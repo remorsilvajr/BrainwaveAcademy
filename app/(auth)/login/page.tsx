@@ -3,7 +3,7 @@
 import React, { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Mail, Lock, LogIn, CheckCircle2 } from "lucide-react";
+import { Mail, Lock, LogIn, CheckCircle2, AlertCircle } from "lucide-react";
 import { FormInput } from "@/components/auth/FormInput";
 
 function LoginContent() {
@@ -15,20 +15,45 @@ function LoginContent() {
     email: "",
     password: "",
   });
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
+    if (error) setError(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
 
-    // Store login status in localStorage
-    localStorage.setItem("isAuthenticated", "true");
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
 
-    // Redirect to parent dashboard
-    router.push("/dashboard");
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        setError(result.message || "Login failed.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      localStorage.setItem("isAuthenticated", "true");
+      localStorage.setItem("authUser", JSON.stringify(result.user));
+      router.push("/dashboard");
+    } catch {
+      setError("Unable to connect to the authentication service.");
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -46,6 +71,13 @@ function LoginContent() {
         <div className="flex items-center gap-2.5 p-3.5 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-800 text-xs font-semibold">
           <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
           <span>Account created! Please log in.</span>
+        </div>
+      )}
+
+      {error && (
+        <div className="flex items-center gap-2.5 p-3.5 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-xs font-semibold">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>{error}</span>
         </div>
       )}
 
@@ -90,10 +122,11 @@ function LoginContent() {
 
         <button
           type="submit"
-          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-semibold text-sm transition-colors cursor-pointer"
+          disabled={isSubmitting}
+          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-semibold text-sm transition-colors cursor-pointer disabled:opacity-70"
         >
           <LogIn className="h-4 w-4" />
-          <span>Log In</span>
+          <span>{isSubmitting ? "Signing in..." : "Log In"}</span>
         </button>
       </form>
 

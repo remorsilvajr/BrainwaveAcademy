@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { GraduationCap, LogOut, ShieldCheck, User, Calendar, BookOpen, Bell } from "lucide-react";
+import { isAuthenticated } from "@/lib/auth";
 
 interface UserProfile {
   firstName: string;
@@ -19,34 +20,27 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Defer state updates to prevent synchronous cascading renders in React
-    queueMicrotask(() => {
-      const authStatus = localStorage.getItem("isAuthenticated");
-      const storedUser = localStorage.getItem("mockUser");
+    if (!isAuthenticated()) {
+      router.push("/login");
+      return;
+    }
 
-      if (authStatus !== "true") {
-        // Redirect to login if unauthenticated
-        router.push("/login");
-        return;
-      }
-
-      if (storedUser) {
-        try {
-          setUser(JSON.parse(storedUser));
-        } catch {
-          setUser({ firstName: "Parent", lastName: "User" });
-        }
-      } else {
+    const storedUser = localStorage.getItem("authUser");
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch {
         setUser({ firstName: "Parent", lastName: "User" });
       }
-
-      setLoading(false);
-    });
+    } else {
+      setUser({ firstName: "Parent", lastName: "User" });
+    }
+    setLoading(false);
   }, [router]);
 
   const handleLogout = () => {
     localStorage.removeItem("isAuthenticated");
-    localStorage.removeItem("mockUser");
+    localStorage.removeItem("authUser");
     router.push("/login");
   };
 

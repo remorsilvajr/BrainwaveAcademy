@@ -3,8 +3,9 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { User, Mail, Lock, UserPlus } from "lucide-react";
+import { User, Mail, Lock, UserPlus, AlertCircle } from "lucide-react";
 import { FormInput } from "@/components/auth/FormInput";
+import { validateName } from "@/lib/auth";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -16,28 +17,56 @@ export default function RegisterPage() {
     email: "",
     password: "",
   });
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
+    if (error) setError(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
 
-    // Store user data in localStorage
-    const mockUser = {
-      firstName: formData.firstName || "Parent",
-      middleName: formData.middleName || "",
-      lastName: formData.lastName || "User",
-      email: formData.email,
-      role: "Parent",
-    };
+    const trimmedFirstName = formData.firstName.trim();
+    const trimmedMiddleName = formData.middleName.trim();
+    const trimmedLastName = formData.lastName.trim();
 
-    localStorage.setItem("mockUser", JSON.stringify(mockUser));
+    if (!validateName(trimmedFirstName) || !validateName(trimmedLastName) || (trimmedMiddleName && !validateName(trimmedMiddleName))) {
+      setError("Names can only include letters, spaces, apostrophes, or hyphens.");
+      setIsSubmitting(false);
+      return;
+    }
 
-    // Immediately redirect to login page with registered query parameter
-    router.push("/login?registered=true");
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: trimmedFirstName,
+          middleName: trimmedMiddleName,
+          lastName: trimmedLastName,
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        setError(result.message || "Registration failed.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      router.push("/login?registered=true");
+    } catch {
+      setError("Unable to create your account right now.");
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -50,6 +79,13 @@ export default function RegisterPage() {
           Register your parent portal account for Brainwave Academy
         </p>
       </div>
+
+      {error && (
+        <div className="flex items-center gap-2.5 p-3.5 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-xs font-semibold">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -108,10 +144,11 @@ export default function RegisterPage() {
         <div className="pt-2">
           <button
             type="submit"
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-semibold text-sm transition-colors cursor-pointer"
+            disabled={isSubmitting}
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-semibold text-sm transition-colors cursor-pointer disabled:opacity-70"
           >
             <UserPlus className="h-4 w-4" />
-            <span>Create Account</span>
+            <span>{isSubmitting ? "Creating account..." : "Create Account"}</span>
           </button>
         </div>
       </form>
