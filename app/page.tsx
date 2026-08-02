@@ -1,65 +1,109 @@
-import Image from "next/image";
+import Link from "next/link";
+import { GraduationCap, LogIn, UserPlus, KeyRound, ShieldCheck } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen w-full bg-slate-50 text-slate-900 flex flex-col justify-between font-sans">
+      {/* Navigation Header */}
+      <header className="max-w-6xl mx-auto w-full px-6 py-6 flex items-center justify-between border-b border-slate-200">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-sky-600 flex items-center justify-center text-white shadow-xs">
+            <GraduationCap className="h-6 w-6" />
+          </div>
+          <span className="text-xl font-bold text-slate-900 tracking-tight">
+            Brainwave Academy
+          </span>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+        <div className="flex items-center gap-3">
+          <Link
+            href="/login"
+            className="px-4 py-2 text-sm font-semibold text-slate-700 hover:text-sky-600 transition-colors"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            Log In
+          </Link>
+          <Link
+            href="/register"
+            className="px-4 py-2 text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-lg shadow-xs transition-colors"
           >
-            Documentation
-          </a>
+            Create Account
+          </Link>
+        </div>
+      </header>
+
+      {/* Main Hero */}
+      <main className="max-w-4xl mx-auto px-6 py-16 text-center flex flex-col items-center justify-center gap-8 my-auto">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-sky-50 border border-sky-200 text-sky-700 text-xs font-semibold">
+          <ShieldCheck className="h-4 w-4 text-sky-600" />
+          Preschool Management Portal — Auth Gateway
+        </div>
+
+        <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight max-w-3xl">
+          Welcome to <span className="text-sky-600">Brainwave Academy</span>
+        </h1>
+
+        <p className="text-base sm:text-lg text-slate-600 max-w-2xl">
+          Clean preschool portal authentication suite with standard Next.js App Router route groups and shared layout.
+        </p>
+
+        {/* Quick Route Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full pt-4">
+          <Link
+            href="/login"
+            className="group p-6 rounded-xl bg-white border border-slate-200 shadow-xs hover:border-sky-500 transition-all text-left flex flex-col justify-between space-y-4"
+          >
+            <div className="h-10 w-10 rounded-lg bg-sky-100 text-sky-600 flex items-center justify-center group-hover:bg-sky-600 group-hover:text-white transition-colors">
+              <LogIn className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 text-base group-hover:text-sky-600 transition-colors">
+                Log In
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Access your parent portal account (`/login`)
+              </p>
+            </div>
+          </Link>
+
+          <Link
+            href="/register"
+            className="group p-6 rounded-xl bg-white border border-slate-200 shadow-xs hover:border-sky-500 transition-all text-left flex flex-col justify-between space-y-4"
+          >
+            <div className="h-10 w-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+              <UserPlus className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 text-base group-hover:text-emerald-600 transition-colors">
+                Create Account
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Register a new parent account (`/register`)
+              </p>
+            </div>
+          </Link>
+
+          <Link
+            href="/reset-password"
+            className="group p-6 rounded-xl bg-white border border-slate-200 shadow-xs hover:border-sky-500 transition-all text-left flex flex-col justify-between space-y-4"
+          >
+            <div className="h-10 w-10 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center group-hover:bg-amber-600 group-hover:text-white transition-colors">
+              <KeyRound className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 text-base group-hover:text-amber-600 transition-colors">
+                Reset Password
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Request password reset link (`/reset-password`)
+              </p>
+            </div>
+          </Link>
         </div>
       </main>
+
+      {/* Footer */}
+      <footer className="py-6 text-center text-xs text-slate-500 border-t border-slate-200">
+        &copy; {new Date().getFullYear()} Brainwave Academy. Preschool Management System.
+      </footer>
     </div>
   );
 }
