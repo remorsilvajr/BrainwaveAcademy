@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Mail, Lock, LogIn, CheckCircle2 } from "lucide-react";
 import { FormInput } from "@/components/auth/FormInput";
+import { loginUser } from "./actions";
 
 function LoginContent() {
   const router = useRouter();
@@ -98,13 +99,8 @@ function LoginContent() {
       </form>
 
       <div className="text-center pt-2 text-xs text-slate-500 border-t border-slate-100">
-        Don&apos;t have an account yet?{" "}
-        <Link
-          href="/register"
-          className="font-semibold text-sky-600 hover:text-sky-700 hover:underline"
-        >
-          Create Account
-        </Link>
+        Don&apos;t have an account yet? 
+        Contact brainwaveIT@bwa.eddu.ph{" "}
       </div>
     </div>
   );

@@ -11,7 +11,7 @@ export default function Home() {
             <GraduationCap className="h-6 w-6" />
           </div>
           <span className="text-xl font-bold text-slate-900 tracking-tight">
-            Brainwave Academy
+            Brainwave Academy Admin Page
           </span>
         </div>
         <div className="flex items-center gap-3">
@@ -25,7 +25,7 @@ export default function Home() {
             href="/register"
             className="px-4 py-2 text-sm font-semibold text-white bg-sky-600 hover:bg-sky-700 rounded-lg shadow-xs transition-colors"
           >
-            Create Account
+            Create User Accounts
           </Link>
         </div>
       </header>
@@ -59,13 +59,13 @@ export default function Home() {
                 Log In
               </h3>
               <p className="text-xs text-slate-500 mt-1">
-                Access your parent portal account (`/login`)
+                Access your account (`/login`)
               </p>
             </div>
           </Link>
 
           <Link
-            href="/register"
+            href="/users"
             className="group p-6 rounded-xl bg-white border border-slate-200 shadow-xs hover:border-sky-500 transition-all text-left flex flex-col justify-between space-y-4"
           >
             <div className="h-10 w-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors">
@@ -76,7 +76,7 @@ export default function Home() {
                 Create Account
               </h3>
               <p className="text-xs text-slate-500 mt-1">
-                Register a new parent account (`/register`)
+                Register a new user account (`/users`)
               </p>
             </div>
           </Link>
