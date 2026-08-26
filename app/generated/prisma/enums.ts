@@ -11,8 +11,30 @@
 
 export const Roles = {
   ADMIN: 'ADMIN',
-  USER: 'USER',
-  TEACHER: 'TEACHER'
+  TEACHER: 'TEACHER',
+  PARENT: 'PARENT',
+  STUDENT: 'STUDENT'
 } as const
 
 export type Roles = (typeof Roles)[keyof typeof Roles]
+
+
+export const AccountStatus = {
+  ACTIVE: 'ACTIVE',
+  INACTIVE: 'INACTIVE',
+  BLOCKED: 'BLOCKED'
+} as const
+
+export type AccountStatus = (typeof AccountStatus)[keyof typeof AccountStatus]
+
+
+export const LearningDomain = {
+  PHYSICAL: 'PHYSICAL',
+  SOCIAL: 'SOCIAL',
+  VALUES: 'VALUES',
+  COGNITIVE: 'COGNITIVE',
+  LANGUAGE: 'LANGUAGE',
+  CREATIVE: 'CREATIVE'
+} as const
+
+export type LearningDomain = (typeof LearningDomain)[keyof typeof LearningDomain]

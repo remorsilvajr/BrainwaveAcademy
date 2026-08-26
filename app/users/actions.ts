@@ -74,12 +74,14 @@ export async function readUsers(searchQuery?: string) {
 
 //update user by id
 export async function updateUser(id: string, formData: FormData) {
+    const password = formData.get("password") as string;
+
     const rawData = {
         name: formData.get("name") as string,
         email: formData.get("email") as string,
-        password: formData.get("password") as string,
         enrolled: formData.get("enrolled") === "on",
         role: formData.get("role") as Roles,
+        ...(password ? { password } : {}),
     };
     const checkedData = updateSchema.safeParse(rawData);
     if (!checkedData.success) {

@@ -51,7 +51,10 @@ export const AnyNull = runtime.AnyNull
 
 
 export const ModelName = {
-  User: 'User'
+  User: 'User',
+  StudentProfile: 'StudentProfile',
+  TeacherProfile: 'TeacherProfile',
+  TeacherDomain: 'TeacherDomain'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -72,17 +75,56 @@ export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof
 
 export const UserScalarFieldEnum = {
   id: 'id',
-  userId: 'userId',
-  name: 'name',
   email: 'email',
   password: 'password',
-  enrolled: 'enrolled',
   role: 'role',
+  status: 'status',
+  phone: 'phone',
+  address: 'address',
+  avatarUrl: 'avatarUrl',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const StudentProfileScalarFieldEnum = {
+  id: 'id',
+  studentId: 'studentId',
+  firstName: 'firstName',
+  lastName: 'lastName',
+  dateOfBirth: 'dateOfBirth',
+  medicalFlags: 'medicalFlags',
+  status: 'status',
+  parentId: 'parentId',
+  userId: 'userId',
+  teacherId: 'teacherId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type StudentProfileScalarFieldEnum = (typeof StudentProfileScalarFieldEnum)[keyof typeof StudentProfileScalarFieldEnum]
+
+
+export const TeacherProfileScalarFieldEnum = {
+  id: 'id',
+  employeeId: 'employeeId',
+  userId: 'userId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TeacherProfileScalarFieldEnum = (typeof TeacherProfileScalarFieldEnum)[keyof typeof TeacherProfileScalarFieldEnum]
+
+
+export const TeacherDomainScalarFieldEnum = {
+  id: 'id',
+  domain: 'domain',
+  teacherProfileId: 'teacherProfileId'
+} as const
+
+export type TeacherDomainScalarFieldEnum = (typeof TeacherDomainScalarFieldEnum)[keyof typeof TeacherDomainScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -99,4 +141,12 @@ export const QueryMode = {
 } as const
 
 export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+export const NullsOrder = {
+  first: 'first',
+  last: 'last'
+} as const
+
+export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 

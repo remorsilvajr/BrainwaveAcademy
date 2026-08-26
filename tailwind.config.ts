@@ -10,22 +10,21 @@ const config: Config = {
         extend: {
             colors: {
                 brand: {
-                    primary: "#006BAD",      // Dark blue button & headers
-                    secondary: "#D0ECFE",    // Light blue background tint
-                    cardBg: "rgba(217, 217, 217, 0.2)", // Translucent card background
+                    navy: "#0B1354",        // Sidebar & dark section backgrounds
+                    pink: "#E5007D",        // Primary CTAs, active sidebar pills, badges
+                    pinkHover: "#C4006B",   // Button hover states
+                    sky: "#DDF0FF",         // Light blue banner & alert backgrounds
+                    skyText: "#0066CC",     // Text for sky blue banners
+                    cardBg: "#F8FAFC",      // Base background color behind cards
                 },
             },
-            fontFamily: {
-                heading: ["var(--font-heading)", "sans-serif"],
-                body: ["var(--font-body)", "sans-serif"],
-                button: ["var(--font-button)", "sans-serif"],
-            },
             borderRadius: {
-                card: "50px",   // Exact 50px radius from Figma
-                btn: "12px",    // Exact 12px radius from Figma
+                card: "16px",
+                btn: "10px",
             },
         },
     },
+
     plugins: [],
 };
 

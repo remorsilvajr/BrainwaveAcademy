@@ -14,18 +14,89 @@ datasource db {
 
 enum Roles {
   ADMIN
-  USER
   TEACHER
+  PARENT
+  STUDENT
+}
+
+enum AccountStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+enum LearningDomain {
+  PHYSICAL
+  SOCIAL
+  VALUES
+  COGNITIVE
+  LANGUAGE
+  CREATIVE
 }
 
 model User {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  name      String
-  email     String   @unique
+  id        String        @id @default(cuid())
+  email     String        @unique
   password  String
-  enrolled  Boolean  @default(false)
-  role      Roles    @default(ADMIN)
+  role      Roles          @default(PARENT)
+  status    AccountStatus @default(ACTIVE)
+  phone     String?
+  address   String?
+  avatarUrl String?
+
+  // Relations
+  teacherProfile TeacherProfile?
+  parentStudents StudentProfile[] @relation("ParentStudents")
+  studentUser    StudentProfile?  @relation("StudentUser")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model StudentProfile {
+  id           String   @id @default(cuid())
+  studentId    String   @unique // e.g. BWA-2026-001
+  firstName    String
+  lastName     String
+  dateOfBirth  DateTime
+  medicalFlags String?
+  status       String   @default("APPROVED")
+
+  // Link to Parent Account
+  parentId String?
+  parent   User?   @relation("ParentStudents", fields: [parentId], references: [id])
+
+  // Link to Student User Account (if student logs in)
+  userId String? @unique
+  user   User?   @relation("StudentUser", fields: [userId], references: [id])
+
+  // Link to Assigned Teacher
+  teacherId String?
+  teacher   TeacherProfile? @relation(fields: [teacherId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TeacherProfile {
+  id         String          @id @default(cuid())
+  employeeId String          @unique
+  domains    TeacherDomain[]
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  students StudentProfile[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TeacherDomain {
+  id               String         @id @default(cuid())
+  domain           LearningDomain
+  teacherProfileId String
+  teacherProfile   TeacherProfile @relation(fields: [teacherProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([teacherProfileId, domain])
 }
