@@ -1,44 +1,50 @@
-import React from "react";
-import Link from "next/link";
-import { Mail, ArrowLeft, Send } from "lucide-react";
-import { FormInput } from "@/components/auth/FormInput";
+"use client";
 
-export default function ResetPasswordPage() {
+import Link from "next/link";
+import { Mail, Info, Send } from "lucide-react";
+
+export default function ForgotPasswordPage() {
   return (
-    <div className="space-y-6">
-      <div className="text-center space-y-1">
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-          Reset Password
+    <div className="w-full max-w-md bg-white rounded-3xl border border-slate-100/80 shadow-xl shadow-pink-500/5 p-8 sm:p-10">
+      <div className="text-center mb-8">
+        <h1 className="font-heading text-2xl sm:text-3xl font-bold text-brand-navy mb-3">
+          Forgot Your Password?
         </h1>
-        <p className="text-sm text-slate-500">
-          Enter your registered email address to receive password reset instructions
+        <p className="text-slate-500 text-xs sm:text-sm leading-relaxed">
+          No worries! Enter your registered parent email address below, and we will send you a secure link to reset your account password.
         </p>
       </div>
 
-      <form className="space-y-4">
-        <FormInput
-          id="email"
-          label="Email Address"
-          type="email"
-          placeholder="parent@brainwave.edu"
-          icon={<Mail className="h-4 w-4" />}
-        />
+      <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+        <div>
+          <label className="block text-xs font-semibold text-brand-navy mb-1.5">Email Address</label>
+          <div className="relative flex items-center">
+            <Mail className="w-5 h-5 absolute left-3.5 text-slate-400" />
+            <input
+              type="email"
+              placeholder="parent@example.com"
+              className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-brand-pink focus:ring-2 focus:ring-brand-pink/20 transition-all"
+            />
+          </div>
+        </div>
+
+        <div className="bg-slate-50 border border-slate-100 rounded-xl p-3.5 flex items-start gap-3">
+          <Info className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
+          <p className="text-xs text-slate-600 leading-relaxed">
+            Note: For security reasons, the generated reset link will expire after 15 minutes.
+          </p>
+        </div>
 
         <button
-          type="button"
-          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-semibold text-sm transition-colors"
+          type="submit"
+          className="w-full py-3.5 rounded-xl bg-brand-pink text-white font-semibold text-sm hover:bg-brand-pinkHover transition-all shadow-md shadow-brand-pink/20 flex items-center justify-center gap-2"
         >
-          <Send className="h-4 w-4" />
-          <span>Send Reset Link</span>
+          Send Password Reset Link <Send className="w-4 h-4" />
         </button>
 
-        <div className="text-center pt-2 border-t border-slate-100">
-          <Link
-            href="/login"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            <span>Back to Log In</span>
+        <div className="text-center pt-2">
+          <Link href="/login" className="text-xs font-medium text-slate-600 hover:text-brand-navy transition-colors">
+            &larr; Back to Log In
           </Link>
         </div>
       </form>
