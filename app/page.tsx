@@ -46,7 +46,7 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="px-6 pt-16 pb-20 text-center bg-[#F8FAFC]">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold mb-6 border border-emerald-200/60">
+        <div className="inline-flex items-center gap-2 text-emerald-600 text-xs font-semibold mb-6">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
           Est. June 22, 2005 • Tagum City
         </div>
@@ -96,7 +96,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
 
             {/* 2005 */}
-            <div className="relative overflow-hidden bg-slate-100/70 p-6 md:p-8 rounded-2xl min-h-[220px] h-full flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+            <div className="bg-[#FBF8FF] border border-slate-200 p-6 md:p-8 rounded-2xl min-h-[220px] h-full flex flex-col">
               <span className="text-3xl font-bold text-slate-800 mb-1">
                 2005
               </span>
@@ -114,7 +114,7 @@ export default function LandingPage() {
             </div>
 
             {/* 2011 */}
-            <div className="bg-slate-100/70 border-slate-100 p-6 md:p-8 rounded-2xl min-h-[220px] h-full flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+            <div className="bg-[#FBF8FF] border border-slate-200 p-6 md:p-8 rounded-2xl min-h-[220px] h-full flex flex-col">
               <span className="text-3xl font-bold text-slate-800 mb-1">
                 2011
               </span>
@@ -130,7 +130,7 @@ export default function LandingPage() {
             </div>
 
             {/* 2017 */}
-            <div className="bg-slate-100/70 border-slate-100 p-6 md:p-8 rounded-2xl min-h-[220px] h-full flex flex-col transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+            <div className="bg-[#FBF8FF] border border-slate-200 p-6 md:p-8 rounded-2xl min-h-[220px] h-full flex flex-col">
               <span className="text-3xl font-bold text-slate-800 mb-1">
                 2017
               </span>
@@ -148,7 +148,7 @@ export default function LandingPage() {
           </div>
 
           {/* Founder Quote Card */}
-          <div className="bg-white border border-slate-100 shadow-xl shadow-slate-100/70 rounded-3xl p-6 md:p-8 lg:p-10 w-full flex flex-col md:flex-row items-center gap-6 md:gap-8">
+          <div className="bg-[#FBF8FF] border border-slate-100 shadow-xl shadow-slate-100/70 rounded-3xl p-6 md:p-8 lg:p-10 w-full flex flex-col md:flex-row items-center gap-6 md:gap-8">
 
             {/* Founder Image */}
             <div className="w-28 h-28 md:w-36 md:h-36 lg:w-40 lg:h-40 rounded-full overflow-hidden shrink-0 border-4 border-slate-50 shadow-inner">
@@ -187,9 +187,9 @@ export default function LandingPage() {
           <h2 className="font-heading text-3xl font-bold text-brand-navy mb-2">Our Educational Programs</h2>
           <p className="text-slate-500 text-sm">Tailored curriculums designed for every stage of early childhood development.</p>
         </div>
-
-        <div className="grid md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+        {/* Card 1 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-[#FBF8FF] rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
             <div className="h-44 bg-slate-200 relative">
               <img src="/assets/program_toddler.jpg" alt="Little Explorers" className="w-full h-full object-cover" />
               <span className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-slate-700 text-[11px] font-bold px-2.5 py-1 rounded-full">Ages 1-3</span>
@@ -199,8 +199,8 @@ export default function LandingPage() {
               <p className="text-slate-600 text-sm leading-relaxed">Sensory-rich environment focusing on gross motor skills and basic socialization.</p>
             </div>
           </div>
-
-          <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+          {/* Card 2 */}
+          <div className="bg-[#FBF8FF] rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
             <div className="h-44 bg-slate-200 relative">
               <img src="/assets/program_advanced.jpg" alt="Advanced Toddler" className="w-full h-full object-cover" />
               <span className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-slate-700 text-[11px] font-bold px-2.5 py-1 rounded-full">Ages 2-4</span>
@@ -211,7 +211,8 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+          {/* Card 3 */}
+          <div className="bg-[#FBF8FF] rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
             <div className="h-44 bg-slate-200 relative">
               <img src="/assets/program_nursery.jpg" alt="Smart Explorers" className="w-full h-full object-cover" />
               <span className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-slate-700 text-[11px] font-bold px-2.5 py-1 rounded-full">Nursery</span>
@@ -221,7 +222,38 @@ export default function LandingPage() {
               <p className="text-slate-600 text-sm leading-relaxed">Foundational phonics, basic numeracy, and fostering independence.</p>
             </div>
           </div>
+
+          {/* Card 4 */}
+          <div className="bg-[#FBF8FF] rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+            <div className="h-44 bg-slate-200 relative">
+              <img src="/assets/program_kinder.jpg" alt="Curious Adventurers" className="w-full h-full object-cover" />
+              <span className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-slate-700 text-[11px] font-bold px-2.5 py-1 rounded-full">Kinder</span>
+            </div>
+            <div className="p-6">
+              <h3 className="font-heading font-bold text-lg text-brand-navy mb-2">Smart Explorers</h3>
+              <p className="text-slate-600 text-sm leading-relaxed">Foundational phonics, basic numeracy, and fostering independence.</p>
+            </div>
+          </div>
+
+          {/* Card 5 */}
+          <div className="bg-[#FBF8FF] rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+            <div className="p-6">
+              <h3 className="font-heading font-bold text-lg text-brand-navy mb-2">Academic Tutorials</h3>
+              <p className="text-slate-600 text-sm leading-relaxed">One-on-one and small group specialized tutoring to support individual paces.</p>
+            </div>
+          </div>
+
+          {/* Card 6 */}
+          <div className="bg-[#FBF8FF] rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+            <div className="p-6">
+              <h3 className="font-heading font-bold text-lg text-brand-navy mb-2">Quiz Bee & Exam Prep</h3>
+              <p className="text-slate-600 text-sm leading-relaxed">Coaching for external competitions and
+                preparation for elementary entrance
+                examinations.</p>
+            </div>
+          </div>
         </div>
+
       </section>
 
       {/* 6 Learning Domains (Navy Section) */}
