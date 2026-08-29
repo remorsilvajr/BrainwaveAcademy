@@ -1,18 +1,12 @@
 import { SiteHeader } from '@/components/landing/site-header'
-import { LoginForm } from '@/components/auth/login-form'
+import { ResetPasswordForm } from '@/components/auth/reset-password-form'
 
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string }>
-}) {
-  const { error } = await searchParams
-
+export default function ResetPasswordPage() {
   return (
     <div className="flex min-h-screen w-full flex-col bg-gradient-to-b from-white to-slate-50">
       <SiteHeader />
       <main className="flex flex-1 items-center justify-center px-4 py-12">
-        <LoginForm error={error} />
+        <ResetPasswordForm />
       </main>
     </div>
   )

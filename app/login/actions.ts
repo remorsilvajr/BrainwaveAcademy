@@ -15,7 +15,12 @@ export async function login(formData: FormData) {
   })
 
   if (error) {
-    redirect(`/login?error=${encodeURIComponent('Incorrect email or password.')}`)
+    // TEMPORARY DEBUG: showing the real Supabase error message so we can
+    // see exactly what's being rejected. Revert this to the generic
+    // message below once login is working — showing detailed auth errors
+    // to real users makes it easier for attackers to guess valid emails.
+    redirect(`/login?error=${encodeURIComponent('DEBUG: ' + error.message)}`)
+    // redirect(`/login?error=${encodeURIComponent('Incorrect email or password.')}`)
   }
 
   const { data: profile } = await supabase
@@ -24,7 +29,6 @@ export async function login(formData: FormData) {
     .eq('id', data.user.id)
     .single()
 
-  // Blocked/inactive accounts shouldn't reach a dashboard
   const { data: statusCheck } = await supabase
     .from('profiles')
     .select('account_status')
