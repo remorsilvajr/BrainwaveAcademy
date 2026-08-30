@@ -3,7 +3,12 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { FileText, X } from 'lucide-react'
-import { saveDocumentReview, requestCorrections, getSignedDocumentUrl } from '@/app/admin/applications/actions'
+import {
+  saveDocumentReview,
+  requestCorrections,
+  getSignedDocumentUrl,
+  approveAndCreateStudentRecord,
+} from '@/app/admin/applications/actions'
 import { calculateAge, formatDateLong } from '@/lib/format'
 import { documentLabels, documentOrder } from '@/lib/documents'
 
@@ -14,6 +19,8 @@ type Application = {
   application_ref: string
   status: string
   review_notes: string | null
+  created_parent_id: string | null
+  created_student_id: string | null
   student_first_name: string
   student_last_name: string
   student_dob: string
@@ -56,8 +63,13 @@ export function ApplicationReviewSlideover({
   })
   const [notes, setNotes] = useState(application.review_notes ?? '')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [result, setResult] = useState<'saved' | 'corrections' | null>(null)
+  const [result, setResult] = useState<'saved' | 'corrections' | 'enrolled' | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
+
+  const hasUploadedDocs = application.documents.length > 0
+  const allValid = documentOrder.every((type) => statuses[type] === 'valid')
+  const hasParentAccount = !!application.created_parent_id
+  const alreadyHasStudent = !!application.created_student_id
 
   async function handleViewDocument(type: string) {
     const doc = application.documents.find((d) => d.document_type === type)
@@ -98,7 +110,20 @@ export function ApplicationReviewSlideover({
     }
   }
 
-  const hasUploadedDocs = application.documents.length > 0
+  async function handleApproveAndCreateStudent() {
+    setIsSubmitting(true)
+    setErrorMessage('')
+    try {
+      await saveDocumentReview(application.id, statuses, notes)
+      await approveAndCreateStudentRecord(application.id)
+      setResult('enrolled')
+      router.refresh()
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : 'Something went wrong.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
@@ -121,9 +146,24 @@ export function ApplicationReviewSlideover({
           {result && (
             <div className="mb-4 rounded-lg border border-green-200 bg-green-50 p-4 text-center">
               <p className="font-medium text-green-800">
-                {result === 'saved' ? 'Review saved.' : 'Corrections requested — parent notified by email.'}
+                {result === 'saved' && 'Review saved.'}
+                {result === 'corrections' && 'Corrections requested — parent notified by email.'}
+                {result === 'enrolled' && `Student record created for ${studentName}!`}
               </p>
             </div>
+          )}
+
+          {!hasParentAccount && (
+            <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700">
+              No parent account exists for this application yet — approve it via Enroll A
+              Student first.
+            </p>
+          )}
+
+          {alreadyHasStudent && (
+            <p className="mb-4 rounded-lg bg-sky-50 px-3 py-2 text-sm text-sky-700">
+              A student record already exists for this application.
+            </p>
           )}
 
           <p className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-400">
@@ -220,21 +260,33 @@ export function ApplicationReviewSlideover({
           )}
         </div>
 
-        <div className="flex gap-2 border-t border-gray-100 p-6">
-          <button
-            onClick={handleRequestCorrections}
-            disabled={isSubmitting || !hasUploadedDocs}
-            className="flex-1 rounded-lg border border-gray-300 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
-          >
-            Request Corrections
-          </button>
-          <button
-            onClick={handleSaveReview}
-            disabled={isSubmitting || !hasUploadedDocs}
-            className="flex-1 rounded-lg bg-[#0b1b62] py-2.5 text-sm font-semibold text-white hover:bg-[#08154d] disabled:opacity-60"
-          >
-            {isSubmitting ? 'Saving…' : 'Save Review'}
-          </button>
+        <div className="flex flex-col gap-2 border-t border-gray-100 p-6">
+          {hasParentAccount && !alreadyHasStudent && (
+            <button
+              onClick={handleApproveAndCreateStudent}
+              disabled={isSubmitting || !allValid}
+              title={!allValid ? 'Mark all 4 documents as Valid first' : undefined}
+              className="w-full rounded-lg bg-[#e6007e] py-3 text-sm font-semibold text-white hover:bg-[#c9006e] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {isSubmitting ? 'Working…' : 'Approve & Create Student Record'}
+            </button>
+          )}
+          <div className="flex gap-2">
+            <button
+              onClick={handleRequestCorrections}
+              disabled={isSubmitting || !hasUploadedDocs}
+              className="flex-1 rounded-lg border border-gray-300 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+            >
+              Request Corrections
+            </button>
+            <button
+              onClick={handleSaveReview}
+              disabled={isSubmitting || !hasUploadedDocs}
+              className="flex-1 rounded-lg bg-[#0b1b62] py-2.5 text-sm font-semibold text-white hover:bg-[#08154d] disabled:opacity-60"
+            >
+              {isSubmitting ? 'Saving…' : 'Save Review'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

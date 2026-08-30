@@ -19,9 +19,10 @@ export async function uploadRequirementDocument(
   const extension = file.name.split('.').pop() || 'bin'
   const path = `${applicationId}/${documentType}.${extension}`
 
-  // RLS (parents_insert/update_own_documents) enforces that this parent
-  // actually owns a student tied to applicationId — no manual ownership
-  // check needed here, the database rejects it otherwise.
+  // RLS (parents_upload_own_documents/parents_replace_own_documents on
+  // storage.objects) enforces that this parent actually owns the
+  // application tied to applicationId, via applications.created_parent_id —
+  // no manual ownership check needed here, the database rejects it otherwise.
   const { error: uploadError } = await supabase.storage
     .from('documents')
     .upload(path, file, { upsert: true })

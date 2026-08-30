@@ -6,11 +6,10 @@ import { uploadRequirementDocument, getOwnDocumentSignedUrl } from '@/app/parent
 import { documentOrder, documentShortLabels, documentDescriptions } from '@/lib/documents'
 
 type DocRow = { id: string; document_type: string; verification_status: string }
-type Student = {
-  id: string
-  first_name: string
-  last_name: string
-  application_id: string | null
+type EnrollmentRecord = {
+  applicationId: string
+  studentFirstName: string
+  studentLastName: string
   documents: DocRow[]
 }
 
@@ -24,26 +23,26 @@ const statusMeta: Record<
   not_submitted: { label: 'Not Submitted', className: 'text-red-600', icon: XCircle },
 }
 
-export function RequirementsChecklist({ students }: { students: Student[] }) {
+export function RequirementsChecklist({ records }: { records: EnrollmentRecord[] }) {
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [isPending, startTransition] = useTransition()
   const [errorMessage, setErrorMessage] = useState('')
   const fileInputs = useRef<Record<string, HTMLInputElement | null>>({})
 
-  if (students.length === 0) {
+  if (records.length === 0) {
     return (
       <p className="text-gray-500">
-        No enrolled student found yet. Requirements will appear here once your enrollment is
-        approved.
+        No enrollment application found for your account yet. If you just received your login
+        details, this may take a moment — otherwise, contact the school office.
       </p>
     )
   }
 
-  const student = students[selectedIndex]
-  const applicationId = student.application_id
+  const record = records[selectedIndex]
+  const applicationId = record.applicationId
 
   function getDoc(type: string) {
-    return student.documents.find((d) => d.document_type === type)
+    return record.documents.find((d) => d.document_type === type)
   }
 
   function getStatusKey(type: string) {
@@ -86,7 +85,7 @@ export function RequirementsChecklist({ students }: { students: Student[] }) {
 
   return (
     <div className="space-y-6">
-      {students.length > 1 && (
+      {records.length > 1 && (
         <div className="max-w-xs">
           <label className="mb-1 block text-xs font-medium text-gray-500">Student</label>
           <select
@@ -94,9 +93,9 @@ export function RequirementsChecklist({ students }: { students: Student[] }) {
             onChange={(e) => setSelectedIndex(Number(e.target.value))}
             className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
           >
-            {students.map((s, i) => (
-              <option key={s.id} value={i}>
-                {s.first_name} {s.last_name}
+            {records.map((r, i) => (
+              <option key={r.applicationId} value={i}>
+                {r.studentFirstName} {r.studentLastName}
               </option>
             ))}
           </select>

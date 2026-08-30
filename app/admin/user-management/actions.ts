@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
 
 export async function toggleBlockUser(userId: string, currentStatus: string) {
   const supabase = await createClient()
@@ -40,7 +41,18 @@ export async function updateUserProfile(
 ) {
   const supabase = await createClient()
 
-  const { error } = await supabase.from('profiles').update(updates).eq('id', userId)
+  const phone = updates.phone_number.trim()
+  if (phone && !isValidPhilippineMobile(phone)) {
+    throw new Error('Enter a valid PH mobile number, e.g. 0917 123 4567 or +63 917 123 4567.')
+  }
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      ...updates,
+      phone_number: phone ? normalizePhilippineMobile(phone) : null,
+    })
+    .eq('id', userId)
 
   if (error) {
     throw new Error(error.message)

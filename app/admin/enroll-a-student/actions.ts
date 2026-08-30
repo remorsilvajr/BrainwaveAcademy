@@ -13,6 +13,9 @@ function generateTempPassword() {
   return `${w1}${w2}${num}`
 }
 
+// Creates ONLY the parent account. The student record is intentionally NOT
+// created here — it's created later, in app/admin/applications/actions.ts,
+// only after the parent has uploaded documents and admin has validated them.
 export async function approveApplication(applicationId: string) {
   const supabase = await createClient()
   const admin = createAdminClient()
@@ -70,39 +73,18 @@ export async function approveApplication(applicationId: string) {
     }
   }
 
-  const { data: student, error: studentError } = await supabase
-    .from('students')
-    .insert({
-      application_id: application.id,
-      first_name: application.student_first_name,
-      middle_name: application.student_middle_name,
-      last_name: application.student_last_name,
-      date_of_birth: application.student_dob,
-      gender: application.student_gender,
-      enrollment_status: 'active',
-    })
-    .select()
-    .single()
-
-  if (studentError || !student) {
-    throw new Error(studentError?.message ?? 'Could not create the student record.')
-  }
-
-  await supabase.from('parent_student').insert({
-    parent_id: parentId,
-    student_id: student.id,
-    relationship: application.parent_relationship,
-  })
-
-  await supabase
+  const { error: updateError } = await supabase
     .from('applications')
     .update({
       status: 'approved',
-      created_student_id: student.id,
       created_parent_id: parentId,
       reviewed_at: new Date().toISOString(),
     })
     .eq('id', application.id)
+
+  if (updateError) {
+    throw new Error(updateError.message)
+  }
 
   if (tempPassword) {
     await sendEmail({
@@ -110,17 +92,19 @@ export async function approveApplication(applicationId: string) {
       subject: 'Your Brainwave Preschool Academy Parent Portal Account',
       html: `
         <h2>Welcome to Brainwave Preschool Academy!</h2>
-        <p>${application.student_first_name} ${application.student_last_name}'s enrollment has been approved.</p>
+        <p>Your enrollment request for ${application.student_first_name} ${application.student_last_name} has been approved.</p>
         <p>You can now log in to the Parent Portal with:</p>
         <p><strong>Email:</strong> ${application.parent_email}<br/>
         <strong>Temporary Password:</strong> ${tempPassword}</p>
         <p>For your security, please change this password after logging in (Sidebar &gt; Settings).</p>
+        <p><strong>Next step:</strong> log in and visit the Requirements page to upload the documents needed to complete enrollment.</p>
         <p><a href="http://localhost:3000/login">Log in to the Parent Portal</a></p>
       `,
     })
   }
 
   revalidatePath('/admin/enroll-a-student')
+  revalidatePath('/admin/applications')
 }
 
 export async function dismissApplication(applicationId: string) {

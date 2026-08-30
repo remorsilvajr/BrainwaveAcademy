@@ -29,11 +29,6 @@ export async function saveDocumentReview(
   revalidatePath('/parent/requirements')
 }
 
-// Saves the review AND, if anything was marked "needs_correction", emails
-// the parent listing exactly which documents need to be resubmitted.
-// Does NOT touch applications.status — that field now only represents the
-// enrollment decision (made via Enroll A Student), which already happened
-// before any documents existed.
 export async function requestCorrections(
   applicationId: string,
   documentStatuses: DocumentStatuses,
@@ -70,6 +65,79 @@ export async function requestCorrections(
 
   revalidatePath('/admin/applications')
   revalidatePath('/parent/requirements')
+}
+
+// The actual point where a student record gets created — only reachable
+// once the parent account exists (from Enroll A Student) AND every document
+// is marked valid. Every step's error is checked and surfaced; a previous
+// version of this insert-chain (when it lived in enroll-a-student/actions.ts)
+// did not check the parent_student insert for errors, which could fail
+// silently and leave a parent account with no visible student anywhere.
+export async function approveAndCreateStudentRecord(applicationId: string) {
+  const supabase = await createClient()
+
+  const { data: application, error: fetchError } = await supabase
+    .from('applications')
+    .select('*')
+    .eq('id', applicationId)
+    .single()
+
+  if (fetchError || !application) {
+    throw new Error('Application not found.')
+  }
+
+  if (!application.created_parent_id) {
+    throw new Error(
+      'This application has no parent account yet — approve it via Enroll A Student first.'
+    )
+  }
+
+  if (application.created_student_id) {
+    throw new Error('A student record already exists for this application.')
+  }
+
+  const { data: student, error: studentError } = await supabase
+    .from('students')
+    .insert({
+      application_id: application.id,
+      first_name: application.student_first_name,
+      middle_name: application.student_middle_name,
+      last_name: application.student_last_name,
+      date_of_birth: application.student_dob,
+      gender: application.student_gender,
+      enrollment_status: 'active',
+    })
+    .select()
+    .single()
+
+  if (studentError || !student) {
+    throw new Error(studentError?.message ?? 'Could not create the student record.')
+  }
+
+  const { error: linkError } = await supabase.from('parent_student').insert({
+    parent_id: application.created_parent_id,
+    student_id: student.id,
+    relationship: application.parent_relationship,
+  })
+
+  if (linkError) {
+    throw new Error(`Student record created, but linking to the parent failed: ${linkError.message}`)
+  }
+
+  const { error: updateError } = await supabase
+    .from('applications')
+    .update({ created_student_id: student.id })
+    .eq('id', application.id)
+
+  if (updateError) {
+    throw new Error(updateError.message)
+  }
+
+  revalidatePath('/admin/applications')
+  revalidatePath('/admin/students')
+  revalidatePath('/admin/enroll-a-student')
+
+  return student
 }
 
 export async function getSignedDocumentUrl(path: string) {

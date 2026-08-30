@@ -27,6 +27,7 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
   const [roleFilter, setRoleFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
   const [editingUser, setEditingUser] = useState<Profile | null>(null)
+  const [confirmingBlockId, setConfirmingBlockId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   const filtered = users.filter((u) => {
@@ -44,6 +45,7 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
     startTransition(async () => {
       await toggleBlockUser(user.id, user.account_status)
     })
+    setConfirmingBlockId(null)
   }
 
   function handleStatusChange(user: Profile, status: string) {
@@ -144,24 +146,46 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
                   </td>
                   <td className="p-4 text-gray-500">{formatDateShort(u.created_at)}</td>
                   <td className="p-4">
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-2">
                       <button
                         onClick={() => setEditingUser(u)}
                         className="rounded border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
                       >
                         Edit
                       </button>
-                      <button
-                        onClick={() => handleToggleBlock(u)}
-                        disabled={isPending}
-                        className={`rounded border px-3 py-1.5 text-xs font-semibold disabled:opacity-60 ${
-                          u.account_status === 'blocked'
-                            ? 'border-green-300 text-green-700 hover:bg-green-50'
-                            : 'border-red-300 text-red-700 hover:bg-red-50'
-                        }`}
-                      >
-                        {u.account_status === 'blocked' ? 'Unblock' : 'Block'}
-                      </button>
+                      {confirmingBlockId === u.id ? (
+                        <div className="flex items-center gap-1.5 text-xs">
+                          <span className="text-gray-600">Block this user?</span>
+                          <button
+                            onClick={() => setConfirmingBlockId(null)}
+                            className="font-semibold text-gray-500 underline"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={() => handleToggleBlock(u)}
+                            className="font-semibold text-red-700 underline"
+                          >
+                            Yes, Block
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() =>
+                            u.account_status === 'blocked'
+                              ? handleToggleBlock(u)
+                              : setConfirmingBlockId(u.id)
+                          }
+                          disabled={isPending}
+                          className={`rounded border px-3 py-1.5 text-xs font-semibold disabled:opacity-60 ${
+                            u.account_status === 'blocked'
+                              ? 'border-green-300 text-green-700 hover:bg-green-50'
+                              : 'border-red-300 text-red-700 hover:bg-red-50'
+                          }`}
+                        >
+                          {u.account_status === 'blocked' ? 'Unblock' : 'Block'}
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

@@ -155,14 +155,14 @@ export function EnrollmentRequestSlideover({
                       password (skipped if this parent already has an account for a sibling).
                     </li>
                     <li className="flex items-start gap-2">
-                      <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                      Generate a student profile for {studentName}.
-                    </li>
-                    <li className="flex items-start gap-2">
                       <Send className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                       Send an automated email with login details to {application.parent_email}.
                     </li>
                   </ul>
+                  <p className="mt-2 text-xs text-sky-700">
+                    The student record isn&apos;t created yet — that happens in Applications, once
+                    the parent uploads documents and they&apos;re verified.
+                  </p>
                 </div>
               )}
 

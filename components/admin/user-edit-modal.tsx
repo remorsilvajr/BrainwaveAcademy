@@ -86,8 +86,12 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
             <input
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
+              placeholder="0917 123 4567 or +63 917 123 4567"
               className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
             />
+            <p className="mt-1 text-xs text-gray-400">
+              Any valid PH mobile format works — it&apos;ll be saved consistently as +63 9XX XXX XXXX.
+            </p>
           </div>
           <div>
             <label className="mb-1 block text-sm font-semibold text-[#0b1b62]">Role</label>
