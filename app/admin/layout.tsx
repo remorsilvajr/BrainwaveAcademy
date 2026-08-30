@@ -7,6 +7,7 @@ const sections: NavSection[] = [
       { label: 'Announcement', href: '/admin/announcement' },
       { label: 'User Management', href: '/admin/user-management' },
       { label: 'Create New Account', href: '/admin/create-new-account' },
+      { label: 'Enroll A Student', href: '/admin/enroll-a-student' },
       { label: 'Applications', href: '/admin/applications' },
       { label: 'Students', href: '/admin/students' },
       { label: 'Student Dashboard', href: '/admin/student-dashboard' },

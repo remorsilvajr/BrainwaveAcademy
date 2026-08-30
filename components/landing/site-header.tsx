@@ -37,7 +37,7 @@ export function SiteHeader() {
 
         <div className="flex items-center gap-2 justify-self-end">
           <a
-            href="#enroll"
+            href="/enroll"
             className="rounded-full bg-[#e6007e] px-6 py-2 text-sm font-semibold text-white shadow-[0px_1px_2px_#0000000d] hover:bg-[#c9006e] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b1b62]"
           >
             Enroll
