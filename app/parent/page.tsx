@@ -14,12 +14,14 @@ export default async function ParentDashboardPage({
     data: { user },
   } = await supabase.auth.getUser()
 
+  // See app/parent/layout.tsx for why this matches on parent_email too, not
+  // just created_parent_id.
   const [{ data: profile }, { data: applications }] = await Promise.all([
     supabase.from('profiles').select('first_name').eq('id', user?.id ?? '').single(),
     supabase
       .from('applications')
-      .select('id, student_first_name, student_last_name, created_student_id')
-      .eq('created_parent_id', user?.id ?? '')
+      .select('id, status, student_first_name, student_last_name, created_student_id')
+      .or(`created_parent_id.eq.${user?.id ?? ''},parent_email.eq.${user?.email ?? ''}`)
       .order('submitted_at', { ascending: true }),
   ])
 
@@ -41,7 +43,9 @@ export default async function ParentDashboardPage({
     ? 'Enrolled'
     : needsCorrection
       ? 'Needs Correction'
-      : 'Under Review'
+      : selectedApplication?.status !== 'approved'
+        ? 'Pending Review'
+        : 'Under Review'
 
   return (
     <div className="space-y-6">

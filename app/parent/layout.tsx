@@ -21,7 +21,7 @@ const sections: NavSection[] = [
   {
     title: 'Student',
     items: [
-      { label: 'Students', href: '/parent/students' },
+      { label: 'Student Profile', href: '/parent/students' },
       { label: 'Student Dashboard', href: '/parent/student-dashboard' },
     ],
   },
@@ -41,12 +41,15 @@ export default async function ParentLayout({ children }: { children: React.React
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Sourced from `applications.created_parent_id`, not `parent_student` —
-  // this needs to cover a child anywhere in the pipeline (in-progress
-  // enrollment, documents pending) not just ones that already have a full
-  // `students` row, since that's the whole point of the selector: it also
-  // drives Requirements/Enrollment Status, which are about children who
-  // aren't fully enrolled yet.
+  // Matches on created_parent_id OR parent_email, not just created_parent_id
+  // — that column is only populated once admin approves the enrollment
+  // *request* itself (Enroll A Student), so a parent who just submitted a
+  // new child would otherwise have no way to even see it in the selector
+  // until admin acts on it. Requirements deliberately keeps the narrower
+  // created_parent_id-only filter (document upload genuinely shouldn't be
+  // possible before the request is approved), but the selector, Dashboard,
+  // Enrollment Status, and Student Profile all need to reflect a
+  // still-pending submission too.
   const [{ data: profile }, { data: applications }] = await Promise.all([
     supabase
       .from('profiles')
@@ -56,7 +59,7 @@ export default async function ParentLayout({ children }: { children: React.React
     supabase
       .from('applications')
       .select('id, student_first_name, student_last_name')
-      .eq('created_parent_id', user?.id ?? '')
+      .or(`created_parent_id.eq.${user?.id ?? ''},parent_email.eq.${user?.email ?? ''}`)
       .order('submitted_at', { ascending: true }),
   ])
 

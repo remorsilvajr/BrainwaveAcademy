@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { logout } from '@/app/login/actions'
 import { iconMap, type IconName } from './sidebar'
@@ -36,36 +37,38 @@ export function LogoutButton({ icon }: { icon?: IconName }) {
         Log Out
       </button>
 
-      {confirming && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/30" onClick={() => setConfirming(false)} />
-          <div className="relative w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
-            <h2 className="text-lg font-semibold text-gray-900">Log out?</h2>
-            <p className="mt-1 text-sm text-gray-500">
-              You&apos;ll need to sign in again to access your account.
-            </p>
-            {errorMessage && (
-              <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{errorMessage}</p>
-            )}
-            <div className="mt-6 flex gap-2">
-              <button
-                onClick={() => setConfirming(false)}
-                disabled={isLoggingOut}
-                className="flex-1 rounded-lg border border-gray-300 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmLogout}
-                disabled={isLoggingOut}
-                className="flex-1 rounded-lg bg-[#e6007e] py-2.5 text-sm font-semibold text-white hover:bg-[#c9006e] disabled:opacity-60"
-              >
-                {isLoggingOut ? 'Logging out…' : 'Log Out'}
-              </button>
+      {confirming &&
+        createPortal(
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/30" onClick={() => setConfirming(false)} />
+            <div className="relative w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+              <h2 className="text-lg font-semibold text-gray-900">Log out?</h2>
+              <p className="mt-1 text-sm text-gray-500">
+                You&apos;ll need to sign in again to access your account.
+              </p>
+              {errorMessage && (
+                <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{errorMessage}</p>
+              )}
+              <div className="mt-6 flex gap-2">
+                <button
+                  onClick={() => setConfirming(false)}
+                  disabled={isLoggingOut}
+                  className="flex-1 rounded-lg border border-gray-300 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmLogout}
+                  disabled={isLoggingOut}
+                  className="flex-1 rounded-lg bg-[#e6007e] py-2.5 text-sm font-semibold text-white hover:bg-[#c9006e] disabled:opacity-60"
+                >
+                  {isLoggingOut ? 'Logging out…' : 'Log Out'}
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </>
   )
 }

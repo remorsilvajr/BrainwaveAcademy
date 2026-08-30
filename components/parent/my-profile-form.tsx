@@ -28,15 +28,31 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
   const [dob, setDob] = useState(profile.date_of_birth ?? '')
   const [relationship, setRelationship] = useState(profile.relationship_to_student ?? '')
 
+  // Photo selection is staged locally (preview only) until Save Profile
+  // Changes is actually clicked — it was previously uploading and
+  // committing to the database the instant a file was chosen, with no way
+  // to back out via Cancel / Discard.
+  const [pendingPhoto, setPendingPhoto] = useState<File | null>(null)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
+
   const [isSaving, setIsSaving] = useState(false)
-  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
   const [message, setMessage] = useState<{ text: string; isError: boolean } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const isDirty =
+    phone !== (profile.phone_number ?? '') ||
+    dob !== (profile.date_of_birth ?? '') ||
+    relationship !== (profile.relationship_to_student ?? '') ||
+    pendingPhoto !== null
 
   function handleCancel() {
     setPhone(profile.phone_number ?? '')
     setDob(profile.date_of_birth ?? '')
     setRelationship(profile.relationship_to_student ?? '')
+    if (photoPreview) URL.revokeObjectURL(photoPreview)
+    setPendingPhoto(null)
+    setPhotoPreview(null)
+    if (fileInputRef.current) fileInputRef.current.value = ''
     setMessage(null)
   }
 
@@ -44,7 +60,18 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
     setIsSaving(true)
     setMessage(null)
     try {
-      await updateMyProfile({ phone_number: phone, date_of_birth: dob, relationship_to_student: relationship })
+      if (pendingPhoto) {
+        const formData = new FormData()
+        formData.append('avatar', pendingPhoto)
+        await uploadMyAvatar(formData)
+      }
+      const saved = await updateMyProfile({ phone_number: phone, date_of_birth: dob, relationship_to_student: relationship })
+      setPhone(saved.phone_number ?? '')
+      setDob(saved.date_of_birth ?? '')
+      setRelationship(saved.relationship_to_student ?? '')
+      if (photoPreview) URL.revokeObjectURL(photoPreview)
+      setPendingPhoto(null)
+      setPhotoPreview(null)
       setMessage({ text: 'Profile updated.', isError: false })
       router.refresh()
     } catch (err) {
@@ -54,20 +81,11 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
     }
   }
 
-  async function handlePhotoChange(file: File | null) {
+  function handlePhotoChange(file: File | null) {
     if (!file) return
-    setIsUploadingPhoto(true)
-    setMessage(null)
-    try {
-      const formData = new FormData()
-      formData.append('avatar', file)
-      await uploadMyAvatar(formData)
-      router.refresh()
-    } catch (err) {
-      setMessage({ text: err instanceof Error ? err.message : 'Could not upload photo.', isError: true })
-    } finally {
-      setIsUploadingPhoto(false)
-    }
+    if (photoPreview) URL.revokeObjectURL(photoPreview)
+    setPendingPhoto(file)
+    setPhotoPreview(URL.createObjectURL(file))
   }
 
   return (
@@ -75,10 +93,10 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <div className="rounded-2xl border border-gray-200 bg-white p-6 text-center">
           <div className="relative mx-auto h-28 w-28">
-            {profile.avatar_url ? (
+            {photoPreview || profile.avatar_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={profile.avatar_url}
+                src={photoPreview ?? profile.avatar_url ?? undefined}
                 alt=""
                 className="h-28 w-28 rounded-full object-cover"
               />
@@ -90,7 +108,7 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              disabled={isUploadingPhoto}
+              disabled={isSaving}
               className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-white text-gray-600 shadow ring-1 ring-gray-200 hover:bg-gray-50 disabled:opacity-60"
               aria-label="Change profile photo"
             >
@@ -207,14 +225,16 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
       )}
 
       <div className="mt-6 flex justify-end gap-3">
-        <button
-          type="button"
-          onClick={handleCancel}
-          disabled={isSaving}
-          className="text-sm font-semibold text-[#00a3e0] hover:underline disabled:opacity-60"
-        >
-          Cancel / Discard
-        </button>
+        {isDirty && (
+          <button
+            type="button"
+            onClick={handleCancel}
+            disabled={isSaving}
+            className="text-sm font-semibold text-[#00a3e0] hover:underline disabled:opacity-60"
+          >
+            Cancel / Discard
+          </button>
+        )}
         <button
           type="button"
           onClick={handleSave}

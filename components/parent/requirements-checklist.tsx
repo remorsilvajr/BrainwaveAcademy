@@ -23,26 +23,32 @@ const statusMeta: Record<
   not_submitted: { label: 'Not Submitted', className: 'text-red-600', icon: XCircle },
 }
 
-export function RequirementsChecklist({ records }: { records: EnrollmentRecord[] }) {
-  const [selectedIndex, setSelectedIndex] = useState(0)
+export function RequirementsChecklist({
+  record,
+  selectedElsewhereNotEligible,
+}: {
+  record: EnrollmentRecord | null
+  selectedElsewhereNotEligible: boolean
+}) {
   const [isPending, startTransition] = useTransition()
   const [errorMessage, setErrorMessage] = useState('')
   const fileInputs = useRef<Record<string, HTMLInputElement | null>>({})
 
-  if (records.length === 0) {
+  if (!record) {
     return (
       <p className="text-gray-500">
-        No enrollment application found for your account yet. If you just received your login
-        details, this may take a moment — otherwise, contact the school office.
+        {selectedElsewhereNotEligible
+          ? "This student's enrollment request hasn't been approved yet — Requirements will be available here once it is."
+          : 'No enrollment application found for your account yet. If you just received your login details, this may take a moment — otherwise, contact the school office.'}
       </p>
     )
   }
 
-  const record = records[selectedIndex]
-  const applicationId = record.applicationId
+  const currentRecord = record
+  const applicationId = currentRecord.applicationId
 
   function getDoc(type: string) {
-    return record.documents.find((d) => d.document_type === type)
+    return currentRecord.documents.find((d) => d.document_type === type)
   }
 
   function getStatusKey(type: string) {
@@ -85,23 +91,6 @@ export function RequirementsChecklist({ records }: { records: EnrollmentRecord[]
 
   return (
     <div className="space-y-6">
-      {records.length > 1 && (
-        <div className="max-w-xs">
-          <label className="mb-1 block text-xs font-medium text-gray-500">Student</label>
-          <select
-            value={selectedIndex}
-            onChange={(e) => setSelectedIndex(Number(e.target.value))}
-            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
-          >
-            {records.map((r, i) => (
-              <option key={r.applicationId} value={i}>
-                {r.studentFirstName} {r.studentLastName}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-
       <div>
         <h2 className="text-2xl font-bold text-[#0b1b62]">Enrollment Requirements Checklist</h2>
         <p className="mt-1 text-sm text-gray-500">

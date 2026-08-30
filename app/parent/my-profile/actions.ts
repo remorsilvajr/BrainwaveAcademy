@@ -23,14 +23,35 @@ export async function updateMyProfile(updates: {
     throw new Error('Enter a valid PH mobile number, e.g. 0917 123 4567 or +63 917 123 4567.')
   }
 
-  const { error } = await supabase
-    .from('profiles')
-    .update({
-      phone_number: phone ? normalizePhilippineMobile(phone) : null,
-      date_of_birth: updates.date_of_birth || null,
-      relationship_to_student: updates.relationship_to_student || null,
-    })
-    .eq('id', user.id)
+  // Same "parent must be at least 10 years older than the student" rule
+  // enforced at /enroll and /parent/enroll-a-student — editing DOB here
+  // was the one place that could silently violate it after the fact for
+  // an existing linked child.
+  if (updates.date_of_birth) {
+    const { data: applications } = await supabase
+      .from('applications')
+      .select('student_dob')
+      .eq('created_parent_id', user.id)
+
+    const newParentDob = new Date(updates.date_of_birth)
+    for (const app of applications ?? []) {
+      const minParentDob = new Date(app.student_dob)
+      minParentDob.setFullYear(minParentDob.getFullYear() - 10)
+      if (newParentDob > minParentDob) {
+        throw new Error(
+          'This date of birth would make you less than 10 years older than one of your linked students. Please check the date.'
+        )
+      }
+    }
+  }
+
+  const normalized = {
+    phone_number: phone ? normalizePhilippineMobile(phone) : null,
+    date_of_birth: updates.date_of_birth || null,
+    relationship_to_student: updates.relationship_to_student || null,
+  }
+
+  const { error } = await supabase.from('profiles').update(normalized).eq('id', user.id)
 
   if (error) {
     throw new Error(error.message)
@@ -38,6 +59,13 @@ export async function updateMyProfile(updates: {
 
   revalidatePath('/parent/my-profile')
   revalidatePath('/parent')
+
+  // Returned so the form can reset its local state to the canonical
+  // (normalized) values instead of whatever was literally typed — e.g. the
+  // phone number is reformatted server-side, so without this the form kept
+  // showing Cancel / Discard after a successful save because its local
+  // state no longer matched what it thought the saved value was.
+  return normalized
 }
 
 export async function uploadMyAvatar(formData: FormData) {

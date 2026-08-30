@@ -140,7 +140,7 @@ export function EnrollStudentForm({ parentName }: { parentName: string }) {
           disabled={isPending}
           className="rounded-lg bg-[#e6007e] px-6 py-3 text-sm font-semibold text-white hover:bg-[#c9006e] disabled:opacity-60"
         >
-          {isPending ? 'Submitting…' : 'Submit Student Application →'}
+          {isPending ? 'Submitting…' : 'Submit Student Application'}
         </button>
       </div>
     </form>
