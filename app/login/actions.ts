@@ -61,3 +61,14 @@ export async function logout() {
   const cookieStore = await cookies()
   cookieStore.delete('user_role')
 }
+
+// Same not-calling-redirect() reasoning as logout() above. scope: 'global'
+// invalidates every refresh token for this user, not just this session's —
+// signs them out of every device, not only this browser.
+export async function logoutAllDevices() {
+  const supabase = await createClient()
+  await supabase.auth.signOut({ scope: 'global' })
+
+  const cookieStore = await cookies()
+  cookieStore.delete('user_role')
+}

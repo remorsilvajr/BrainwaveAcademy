@@ -4,6 +4,7 @@ import { useState, type FormEvent } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 export function ChangePasswordForm() {
+  const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [message, setMessage] = useState('')
@@ -24,9 +25,41 @@ export function ChangePasswordForm() {
       setMessage('Passwords do not match.')
       return
     }
+    if (!currentPassword) {
+      setIsError(true)
+      setMessage('Enter your current password.')
+      return
+    }
 
     setIsSubmitting(true)
     const supabase = createClient()
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user?.email) {
+      setIsSubmitting(false)
+      setIsError(true)
+      setMessage('Your session has expired. Please log in again.')
+      return
+    }
+
+    // Verifies the current password is actually correct before allowing a
+    // change, rather than letting anyone with an unlocked, still-logged-in
+    // session change the password outright.
+    const { error: reauthError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword,
+    })
+
+    if (reauthError) {
+      setIsSubmitting(false)
+      setIsError(true)
+      setMessage('Current password is incorrect.')
+      return
+    }
+
     const { error } = await supabase.auth.updateUser({ password: newPassword })
     setIsSubmitting(false)
 
@@ -38,6 +71,7 @@ export function ChangePasswordForm() {
 
     setIsError(false)
     setMessage('Password updated successfully.')
+    setCurrentPassword('')
     setNewPassword('')
     setConfirmPassword('')
   }
@@ -45,32 +79,41 @@ export function ChangePasswordForm() {
   return (
     <form onSubmit={handleSubmit} className="max-w-sm space-y-4">
       <div>
-        <label className="block text-sm mb-1">New Password</label>
+        <label className="mb-1 block text-sm font-semibold text-[#0b1b62]">Current Password</label>
+        <input
+          type="password"
+          value={currentPassword}
+          onChange={(e) => setCurrentPassword(e.target.value)}
+          className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-gray-700 focus:border-[#0b1b62] focus:outline-none"
+        />
+      </div>
+      <div>
+        <label className="mb-1 block text-sm font-semibold text-[#0b1b62]">New Password</label>
         <input
           type="password"
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
           required
-          className="w-full border rounded px-3 py-2"
+          className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-gray-700 focus:border-[#0b1b62] focus:outline-none"
         />
       </div>
       <div>
-        <label className="block text-sm mb-1">Confirm New Password</label>
+        <label className="mb-1 block text-sm font-semibold text-[#0b1b62]">Confirm New Password</label>
         <input
           type="password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
-          className="w-full border rounded px-3 py-2"
+          className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-gray-700 focus:border-[#0b1b62] focus:outline-none"
         />
       </div>
 
       <button
         type="submit"
         disabled={isSubmitting}
-        className="bg-gray-900 text-white rounded px-4 py-2 disabled:opacity-60"
+        className="rounded-lg bg-[#00a3e0] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#0090c7] disabled:opacity-60"
       >
-        {isSubmitting ? 'Updating…' : 'Change Password'}
+        {isSubmitting ? 'Updating…' : 'Update Password'}
       </button>
 
       {message && (

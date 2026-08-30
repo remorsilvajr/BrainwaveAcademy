@@ -4,6 +4,7 @@ import { useActionState, useRef, useState } from 'react'
 import Link from 'next/link'
 import { Camera } from 'lucide-react'
 import { createSystemUser, type CreateSystemUserState } from '@/app/admin/create-new-account/actions'
+import { Toggle } from '@/components/ui/toggle'
 
 const initialState: CreateSystemUserState = {}
 
@@ -243,17 +244,7 @@ export function CreateAccountForm() {
                     : 'Set a password yourself below — nothing will be emailed automatically.'}
                 </p>
               </div>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={autoGenerate}
-                onClick={() => setAutoGenerate((v) => !v)}
-                className={`flex h-6 w-11 shrink-0 items-center rounded-full border-0 p-0.5 transition-colors ${
-                  autoGenerate ? 'justify-end bg-green-500' : 'justify-start bg-gray-300'
-                }`}
-              >
-                <span className="h-5 w-5 rounded-full bg-white shadow" />
-              </button>
+              <Toggle checked={autoGenerate} onChange={setAutoGenerate} label="Auto-generate password" />
               <input type="hidden" name="auto_generate" value={autoGenerate ? 'on' : 'off'} />
             </div>
 
