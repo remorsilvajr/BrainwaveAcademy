@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { toggleBlockUser } from '@/app/admin/user-management/actions'
+import { toggleBlockUser, updateAccountStatus } from '@/app/admin/user-management/actions'
 import { formatDateShort } from '@/lib/format'
+import { UserEditModal } from '@/components/admin/user-edit-modal'
 
 type Profile = {
   id: string
@@ -10,6 +11,7 @@ type Profile = {
   last_name: string
   email: string
   role: string
+  phone_number: string | null
   account_status: string
   created_at: string
 }
@@ -24,6 +26,7 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [editingUser, setEditingUser] = useState<Profile | null>(null)
   const [isPending, startTransition] = useTransition()
 
   const filtered = users.filter((u) => {
@@ -40,6 +43,12 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
   function handleToggleBlock(user: Profile) {
     startTransition(async () => {
       await toggleBlockUser(user.id, user.account_status)
+    })
+  }
+
+  function handleStatusChange(user: Profile, status: string) {
+    startTransition(async () => {
+      await updateAccountStatus(user.id, status as 'active' | 'inactive')
     })
   }
 
@@ -116,40 +125,44 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
                     </span>
                   </td>
                   <td className="p-4">
-                    <span
-                      className={`inline-flex items-center gap-1.5 text-sm capitalize ${
+                    <select
+                      value={u.account_status}
+                      disabled={u.account_status === 'blocked' || isPending}
+                      onChange={(e) => handleStatusChange(u, e.target.value)}
+                      className={`rounded-lg border px-2 py-1 text-sm capitalize disabled:opacity-60 ${
                         u.account_status === 'active'
-                          ? 'text-green-700'
+                          ? 'border-green-200 text-green-700'
                           : u.account_status === 'blocked'
-                            ? 'text-red-700'
-                            : 'text-gray-500'
+                            ? 'border-red-200 text-red-700'
+                            : 'border-amber-200 text-amber-700'
                       }`}
                     >
-                      <span
-                        className={`h-2 w-2 rounded-full ${
-                          u.account_status === 'active'
-                            ? 'bg-green-500'
-                            : u.account_status === 'blocked'
-                              ? 'bg-red-500'
-                              : 'bg-gray-400'
-                        }`}
-                      />
-                      {u.account_status}
-                    </span>
+                      {u.account_status === 'blocked' && <option value="blocked">Blocked</option>}
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
                   </td>
                   <td className="p-4 text-gray-500">{formatDateShort(u.created_at)}</td>
                   <td className="p-4">
-                    <button
-                      onClick={() => handleToggleBlock(u)}
-                      disabled={isPending}
-                      className={`rounded border px-3 py-1.5 text-xs font-semibold disabled:opacity-60 ${
-                        u.account_status === 'blocked'
-                          ? 'border-green-300 text-green-700 hover:bg-green-50'
-                          : 'border-red-300 text-red-700 hover:bg-red-50'
-                      }`}
-                    >
-                      {u.account_status === 'blocked' ? 'Unblock' : 'Block'}
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setEditingUser(u)}
+                        className="rounded border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleToggleBlock(u)}
+                        disabled={isPending}
+                        className={`rounded border px-3 py-1.5 text-xs font-semibold disabled:opacity-60 ${
+                          u.account_status === 'blocked'
+                            ? 'border-green-300 text-green-700 hover:bg-green-50'
+                            : 'border-red-300 text-red-700 hover:bg-red-50'
+                        }`}
+                      >
+                        {u.account_status === 'blocked' ? 'Unblock' : 'Block'}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -163,6 +176,10 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
           </tbody>
         </table>
       </div>
+
+      {editingUser && (
+        <UserEditModal user={editingUser} onClose={() => setEditingUser(null)} />
+      )}
     </>
   )
 }

@@ -54,34 +54,6 @@ function Field({
   )
 }
 
-function FileField({
-  label,
-  name,
-  error,
-}: {
-  label: string
-  name: string
-  error?: string
-}) {
-  return (
-    <div>
-      <label htmlFor={name} className="mb-1 block text-sm font-semibold text-[#0b1b62]">
-        {label}
-      </label>
-      <input
-        id={name}
-        name={name}
-        type="file"
-        accept="image/*,.pdf"
-        className={`w-full rounded-lg border bg-white px-3 py-2 text-sm text-gray-700 file:mr-3 file:rounded-md file:border-0 file:bg-gray-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-gray-700 hover:file:bg-gray-200 ${
-          error ? 'border-red-400' : 'border-slate-200'
-        }`}
-      />
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
-    </div>
-  )
-}
-
 export function EnrollmentForm() {
   const [state, formAction, isPending] = useActionState(submitApplication, initialState)
 
@@ -304,37 +276,6 @@ export function EnrollmentForm() {
           <p className="mt-1 text-xs text-[#454650]">
             Your login credentials and admission confirmation will be sent here.
           </p>
-        </div>
-      </div>
-
-      <div>
-        <h2 className="mb-4 border-b border-[#00a3e0] pb-2 text-xl font-semibold text-[#0b1b62]">
-          Required Documents
-        </h2>
-        <p className="mb-4 text-sm text-[#454650]">
-          Accepted formats: JPG, PNG, or PDF.
-        </p>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FileField
-            label="Birth Certificate (PSA/NSO copy)"
-            name="doc_birth_certificate"
-            error={liveErrors.doc_birth_certificate}
-          />
-          <FileField
-            label="2x2 ID Photo (Recent)"
-            name="doc_id_photo"
-            error={liveErrors.doc_id_photo}
-          />
-          <FileField
-            label="Proof of Address (Barangay/Utility)"
-            name="doc_proof_of_address"
-            error={liveErrors.doc_proof_of_address}
-          />
-          <FileField
-            label="Parent/Guardian Valid ID"
-            name="doc_guardian_id"
-            error={liveErrors.doc_guardian_id}
-          />
         </div>
       </div>
 

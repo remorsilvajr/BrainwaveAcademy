@@ -1,3 +1,4 @@
+import { Users, CheckCircle2, Clock, Ban } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { UserManagementTable } from '@/components/admin/user-management-table'
 
@@ -24,21 +25,41 @@ export default async function UserManagementPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-        <div className="rounded-xl border border-gray-200 bg-white p-4">
-          <p className="text-sm text-gray-500">Total Users</p>
-          <p className="mt-1 text-3xl font-bold text-gray-900">{counts.total}</p>
+        <div className="flex items-center justify-between rounded-xl border border-gray-200 border-l-4 border-l-gray-400 bg-white p-4">
+          <div>
+            <p className="text-sm text-gray-500">Total Users</p>
+            <p className="mt-1 text-3xl font-bold text-gray-900">{counts.total}</p>
+          </div>
+          <div className="rounded-full bg-gray-100 p-2.5">
+            <Users className="h-5 w-5 text-gray-500" />
+          </div>
         </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-4">
-          <p className="text-sm text-gray-500">Active</p>
-          <p className="mt-1 text-3xl font-bold text-green-600">{counts.active}</p>
+        <div className="flex items-center justify-between rounded-xl border border-gray-200 border-l-4 border-l-green-400 bg-white p-4">
+          <div>
+            <p className="text-sm text-gray-500">Active</p>
+            <p className="mt-1 text-3xl font-bold text-green-600">{counts.active}</p>
+          </div>
+          <div className="rounded-full bg-green-50 p-2.5">
+            <CheckCircle2 className="h-5 w-5 text-green-600" />
+          </div>
         </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-4">
-          <p className="text-sm text-gray-500">Inactive</p>
-          <p className="mt-1 text-3xl font-bold text-amber-500">{counts.inactive}</p>
+        <div className="flex items-center justify-between rounded-xl border border-gray-200 border-l-4 border-l-amber-400 bg-white p-4">
+          <div>
+            <p className="text-sm text-gray-500">Inactive</p>
+            <p className="mt-1 text-3xl font-bold text-amber-500">{counts.inactive}</p>
+          </div>
+          <div className="rounded-full bg-amber-50 p-2.5">
+            <Clock className="h-5 w-5 text-amber-500" />
+          </div>
         </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-4">
-          <p className="text-sm text-gray-500">Blocked</p>
-          <p className="mt-1 text-3xl font-bold text-red-600">{counts.blocked}</p>
+        <div className="flex items-center justify-between rounded-xl border border-gray-200 border-l-4 border-l-red-400 bg-white p-4">
+          <div>
+            <p className="text-sm text-gray-500">Blocked</p>
+            <p className="mt-1 text-3xl font-bold text-red-600">{counts.blocked}</p>
+          </div>
+          <div className="rounded-full bg-red-50 p-2.5">
+            <Ban className="h-5 w-5 text-red-600" />
+          </div>
         </div>
       </div>
 
