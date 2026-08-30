@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 
@@ -9,6 +9,14 @@ export const metadata: Metadata = {
   description: 'Nurturing Young Learners in Their Most Formative Years.',
 }
 
+// Explicitly opt into a light-only theme. Without this, some browsers'
+// automatic dark-mode-for-websites feature will invert any unstyled area
+// (like a plain <div> with no background class) to black when the user's
+// OS is set to dark mode — which is what was happening on admin pages.
+export const viewport: Viewport = {
+  colorScheme: 'light',
+}
+
 export default function RootLayout({
   children,
 }: {
@@ -16,7 +24,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={`${inter.className} bg-white text-gray-900`}>{children}</body>
     </html>
   )
 }
