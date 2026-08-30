@@ -37,7 +37,14 @@ export async function updateAccountStatus(userId: string, status: 'active' | 'in
 
 export async function updateUserProfile(
   userId: string,
-  updates: { first_name: string; last_name: string; phone_number: string; role: string }
+  updates: {
+    first_name: string
+    middle_name: string
+    last_name: string
+    phone_number: string
+    role: string
+    relationship_to_student: string
+  }
 ) {
   const supabase = await createClient()
 
@@ -49,8 +56,12 @@ export async function updateUserProfile(
   const { error } = await supabase
     .from('profiles')
     .update({
-      ...updates,
+      first_name: updates.first_name,
+      middle_name: updates.middle_name.trim() || null,
+      last_name: updates.last_name,
+      role: updates.role,
       phone_number: phone ? normalizePhilippineMobile(phone) : null,
+      relationship_to_student: updates.role === 'parent' ? updates.relationship_to_student || null : null,
     })
     .eq('id', userId)
 

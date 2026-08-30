@@ -3,23 +3,36 @@
 import { useState, type FormEvent } from 'react'
 import { X } from 'lucide-react'
 import { updateUserProfile } from '@/app/admin/user-management/actions'
+import { calculateAge, formatDateLong } from '@/lib/format'
+
+type LinkedStudent = { id: string; first_name: string; middle_name: string | null; last_name: string }
 
 type Profile = {
   id: string
   first_name: string
+  middle_name: string | null
   last_name: string
   email: string
   role: string
   phone_number: string | null
+  date_of_birth: string | null
+  relationship_to_student: string | null
+  parent_student?: { relationship: string; students: LinkedStudent | null }[]
 }
 
 export function UserEditModal({ user, onClose }: { user: Profile; onClose: () => void }) {
   const [firstName, setFirstName] = useState(user.first_name)
+  const [middleName, setMiddleName] = useState(user.middle_name ?? '')
   const [lastName, setLastName] = useState(user.last_name)
   const [phone, setPhone] = useState(user.phone_number ?? '')
   const [role, setRole] = useState(user.role)
+  const [relationship, setRelationship] = useState(user.relationship_to_student ?? '')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+
+  const linkedStudents = (user.parent_student ?? [])
+    .map((ps) => ps.students)
+    .filter((s): s is LinkedStudent => s !== null)
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -28,9 +41,11 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
     try {
       await updateUserProfile(user.id, {
         first_name: firstName,
+        middle_name: middleName,
         last_name: lastName,
         phone_number: phone,
         role,
+        relationship_to_student: relationship,
       })
       onClose()
     } catch (err) {
@@ -61,13 +76,22 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
               className="w-full rounded-lg border border-slate-200 bg-gray-100 px-3 py-2 text-sm text-gray-500"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="mb-1 block text-sm font-semibold text-[#0b1b62]">First Name</label>
               <input
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 required
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-semibold text-[#0b1b62]">Middle Name</label>
+              <input
+                value={middleName}
+                onChange={(e) => setMiddleName(e.target.value)}
+                placeholder="Optional"
                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
               />
             </div>
@@ -81,6 +105,14 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
               />
             </div>
           </div>
+          {user.date_of_birth && (
+            <div>
+              <p className="mb-1 text-sm font-semibold text-[#0b1b62]">Date of Birth</p>
+              <p className="rounded-lg border border-slate-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                {formatDateLong(user.date_of_birth)} ({calculateAge(user.date_of_birth)} years old)
+              </p>
+            </div>
+          )}
           <div>
             <label className="mb-1 block text-sm font-semibold text-[#0b1b62]">Phone Number</label>
             <input
@@ -105,6 +137,43 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
               <option value="admin">Admin</option>
             </select>
           </div>
+
+          {role === 'parent' && (
+            <div>
+              <label className="mb-1 block text-sm font-semibold text-[#0b1b62]">
+                Relationship to Student
+              </label>
+              <select
+                value={relationship}
+                onChange={(e) => setRelationship(e.target.value)}
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
+              >
+                <option value="">Not set</option>
+                <option value="Mother">Mother</option>
+                <option value="Father">Father</option>
+                <option value="Guardian">Guardian</option>
+              </select>
+            </div>
+          )}
+
+          {role === 'parent' && (
+            <div>
+              <p className="mb-1 text-sm font-semibold text-[#0b1b62]">Students</p>
+              {linkedStudents.length > 0 ? (
+                <ul className="space-y-1 rounded-lg border border-slate-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                  {linkedStudents.map((s) => (
+                    <li key={s.id}>
+                      {s.first_name} {s.middle_name ? `${s.middle_name} ` : ''}{s.last_name}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="rounded-lg border border-slate-200 bg-gray-50 px-3 py-2 text-sm text-gray-400">
+                  No students linked to this account yet.
+                </p>
+              )}
+            </div>
+          )}
 
           {errorMessage && (
             <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{errorMessage}</p>

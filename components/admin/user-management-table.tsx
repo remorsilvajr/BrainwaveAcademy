@@ -5,15 +5,21 @@ import { toggleBlockUser, updateAccountStatus } from '@/app/admin/user-managemen
 import { formatDateShort } from '@/lib/format'
 import { UserEditModal } from '@/components/admin/user-edit-modal'
 
+type LinkedStudent = { id: string; first_name: string; middle_name: string | null; last_name: string }
+
 type Profile = {
   id: string
   first_name: string
+  middle_name: string | null
   last_name: string
   email: string
   role: string
   phone_number: string | null
+  date_of_birth: string | null
+  relationship_to_student: string | null
   account_status: string
   created_at: string
+  parent_student?: { relationship: string; students: LinkedStudent | null }[]
 }
 
 const roleBadgeClasses: Record<string, string> = {

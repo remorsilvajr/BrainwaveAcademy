@@ -4,7 +4,10 @@ import { UserManagementTable } from '@/components/admin/user-management-table'
 
 export default async function UserManagementPage() {
   const supabase = await createClient()
-  const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false })
+  const { data } = await supabase
+    .from('profiles')
+    .select('*, parent_student(relationship, students(id, first_name, middle_name, last_name))')
+    .order('created_at', { ascending: false })
   const users = data ?? []
 
   const counts = {
