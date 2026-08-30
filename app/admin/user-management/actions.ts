@@ -4,6 +4,29 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
 
+// A parent account that isn't active (inactive or blocked) shouldn't leave
+// their linked students showing as actively enrolled — keeps the Students
+// tab consistent with the parent's actual account state, in both
+// directions (deactivating the parent deactivates their students;
+// reactivating the parent restores them too).
+async function syncLinkedStudentsStatus(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  parentId: string,
+  accountStatus: string
+) {
+  const studentStatus = accountStatus === 'active' ? 'active' : 'inactive'
+
+  const { data: links } = await supabase
+    .from('parent_student')
+    .select('student_id')
+    .eq('parent_id', parentId)
+
+  const studentIds = (links ?? []).map((l) => l.student_id)
+  if (studentIds.length > 0) {
+    await supabase.from('students').update({ enrollment_status: studentStatus }).in('id', studentIds)
+  }
+}
+
 export async function toggleBlockUser(userId: string, currentStatus: string) {
   const supabase = await createClient()
   const newStatus = currentStatus === 'blocked' ? 'active' : 'blocked'
@@ -17,7 +40,10 @@ export async function toggleBlockUser(userId: string, currentStatus: string) {
     throw new Error(error.message)
   }
 
+  await syncLinkedStudentsStatus(supabase, userId, newStatus)
+
   revalidatePath('/admin/user-management')
+  revalidatePath('/admin/students')
 }
 
 export async function updateAccountStatus(userId: string, status: 'active' | 'inactive') {
@@ -32,7 +58,10 @@ export async function updateAccountStatus(userId: string, status: 'active' | 'in
     throw new Error(error.message)
   }
 
+  await syncLinkedStudentsStatus(supabase, userId, status)
+
   revalidatePath('/admin/user-management')
+  revalidatePath('/admin/students')
 }
 
 export async function updateUserProfile(

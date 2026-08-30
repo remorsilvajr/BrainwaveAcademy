@@ -22,7 +22,14 @@ type Student = {
 export function StudentsTable({ students }: { students: Student[] }) {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
-  const [selected, setSelected] = useState<Student | null>(null)
+  // Holds an id, not the row itself — router.refresh() (after editing a
+  // student, or a status cascade from User Management) re-fetches this
+  // page's server data and passes down a brand-new `students` array each
+  // time, so deriving `selected` from it on every render (below) means the
+  // open slideover always reflects the latest data instead of going stale
+  // until closed and reopened.
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const selected = selectedId ? (students.find((s) => s.id === selectedId) ?? null) : null
 
   const statuses = useMemo(
     () => Array.from(new Set(students.map((s) => s.enrollment_status))),
@@ -105,13 +112,19 @@ export function StudentsTable({ students }: { students: Student[] }) {
                       )}
                     </td>
                     <td className="p-4">
-                      <span className="inline-block rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium capitalize text-green-700">
+                      <span
+                        className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium capitalize ${
+                          s.enrollment_status === 'active'
+                            ? 'bg-green-50 text-green-700'
+                            : 'bg-gray-100 text-gray-600'
+                        }`}
+                      >
                         {s.enrollment_status}
                       </span>
                     </td>
                     <td className="p-4">
                       <button
-                        onClick={() => setSelected(s)}
+                        onClick={() => setSelectedId(s.id)}
                         className="rounded-full border border-[#0b1b62] px-4 py-1.5 text-xs font-semibold text-[#0b1b62] hover:bg-[#0b1b62] hover:text-white"
                       >
                         Open Full Record
@@ -132,7 +145,7 @@ export function StudentsTable({ students }: { students: Student[] }) {
       </div>
 
       {selected && (
-        <StudentRecordSlideover student={selected} onClose={() => setSelected(null)} />
+        <StudentRecordSlideover student={selected} onClose={() => setSelectedId(null)} />
       )}
     </>
   )

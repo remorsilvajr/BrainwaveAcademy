@@ -32,7 +32,10 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
-  const [editingUser, setEditingUser] = useState<Profile | null>(null)
+  // See students-table.tsx for why this is derived rather than its own
+  // synced state.
+  const [editingUserId, setEditingUserId] = useState<string | null>(null)
+  const editingUser = editingUserId ? (users.find((u) => u.id === editingUserId) ?? null) : null
   const [confirmingBlockId, setConfirmingBlockId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
@@ -154,7 +157,7 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
                   <td className="p-4">
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => setEditingUser(u)}
+                        onClick={() => setEditingUserId(u.id)}
                         className="rounded border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
                       >
                         Edit
@@ -208,7 +211,7 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
       </div>
 
       {editingUser && (
-        <UserEditModal user={editingUser} onClose={() => setEditingUser(null)} />
+        <UserEditModal user={editingUser} onClose={() => setEditingUserId(null)} />
       )}
     </>
   )

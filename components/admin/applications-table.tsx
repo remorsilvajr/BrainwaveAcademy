@@ -47,7 +47,10 @@ const progressMeta: Record<'corrections' | 'completed' | 'pending', { label: str
 
 export function ApplicationsTable({ applications }: { applications: Application[] }) {
   const [tab, setTab] = useState<Tab>('all')
-  const [selected, setSelected] = useState<Application | null>(null)
+  // See students-table.tsx for why this is derived rather than its own
+  // synced state.
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const selected = selectedId ? (applications.find((a) => a.id === selectedId) ?? null) : null
 
   const counts = {
     all: applications.length,
@@ -121,7 +124,7 @@ export function ApplicationsTable({ applications }: { applications: Application[
                   </td>
                   <td className="p-4">
                     <button
-                      onClick={() => setSelected(app)}
+                      onClick={() => setSelectedId(app.id)}
                       className="rounded-full bg-[#0b1b62] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#08154d]"
                     >
                       Review Application
@@ -141,7 +144,7 @@ export function ApplicationsTable({ applications }: { applications: Application[
       </div>
 
       {selected && (
-        <ApplicationReviewSlideover application={selected} onClose={() => setSelected(null)} />
+        <ApplicationReviewSlideover application={selected} onClose={() => setSelectedId(null)} />
       )}
     </>
   )

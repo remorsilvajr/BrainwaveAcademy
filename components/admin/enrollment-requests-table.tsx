@@ -30,7 +30,11 @@ type Application = {
 type Tab = 'all' | 'pending_review' | 'approved' | 'rejected'
 
 export function EnrollmentRequestsTable({ applications }: { applications: Application[] }) {
-  const [selected, setSelected] = useState<Application | null>(null)
+  // See students-table.tsx for why this is derived rather than its own
+  // synced state — also matters here since the realtime subscription below
+  // triggers router.refresh() on any change.
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const selected = selectedId ? (applications.find((a) => a.id === selectedId) ?? null) : null
   const [tab, setTab] = useState<Tab>('all')
   const router = useRouter()
 
@@ -153,7 +157,7 @@ export function EnrollmentRequestsTable({ applications }: { applications: Applic
                   </td>
                   <td className="p-4">
                     <button
-                      onClick={() => setSelected(app)}
+                      onClick={() => setSelectedId(app.id)}
                       className="text-sm font-semibold text-[#0b1b62] underline"
                     >
                       View Submission
@@ -173,7 +177,7 @@ export function EnrollmentRequestsTable({ applications }: { applications: Applic
       </div>
 
       {selected && (
-        <EnrollmentRequestSlideover application={selected} onClose={() => setSelected(null)} />
+        <EnrollmentRequestSlideover application={selected} onClose={() => setSelectedId(null)} />
       )}
     </>
   )
