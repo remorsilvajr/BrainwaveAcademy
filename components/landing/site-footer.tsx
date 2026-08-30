@@ -30,10 +30,10 @@ export function SiteFooter() {
             >
               Contact Us
             </h2>
-            <address className="flex items-start gap-2 not-italic">
+            <address className="relative not-italic">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                className="mt-1 h-3 w-3"
+                className="absolute -left-5 top-1 h-3 w-3"
                 alt=""
                 aria-hidden="true"
                 src="/images/landing/location-icon.svg"

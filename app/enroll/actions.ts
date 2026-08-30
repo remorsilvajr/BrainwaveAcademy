@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
 
 export type SubmitApplicationState = {
@@ -80,6 +81,15 @@ export async function submitApplication(
       'Enter a valid PH mobile number, e.g. 0917 123 4567 or +63 917 123 4567.'
   }
 
+  if (values.student_dob && !fieldErrors.student_dob) {
+    const studentDob = new Date(values.student_dob)
+    const minDob = new Date()
+    minDob.setFullYear(minDob.getFullYear() - 2)
+    if (studentDob > minDob) {
+      fieldErrors.student_dob = 'Student must be at least 2 years old.'
+    }
+  }
+
   if (values.student_dob && values.parent_dob && !fieldErrors.student_dob && !fieldErrors.parent_dob) {
     const studentDob = new Date(values.student_dob)
     const parentDob = new Date(values.parent_dob)
@@ -95,6 +105,32 @@ export async function submitApplication(
     return {
       error: 'Please fix the highlighted fields below.',
       fieldErrors,
+      values,
+    }
+  }
+
+  // This public form is for brand-new parents only — an existing parent
+  // enrolling another child should do it logged in, via Enroll A Student in
+  // their portal, not resubmit this form (which would otherwise silently
+  // reuse their account with no new email sent, per approveApplication's
+  // own duplicate-email handling — confusing here since nothing in this
+  // form's own confirmation message reflects that).
+  //
+  // Uses the admin client because this check has to run for anonymous
+  // visitors, and `profiles` has no RLS policy letting `anon` read it —
+  // regular anon inserts into `applications` stay on the normal RLS-scoped
+  // client below.
+  const admin = createAdminClient()
+  const { data: existingProfile } = await admin
+    .from('profiles')
+    .select('id')
+    .eq('email', values.parent_email.toLowerCase())
+    .maybeSingle()
+
+  if (existingProfile) {
+    return {
+      error:
+        'An account already exists with this email. Please log in and use Enroll A Student in your portal to add another child.',
       values,
     }
   }

@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { ApplicationReviewSlideover } from '@/components/admin/application-review-slideover'
-import { isToday } from '@/lib/format'
 import { documentOrder } from '@/lib/documents'
 
 type DocRow = { document_type: string; file_url: string; verification_status: string }
@@ -10,7 +9,8 @@ type DocRow = { document_type: string; file_url: string; verification_status: st
 type Application = {
   id: string
   application_ref: string
-  status: string
+  created_parent_id: string | null
+  created_student_id: string | null
   reviewed_at: string | null
   review_notes: string | null
   submitted_at: string
@@ -25,7 +25,25 @@ type Application = {
   documents: DocRow[]
 }
 
-type Tab = 'all' | 'pending' | 'corrections' | 'approvedToday'
+type Tab = 'all' | 'pending' | 'corrections' | 'completed'
+
+// Document-verification progress, not `applications.status` — every row
+// here already has status 'approved' (that's the enrollment *request*
+// outcome, decided back in Enroll A Student), so it's constant within this
+// page and doesn't distinguish anything. What actually varies here is
+// whether documents still need review, need correction, or are all in and
+// the student record has been created.
+function progressOf(app: Application): 'corrections' | 'completed' | 'pending' {
+  if (app.created_student_id) return 'completed'
+  if (app.documents.some((d) => d.verification_status === 'needs_correction')) return 'corrections'
+  return 'pending'
+}
+
+const progressMeta: Record<'corrections' | 'completed' | 'pending', { label: string; className: string }> = {
+  pending: { label: 'Pending Document Review', className: 'bg-amber-50 text-amber-700' },
+  corrections: { label: 'Needs Correction', className: 'bg-orange-50 text-orange-700' },
+  completed: { label: 'Completed', className: 'bg-green-50 text-green-700' },
+}
 
 export function ApplicationsTable({ applications }: { applications: Application[] }) {
   const [tab, setTab] = useState<Tab>('all')
@@ -33,25 +51,21 @@ export function ApplicationsTable({ applications }: { applications: Application[
 
   const counts = {
     all: applications.length,
-    pending: applications.filter((a) => a.status === 'pending_review').length,
-    corrections: applications.filter((a) => a.status === 'needs_correction').length,
-    approvedToday: applications.filter(
-      (a) => a.status === 'approved' && a.reviewed_at && isToday(a.reviewed_at)
-    ).length,
+    pending: applications.filter((a) => progressOf(a) === 'pending').length,
+    corrections: applications.filter((a) => progressOf(a) === 'corrections').length,
+    completed: applications.filter((a) => progressOf(a) === 'completed').length,
   }
 
   const filtered = applications.filter((app) => {
-    if (tab === 'pending') return app.status === 'pending_review'
-    if (tab === 'corrections') return app.status === 'needs_correction'
-    if (tab === 'approvedToday') return app.status === 'approved' && app.reviewed_at && isToday(app.reviewed_at)
-    return true
+    if (tab === 'all') return true
+    return progressOf(app) === tab
   })
 
   const tabs: { key: Tab; label: string; count: number }[] = [
     { key: 'all', label: 'All Applications', count: counts.all },
     { key: 'pending', label: 'Pending Document Review', count: counts.pending },
     { key: 'corrections', label: 'Needs Correction', count: counts.corrections },
-    { key: 'approvedToday', label: 'Approved Today', count: counts.approvedToday },
+    { key: 'completed', label: 'Completed', count: counts.completed },
   ]
 
   return (
@@ -100,17 +114,9 @@ export function ApplicationsTable({ applications }: { applications: Application[
                   </td>
                   <td className="p-4">
                     <span
-                      className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium ${
-                        app.status === 'approved'
-                          ? 'bg-green-50 text-green-700'
-                          : app.status === 'rejected'
-                            ? 'bg-red-50 text-red-700'
-                            : app.status === 'needs_correction'
-                              ? 'bg-orange-50 text-orange-700'
-                              : 'bg-amber-50 text-amber-700'
-                      }`}
+                      className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium ${progressMeta[progressOf(app)].className}`}
                     >
-                      {app.status.replace(/_/g, ' ')}
+                      {progressMeta[progressOf(app)].label}
                     </span>
                   </td>
                   <td className="p-4">

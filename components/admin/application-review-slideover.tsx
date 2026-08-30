@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { FileText, X } from 'lucide-react'
 import {
@@ -17,7 +17,6 @@ type DocRow = { document_type: string; file_url: string; verification_status: st
 type Application = {
   id: string
   application_ref: string
-  status: string
   review_notes: string | null
   created_parent_id: string | null
   created_student_id: string | null
@@ -65,11 +64,27 @@ export function ApplicationReviewSlideover({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [result, setResult] = useState<'saved' | 'corrections' | 'enrolled' | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
+  const contentRef = useRef<HTMLDivElement>(null)
 
   const hasUploadedDocs = application.documents.length > 0
   const allValid = documentOrder.every((type) => statuses[type] === 'valid')
   const hasParentAccount = !!application.created_parent_id
-  const alreadyHasStudent = !!application.created_student_id
+  // Local `result` state, not just the (possibly stale, until the parent
+  // Server Component re-renders after router.refresh()) `application` prop —
+  // otherwise the "Approve & Create Student Record" button stays visible
+  // and clickable right after a successful creation, looking like nothing
+  // happened.
+  const alreadyHasStudent = !!application.created_student_id || result === 'enrolled'
+
+  // The confirmation banner renders at the top of this scrollable panel,
+  // but admins are typically scrolled to the bottom (where the action
+  // buttons are) after reviewing all 4 documents — without this, the
+  // banner appears completely off-screen and the button just reverts to
+  // its normal clickable state, looking exactly like nothing happened.
+  function showResult(value: 'saved' | 'corrections' | 'enrolled') {
+    setResult(value)
+    contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   async function handleViewDocument(type: string) {
     const doc = application.documents.find((d) => d.document_type === type)
@@ -87,7 +102,7 @@ export function ApplicationReviewSlideover({
     setErrorMessage('')
     try {
       await saveDocumentReview(application.id, statuses, notes)
-      setResult('saved')
+      showResult('saved')
       router.refresh()
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Something went wrong.')
@@ -101,7 +116,7 @@ export function ApplicationReviewSlideover({
     setErrorMessage('')
     try {
       await requestCorrections(application.id, statuses, notes)
-      setResult('corrections')
+      showResult('corrections')
       router.refresh()
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Something went wrong.')
@@ -116,7 +131,7 @@ export function ApplicationReviewSlideover({
     try {
       await saveDocumentReview(application.id, statuses, notes)
       await approveAndCreateStudentRecord(application.id)
-      setResult('enrolled')
+      showResult('enrolled')
       router.refresh()
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Something went wrong.')
@@ -142,7 +157,7 @@ export function ApplicationReviewSlideover({
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6">
+        <div ref={contentRef} className="flex-1 overflow-y-auto p-6">
           {result && (
             <div className="mb-4 rounded-lg border border-green-200 bg-green-50 p-4 text-center">
               <p className="font-medium text-green-800">

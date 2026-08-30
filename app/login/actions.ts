@@ -1,6 +1,7 @@
 'use server'
 
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 
 export async function login(formData: FormData) {
@@ -15,30 +16,43 @@ export async function login(formData: FormData) {
   })
 
   if (error) {
-    // TEMPORARY DEBUG: showing the real Supabase error message so we can
-    // see exactly what's being rejected. Revert this to the generic
-    // message below once login is working — showing detailed auth errors
-    // to real users makes it easier for attackers to guess valid emails.
-    redirect(`/login?error=${encodeURIComponent('DEBUG: ' + error.message)}`)
-    // redirect(`/login?error=${encodeURIComponent('Incorrect email or password.')}`)
+    redirect(`/login?error=${encodeURIComponent('Incorrect email or password.')}`)
   }
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role')
+    .select('role, account_status')
     .eq('id', data.user.id)
     .single()
 
-  const { data: statusCheck } = await supabase
-    .from('profiles')
-    .select('account_status')
-    .eq('id', data.user.id)
-    .single()
-
-  if (statusCheck?.account_status === 'blocked') {
+  if (profile?.account_status === 'blocked') {
     await supabase.auth.signOut()
     redirect(`/login?error=${encodeURIComponent('This account has been blocked. Contact the school.')}`)
   }
 
-  redirect(`/${profile?.role ?? 'parent'}`)
+  const role = profile?.role ?? 'parent'
+
+  // Cached so middleware doesn't have to re-query profiles.role on every
+  // single navigation — see middleware.ts. Short-lived so a role change
+  // (rare for this app) is picked up again soon rather than staying stale
+  // for the rest of the session.
+  const cookieStore = await cookies()
+  cookieStore.set('user_role', role, {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 60,
+  })
+
+  redirect(`/${role}`)
+}
+
+export async function logout() {
+  const supabase = await createClient()
+  await supabase.auth.signOut()
+
+  const cookieStore = await cookies()
+  cookieStore.delete('user_role')
+
+  redirect('/login')
 }

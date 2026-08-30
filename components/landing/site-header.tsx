@@ -1,9 +1,9 @@
 import Link from 'next/link'
 
 const navigationItems = [
-  { label: 'About Us', href: '#about-us' },
-  { label: 'Programs', href: '#programs' },
-  { label: '6 Domains', href: '#domains' },
+  { label: 'About Us', href: '/#about-us' },
+  { label: 'Programs', href: '/#programs' },
+  { label: '6 Domains', href: '/#domains' },
 ]
 
 export function SiteHeader() {

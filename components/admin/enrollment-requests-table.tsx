@@ -27,9 +27,28 @@ type Application = {
   parent_email: string
 }
 
+type Tab = 'all' | 'pending_review' | 'approved' | 'rejected'
+
 export function EnrollmentRequestsTable({ applications }: { applications: Application[] }) {
   const [selected, setSelected] = useState<Application | null>(null)
+  const [tab, setTab] = useState<Tab>('all')
   const router = useRouter()
+
+  const counts = {
+    all: applications.length,
+    pending_review: applications.filter((a) => a.status === 'pending_review').length,
+    approved: applications.filter((a) => a.status === 'approved').length,
+    rejected: applications.filter((a) => a.status === 'rejected').length,
+  }
+
+  const filtered = tab === 'all' ? applications : applications.filter((a) => a.status === tab)
+
+  const tabs: { key: Tab; label: string; count: number }[] = [
+    { key: 'all', label: 'All', count: counts.all },
+    { key: 'pending_review', label: 'Pending', count: counts.pending_review },
+    { key: 'approved', label: 'Approved', count: counts.approved },
+    { key: 'rejected', label: 'Rejected', count: counts.rejected },
+  ]
 
   // Live updates: re-fetch this route's data whenever any row in
   // `applications` changes (a new public submission, or a status change
@@ -55,7 +74,23 @@ export function EnrollmentRequestsTable({ applications }: { applications: Applic
 
   return (
     <>
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+      <div className="flex flex-wrap gap-2">
+        {tabs.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`rounded-full px-4 py-2 text-sm font-medium ${
+              tab === t.key
+                ? 'bg-[#0b1b62] text-white'
+                : 'border border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            {t.label} ({t.count})
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-4 overflow-hidden rounded-xl border border-gray-200 bg-white">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-left text-gray-500">
             <tr>
@@ -68,8 +103,8 @@ export function EnrollmentRequestsTable({ applications }: { applications: Applic
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {applications.length > 0 ? (
-              applications.map((app) => (
+            {filtered.length > 0 ? (
+              filtered.map((app) => (
                 <tr key={app.id} className="align-top">
                   <td className="p-4">
                     <p className="font-medium text-gray-900">
@@ -129,7 +164,7 @@ export function EnrollmentRequestsTable({ applications }: { applications: Applic
             ) : (
               <tr>
                 <td colSpan={6} className="p-8 text-center text-gray-400">
-                  No enrollment requests yet.
+                  No enrollment requests in this view.
                 </td>
               </tr>
             )}
