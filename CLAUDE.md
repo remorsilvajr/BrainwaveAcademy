@@ -59,8 +59,8 @@ Sidebar: Dashboard, Announcement, User Management, Create New Account, **Enroll 
 
 **"Enroll A Student" and "Applications" are two separate, easily-confused features — do not merge them:**
 
-- **`/admin/enroll-a-student`** — reviews landing-page enrollment _requests_ (rows in the `applications` table with `status = 'pending_review'`) and approves them. Approving: creates the parent's `auth.users` account + `profiles` row (or reuses an existing parent profile if this is a second child — matched by email, no duplicate account or email sent in that case), creates the `students` row, links them via `parent_student`, marks the application `approved`, and emails the parent a temp password. **This is fully built** — see `app/admin/enroll-a-student/actions.ts`.
-- **`/admin/applications`** — a _separate, not-yet-built_ document-verification workflow (Birth Certificate, 2x2 ID Photos, Proof of Address, Guardian Valid ID — filters for Pending Document Review / Needs Correction / Approved Today). Currently a placeholder page only. No document upload UI exists anywhere yet, even though `application_documents` is already a table.
+- **`/admin/enroll-a-student`** — reviews landing-page enrollment *requests* (rows in the `applications` table with `status = 'pending_review'`) and approves them. Approving: creates the parent's `auth.users` account + `profiles` row (or reuses an existing parent profile if this is a second child — matched by email, no duplicate account or email sent in that case), creates the `students` row, links them via `parent_student`, marks the application `approved`, and emails the parent a temp password. **This is fully built** — see `app/admin/enroll-a-student/actions.ts`.
+- **`/admin/applications`** — a *separate, not-yet-built* document-verification workflow (Birth Certificate, 2x2 ID Photos, Proof of Address, Guardian Valid ID — filters for Pending Document Review / Needs Correction / Approved Today). Currently a placeholder page only. No document upload UI exists anywhere yet, even though `application_documents` is already a table.
 - **Dashboard**: Pending Applications, Active Student Enrollment, Unsolved Feedback, Recent Financial Transactions, Priority Actions & Log. Currently static demo numbers, not wired to real queries.
 - **User Management**: filters (Total/Active/Inactive/Blocked), user list with role/status/last-active, Edit/Block actions. Placeholder.
 - **Create New Account**: photo upload (optional), name/email/phone, role select, auto-generate password. Placeholder — not yet wired to `createAdminClient()`.
@@ -68,7 +68,6 @@ Sidebar: Dashboard, Announcement, User Management, Create New Account, **Enroll 
 ## Architecture
 
 **Role-based routing via middleware, not layout guards.** `middleware.ts` is the single gatekeeper for `/admin`, `/teacher`, `/parent`:
-
 - Unauthenticated users hitting a protected path are redirected to `/login`.
 - Authenticated users are read from the `profiles` table (`role` column) and bounced to `/${role}` if they try to access a section that isn't theirs (e.g. a parent visiting `/admin/*` is redirected to `/parent`).
 - The matcher excludes `_next/static`, `_next/image`, `favicon.ico`, and static image extensions.
@@ -76,10 +75,11 @@ Sidebar: Dashboard, Announcement, User Management, Create New Account, **Enroll 
 Each role has its own `app/<role>/layout.tsx` that renders `<Sidebar>` (`components/sidebar.tsx`) with a hardcoded `NavSection[]` array for that role — this is the source of truth for what pages exist under each role and their nav labels. There's no shared nav config; adding a page means adding both the route and a matching sidebar entry in that role's layout.
 
 **Supabase client selection matters and is security-sensitive** (`lib/supabase/`):
+- `client.ts` — `createClient()` (sync) for Client Components only. **Must reference `process.env.NEXT_PUBLIC_X` directly and literally, never through a dynamic helper like `requireEnv(name)`.** Next.js only inlines a `NEXT_PUBLIC_` variable's real value into the browser bundle when it can statically see the exact variable name in source; a dynamic/bracket lookup (`process.env[name]`) defeats that detection, and the value silently comes back `undefined` in the browser even though the same variable works fine in server code. This caused a real outage (logout broke) when a shared `requireEnv()` validation helper — correct for server-side files — was mistakenly also applied here.
+- `server.ts` — `createClient()` (async, must be `await`ed) for Server Components, Server Actions, and Route Handlers. Cookie writes are wrapped in try/catch because Server Components can't set cookies — the middleware's session refresh covers that case. Safe to use `requireEnv()` here since this runs in Node.js, where `process.env` is fully populated at runtime regardless of how it's accessed.
+- `admin.ts` — `createAdminClient()` uses the Supabase **service role key** and bypasses Row Level Security entirely. Never import it into a Client Component; never expose `SUPABASE_SERVICE_ROLE_KEY` with a `NEXT_PUBLIC_` prefix. Currently only used in `app/admin/enroll-a-student/actions.ts` to create parent auth accounts. Also safe to use `requireEnv()` here (server-only).
 
-- `client.ts` — `createClient()` (sync) for Client Components only.
-- `server.ts` — `createClient()` (async, must be `await`ed) for Server Components, Server Actions, and Route Handlers. Cookie writes are wrapped in try/catch because Server Components can't set cookies — the middleware's session refresh covers that case.
-- `admin.ts` — `createAdminClient()` uses the Supabase **service role key** and bypasses Row Level Security entirely. Never import it into a Client Component; never expose `SUPABASE_SERVICE_ROLE_KEY` with a `NEXT_PUBLIC_` prefix. Currently only used in `app/admin/enroll-a-student/actions.ts` to create parent auth accounts.
+**Env var validation**: `lib/env.ts` exports `requireEnv(name)`, which throws a clear `Missing required environment variable: X` error instead of an opaque downstream error. Use it in server-only code. Do not use it in `lib/supabase/client.ts` or any other browser-executed code — see above.
 
 **Auth/mutation logic lives in `actions.ts` files colocated with their route** (e.g. `app/login/actions.ts`, `app/enroll/actions.ts`, `app/forgot-password/actions.ts`, `app/admin/enroll-a-student/actions.ts`), marked `'use server'`.
 
@@ -91,15 +91,15 @@ Each role has its own `app/<role>/layout.tsx` that renders `<Sidebar>` (`compone
 
 ## Route status (as of last working session)
 
-| Route                                                           | Status                                                  |
-| --------------------------------------------------------------- | ------------------------------------------------------- |
-| `/`, `/enroll`, `/login`, `/forgot-password`, `/reset-password` | Fully built and wired                                   |
-| `/admin/enroll-a-student`                                       | Fully built (approve → account + student + email)       |
-| `/admin/applications`                                           | Placeholder only — document verification not built      |
-| `/parent/settings`                                              | Built (change password)                                 |
-| `/parent/enroll-a-student`                                      | **Static shell only, not wired to a Server Action yet** |
-| `/parent` dashboard, My Profile, Student Dashboard              | Static shells with placeholder data                     |
-| All other parent/teacher/admin pages not listed above           | Static placeholder shells                               |
+| Route | Status |
+|---|---|
+| `/`, `/enroll`, `/login`, `/forgot-password`, `/reset-password` | Fully built and wired |
+| `/admin/enroll-a-student` | Fully built (approve → account + student + email) |
+| `/admin/applications` | Placeholder only — document verification not built |
+| `/parent/settings` | Built (change password) |
+| `/parent/enroll-a-student` | **Static shell only, not wired to a Server Action yet** |
+| `/parent` dashboard, My Profile, Student Dashboard | Static shells with placeholder data |
+| All other parent/teacher/admin pages not listed above | Static placeholder shells |
 
 ## Database
 
@@ -126,6 +126,8 @@ There is no automated test suite, so "testing" here means verifying against the 
 - **Before implementing a new feature**: check the "Route status" table above and the actual files in the target route first — confirm whether something is a true placeholder or partially wired, so existing logic (e.g. an `actions.ts` pattern already established elsewhere) gets reused rather than re-invented differently.
 - **After implementing**: run `npm run lint` and `npm run build` to catch type/lint errors before calling something done. For anything touching a Server Action, form, or auth flow, actually exercise it (submit the form, check the terminal/browser for errors) rather than treating a clean build as sufficient — this codebase has had multiple cases of code that type-checked fine but failed at runtime (RLS policies, env vars not loading, controlled vs. uncontrolled form inputs).
 - If a fix is uncertain, prefer adding a temporary, clearly-labeled debug output (matching the existing `DEBUG:` prefix pattern already used in `app/login/actions.ts` and `app/enroll/actions.ts`) over guessing blind — but flag it for removal once resolved, per "Known temporary state" above.
+
+
 
 Required (see `.env.local`, `lib/supabase/*`, `lib/email.ts`): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `BREVO_SMTP_USER`, `BREVO_SMTP_KEY`, `BREVO_SENDER_EMAIL`, `NEXT_PUBLIC_SITE_URL` (currently unreliable — see TODO above).
 

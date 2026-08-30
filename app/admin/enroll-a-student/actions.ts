@@ -6,8 +6,6 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email'
 
 function generateTempPassword() {
-  // Short, readable temp password (word + word + number) rather than a
-  // random string — easier for a parent to type in correctly on first login.
   const words = ['Maple', 'Tiger', 'River', 'Comet', 'Coral', 'Amber', 'Lunar', 'Sunny', 'Cedar', 'Pixel']
   const w1 = words[Math.floor(Math.random() * words.length)]
   const w2 = words[Math.floor(Math.random() * words.length)]
@@ -29,8 +27,6 @@ export async function approveApplication(applicationId: string) {
     throw new Error('Application not found.')
   }
 
-  // If this parent already has an account (enrolling a second child), reuse
-  // it instead of creating a duplicate.
   const { data: existingProfile } = await supabase
     .from('profiles')
     .select('id')
@@ -123,8 +119,24 @@ export async function approveApplication(applicationId: string) {
       `,
     })
   }
-  // If tempPassword is null, this parent already had an account (sibling
-  // enrollment) — no new credentials to send, so no email goes out here.
 
-  revalidatePath('/admin/applications')
+  revalidatePath('/admin/enroll-a-student')
+}
+
+export async function dismissApplication(applicationId: string) {
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from('applications')
+    .update({
+      status: 'rejected',
+      reviewed_at: new Date().toISOString(),
+    })
+    .eq('id', applicationId)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  revalidatePath('/admin/enroll-a-student')
 }
