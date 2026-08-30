@@ -2,8 +2,9 @@
 
 import { useState, type FormEvent } from 'react'
 import { X } from 'lucide-react'
-import { updateUserProfile } from '@/app/admin/user-management/actions'
+import { updateUserProfile, updateUserAvatar, removeUserAvatar } from '@/app/admin/user-management/actions'
 import { calculateAge, formatDateLong } from '@/lib/format'
+import { AvatarEditor } from '@/components/ui/avatar-editor'
 
 type LinkedStudent = { id: string; first_name: string; middle_name: string | null; last_name: string }
 
@@ -17,10 +18,14 @@ type Profile = {
   phone_number: string | null
   date_of_birth: string | null
   relationship_to_student: string | null
+  avatar_url: string | null
   parent_student?: { relationship: string; students: LinkedStudent | null }[]
 }
 
 export function UserEditModal({ user, onClose }: { user: Profile; onClose: () => void }) {
+  const [avatarUrl, setAvatarUrl] = useState(user.avatar_url)
+  const [isSavingAvatar, setIsSavingAvatar] = useState(false)
+  const [avatarError, setAvatarError] = useState('')
   const [firstName, setFirstName] = useState(user.first_name)
   const [middleName, setMiddleName] = useState(user.middle_name ?? '')
   const [lastName, setLastName] = useState(user.last_name)
@@ -33,6 +38,34 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
   const linkedStudents = (user.parent_student ?? [])
     .map((ps) => ps.students)
     .filter((s): s is LinkedStudent => s !== null)
+
+  async function handleAvatarSelected(file: File) {
+    setIsSavingAvatar(true)
+    setAvatarError('')
+    try {
+      const formData = new FormData()
+      formData.append('avatar', file)
+      const newUrl = await updateUserAvatar(user.id, formData)
+      setAvatarUrl(newUrl)
+    } catch (err) {
+      setAvatarError(err instanceof Error ? err.message : 'Something went wrong.')
+    } finally {
+      setIsSavingAvatar(false)
+    }
+  }
+
+  async function handleAvatarRemove() {
+    setIsSavingAvatar(true)
+    setAvatarError('')
+    try {
+      await removeUserAvatar(user.id)
+      setAvatarUrl(null)
+    } catch (err) {
+      setAvatarError(err instanceof Error ? err.message : 'Something went wrong.')
+    } finally {
+      setIsSavingAvatar(false)
+    }
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -65,6 +98,17 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
           <button onClick={onClose} aria-label="Close" className="text-gray-400 hover:text-gray-600">
             <X className="h-5 w-5" />
           </button>
+        </div>
+
+        <div className="mb-4">
+          <AvatarEditor
+            imageUrl={avatarUrl}
+            onFileSelected={handleAvatarSelected}
+            onRemove={avatarUrl ? handleAvatarRemove : undefined}
+            disabled={isSavingAvatar}
+            sizeClassName="h-20 w-20"
+          />
+          {avatarError && <p className="mt-2 text-center text-xs text-red-600">{avatarError}</p>}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

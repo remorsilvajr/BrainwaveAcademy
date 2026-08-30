@@ -100,3 +100,42 @@ export async function updateUserProfile(
 
   revalidatePath('/admin/user-management')
 }
+
+export async function updateUserAvatar(userId: string, formData: FormData) {
+  const supabase = await createClient()
+
+  const file = formData.get('avatar') as File | null
+  if (!file || file.size === 0) {
+    throw new Error('Please choose an image.')
+  }
+
+  const extension = file.name.split('.').pop() || 'jpg'
+  const path = `${userId}/avatar.${extension}`
+
+  const { error: uploadError } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
+  if (uploadError) {
+    throw new Error(uploadError.message)
+  }
+
+  const { data } = supabase.storage.from('avatars').getPublicUrl(path)
+  const avatarUrl = `${data.publicUrl}?v=${Date.now()}`
+
+  const { error: updateError } = await supabase.from('profiles').update({ avatar_url: avatarUrl }).eq('id', userId)
+  if (updateError) {
+    throw new Error(updateError.message)
+  }
+
+  revalidatePath('/admin/user-management')
+  return avatarUrl
+}
+
+export async function removeUserAvatar(userId: string) {
+  const supabase = await createClient()
+
+  const { error } = await supabase.from('profiles').update({ avatar_url: null }).eq('id', userId)
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  revalidatePath('/admin/user-management')
+}

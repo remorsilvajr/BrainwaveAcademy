@@ -15,14 +15,8 @@ const sections: NavSection[] = [
     title: 'Student',
     items: [
       { label: 'Students', href: '/admin/students', icon: 'user' },
+      { label: 'Attendance', href: '/admin/attendance', icon: 'checklist' },
       { label: 'Student Dashboard', href: '/admin/student-dashboard', icon: 'graduationCap' },
-    ],
-  },
-  {
-    title: 'Account',
-    items: [
-      { label: 'My Profile', href: '/admin/my-profile', icon: 'user' },
-      { label: 'Settings', href: '/admin/settings', icon: 'settings' },
     ],
   },
   {

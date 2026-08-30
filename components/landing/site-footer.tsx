@@ -13,7 +13,7 @@ export function SiteFooter() {
             <img
               className="h-10 w-auto opacity-80"
               alt="Brainwave Learning Center"
-              src="/images/landing/footer-logo.png"
+              src="/images/landing/logo.svg"
             />
             <p className="text-base leading-6 text-[#bac3ff]">
               Nurturing Young Learners in Their Most Formative Years.

@@ -3,6 +3,7 @@ import { GraduationCap } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { calculateAge, formatDateLong } from '@/lib/format'
 import { documentOrder, documentShortLabels } from '@/lib/documents'
+import { StudentAvatarEditor } from '@/components/parent/student-avatar-editor'
 
 export default async function StudentProfilePage({
   searchParams,
@@ -50,10 +51,15 @@ export default async function StudentProfilePage({
     )
   }
 
-  const { data: documents } = await supabase
-    .from('application_documents')
-    .select('document_type, verification_status')
-    .eq('application_id', application.id)
+  const [{ data: documents }, { data: student }] = await Promise.all([
+    supabase
+      .from('application_documents')
+      .select('document_type, verification_status')
+      .eq('application_id', application.id),
+    application.created_student_id
+      ? supabase.from('students').select('avatar_url').eq('id', application.created_student_id).single()
+      : Promise.resolve({ data: null }),
+  ])
 
   const validCount = (documents ?? []).filter((d) => d.verification_status === 'valid').length
   const fullName = `${application.student_first_name}${application.student_middle_name ? ' ' + application.student_middle_name : ''} ${application.student_last_name}`
@@ -77,9 +83,13 @@ export default async function StudentProfilePage({
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <div className="rounded-2xl border border-gray-200 bg-white p-6 text-center">
-          <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-sky-100 text-sky-700">
-            <GraduationCap className="h-9 w-9" />
-          </span>
+          {application.created_student_id ? (
+            <StudentAvatarEditor studentId={application.created_student_id} avatarUrl={student?.avatar_url ?? null} />
+          ) : (
+            <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-sky-100 text-sky-700">
+              <GraduationCap className="h-9 w-9" />
+            </span>
+          )}
           <p className="mt-4 text-lg font-bold text-gray-900">{fullName}</p>
           <span
             className={`mt-1 inline-block rounded-full px-3 py-1 text-xs font-medium ${

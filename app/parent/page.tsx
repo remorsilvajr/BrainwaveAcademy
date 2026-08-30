@@ -1,7 +1,16 @@
 import Link from 'next/link'
-import { CalendarClock } from 'lucide-react'
+import { CalendarClock, Megaphone } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { documentOrder } from '@/lib/documents'
+import { formatRelativeTime } from '@/lib/format'
+
+type AnnouncementRow = {
+  id: string
+  title: string
+  body: string
+  created_at: string
+  profiles: { first_name: string; last_name: string } | null
+}
 
 export default async function ParentDashboardPage({
   searchParams,
@@ -16,14 +25,23 @@ export default async function ParentDashboardPage({
 
   // See app/parent/layout.tsx for why this matches on parent_email too, not
   // just created_parent_id.
-  const [{ data: profile }, { data: applications }] = await Promise.all([
+  const [{ data: profile }, { data: applications }, { data: announcementRows }] = await Promise.all([
     supabase.from('profiles').select('first_name').eq('id', user?.id ?? '').single(),
     supabase
       .from('applications')
       .select('id, status, student_first_name, student_last_name, created_student_id')
       .or(`created_parent_id.eq.${user?.id ?? ''},parent_email.eq.${user?.email ?? ''}`)
       .order('submitted_at', { ascending: true }),
+    supabase
+      .from('announcements')
+      .select('id, title, body, created_at, profiles(first_name, last_name)')
+      .in('target_role', ['parent', 'all'])
+      .order('created_at', { ascending: false })
+      .limit(3)
+      .returns<AnnouncementRow[]>(),
   ])
+
+  const announcements = announcementRows ?? []
 
   const selectedApplication =
     (applications ?? []).find((a) => a.id === studentParam) ?? applications?.[0] ?? null
@@ -112,7 +130,33 @@ export default async function ParentDashboardPage({
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900">Recent Announcements &amp; School Updates</h2>
         </div>
-        <p className="mt-4 text-sm text-gray-500">No announcements yet.</p>
+        {announcements.length === 0 ? (
+          <p className="mt-4 text-sm text-gray-500">No announcements yet.</p>
+        ) : (
+          <div className="mt-4 space-y-3">
+            {announcements.map((a) => (
+              <div key={a.id} className="flex gap-3">
+                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-700">
+                  <Megaphone className="h-4 w-4" />
+                </span>
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">{a.title}</p>
+                  <p className="mt-1 text-sm text-gray-600">{a.body}</p>
+                  <p className="mt-1 text-xs text-gray-400">
+                    Posted {formatRelativeTime(a.created_at)} by{' '}
+                    {a.profiles ? `${a.profiles.first_name} ${a.profiles.last_name}` : 'Staff'}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        <Link
+          href="/parent/announcement"
+          className="mt-4 inline-block text-sm font-semibold text-[#00a3e0] hover:underline"
+        >
+          View All →
+        </Link>
       </div>
     </div>
   )

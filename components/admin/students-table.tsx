@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { User as UserIcon } from 'lucide-react'
 import { StudentRecordSlideover } from '@/components/admin/student-record-slideover'
 
 type Guardian = { name: string; relationship: string | null; phone: string | null; email: string | null }
@@ -15,6 +16,7 @@ type Student = {
   date_of_birth: string
   gender: string
   enrollment_status: string
+  avatar_url: string | null
   guardians: Guardian[]
   documents: DocRow[]
 }
@@ -96,10 +98,22 @@ export function StudentsTable({ students }: { students: Student[] }) {
                 return (
                   <tr key={s.id}>
                     <td className="p-4">
-                      <p className="font-medium text-[#0b1b62]">
-                        {s.first_name} {s.last_name}
-                      </p>
-                      <p className="text-xs text-gray-400">{s.student_id ?? '—'}</p>
+                      <div className="flex items-center gap-3">
+                        {s.avatar_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={s.avatar_url} alt="" className="h-9 w-9 rounded-full object-cover" />
+                        ) : (
+                          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 text-sky-700">
+                            <UserIcon className="h-4 w-4" />
+                          </span>
+                        )}
+                        <div>
+                          <p className="font-medium text-[#0b1b62]">
+                            {s.first_name} {s.last_name}
+                          </p>
+                          <p className="text-xs text-gray-400">{s.student_id ?? '—'}</p>
+                        </div>
+                      </div>
                     </td>
                     <td className="p-4 text-gray-700">
                       {guardian ? (

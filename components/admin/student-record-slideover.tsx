@@ -6,7 +6,8 @@ import { X } from 'lucide-react'
 import { calculateAge, formatDateLong } from '@/lib/format'
 import { documentLabels, documentOrder } from '@/lib/documents'
 import { getSignedDocumentUrl } from '@/app/admin/applications/actions'
-import { updateStudentRecord } from '@/app/admin/students/actions'
+import { updateStudentRecord, updateStudentAvatar, removeStudentAvatar } from '@/app/admin/students/actions'
+import { AvatarEditor } from '@/components/ui/avatar-editor'
 
 type Guardian = {
   name: string
@@ -26,6 +27,7 @@ type Student = {
   date_of_birth: string
   gender: string
   enrollment_status: string
+  avatar_url: string | null
   guardians: Guardian[]
   documents: DocRow[]
 }
@@ -45,6 +47,38 @@ export function StudentRecordSlideover({ student, onClose }: { student: Student;
   const router = useRouter()
   const [tab, setTab] = useState<Tab>('personal')
   const [errorMessage, setErrorMessage] = useState('')
+
+  const [avatarUrl, setAvatarUrl] = useState(student.avatar_url)
+  const [isSavingAvatar, setIsSavingAvatar] = useState(false)
+  const [avatarError, setAvatarError] = useState('')
+
+  async function handleAvatarSelected(file: File) {
+    setIsSavingAvatar(true)
+    setAvatarError('')
+    try {
+      const formData = new FormData()
+      formData.append('avatar', file)
+      const newUrl = await updateStudentAvatar(student.id, formData)
+      setAvatarUrl(newUrl)
+    } catch (err) {
+      setAvatarError(err instanceof Error ? err.message : 'Something went wrong.')
+    } finally {
+      setIsSavingAvatar(false)
+    }
+  }
+
+  async function handleAvatarRemove() {
+    setIsSavingAvatar(true)
+    setAvatarError('')
+    try {
+      await removeStudentAvatar(student.id)
+      setAvatarUrl(null)
+    } catch (err) {
+      setAvatarError(err instanceof Error ? err.message : 'Something went wrong.')
+    } finally {
+      setIsSavingAvatar(false)
+    }
+  }
 
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -109,7 +143,18 @@ export function StudentRecordSlideover({ student, onClose }: { student: Student;
       <div className="relative flex h-full w-full max-w-lg flex-col bg-white shadow-xl">
         <div className="border-b border-gray-100 p-6">
           <div className="flex items-start justify-between">
-            <div>
+            <div className="flex items-start gap-4">
+              <div>
+                <AvatarEditor
+                  imageUrl={avatarUrl}
+                  onFileSelected={handleAvatarSelected}
+                  onRemove={avatarUrl ? handleAvatarRemove : undefined}
+                  disabled={isSavingAvatar}
+                  sizeClassName="h-16 w-16"
+                />
+                {avatarError && <p className="mt-1 max-w-[64px] text-center text-[10px] text-red-600">{avatarError}</p>}
+              </div>
+              <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-xl font-bold text-gray-900">{student.first_name} {student.last_name}</h2>
                 <span
@@ -123,6 +168,7 @@ export function StudentRecordSlideover({ student, onClose }: { student: Student;
                 </span>
               </div>
               <p className="mt-1 text-sm text-gray-500">Student ID: {student.student_id ?? '—'}</p>
+              </div>
             </div>
             <button onClick={onClose} aria-label="Close" className="text-gray-400 hover:text-gray-600">
               <X className="h-5 w-5" />

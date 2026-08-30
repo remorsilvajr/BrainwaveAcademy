@@ -45,7 +45,37 @@ export async function uploadRequirementDocument(
     throw new Error(upsertError.message)
   }
 
+  // The 2x2 ID photo doubles as the student's profile picture wherever
+  // there's already a real student record for this application (documents
+  // are uploaded well before that's guaranteed to exist — see the
+  // application_documents RLS note in CLAUDE.md). 'documents' is a private
+  // bucket, so the photo is re-uploaded into the public 'avatars' bucket
+  // rather than pointing avatar_url at a signed-URL-only path.
+  if (documentType === 'id_photo') {
+    const { data: application } = await supabase
+      .from('applications')
+      .select('created_student_id')
+      .eq('id', applicationId)
+      .single()
+
+    if (application?.created_student_id) {
+      const avatarPath = `student-${application.created_student_id}/avatar.${extension}`
+      const { error: avatarUploadError } = await supabase.storage
+        .from('avatars')
+        .upload(avatarPath, file, { upsert: true })
+
+      if (!avatarUploadError) {
+        const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(avatarPath)
+        await supabase
+          .from('students')
+          .update({ avatar_url: `${publicUrlData.publicUrl}?v=${Date.now()}` })
+          .eq('id', application.created_student_id)
+      }
+    }
+  }
+
   revalidatePath('/parent/requirements')
+  revalidatePath('/parent/students')
 }
 
 // Verifies ownership via a normal RLS-scoped select (only succeeds if this

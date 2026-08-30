@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { updateMyProfile, uploadMyAvatar, removeMyAvatar } from '@/app/parent/my-profile/actions'
+import { updateMyProfile, uploadMyAvatar, removeMyAvatar } from '@/app/teacher/my-profile/actions'
 import { formatDateShort } from '@/lib/format'
 import { AvatarEditor } from '@/components/ui/avatar-editor'
 
@@ -13,7 +13,7 @@ type Profile = {
   email: string
   phone_number: string | null
   date_of_birth: string | null
-  relationship_to_student: string | null
+  gender: string | null
   account_id: string | null
   is_verified: boolean
   avatar_url: string | null
@@ -26,14 +26,12 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
 
   const [phone, setPhone] = useState(profile.phone_number ?? '')
   const [dob, setDob] = useState(profile.date_of_birth ?? '')
-  const [relationship, setRelationship] = useState(profile.relationship_to_student ?? '')
+  const [gender, setGender] = useState(profile.gender ?? '')
 
-  // Photo changes are staged locally (preview only) until Save Profile
-  // Changes is actually clicked — it was previously uploading and
-  // committing to the database the instant a file was chosen, with no way
-  // to back out via Cancel / Discard. Removal follows the same deferred
-  // pattern, tracked separately since "no pending photo" and "pending
-  // removal of the existing photo" are different states.
+  // Photo is staged locally until Save is clicked — see
+  // components/parent/my-profile-form.tsx for why (previously committed to
+  // the DB the instant a file was picked, with no way to back out) and for
+  // why removal follows the same deferred pattern via its own flag.
   const [pendingPhoto, setPendingPhoto] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [removePending, setRemovePending] = useState(false)
@@ -44,14 +42,14 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
   const isDirty =
     phone !== (profile.phone_number ?? '') ||
     dob !== (profile.date_of_birth ?? '') ||
-    relationship !== (profile.relationship_to_student ?? '') ||
+    gender !== (profile.gender ?? '') ||
     pendingPhoto !== null ||
     removePending
 
   function handleCancel() {
     setPhone(profile.phone_number ?? '')
     setDob(profile.date_of_birth ?? '')
-    setRelationship(profile.relationship_to_student ?? '')
+    setGender(profile.gender ?? '')
     if (photoPreview) URL.revokeObjectURL(photoPreview)
     setPendingPhoto(null)
     setPhotoPreview(null)
@@ -70,10 +68,10 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
       } else if (removePending) {
         await removeMyAvatar()
       }
-      const saved = await updateMyProfile({ phone_number: phone, date_of_birth: dob, relationship_to_student: relationship })
+      const saved = await updateMyProfile({ phone_number: phone, date_of_birth: dob, gender })
       setPhone(saved.phone_number ?? '')
       setDob(saved.date_of_birth ?? '')
-      setRelationship(saved.relationship_to_student ?? '')
+      setGender(saved.gender ?? '')
       if (photoPreview) URL.revokeObjectURL(photoPreview)
       setPendingPhoto(null)
       setPhotoPreview(null)
@@ -116,18 +114,18 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
 
           <p className="mt-4 text-lg font-bold text-gray-900">{fullName}</p>
           <span className="mt-1 inline-block rounded-full bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700">
-            Primary Guardian / Parent
+            Teacher
           </span>
 
           <div className="mt-6 space-y-2 border-t border-gray-100 pt-4 text-left text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-500">Account ID</span>
+              <span className="text-gray-500">Teacher ID</span>
               <span className="font-semibold text-gray-900">{profile.account_id ?? '—'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-500">Status</span>
               <span className={`font-semibold ${profile.is_verified ? 'text-green-600' : 'text-amber-600'}`}>
-                {profile.is_verified ? 'Verified Account' : 'Not Verified'}
+                {profile.is_verified ? 'Active / Verified' : 'Not Verified'}
               </span>
             </div>
             <div className="flex justify-between">
@@ -143,7 +141,7 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
           </h2>
 
           <div className="mt-4">
-            <label className="mb-1 block text-sm font-semibold text-[#0b1b62]">Parent Full Name</label>
+            <label className="mb-1 block text-sm font-semibold text-[#0b1b62]">Full Name</label>
             <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-gray-100 px-3 py-2.5 text-sm text-gray-600">
               {fullName}
               <span className="text-xs text-gray-400">🔒</span>
@@ -190,19 +188,18 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
               />
             </div>
             <div>
-              <label htmlFor="relationship" className="mb-1 block text-sm font-semibold text-[#0b1b62]">
-                Relationship to Student
+              <label htmlFor="gender" className="mb-1 block text-sm font-semibold text-[#0b1b62]">
+                Gender
               </label>
               <select
-                id="relationship"
-                value={relationship}
-                onChange={(e) => setRelationship(e.target.value)}
+                id="gender"
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
                 className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-gray-700 focus:border-[#0b1b62] focus:outline-none"
               >
                 <option value="">Not set</option>
-                <option value="Mother">Mother</option>
-                <option value="Father">Father</option>
-                <option value="Guardian">Guardian</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
               </select>
             </div>
           </div>

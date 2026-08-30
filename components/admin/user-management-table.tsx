@@ -19,6 +19,7 @@ type Profile = {
   relationship_to_student: string | null
   account_status: string
   created_at: string
+  avatar_url: string | null
   parent_student?: { relationship: string; students: LinkedStudent | null }[]
 }
 
