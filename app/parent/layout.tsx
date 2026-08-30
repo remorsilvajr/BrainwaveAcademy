@@ -37,7 +37,7 @@ export default function ParentLayout({ children }: { children: React.ReactNode }
   return (
     <div className="flex">
       <Sidebar sections={sections} />
-      <main className="flex-1 p-8">{children}</main>
+      <main className="ml-64 flex-1 p-8">{children}</main>
     </div>
   )
 }

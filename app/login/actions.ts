@@ -47,12 +47,17 @@ export async function login(formData: FormData) {
   redirect(`/${role}`)
 }
 
+// Deliberately does NOT call redirect() here — this is invoked as a plain
+// function call from a client onClick, not a form submission, and a
+// redirect() thrown from a Server Action in that context wasn't reliably
+// reaching the client in this dev environment (left the "Logging out…"
+// button stuck forever, with nothing to recover it since the throw meant
+// the client's own code after the call never ran either). The caller
+// navigates itself once this resolves.
 export async function logout() {
   const supabase = await createClient()
   await supabase.auth.signOut()
 
   const cookieStore = await cookies()
   cookieStore.delete('user_role')
-
-  redirect('/login')
 }

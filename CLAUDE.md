@@ -25,6 +25,16 @@ There is no test runner configured in this repo.
 
 This repo pins `next@16.3.3`, which is newer than most training data and has breaking API changes vs. Next 13/14 conventions. Per `AGENTS.md`, read the relevant guide under `node_modules/next/dist/docs/{01-app,02-pages,03-architecture,04-community}` before writing routing, data-fetching, or server-action code, and follow any deprecation notices found there.
 
+## Working from Figma references
+
+The user drops per-page Figma exports into `public/images/pages/` (e.g. `Admin Create New Account.png`) as a reference when asking for a page to be built or reworked — ask for one if it would help and none has been provided. Treat these as reference, not spec, and adapt rather than replicate:
+
+- The designs predate many of this project's small and big changes made while actually building the system, so they're often stale — cross-check against the real current schema/routes/conventions in this file rather than trusting the image, and add fields the design is missing if the underlying data model already has them (e.g. `middle_name` isn't in most designs but every profile-editing surface in the app treats it as a real field).
+- Drop options/fields from the design that don't correspond to anything real in the system (e.g. a role that doesn't exist in `user_role`) rather than inventing new backing functionality to support them, unless asked to actually add that capability.
+- Figma canvases are typically a fixed, fairly narrow width. Don't reproduce that literally — a page/card sized to the Figma's canvas width usually looks awkward and unbalanced inside this app's actual (much wider) admin/teacher/parent content area, leaving a large dead gap. Widen layouts, rearrange fields into a layout that uses the available width well (e.g. multi-column instead of one narrow stacked column), and center or otherwise place the result deliberately rather than defaulting to flush-left.
+- Match this project's own established UI conventions (color tokens, spacing, the `useActionState` form pattern, card/section styling already used elsewhere) over precisely matching the Figma's exact pixel styling.
+- When something in the design is ambiguous or conflicts with how the system actually works now, ask rather than guessing silently.
+
 ## Product requirements
 
 ### Public site (unauthenticated)

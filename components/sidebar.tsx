@@ -60,7 +60,7 @@ export function Sidebar({
   const pathname = usePathname()
 
   return (
-    <aside className="sticky top-0 flex min-h-screen w-64 shrink-0 flex-col bg-[#0b1b62] p-4">
+    <aside className="fixed inset-y-0 left-0 flex w-64 shrink-0 flex-col overflow-y-auto bg-[#0b1b62] p-4">
       <div className="mb-6 px-2">
         <p className="text-lg font-bold text-white">{schoolName}</p>
         {portalLabel && <p className="text-xs text-[#8f9bd6]">{portalLabel}</p>}

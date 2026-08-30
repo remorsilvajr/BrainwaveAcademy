@@ -1,17 +1,29 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { logout } from '@/app/login/actions'
 import { iconMap, type IconName } from './sidebar'
 
 export function LogoutButton({ icon }: { icon?: IconName }) {
+  const router = useRouter()
   const Icon = icon ? iconMap[icon] : undefined
   const [confirming, setConfirming] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
 
   async function handleConfirmLogout() {
     setIsLoggingOut(true)
-    await logout()
+    setErrorMessage('')
+    try {
+      await logout()
+      router.push('/login')
+      router.refresh()
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+    } finally {
+      setIsLoggingOut(false)
+    }
   }
 
   return (
@@ -32,6 +44,9 @@ export function LogoutButton({ icon }: { icon?: IconName }) {
             <p className="mt-1 text-sm text-gray-500">
               You&apos;ll need to sign in again to access your account.
             </p>
+            {errorMessage && (
+              <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{errorMessage}</p>
+            )}
             <div className="mt-6 flex gap-2">
               <button
                 onClick={() => setConfirming(false)}

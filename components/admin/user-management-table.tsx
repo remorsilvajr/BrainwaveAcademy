@@ -113,7 +113,7 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
               <th className="p-4 font-medium">Assigned Role</th>
               <th className="p-4 font-medium">Account Status</th>
               <th className="p-4 font-medium">Joined</th>
-              <th className="p-4 font-medium">Actions</th>
+              <th className="min-w-[260px] p-4 font-medium">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -163,7 +163,7 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
                         Edit
                       </button>
                       {confirmingBlockId === u.id ? (
-                        <div className="flex items-center gap-1.5 text-xs">
+                        <div className="flex items-center gap-1.5 whitespace-nowrap text-xs">
                           <span className="text-gray-600">Block this user?</span>
                           <button
                             onClick={() => setConfirmingBlockId(null)}

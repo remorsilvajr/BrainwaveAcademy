@@ -4,14 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email'
-
-function generateTempPassword() {
-  const words = ['Maple', 'Tiger', 'River', 'Comet', 'Coral', 'Amber', 'Lunar', 'Sunny', 'Cedar', 'Pixel']
-  const w1 = words[Math.floor(Math.random() * words.length)]
-  const w2 = words[Math.floor(Math.random() * words.length)]
-  const num = Math.floor(100 + Math.random() * 900)
-  return `${w1}${w2}${num}`
-}
+import { generateTempPassword } from '@/lib/password'
 
 // Creates ONLY the parent account. The student record is intentionally NOT
 // created here — it's created later, in app/admin/applications/actions.ts,
