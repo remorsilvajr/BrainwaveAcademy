@@ -1,7 +1,7 @@
 'use client'
 
 import { Suspense, useState } from 'react'
-import Link from 'next/link'
+import Link, { useLinkStatus } from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import {
   LayoutGrid,
@@ -16,6 +16,7 @@ import {
   LogOut,
   Menu,
   X,
+  Loader2,
   type LucideIcon,
 } from 'lucide-react'
 import { LogoutButton } from './logout-button'
@@ -49,6 +50,30 @@ export type NavItem = {
 export type NavSection = {
   title?: string
   items: NavItem[]
+}
+
+// useLinkStatus() only works in a descendant of the specific <Link> whose
+// pending state it's reading, so the icon + label live in their own child
+// component rather than being rendered directly inside the <Link> in
+// NavLinks. Swaps the icon for a spinner (same h-4 w-4 footprint, so no
+// layout shift) and dims the label while this link's navigation is still
+// resolving — reported live as feeling "slow/sluggish" with no feedback
+// that a click had even registered, since every route here is a fully
+// server-rendered page waiting on its own Supabase queries. Skipped
+// automatically once the destination has been prefetched (the common
+// case), so it only shows up when there's an actual wait to cover.
+function NavLinkRow({ label, Icon }: { label: string; Icon?: LucideIcon }) {
+  const { pending } = useLinkStatus()
+  return (
+    <>
+      {pending ? (
+        <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+      ) : (
+        Icon && <Icon className="h-4 w-4 shrink-0" />
+      )}
+      <span className={pending ? 'opacity-70' : undefined}>{label}</span>
+    </>
+  )
 }
 
 // Split out from Sidebar specifically so only this part needs the
@@ -101,8 +126,7 @@ function NavLinks({ sections, onNavigate }: { sections: NavSection[]; onNavigate
                         : 'text-[#c7cff0] hover:bg-white/10 hover:text-white'
                     }`}
                   >
-                    {Icon && <Icon className="h-4 w-4 shrink-0" />}
-                    {item.label}
+                    <NavLinkRow label={item.label} Icon={Icon} />
                   </Link>
                 </li>
               )
