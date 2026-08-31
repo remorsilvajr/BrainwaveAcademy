@@ -1,1 +1,15 @@
 @import "tailwindcss";
+
+/* Native <button> elements default to cursor: default in most browsers,
+   unlike <a> tags (which is why the header's Enroll/Log In links already
+   showed a hand cursor while every <button> elsewhere in the app didn't).
+   Applied globally here instead of per-component so every current and
+   future button gets it automatically. */
+@layer base {
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+}

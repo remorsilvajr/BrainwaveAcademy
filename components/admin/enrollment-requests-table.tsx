@@ -188,7 +188,7 @@ export function EnrollmentRequestsTable({ applications }: { applications: Applic
                   <td className="p-4">
                     <button
                       onClick={() => setSelectedId(app.id)}
-                      className="text-sm font-semibold text-[#0b1b62] underline"
+                      className="rounded-full border border-[#0b1b62] px-4 py-1.5 text-xs font-semibold text-[#0b1b62] hover:bg-[#0b1b62] hover:text-white"
                     >
                       View Submission
                     </button>
