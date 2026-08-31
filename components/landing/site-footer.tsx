@@ -1,4 +1,4 @@
-const quickLinks = ['About Us', 'Programs', '6 Domains', 'Parent Portal Login']
+const quickLinks = ['About Us', 'Programs', '6 Domains']
 
 export function SiteFooter() {
   return (
