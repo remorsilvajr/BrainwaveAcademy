@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { Megaphone } from 'lucide-react'
 import { postAnnouncement } from '@/app/teacher/actions'
 import { formatRelativeTime } from '@/lib/format'
+import { Pagination } from '@/components/ui/pagination'
+import { usePagination } from '@/lib/use-pagination'
 
 type Announcement = {
   id: string
@@ -28,6 +30,28 @@ export function ClassroomAnnouncements({
   const [body, setBody] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [search, setSearch] = useState('')
+
+  // The dashboard widget (viewAllHref set, capped at 5 by the caller's own
+  // query) stays a simple recent-5 list — search/pagination only kick in on
+  // the full /teacher/announcement page, which renders this with no
+  // viewAllHref.
+  const isFullList = !viewAllHref
+
+  const filtered = isFullList
+    ? announcements.filter((a) => {
+        if (!search.trim()) return true
+        const term = search.toLowerCase()
+        return (
+          a.title.toLowerCase().includes(term) ||
+          a.body.toLowerCase().includes(term) ||
+          a.posted_by_name.toLowerCase().includes(term)
+        )
+      })
+    : announcements
+
+  const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(filtered, search)
+  const displayed = isFullList ? pageItems : announcements
 
   async function handlePost() {
     setIsSubmitting(true)
@@ -85,8 +109,20 @@ export function ClassroomAnnouncements({
         </div>
       )}
 
-      <div className="mt-4 space-y-3">
-        {announcements.map((a) => (
+      {isFullList && (
+        <div className="mt-4">
+          <label className="mb-1 block text-xs font-medium text-gray-500">Search</label>
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Title, message, or author"
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
+          />
+        </div>
+      )}
+
+      <div className={`mt-4 space-y-3 ${isFullList ? 'min-h-[360px]' : ''}`}>
+        {displayed.map((a) => (
           <div key={a.id} className="flex gap-3 rounded-xl border border-gray-100 p-4">
             <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-pink-50 text-[#e6007e]">
               <Megaphone className="h-4 w-4" />
@@ -100,10 +136,24 @@ export function ClassroomAnnouncements({
             </div>
           </div>
         ))}
-        {announcements.length === 0 && (
-          <p className="text-sm text-gray-500">No announcements posted yet.</p>
+        {displayed.length === 0 && (
+          <p className="text-sm text-gray-500">
+            {announcements.length === 0 ? 'No announcements posted yet.' : 'No announcements match your search.'}
+          </p>
         )}
       </div>
+
+      {isFullList && (
+        <div className="-mx-6 -mb-6 mt-4">
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={setPage}
+          />
+        </div>
+      )}
 
       {viewAllHref && (
         <Link

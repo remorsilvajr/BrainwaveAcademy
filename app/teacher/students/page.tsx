@@ -1,7 +1,5 @@
-import Link from 'next/link'
-import { User as UserIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
-import { calculateAge, formatDateLong } from '@/lib/format'
+import { TeacherStudentsTable } from '@/components/teacher/students-table'
 
 export default async function TeacherStudentsPage() {
   const supabase = await createClient()
@@ -18,71 +16,7 @@ export default async function TeacherStudentsPage() {
         <p className="mt-1 text-sm text-gray-500">All enrolled students at Brainwave Academy.</p>
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-left text-gray-500">
-            <tr>
-              <th className="p-4 font-medium">Name</th>
-              <th className="p-4 font-medium">Date of Birth</th>
-              <th className="p-4 font-medium">Gender</th>
-              <th className="p-4 font-medium">Enrollment Status</th>
-              <th className="p-4"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {(students ?? []).map((s) => (
-              <tr key={s.id} className="border-t border-gray-100">
-                <td className="p-4">
-                  <div className="flex items-center gap-3">
-                    {s.avatar_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={s.avatar_url} alt="" className="h-9 w-9 rounded-full object-cover" />
-                    ) : (
-                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 text-sky-700">
-                        <UserIcon className="h-4 w-4" />
-                      </span>
-                    )}
-                    <span className="font-medium text-gray-900">
-                      {s.first_name}
-                      {s.middle_name ? ` ${s.middle_name}` : ''} {s.last_name}
-                    </span>
-                  </div>
-                </td>
-                <td className="p-4 text-gray-600">
-                  {formatDateLong(s.date_of_birth)} ({calculateAge(s.date_of_birth)}y)
-                </td>
-                <td className="p-4 capitalize text-gray-600">{s.gender}</td>
-                <td className="p-4">
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${
-                      s.enrollment_status === 'active'
-                        ? 'bg-green-50 text-green-700'
-                        : 'bg-gray-100 text-gray-600'
-                    }`}
-                  >
-                    {s.enrollment_status}
-                  </span>
-                </td>
-                <td className="p-4 text-right">
-                  <Link
-                    href={`/teacher/student-dashboard?student=${s.id}`}
-                    className="text-sm font-semibold text-[#00a3e0] hover:underline"
-                  >
-                    Show Student Record
-                  </Link>
-                </td>
-              </tr>
-            ))}
-            {(students ?? []).length === 0 && (
-              <tr>
-                <td colSpan={5} className="p-8 text-center text-sm text-gray-500">
-                  No students on file yet.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <TeacherStudentsTable students={students ?? []} />
     </div>
   )
 }

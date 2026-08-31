@@ -4,6 +4,8 @@ import { useState, useTransition } from 'react'
 import { toggleBlockUser, updateAccountStatus } from '@/app/admin/user-management/actions'
 import { formatDateShort } from '@/lib/format'
 import { UserEditModal } from '@/components/admin/user-edit-modal'
+import { Pagination } from '@/components/ui/pagination'
+import { usePagination } from '@/lib/use-pagination'
 
 type LinkedStudent = { id: string; first_name: string; middle_name: string | null; last_name: string }
 type Applicant = {
@@ -57,6 +59,11 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
       u.email.toLowerCase().includes(term)
     )
   })
+
+  const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(
+    filtered,
+    `${search}|${roleFilter}|${statusFilter}`
+  )
 
   function handleToggleBlock(user: Profile) {
     startTransition(async () => {
@@ -113,7 +120,8 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
         </div>
       </div>
 
-      <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200 bg-white">
+      <div className="mt-4 rounded-xl border border-gray-200 bg-white">
+        <div className="min-h-[420px] overflow-x-auto">
         <table className="w-full min-w-[720px] text-sm">
           <thead className="bg-gray-50 text-left text-gray-500">
             <tr>
@@ -125,8 +133,8 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {filtered.length > 0 ? (
-              filtered.map((u) => (
+            {pageItems.length > 0 ? (
+              pageItems.map((u) => (
                 <tr key={u.id}>
                   <td className="p-4">
                     <p className="font-medium text-gray-900">
@@ -216,6 +224,14 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
             )}
           </tbody>
         </table>
+        </div>
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          pageSize={pageSize}
+          onPageChange={setPage}
+        />
       </div>
 
       {editingUser && (

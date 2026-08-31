@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { ApplicationReviewSlideover } from '@/components/admin/application-review-slideover'
 import { documentOrder } from '@/lib/documents'
+import { Pagination } from '@/components/ui/pagination'
+import { usePagination } from '@/lib/use-pagination'
 
 type DocRow = { document_type: string; file_url: string; verification_status: string }
 
@@ -47,6 +49,7 @@ const progressMeta: Record<'corrections' | 'completed' | 'pending', { label: str
 
 export function ApplicationsTable({ applications }: { applications: Application[] }) {
   const [tab, setTab] = useState<Tab>('all')
+  const [search, setSearch] = useState('')
   // See students-table.tsx for why this is derived rather than its own
   // synced state.
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -60,9 +63,21 @@ export function ApplicationsTable({ applications }: { applications: Application[
   }
 
   const filtered = applications.filter((app) => {
-    if (tab === 'all') return true
-    return progressOf(app) === tab
+    if (tab !== 'all' && progressOf(app) !== tab) return false
+    if (!search.trim()) return true
+    const term = search.toLowerCase()
+    return (
+      `${app.student_first_name} ${app.student_last_name}`.toLowerCase().includes(term) ||
+      `${app.parent_first_name} ${app.parent_last_name}`.toLowerCase().includes(term) ||
+      app.parent_email.toLowerCase().includes(term) ||
+      app.application_ref.toLowerCase().includes(term)
+    )
   })
+
+  const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(
+    filtered,
+    `${tab}|${search}`
+  )
 
   const tabs: { key: Tab; label: string; count: number }[] = [
     { key: 'all', label: 'All Applications', count: counts.all },
@@ -89,7 +104,18 @@ export function ApplicationsTable({ applications }: { applications: Application[
         ))}
       </div>
 
-      <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200 bg-white">
+      <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
+        <label className="mb-1 block text-xs font-medium text-gray-500">Search</label>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Student name, parent name, email, or reference #"
+          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
+        />
+      </div>
+
+      <div className="mt-4 rounded-xl border border-gray-200 bg-white">
+        <div className="min-h-[420px] overflow-x-auto">
         <table className="w-full min-w-[720px] text-sm">
           <thead className="bg-gray-50 text-left text-gray-500">
             <tr>
@@ -102,8 +128,8 @@ export function ApplicationsTable({ applications }: { applications: Application[
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {filtered.length > 0 ? (
-              filtered.map((app) => (
+            {pageItems.length > 0 ? (
+              pageItems.map((app) => (
                 <tr key={app.id}>
                   <td className="p-4 font-medium text-[#0b1b62]">{app.application_ref}</td>
                   <td className="p-4 text-gray-900">
@@ -141,6 +167,14 @@ export function ApplicationsTable({ applications }: { applications: Application[
             )}
           </tbody>
         </table>
+        </div>
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          pageSize={pageSize}
+          onPageChange={setPage}
+        />
       </div>
 
       {selected && (

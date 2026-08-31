@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { Check } from 'lucide-react'
 import { recordAttendance } from '@/app/teacher/student-dashboard/actions'
 import { formatDateLong, todayIso } from '@/lib/format'
+import { Pagination } from '@/components/ui/pagination'
+import { usePagination } from '@/lib/use-pagination'
 
 type Student = { id: string; first_name: string; last_name: string }
 
@@ -29,6 +31,15 @@ export function RosterCheckin({
   const [markingId, setMarkingId] = useState<string | null>(null)
   const [savedId, setSavedId] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
+  const [search, setSearch] = useState('')
+
+  const filtered = students.filter((s) => {
+    if (!search.trim()) return true
+    const term = search.toLowerCase()
+    return `${s.first_name} ${s.last_name}`.toLowerCase().includes(term)
+  })
+
+  const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(filtered, search)
 
   // Clears the "Saved" confirmation a couple seconds after it appears,
   // rather than leaving it up until the next action.
@@ -75,8 +86,17 @@ export function RosterCheckin({
 
       {errorMessage && <p className="mt-3 text-sm text-red-600">{errorMessage}</p>}
 
-      <div className="mt-4 divide-y divide-gray-100">
-        {students.map((s) => {
+      <div className="mt-4">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search students…"
+          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
+        />
+      </div>
+
+      <div className="mt-2 min-h-[360px] divide-y divide-gray-100">
+        {pageItems.map((s) => {
           const status = statusByStudent[s.id]
           return (
             <div key={s.id} className="flex items-center justify-between gap-4 py-3">
@@ -118,7 +138,21 @@ export function RosterCheckin({
             </div>
           )
         })}
-        {students.length === 0 && <p className="py-6 text-center text-sm text-gray-500">No students on file yet.</p>}
+        {pageItems.length === 0 && (
+          <p className="py-6 text-center text-sm text-gray-500">
+            {students.length === 0 ? 'No students on file yet.' : 'No students match your search.'}
+          </p>
+        )}
+      </div>
+
+      <div className="-mx-6 -mb-6 mt-2">
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          pageSize={pageSize}
+          onPageChange={setPage}
+        />
       </div>
     </div>
   )

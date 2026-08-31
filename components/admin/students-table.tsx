@@ -3,6 +3,8 @@
 import { useMemo, useState } from 'react'
 import { User as UserIcon } from 'lucide-react'
 import { StudentRecordSlideover } from '@/components/admin/student-record-slideover'
+import { Pagination } from '@/components/ui/pagination'
+import { usePagination } from '@/lib/use-pagination'
 
 type Guardian = { name: string; relationship: string | null; phone: string | null; email: string | null }
 type DocRow = { document_type: string; file_url: string; verification_status: string }
@@ -50,6 +52,11 @@ export function StudentsTable({ students }: { students: Student[] }) {
     )
   })
 
+  const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(
+    filtered,
+    `${search}|${statusFilter}`
+  )
+
   return (
     <>
       <div className="rounded-xl border border-gray-200 bg-white p-4">
@@ -81,7 +88,8 @@ export function StudentsTable({ students }: { students: Student[] }) {
         </div>
       </div>
 
-      <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200 bg-white">
+      <div className="mt-4 rounded-xl border border-gray-200 bg-white">
+        <div className="min-h-[420px] overflow-x-auto">
         <table className="w-full min-w-[640px] text-sm">
           <thead className="bg-gray-50 text-left text-gray-500">
             <tr>
@@ -92,8 +100,8 @@ export function StudentsTable({ students }: { students: Student[] }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {filtered.length > 0 ? (
-              filtered.map((s) => {
+            {pageItems.length > 0 ? (
+              pageItems.map((s) => {
                 const guardian = s.guardians[0]
                 return (
                   <tr key={s.id}>
@@ -156,6 +164,14 @@ export function StudentsTable({ students }: { students: Student[] }) {
             )}
           </tbody>
         </table>
+        </div>
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          pageSize={pageSize}
+          onPageChange={setPage}
+        />
       </div>
 
       {selected && (

@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { Megaphone, Trash2 } from 'lucide-react'
 import { postAnnouncement, deleteAnnouncement } from '@/app/admin/announcement/actions'
 import { formatRelativeTime } from '@/lib/format'
+import { Pagination } from '@/components/ui/pagination'
+import { usePagination } from '@/lib/use-pagination'
 
 type Announcement = {
   id: string
@@ -36,6 +38,19 @@ export function AnnouncementFeed({ announcements }: { announcements: Announcemen
   const [errorMessage, setErrorMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+
+  const filtered = announcements.filter((a) => {
+    if (!search.trim()) return true
+    const term = search.toLowerCase()
+    return (
+      a.title.toLowerCase().includes(term) ||
+      a.body.toLowerCase().includes(term) ||
+      a.posted_by_name.toLowerCase().includes(term)
+    )
+  })
+
+  const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(filtered, search)
 
   async function handlePost() {
     setIsSubmitting(true)
@@ -118,8 +133,18 @@ export function AnnouncementFeed({ announcements }: { announcements: Announcemen
         </div>
       )}
 
-      <div className="mt-4 space-y-3">
-        {announcements.map((a) => (
+      <div className="mt-4">
+        <label className="mb-1 block text-xs font-medium text-gray-500">Search</label>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Title, message, or author"
+          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
+        />
+      </div>
+
+      <div className="mt-4 min-h-[360px] space-y-3">
+        {pageItems.map((a) => (
           <div key={a.id} className="flex items-start justify-between gap-3 rounded-xl border border-gray-100 p-4">
             <div className="flex gap-3">
               <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-pink-50 text-[#e6007e]">
@@ -149,9 +174,21 @@ export function AnnouncementFeed({ announcements }: { announcements: Announcemen
             </button>
           </div>
         ))}
-        {announcements.length === 0 && (
-          <p className="text-sm text-gray-500">No announcements posted yet.</p>
+        {pageItems.length === 0 && (
+          <p className="text-sm text-gray-500">
+            {announcements.length === 0 ? 'No announcements posted yet.' : 'No announcements match your search.'}
+          </p>
         )}
+      </div>
+
+      <div className="-mx-6 -mb-6 mt-4">
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          pageSize={pageSize}
+          onPageChange={setPage}
+        />
       </div>
     </div>
   )
