@@ -8,6 +8,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Brainwave Preschool Academy — a Next.js (App Router) admin/enrollment portal backed by Supabase (Postgres + Auth). Three user roles — `admin`, `teacher`, `parent` — each with its own route section, sidebar nav, and dashboard. Public marketing site + enrollment form live outside auth; everything else is role-gated.
 
+**Live deployment**: https://brainwave-academy-phi.vercel.app/ (Vercel). This is the real `NEXT_PUBLIC_SITE_URL` — see the env var note near the bottom of this file for why that must be set correctly in Vercel's own dashboard, separately from the `http://localhost:3000` value in local `.env.local`.
+
 If the retro classroom has no/slow internet, see **`RETRO_OFFLINE_BACKUP.md`** — primary plan is USB-tethering a phone; secondary is a local Supabase environment (Docker + WSL2) that removes the internet dependency entirely, proven working end-to-end on a dev machine but requiring the same setup to be repeated on whichever lab PC is actually used, in advance.
 
 This is a student capstone/school project. It needs to run identically when cloned onto any of 4 different PCs for a sprint retro (solved via a single shared cloud Supabase project + `.env.local`, not local Postgres).
