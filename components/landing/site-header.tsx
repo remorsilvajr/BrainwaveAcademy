@@ -41,34 +41,41 @@ export function SiteHeader() {
           ))}
         </ul>
 
-        <div className="hidden items-center gap-2 justify-self-end lg:flex">
+        {/* Enroll/Log In stay visible at every width, not just lg: — these
+            are the landing page's primary conversion actions, so they
+            shouldn't be buried inside the hamburger drawer alongside the
+            nav links on mobile. Only the hamburger toggle itself is
+            lg:hidden. */}
+        <div className="flex shrink-0 items-center gap-1.5 justify-self-end sm:gap-2">
           <a
             href="/enroll"
-            className="rounded-full bg-[#e6007e] px-6 py-2 text-sm font-semibold text-white shadow-[0px_1px_2px_#0000000d] hover:bg-[#c9006e] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b1b62]"
+            className="whitespace-nowrap rounded-full bg-[#e6007e] px-3 py-1.5 text-xs font-semibold text-white shadow-[0px_1px_2px_#0000000d] hover:bg-[#c9006e] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b1b62] sm:px-6 sm:py-2 sm:text-sm"
           >
             Enroll
           </a>
           <a
             href="/login"
-            className="rounded-full bg-[#0b1b62] px-6 py-2 text-sm font-semibold text-white shadow-[0px_1px_2px_#0000000d] hover:bg-[#08154d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e6007e]"
+            className="whitespace-nowrap rounded-full bg-[#0b1b62] px-3 py-1.5 text-xs font-semibold text-white shadow-[0px_1px_2px_#0000000d] hover:bg-[#08154d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e6007e] sm:px-6 sm:py-2 sm:text-sm"
           >
             Log In
           </a>
-        </div>
 
-        <button
-          type="button"
-          onClick={() => setIsMenuOpen((v) => !v)}
-          aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
-          aria-expanded={isMenuOpen}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-[#0b1b62] hover:bg-black/5 lg:hidden"
-        >
-          {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+          <button
+            type="button"
+            onClick={() => setIsMenuOpen((v) => !v)}
+            aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={isMenuOpen}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#0b1b62] hover:bg-black/5 lg:hidden"
+          >
+            {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </nav>
 
       {isMenuOpen && (
         <div className="border-t border-[#c6c5d2] bg-[#fbf8ff] px-4 py-4 lg:hidden">
+          {/* Enroll/Log In live in the persistent header bar now (visible at
+              every width), so this drawer only needs the anchor nav links. */}
           <ul className="flex list-none flex-col gap-1 p-0 m-0">
             {navigationItems.map((item) => (
               <li key={item.label}>
@@ -82,22 +89,6 @@ export function SiteHeader() {
               </li>
             ))}
           </ul>
-          <div className="mt-3 flex flex-col gap-2 border-t border-[#c6c5d2] pt-3">
-            <a
-              href="/enroll"
-              onClick={() => setIsMenuOpen(false)}
-              className="rounded-full bg-[#e6007e] px-6 py-2.5 text-center text-sm font-semibold text-white hover:bg-[#c9006e]"
-            >
-              Enroll
-            </a>
-            <a
-              href="/login"
-              onClick={() => setIsMenuOpen(false)}
-              className="rounded-full bg-[#0b1b62] px-6 py-2.5 text-center text-sm font-semibold text-white hover:bg-[#08154d]"
-            >
-              Log In
-            </a>
-          </div>
         </div>
       )}
     </header>
