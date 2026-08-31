@@ -30,14 +30,7 @@ export function SiteFooter() {
             >
               Contact Us
             </h2>
-            <address className="relative not-italic">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                className="absolute -left-5 top-1 h-3 w-3"
-                alt=""
-                aria-hidden="true"
-                src="/images/landing/location-icon.svg"
-              />
+            <address className="not-italic">
               <p className="text-base leading-6 text-[#bac3ff]">
                 Tagum City, Davao del Norte, Philippines
               </p>
