@@ -66,17 +66,20 @@ export function CreateAccountForm() {
   const [photoError, setPhotoError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Vercel's serverless functions cap request bodies at 4.5MB regardless of
-  // next.config.ts's own `serverActions.bodySizeLimit` (10mb) — that only
-  // governs Next's application-level check, not the platform's. An oversized
-  // photo used to sail past this form and hit that platform limit at the
-  // network layer, which doesn't surface as a normal caught error — it
-  // crashes the whole submission generically with no indication of why.
-  const MAX_PHOTO_BYTES = 4 * 1024 * 1024
+  // The `avatars` bucket this uploads to already enforces a 2MB
+  // file_size_limit server-side — matching it here gives an immediate
+  // client-side message instead of a round trip that fails at Storage
+  // anyway, and stays safely under Vercel's separate 4.5MB platform-level
+  // cap on serverless function request bodies (independent of this repo's
+  // own next.config.ts `serverActions.bodySizeLimit`, which only governs
+  // Next's application-level check, not the platform's) — a photo that
+  // snuck past a looser check used to hit that platform limit instead,
+  // crashing the whole submission generically with no indication of why.
+  const MAX_PHOTO_BYTES = 2 * 1024 * 1024
 
   function handlePhotoChange(file: File | null) {
     if (file && file.size > MAX_PHOTO_BYTES) {
-      setPhotoError('That photo is too large — please choose one under 4MB.')
+      setPhotoError('That photo is too large — please choose one under 2MB.')
       if (fileInputRef.current) fileInputRef.current.value = ''
       return
     }

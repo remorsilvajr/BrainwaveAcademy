@@ -3,19 +3,19 @@
 import { useRef, useState } from 'react'
 import { Camera, Trash2, User as UserIcon } from 'lucide-react'
 
-// Vercel's serverless functions cap request bodies at 4.5MB regardless of
-// this repo's own next.config.ts `experimental.serverActions.bodySizeLimit`
-// (10mb) — that config only governs Next's own application-level check, not
-// the platform's. An oversized photo (a phone-camera JPEG, or especially an
-// uncompressed format like BMP) used to sail past this component with no
-// feedback and hit that platform limit at the network layer instead, which
-// doesn't come back as a normal thrown Error the Server Action's try/catch
-// can show a friendly message for — it surfaces as a generic framework
-// error ("An unexpected response was received from the server" or a
-// minified React Server Components error) with no indication of the real
-// cause. Rejecting oversized files here, before any upload is attempted,
-// turns that into an immediate, friendly, catchable message instead.
-const MAX_FILE_BYTES = 4 * 1024 * 1024
+// The `avatars` Supabase Storage bucket itself already enforces a 2MB
+// file_size_limit server-side — matching that here means an oversized file
+// gets an immediate, friendly, client-side message instead of a round trip
+// that fails at Storage anyway. This also stays safely under Vercel's
+// separate 4.5MB platform-level cap on serverless function request bodies
+// (independent of this repo's own next.config.ts
+// `experimental.serverActions.bodySizeLimit`, which only governs Next's own
+// application-level check, not the platform's) — a photo that snuck past a
+// looser client check used to hit that platform limit at the network layer
+// instead, surfacing as a generic framework error ("An unexpected response
+// was received from the server" or a minified React Server Components
+// error) with no indication of the real cause.
+const MAX_FILE_BYTES = 2 * 1024 * 1024
 
 // Purely presentational + interactive - callers decide whether a picked
 // file is uploaded immediately or staged until some outer "Save" (see
@@ -77,7 +77,7 @@ export function AvatarEditor({
             const file = e.target.files?.[0]
             if (file) {
               if (file.size > MAX_FILE_BYTES) {
-                setSizeError('That photo is too large — please choose one under 4MB.')
+                setSizeError('That photo is too large — please choose one under 2MB.')
               } else {
                 setSizeError('')
                 onFileSelected(file)
