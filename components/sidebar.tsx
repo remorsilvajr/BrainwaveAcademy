@@ -1,8 +1,8 @@
 'use client'
 
-import { Suspense, useState } from 'react'
-import Link, { useLinkStatus } from 'next/link'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { Suspense, useEffect, useState, useTransition } from 'react'
+import Link from 'next/link'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import {
   LayoutGrid,
   Megaphone,
@@ -16,7 +16,6 @@ import {
   LogOut,
   Menu,
   X,
-  Loader2,
   type LucideIcon,
 } from 'lucide-react'
 import { LogoutButton } from './logout-button'
@@ -52,27 +51,67 @@ export type NavSection = {
   items: NavItem[]
 }
 
-// useLinkStatus() only works in a descendant of the specific <Link> whose
-// pending state it's reading, so the icon + label live in their own child
-// component rather than being rendered directly inside the <Link> in
-// NavLinks. Swaps the icon for a spinner (same h-4 w-4 footprint, so no
-// layout shift) and dims the label while this link's navigation is still
-// resolving — reported live as feeling "slow/sluggish" with no feedback
-// that a click had even registered, since every route here is a fully
-// server-rendered page waiting on its own Supabase queries. Skipped
-// automatically once the destination has been prefetched (the common
-// case), so it only shows up when there's an actual wait to cover.
-function NavLinkRow({ label, Icon }: { label: string; Icon?: LucideIcon }) {
-  const { pending } = useLinkStatus()
+// A slim top-of-page bar showing sidebar-navigation progress. An earlier
+// version used next/link's useLinkStatus() to swap the clicked link's own
+// icon for a spinner, but that hook's `pending` only covers the brief
+// window before the URL updates — reported live as invisible in practice,
+// since that flip happens almost immediately, well before the destination
+// page's data is actually ready. This instead tracks a real React
+// transition wrapping the navigation's router.push (see Sidebar's
+// handleLinkClick, which intercepts <Link>'s own click handling via
+// preventDefault specifically so useLinkStatus's tracking — now
+// unreachable — was removed rather than left as dead code). The
+// transition's `isPending` stays true for its full lifetime, including
+// while a Suspense boundary further down the tree (the role's loading.tsx)
+// is still resolving, giving a sustained "this is still loading" signal
+// instead of an instant flash.
+function TopProgressBar({ active }: { active: boolean }) {
+  const [width, setWidth] = useState(0)
+  const [visible, setVisible] = useState(false)
+  const [lastActive, setLastActive] = useState(active)
+
+  // The instant part of each transition (show + jump to 15%, or jump to
+  // 100%) happens inline during render the moment `active` flips — React's
+  // documented "adjusting state when a prop changes" pattern — rather than
+  // in the effect below, so only the genuinely time-delayed follow-ups
+  // (inside a setTimeout callback, not synchronous in the effect body)
+  // need the effect at all.
+  if (active !== lastActive) {
+    setLastActive(active)
+    if (active) {
+      setVisible(true)
+      setWidth(15)
+    } else {
+      setWidth(100)
+    }
+  }
+
+  useEffect(() => {
+    if (active) {
+      const growTimer = setTimeout(() => setWidth(80), 50)
+      return () => clearTimeout(growTimer)
+    }
+    const hideTimer = setTimeout(() => {
+      setVisible(false)
+      setWidth(0)
+    }, 300)
+    return () => clearTimeout(hideTimer)
+  }, [active])
+
   return (
-    <>
-      {pending ? (
-        <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
-      ) : (
-        Icon && <Icon className="h-4 w-4 shrink-0" />
-      )}
-      <span className={pending ? 'opacity-70' : undefined}>{label}</span>
-    </>
+    <div
+      aria-hidden="true"
+      className="fixed inset-x-0 top-0 z-50 h-[3px]"
+      style={{ opacity: visible ? 1 : 0, transition: 'opacity 200ms ease' }}
+    >
+      <div
+        className="h-full bg-[#e6007e]"
+        style={{
+          width: `${width}%`,
+          transition: width === 100 ? 'width 200ms ease' : 'width 1.2s ease-out',
+        }}
+      />
+    </div>
   )
 }
 
@@ -80,7 +119,15 @@ function NavLinkRow({ label, Icon }: { label: string; Icon?: LucideIcon }) {
 // <Suspense> boundary useSearchParams() requires for prerendered routes
 // (admin/teacher pages are statically prerendered and don't use the
 // ?student= param at all) — everything else in Sidebar stays prerenderable.
-function NavLinks({ sections, onNavigate }: { sections: NavSection[]; onNavigate?: () => void }) {
+function NavLinks({
+  sections,
+  onNavigate,
+  onLinkClick,
+}: {
+  sections: NavSection[]
+  onNavigate?: () => void
+  onLinkClick: (href: string, e: React.MouseEvent) => void
+}) {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
@@ -119,14 +166,18 @@ function NavLinks({ sections, onNavigate }: { sections: NavSection[]; onNavigate
                 <li key={item.href}>
                   <Link
                     href={hrefWithStudent(item.href!)}
-                    onClick={onNavigate}
+                    onClick={(e) => {
+                      onLinkClick(hrefWithStudent(item.href!), e)
+                      onNavigate?.()
+                    }}
                     className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium ${
                       active
                         ? 'bg-[#e6007e] text-white'
                         : 'text-[#c7cff0] hover:bg-white/10 hover:text-white'
                     }`}
                   >
-                    <NavLinkRow label={item.label} Icon={Icon} />
+                    {Icon && <Icon className="h-4 w-4 shrink-0" />}
+                    {item.label}
                   </Link>
                 </li>
               )
@@ -154,9 +205,24 @@ export function Sidebar({
   // `pt-14 lg:pt-0 lg:ml-64` on the content side, and each role's top bar
   // for the matching `top-14 lg:top-0` so nothing sticks underneath this.
   const [isMobileOpen, setIsMobileOpen] = useState(false)
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+
+  // Intercepts a normal left-click to route it through startTransition (so
+  // TopProgressBar's `isPending` tracks it) instead of letting <Link> do
+  // its own default navigation. Modified clicks (ctrl/cmd/shift/middle) are
+  // left alone so "open in new tab" etc. keep working normally.
+  function handleLinkClick(href: string, e: React.MouseEvent) {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return
+    e.preventDefault()
+    startTransition(() => {
+      router.push(href)
+    })
+  }
 
   return (
     <>
+      <TopProgressBar active={isPending} />
       <div className="fixed inset-x-0 top-0 z-40 flex h-14 items-center gap-3 bg-[#0b1b62] px-4 lg:hidden">
         <button
           type="button"
@@ -196,7 +262,11 @@ export function Sidebar({
             </div>
             <nav className="flex-1 space-y-6">
               <Suspense fallback={<NavLinksFallback sections={sections} />}>
-                <NavLinks sections={sections} onNavigate={() => setIsMobileOpen(false)} />
+                <NavLinks
+                  sections={sections}
+                  onNavigate={() => setIsMobileOpen(false)}
+                  onLinkClick={handleLinkClick}
+                />
               </Suspense>
             </nav>
           </aside>
@@ -211,7 +281,7 @@ export function Sidebar({
 
         <nav className="flex-1 space-y-6">
           <Suspense fallback={<NavLinksFallback sections={sections} />}>
-            <NavLinks sections={sections} />
+            <NavLinks sections={sections} onLinkClick={handleLinkClick} />
           </Suspense>
         </nav>
       </aside>
