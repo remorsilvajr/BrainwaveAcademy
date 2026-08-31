@@ -1,5 +1,6 @@
 import { Lock } from 'lucide-react'
 import { ChangePasswordForm } from '@/components/settings/change-password-form'
+import { RequestPasswordReset } from '@/components/settings/request-password-reset'
 
 export default function AdminSettingsPage() {
   return (
@@ -14,8 +15,9 @@ export default function AdminSettingsPage() {
           <Lock className="h-5 w-5 text-[#e6007e]" />
           <h2 className="text-lg font-bold text-gray-900">Password &amp; Security</h2>
         </div>
-        <div className="p-6">
+        <div className="space-y-6 p-6">
           <ChangePasswordForm />
+          <RequestPasswordReset />
         </div>
       </section>
     </div>

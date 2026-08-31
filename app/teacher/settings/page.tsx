@@ -1,6 +1,7 @@
 import { Lock, Bell, Laptop } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { ChangePasswordForm } from '@/components/settings/change-password-form'
+import { RequestPasswordReset } from '@/components/settings/request-password-reset'
 import { NotificationSettings } from '@/components/teacher/notification-settings'
 import { SessionManagement } from '@/components/parent/session-management'
 
@@ -31,8 +32,9 @@ export default async function TeacherSettingsPage() {
           <Lock className="h-5 w-5 text-[#e6007e]" />
           <h2 className="text-lg font-bold text-gray-900">Password &amp; Security</h2>
         </div>
-        <div className="p-6">
+        <div className="space-y-6 p-6">
           <ChangePasswordForm />
+          <RequestPasswordReset />
         </div>
       </section>
 
