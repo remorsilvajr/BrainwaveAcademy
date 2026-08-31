@@ -15,9 +15,9 @@ export function TeacherTopBar({ sections, teacher }: { sections: NavSection[]; t
       : (sections.flatMap((s) => s.items).find((item) => item.href === pathname)?.label ?? 'Brainwave Dashboard')
 
   return (
-    <header className="sticky top-0 z-40 border-b border-gray-200 bg-white px-8 py-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-[#0b1b62]">{title}</h1>
+    <header className="sticky top-14 z-20 border-b border-gray-200 bg-white px-4 py-4 sm:px-8 lg:top-0">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+        <h1 className="text-lg font-bold text-[#0b1b62] sm:text-xl">{title}</h1>
 
         <div className="flex items-center gap-2.5">
           {teacher.avatar_url ? (

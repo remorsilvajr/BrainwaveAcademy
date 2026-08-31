@@ -120,7 +120,7 @@ export function CreateAccountForm() {
             <h3 className="border-b border-gray-100 pb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
               Personal Information
             </h3>
-            <div className="mt-4 grid grid-cols-3 gap-3">
+            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
               <Field
                 label="First Name"
                 name="first_name"
@@ -145,7 +145,7 @@ export function CreateAccountForm() {
                 defaultValue={values.last_name}
               />
             </div>
-            <div className="mt-4 grid grid-cols-2 gap-3">
+            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Field
                 label="Email Address"
                 name="email"
@@ -173,7 +173,7 @@ export function CreateAccountForm() {
               <p className="mb-2 text-sm font-semibold text-[#0b1b62]">
                 Assigned Role <span className="text-[#e6007e]">*</span>
               </p>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 {roleOptions.map((r) => (
                   <label
                     key={r.value}

@@ -42,7 +42,7 @@ export default async function TeacherLayout({ children }: { children: React.Reac
   return (
     <div className="flex">
       <Sidebar sections={sections} schoolName="Brainwave Academy" portalLabel="Teacher Portal" />
-      <div className="ml-64 flex-1">
+      <div className="min-w-0 flex-1 pt-14 lg:ml-64 lg:pt-0">
         <TeacherTopBar
           sections={sections}
           teacher={{
@@ -51,7 +51,7 @@ export default async function TeacherLayout({ children }: { children: React.Reac
             avatar_url: profile?.avatar_url ?? null,
           }}
         />
-        <main className="bg-[#faf9fc] p-8">{children}</main>
+        <main className="bg-[#faf9fc] p-4 sm:p-8">{children}</main>
       </div>
     </div>
   )

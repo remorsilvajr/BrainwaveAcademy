@@ -72,7 +72,7 @@ export default async function ParentLayout({ children }: { children: React.React
   return (
     <div className="flex">
       <Sidebar sections={sections} schoolName="Brainwave Academy" portalLabel="Parent Portal" />
-      <div className="ml-64 flex-1">
+      <div className="min-w-0 flex-1 pt-14 lg:ml-64 lg:pt-0">
         <ParentTopBar
           sections={sections}
           students={students}
@@ -82,7 +82,7 @@ export default async function ParentLayout({ children }: { children: React.React
             avatar_url: profile?.avatar_url ?? null,
           }}
         />
-        <main className="p-8">{children}</main>
+        <main className="p-4 sm:p-8">{children}</main>
       </div>
     </div>
   )

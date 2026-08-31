@@ -83,7 +83,8 @@ export default async function AdminDashboardPage() {
         {/* Payments aren't wired up yet — left as static placeholder. */}
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
           <h2 className="mb-3 font-semibold text-[#0b1b62]">Recent Financial Transactions</h2>
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[520px] text-sm">
             <thead className="text-left text-gray-400">
               <tr>
                 <th className="pb-2 font-medium">Ref # / Date</th>
@@ -134,6 +135,7 @@ export default async function AdminDashboardPage() {
               </tr>
             </tbody>
           </table>
+          </div>
         </div>
 
         <PriorityFeedbackLog items={feedbackItems} />

@@ -184,7 +184,7 @@ export function ApplicationReviewSlideover({
           <p className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-400">
             Applicant Summary
           </p>
-          <div className="grid grid-cols-2 gap-4 rounded-xl bg-gray-50 p-4">
+          <div className="grid grid-cols-1 gap-4 rounded-xl bg-gray-50 p-4 sm:grid-cols-2">
             <InfoField
               label="Date of Birth"
               value={`${formatDateLong(application.student_dob)} (${calculateAge(application.student_dob)}y)`}

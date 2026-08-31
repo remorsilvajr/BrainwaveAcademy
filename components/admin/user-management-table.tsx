@@ -106,8 +106,8 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
         </div>
       </div>
 
-      <div className="mt-4 overflow-hidden rounded-xl border border-gray-200 bg-white">
-        <table className="w-full text-sm">
+      <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200 bg-white">
+        <table className="w-full min-w-[720px] text-sm">
           <thead className="bg-gray-50 text-left text-gray-500">
             <tr>
               <th className="p-4 font-medium">User Details</th>

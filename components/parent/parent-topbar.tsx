@@ -38,20 +38,21 @@ export function ParentTopBar({
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-gray-200 bg-white px-8 py-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-[#0b1b62]">{title}</h1>
+    <header className="sticky top-14 z-20 border-b border-gray-200 bg-white px-4 py-4 sm:px-8 lg:top-0">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+        <h1 className="text-lg font-bold text-[#0b1b62] sm:text-xl">{title}</h1>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           {students.length > 0 && (
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setStudentMenuOpen((v) => !v)}
-                className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
               >
                 <span aria-hidden="true">🎒</span>
-                Student: {selected ? `${selected.first_name} ${selected.last_name}` : 'Select'}
+                <span className="hidden sm:inline">Student: </span>
+                {selected ? `${selected.first_name} ${selected.last_name}` : 'Select'}
                 <ChevronDown className="h-4 w-4 text-gray-400" />
               </button>
 
@@ -77,7 +78,7 @@ export function ParentTopBar({
             </div>
           )}
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 sm:gap-2.5">
             {parent.avatar_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -94,7 +95,7 @@ export function ParentTopBar({
               <p className="text-sm font-semibold text-gray-900">
                 {parent.last_name}, {parent.first_name.charAt(0)}.
               </p>
-              <p className="text-xs text-gray-500">Parent / Guardian</p>
+              <p className="hidden text-xs text-gray-500 sm:block">Parent / Guardian</p>
             </div>
           </div>
         </div>

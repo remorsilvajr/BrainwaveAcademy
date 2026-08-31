@@ -71,7 +71,7 @@ export function EnrollStudentForm({ parentName }: { parentName: string }) {
           <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{state.error}</p>
         )}
 
-        <div className="mt-6 grid grid-cols-2 gap-4">
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field
             label="First Name"
             name="student_first_name"

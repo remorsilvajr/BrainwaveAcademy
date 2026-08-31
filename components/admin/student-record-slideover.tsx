@@ -193,7 +193,7 @@ export function StudentRecordSlideover({ student, onClose }: { student: Student;
         <div className="flex-1 overflow-y-auto p-6">
           {tab === 'personal' && !isEditing && (
             <div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <InfoField label="Legal Full Name" value={fullName} />
                 <InfoField
                   label="Date of Birth (Age)"
@@ -212,7 +212,7 @@ export function StudentRecordSlideover({ student, onClose }: { student: Student;
 
           {tab === 'personal' && isEditing && (
             <div className="space-y-3">
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <div>
                   <label className="mb-1 block text-sm font-semibold text-[#0b1b62]">First Name</label>
                   <input
@@ -241,7 +241,7 @@ export function StudentRecordSlideover({ student, onClose }: { student: Student;
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-sm font-semibold text-[#0b1b62]">Date of Birth</label>
                   <input

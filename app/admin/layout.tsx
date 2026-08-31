@@ -33,7 +33,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="flex">
       <Sidebar sections={sections} schoolName="Brainwave Academy" portalLabel="Admin Portal" />
-      <main className="ml-64 flex-1 bg-[#faf9fc] p-8">{children}</main>
+      <main className="min-w-0 flex-1 bg-[#faf9fc] px-4 pb-8 pt-20 lg:ml-64 lg:px-8 lg:pt-8">{children}</main>
     </div>
   )
 }
