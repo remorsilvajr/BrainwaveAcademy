@@ -11,6 +11,7 @@ import {
 } from '@/app/admin/applications/actions'
 import { calculateAge, formatDateLong } from '@/lib/format'
 import { documentLabels, documentOrder } from '@/lib/documents'
+import { DocumentPreviewModal } from '@/components/ui/document-preview-modal'
 
 type DocRow = { document_type: string; file_url: string; verification_status: string }
 
@@ -65,6 +66,8 @@ export function ApplicationReviewSlideover({
   const [result, setResult] = useState<'saved' | 'corrections' | 'enrolled' | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
   const contentRef = useRef<HTMLDivElement>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [previewTitle, setPreviewTitle] = useState('')
 
   const hasUploadedDocs = application.documents.length > 0
   const allValid = documentOrder.every((type) => statuses[type] === 'valid')
@@ -91,7 +94,8 @@ export function ApplicationReviewSlideover({
     if (!doc) return
     try {
       const url = await getSignedDocumentUrl(doc.file_url)
-      window.open(url, '_blank')
+      setPreviewTitle(documentLabels[type] ?? 'Document')
+      setPreviewUrl(url)
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Could not open that document.')
     }
@@ -304,6 +308,12 @@ export function ApplicationReviewSlideover({
           </div>
         </div>
       </div>
+
+      <DocumentPreviewModal
+        url={previewUrl}
+        title={previewTitle}
+        onClose={() => setPreviewUrl(null)}
+      />
     </div>
   )
 }

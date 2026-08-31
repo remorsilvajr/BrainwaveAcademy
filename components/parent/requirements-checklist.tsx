@@ -4,6 +4,7 @@ import { useRef, useState, useTransition } from 'react'
 import { CheckCircle2, Clock, XCircle, FileText } from 'lucide-react'
 import { uploadRequirementDocument, getOwnDocumentSignedUrl } from '@/app/parent/requirements/actions'
 import { documentOrder, documentShortLabels, documentDescriptions } from '@/lib/documents'
+import { DocumentPreviewModal } from '@/components/ui/document-preview-modal'
 
 type DocRow = { id: string; document_type: string; verification_status: string }
 type EnrollmentRecord = {
@@ -45,6 +46,8 @@ export function RequirementsChecklist({
   const [isPending, startTransition] = useTransition()
   const [errorMessage, setErrorMessage] = useState('')
   const fileInputs = useRef<Record<string, HTMLInputElement | null>>({})
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [previewTitle, setPreviewTitle] = useState('')
 
   if (!record) {
     return (
@@ -99,7 +102,8 @@ export function RequirementsChecklist({
     if (!doc) return
     try {
       const url = await getOwnDocumentSignedUrl(doc.id)
-      window.open(url, '_blank')
+      setPreviewTitle(documentShortLabels[type] ?? 'Document')
+      setPreviewUrl(url)
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Could not open that document.')
     }
@@ -194,6 +198,12 @@ export function RequirementsChecklist({
           )
         })}
       </div>
+
+      <DocumentPreviewModal
+        url={previewUrl}
+        title={previewTitle}
+        onClose={() => setPreviewUrl(null)}
+      />
     </div>
   )
 }

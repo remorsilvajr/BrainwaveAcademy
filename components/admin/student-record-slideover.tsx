@@ -8,6 +8,7 @@ import { documentLabels, documentOrder } from '@/lib/documents'
 import { getSignedDocumentUrl } from '@/app/admin/applications/actions'
 import { updateStudentRecord, updateStudentAvatar, removeStudentAvatar } from '@/app/admin/students/actions'
 import { AvatarEditor } from '@/components/ui/avatar-editor'
+import { DocumentPreviewModal } from '@/components/ui/document-preview-modal'
 
 type Guardian = {
   name: string
@@ -47,6 +48,8 @@ export function StudentRecordSlideover({ student, onClose }: { student: Student;
   const router = useRouter()
   const [tab, setTab] = useState<Tab>('personal')
   const [errorMessage, setErrorMessage] = useState('')
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [previewTitle, setPreviewTitle] = useState('')
 
   const [avatarUrl, setAvatarUrl] = useState(student.avatar_url)
   const [isSavingAvatar, setIsSavingAvatar] = useState(false)
@@ -91,10 +94,11 @@ export function StudentRecordSlideover({ student, onClose }: { student: Student;
 
   const fullName = `${student.first_name}${student.middle_name ? ' ' + student.middle_name : ''} ${student.last_name}`
 
-  async function handleViewDocument(path: string) {
+  async function handleViewDocument(path: string, label: string) {
     try {
       const url = await getSignedDocumentUrl(path)
-      window.open(url, '_blank')
+      setPreviewTitle(label)
+      setPreviewUrl(url)
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Could not open that document.')
     }
@@ -320,7 +324,7 @@ export function StudentRecordSlideover({ student, onClose }: { student: Student;
                     </div>
                     {doc && (
                       <button
-                        onClick={() => handleViewDocument(doc.file_url)}
+                        onClick={() => handleViewDocument(doc.file_url, documentLabels[type])}
                         className="text-sm font-medium text-[#0b1b62] underline"
                       >
                         View
@@ -345,6 +349,12 @@ export function StudentRecordSlideover({ student, onClose }: { student: Student;
           </button>
         </div>
       </div>
+
+      <DocumentPreviewModal
+        url={previewUrl}
+        title={previewTitle}
+        onClose={() => setPreviewUrl(null)}
+      />
     </div>
   )
 }
