@@ -12,12 +12,67 @@ export default async function AdminStudentDashboardPage({
   const { student: studentParam } = await searchParams
   const supabase = await createClient()
 
-  const { data: students } = await supabase
+  // The student list is only actually needed up front to pick a *default*
+  // selection when the URL has no ?student= yet — every other entry into
+  // this page (the selector, "Assess Now" links, the roster) already
+  // supplies one. Previously this list query was always awaited before the
+  // detail queries even started, serializing two round trips on the common
+  // path for no reason. When studentParam is present, everything — list
+  // included — now runs in one Promise.all instead.
+  const studentsQuery = supabase
     .from('students')
     .select('id, first_name, last_name')
     .order('first_name', { ascending: true })
 
-  const selectedId = studentParam ?? students?.[0]?.id ?? null
+  function detailQueries(id: string) {
+    return Promise.all([
+      supabase
+        .from('students')
+        .select('id, first_name, middle_name, last_name, date_of_birth, gender, enrollment_status, avatar_url')
+        .eq('id', id)
+        .single(),
+      supabase
+        .from('attendance')
+        .select('id, date, status')
+        .eq('student_id', id)
+        .order('date', { ascending: false })
+        .limit(14),
+      supabase
+        .from('milestones')
+        .select('id, category, assessment_date, notes')
+        .eq('student_id', id)
+        .order('assessment_date', { ascending: false })
+        .order('created_at', { ascending: false }),
+    ])
+  }
+
+  let students, student, attendance, milestones
+  let selectedId: string | null
+
+  if (studentParam) {
+    selectedId = studentParam
+    const [studentsRes, [studentRes, attendanceRes, milestonesRes]] = await Promise.all([
+      studentsQuery,
+      detailQueries(studentParam),
+    ])
+    ;({ data: students } = studentsRes)
+    ;({ data: student } = studentRes)
+    ;({ data: attendance } = attendanceRes)
+    ;({ data: milestones } = milestonesRes)
+  } else {
+    ;({ data: students } = await studentsQuery)
+    selectedId = students?.[0]?.id ?? null
+    if (selectedId) {
+      const [studentRes, attendanceRes, milestonesRes] = await detailQueries(selectedId)
+      ;({ data: student } = studentRes)
+      ;({ data: attendance } = attendanceRes)
+      ;({ data: milestones } = milestonesRes)
+    } else {
+      student = null
+      attendance = null
+      milestones = null
+    }
+  }
 
   if (!selectedId) {
     return (
@@ -35,26 +90,6 @@ export default async function AdminStudentDashboardPage({
       </div>
     )
   }
-
-  const [{ data: student }, { data: attendance }, { data: milestones }] = await Promise.all([
-    supabase
-      .from('students')
-      .select('id, first_name, middle_name, last_name, date_of_birth, gender, enrollment_status, avatar_url')
-      .eq('id', selectedId)
-      .single(),
-    supabase
-      .from('attendance')
-      .select('id, date, status')
-      .eq('student_id', selectedId)
-      .order('date', { ascending: false })
-      .limit(14),
-    supabase
-      .from('milestones')
-      .select('id, category, assessment_date, notes')
-      .eq('student_id', selectedId)
-      .order('assessment_date', { ascending: false })
-      .order('created_at', { ascending: false }),
-  ])
 
   return (
     <div className="space-y-6">

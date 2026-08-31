@@ -11,12 +11,65 @@ export default async function TeacherStudentDashboardPage({
   const { student: studentParam } = await searchParams
   const supabase = await createClient()
 
-  const { data: students } = await supabase
+  // See app/admin/student-dashboard/page.tsx for why this branches on
+  // studentParam — the student list is only needed up front to pick a
+  // *default* selection when the URL has none yet; every other entry into
+  // this page already supplies one, so this avoids serializing two DB
+  // round trips into one when a single Promise.all would do.
+  const studentsQuery = supabase
     .from('students')
     .select('id, first_name, last_name')
     .order('first_name', { ascending: true })
 
-  const selectedId = studentParam ?? students?.[0]?.id ?? null
+  function detailQueries(id: string) {
+    return Promise.all([
+      supabase
+        .from('students')
+        .select('id, first_name, middle_name, last_name, date_of_birth, gender, enrollment_status, avatar_url')
+        .eq('id', id)
+        .single(),
+      supabase
+        .from('attendance')
+        .select('id, date, status')
+        .eq('student_id', id)
+        .order('date', { ascending: false })
+        .limit(14),
+      supabase
+        .from('milestones')
+        .select('id, category, assessment_date, notes')
+        .eq('student_id', id)
+        .order('assessment_date', { ascending: false })
+        .order('created_at', { ascending: false }),
+    ])
+  }
+
+  let students, student, attendance, milestones
+  let selectedId: string | null
+
+  if (studentParam) {
+    selectedId = studentParam
+    const [studentsRes, [studentRes, attendanceRes, milestonesRes]] = await Promise.all([
+      studentsQuery,
+      detailQueries(studentParam),
+    ])
+    ;({ data: students } = studentsRes)
+    ;({ data: student } = studentRes)
+    ;({ data: attendance } = attendanceRes)
+    ;({ data: milestones } = milestonesRes)
+  } else {
+    ;({ data: students } = await studentsQuery)
+    selectedId = students?.[0]?.id ?? null
+    if (selectedId) {
+      const [studentRes, attendanceRes, milestonesRes] = await detailQueries(selectedId)
+      ;({ data: student } = studentRes)
+      ;({ data: attendance } = attendanceRes)
+      ;({ data: milestones } = milestonesRes)
+    } else {
+      student = null
+      attendance = null
+      milestones = null
+    }
+  }
 
   if (!selectedId) {
     return (
@@ -34,26 +87,6 @@ export default async function TeacherStudentDashboardPage({
       </div>
     )
   }
-
-  const [{ data: student }, { data: attendance }, { data: milestones }] = await Promise.all([
-    supabase
-      .from('students')
-      .select('id, first_name, middle_name, last_name, date_of_birth, gender, enrollment_status, avatar_url')
-      .eq('id', selectedId)
-      .single(),
-    supabase
-      .from('attendance')
-      .select('id, date, status')
-      .eq('student_id', selectedId)
-      .order('date', { ascending: false })
-      .limit(14),
-    supabase
-      .from('milestones')
-      .select('id, category, assessment_date, notes')
-      .eq('student_id', selectedId)
-      .order('assessment_date', { ascending: false })
-      .order('created_at', { ascending: false }),
-  ])
 
   return (
     <div className="space-y-6">
