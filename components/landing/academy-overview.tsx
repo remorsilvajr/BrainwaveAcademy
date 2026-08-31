@@ -1,5 +1,31 @@
 'use client'
 
+import { useState } from 'react'
+import Image from 'next/image'
+
+// Missing program photos (see the two entries below with no matching file
+// in public/images/landing/ — those are the user's own real photos to add,
+// not something to fabricate) used to just silently show blank space via a
+// CSS background-image that failed to load. A plain next/image <img>
+// doesn't fail that quietly — a 404'd src shows the browser's broken-image
+// icon — so each photo tracks its own load-error state and unmounts itself
+// on failure, keeping today's "just blank" behavior instead of a worse
+// broken-icon regression once these are swapped to next/image.
+function ProgramPhoto({ src, alt, sizes }: { src: string; alt: string; sizes: string }) {
+  const [failed, setFailed] = useState(false)
+  if (failed) return null
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      fill
+      sizes={sizes}
+      className="object-cover"
+      onError={() => setFailed(true)}
+    />
+  )
+}
+
 const journeyItems = [
   {
     year: '2005',
@@ -220,12 +246,15 @@ export function AcademyOverview() {
             ))}
           </ol>
           <article className="flex w-full max-w-4xl flex-col items-center gap-8 rounded-2xl border border-[#c6c5d2] bg-[#fbf8ff] px-8 pb-8 pt-12 shadow-[0px_1px_2px_#0000000d] sm:flex-row">
-            <div
-              className="h-48 w-48 shrink-0 rounded-full border-4 border-[#f5f2f9] bg-cover bg-center shadow-[inset_0px_2px_4px_4px_#0000000d]"
-              style={{ backgroundImage: 'url(/images/landing/founder.jpg)' }}
-              role="img"
-              aria-label="Dr. Elena C. Lagrimas"
-            />
+            <div className="relative h-48 w-48 shrink-0 overflow-hidden rounded-full border-4 border-[#f5f2f9] shadow-[inset_0px_2px_4px_4px_#0000000d]">
+              <Image
+                src="/images/landing/founder.jpg"
+                alt="Dr. Elena C. Lagrimas"
+                fill
+                sizes="192px"
+                className="object-cover"
+              />
+            </div>
             <div>
               <h3 className="text-2xl font-semibold leading-8 text-[#0b1b62]">
                 Dr. Elena C. Lagrimas
@@ -268,10 +297,12 @@ export function AcademyOverview() {
               key={program.title}
               className="overflow-hidden rounded-xl border border-[#c6c5d2] bg-[#fbf8ff] shadow-[0px_1px_2px_#0000000d]"
             >
-              <div
-                className="relative h-48 w-full bg-cover bg-center"
-                style={{ backgroundImage: `url(${program.image})` }}
-              >
+              <div className="relative h-48 w-full bg-[#f5f2f9]">
+                <ProgramPhoto
+                  src={program.image}
+                  alt={`${program.title} program`}
+                  sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw"
+                />
                 <span className="absolute right-4 top-4 rounded-full bg-[#ffffffe6] px-2 py-1 text-xs font-medium tracking-[0.24px] text-[#0b1b62] backdrop-blur-[2px]">
                   {program.age}
                 </span>
