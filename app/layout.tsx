@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
+import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 import { CrossTabAuthSync } from '@/components/cross-tab-auth-sync'
 
@@ -28,6 +29,7 @@ export default function RootLayout({
       <body className={`${inter.className} bg-white text-gray-900`}>
         <CrossTabAuthSync />
         {children}
+        <Analytics />
       </body>
     </html>
   )
