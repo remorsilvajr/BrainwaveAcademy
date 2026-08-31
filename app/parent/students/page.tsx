@@ -37,11 +37,11 @@ export default async function StudentProfilePage({
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#0b1b62]">Student Profile</h1>
+          <h1 className="text-2xl font-bold text-[#0b1b62]">Enrollment Profile</h1>
           <p className="mt-1 text-sm text-gray-500">View your child&apos;s enrollment record.</p>
         </div>
         <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-500">
-          No students on file yet.{' '}
+          No applicants or students on file yet.{' '}
           <Link href="/parent/enroll-a-student" className="font-semibold text-[#00a3e0] hover:underline">
             Enroll a student
           </Link>{' '}
@@ -77,7 +77,9 @@ export default async function StudentProfilePage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-[#0b1b62]">Student Profile</h1>
+        <h1 className="text-2xl font-bold text-[#0b1b62]">
+          {application.created_student_id ? 'Student Profile' : 'Applicant Profile'}
+        </h1>
         <p className="mt-1 text-sm text-gray-500">View your child&apos;s enrollment record.</p>
       </div>
 

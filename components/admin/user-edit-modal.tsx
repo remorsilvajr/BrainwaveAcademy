@@ -7,6 +7,12 @@ import { calculateAge, formatDateLong } from '@/lib/format'
 import { AvatarEditor } from '@/components/ui/avatar-editor'
 
 type LinkedStudent = { id: string; first_name: string; middle_name: string | null; last_name: string }
+type Applicant = {
+  id: string
+  student_first_name: string
+  student_middle_name: string | null
+  student_last_name: string
+}
 
 type Profile = {
   id: string
@@ -20,6 +26,7 @@ type Profile = {
   relationship_to_student: string | null
   avatar_url: string | null
   parent_student?: { relationship: string; students: LinkedStudent | null }[]
+  applicants?: Applicant[]
 }
 
 export function UserEditModal({ user, onClose }: { user: Profile; onClose: () => void }) {
@@ -38,6 +45,7 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
   const linkedStudents = (user.parent_student ?? [])
     .map((ps) => ps.students)
     .filter((s): s is LinkedStudent => s !== null)
+  const applicants = user.applicants ?? []
 
   async function handleAvatarSelected(file: File) {
     setIsSavingAvatar(true)
@@ -202,7 +210,7 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
 
           {role === 'parent' && (
             <div>
-              <p className="mb-1 text-sm font-semibold text-[#0b1b62]">Students</p>
+              <p className="mb-1 text-sm font-semibold text-[#0b1b62]">Enrolled Students</p>
               {linkedStudents.length > 0 ? (
                 <ul className="space-y-1 rounded-lg border border-slate-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
                   {linkedStudents.map((s) => (
@@ -213,9 +221,25 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
                 </ul>
               ) : (
                 <p className="rounded-lg border border-slate-200 bg-gray-50 px-3 py-2 text-sm text-gray-400">
-                  No students linked to this account yet.
+                  No enrolled students yet.
                 </p>
               )}
+            </div>
+          )}
+
+          {role === 'parent' && applicants.length > 0 && (
+            <div>
+              <p className="mb-1 text-sm font-semibold text-[#0b1b62]">
+                Applicants <span className="font-normal text-gray-400">(not yet enrolled)</span>
+              </p>
+              <ul className="space-y-1 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                {applicants.map((a) => (
+                  <li key={a.id}>
+                    {a.student_first_name} {a.student_middle_name ? `${a.student_middle_name} ` : ''}
+                    {a.student_last_name}
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
 

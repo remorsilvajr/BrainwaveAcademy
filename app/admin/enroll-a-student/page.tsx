@@ -1,15 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { EnrollmentRequestsTable } from '@/components/admin/enrollment-requests-table'
-
-function isToday(dateString: string) {
-  const date = new Date(dateString)
-  const today = new Date()
-  return (
-    date.getFullYear() === today.getFullYear() &&
-    date.getMonth() === today.getMonth() &&
-    date.getDate() === today.getDate()
-  )
-}
+import { isToday } from '@/lib/format'
 
 export default async function EnrollAStudentPage() {
   const supabase = await createClient()
@@ -29,8 +20,10 @@ export default async function EnrollAStudentPage() {
       <div>
         <h1 className="text-2xl font-bold text-[#0b1b62]">Landing Page Enrollment Requests</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Review light enrollment submissions from the public website, approve students, and
-          automatically trigger account setup emails.
+          Review light enrollment submissions from the public website, approve enrollment
+          requests, and automatically trigger account setup emails. This creates the parent
+          account only — the child becomes an enrolled student after document review in
+          Applications.
         </p>
       </div>
 

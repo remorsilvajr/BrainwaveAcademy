@@ -6,6 +6,12 @@ import { formatDateShort } from '@/lib/format'
 import { UserEditModal } from '@/components/admin/user-edit-modal'
 
 type LinkedStudent = { id: string; first_name: string; middle_name: string | null; last_name: string }
+type Applicant = {
+  id: string
+  student_first_name: string
+  student_middle_name: string | null
+  student_last_name: string
+}
 
 type Profile = {
   id: string
@@ -21,6 +27,7 @@ type Profile = {
   created_at: string
   avatar_url: string | null
   parent_student?: { relationship: string; students: LinkedStudent | null }[]
+  applicants?: Applicant[]
 }
 
 const roleBadgeClasses: Record<string, string> = {

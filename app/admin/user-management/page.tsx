@@ -4,11 +4,33 @@ import { UserManagementTable } from '@/components/admin/user-management-table'
 
 export default async function UserManagementPage() {
   const supabase = await createClient()
-  const { data } = await supabase
-    .from('profiles')
-    .select('*, parent_student(relationship, students(id, first_name, middle_name, last_name))')
-    .order('created_at', { ascending: false })
-  const users = data ?? []
+  const [{ data }, { data: pendingApplications }] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('*, parent_student(relationship, students(id, first_name, middle_name, last_name))')
+      .order('created_at', { ascending: false }),
+    // Children who exist only as an application (no students row yet) —
+    // shown as "Applicants" in the edit modal alongside genuinely enrolled
+    // Students, so a parent mid-enrollment doesn't look like they have no
+    // children on file at all. See CLAUDE.md's applicant/student note.
+    supabase
+      .from('applications')
+      .select('id, created_parent_id, student_first_name, student_middle_name, student_last_name')
+      .not('created_parent_id', 'is', null)
+      .is('created_student_id', null),
+  ])
+
+  const applicantsByParentId = new Map<string, typeof pendingApplications>()
+  for (const application of pendingApplications ?? []) {
+    if (!application.created_parent_id) continue
+    const existing = applicantsByParentId.get(application.created_parent_id) ?? []
+    applicantsByParentId.set(application.created_parent_id, [...existing, application])
+  }
+
+  const users = (data ?? []).map((user) => ({
+    ...user,
+    applicants: applicantsByParentId.get(user.id) ?? [],
+  }))
 
   const counts = {
     total: users.length,

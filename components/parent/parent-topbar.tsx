@@ -51,7 +51,7 @@ export function ParentTopBar({
                 className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
               >
                 <span aria-hidden="true">🎒</span>
-                <span className="hidden sm:inline">Student: </span>
+                <span className="hidden sm:inline">Child: </span>
                 {selected ? `${selected.first_name} ${selected.last_name}` : 'Select'}
                 <ChevronDown className="h-4 w-4 text-gray-400" />
               </button>
