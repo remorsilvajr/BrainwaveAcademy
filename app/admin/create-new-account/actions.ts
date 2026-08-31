@@ -152,18 +152,25 @@ export async function createSystemUser(
 
   if (autoGenerate) {
     const siteUrl = getSiteUrl()
-    await sendEmail({
-      to: values.email,
-      subject: 'Your Brainwave Preschool Academy Account',
-      html: `
-        <h2>Welcome to Brainwave Preschool Academy!</h2>
-        <p>An account has been created for you.</p>
-        <p><strong>Email:</strong> ${values.email}<br/>
-        <strong>Temporary Password:</strong> ${password}</p>
-        <p>For your security, please change this password after logging in.</p>
-        <p><a href="${siteUrl}/login">Log in</a></p>
-      `,
-    })
+    // Best-effort, like logActivity above — the account itself is already
+    // created successfully at this point, so a failed welcome email (e.g.
+    // no internet, or Brevo unreachable) shouldn't fail the whole action.
+    try {
+      await sendEmail({
+        to: values.email,
+        subject: 'Your Brainwave Preschool Academy Account',
+        html: `
+          <h2>Welcome to Brainwave Preschool Academy!</h2>
+          <p>An account has been created for you.</p>
+          <p><strong>Email:</strong> ${values.email}<br/>
+          <strong>Temporary Password:</strong> ${password}</p>
+          <p>For your security, please change this password after logging in.</p>
+          <p><a href="${siteUrl}/login">Log in</a></p>
+        `,
+      })
+    } catch (err) {
+      console.error('sendEmail failed for createSystemUser:', err)
+    }
   }
 
   redirect('/admin/user-management')

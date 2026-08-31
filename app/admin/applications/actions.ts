@@ -62,17 +62,24 @@ export async function requestCorrections(
 
     if (application) {
       const siteUrl = getSiteUrl()
-      await sendEmail({
-        to: application.parent_email,
-        subject: `Action needed: documents for ${application.student_first_name} ${application.student_last_name}`,
-        html: `
-          <p>Hi ${application.parent_first_name},</p>
-          <p>A few documents for ${application.student_first_name} ${application.student_last_name}'s enrollment need to be resubmitted:</p>
-          <ul>${needsCorrection.map((label) => `<li>${label}</li>`).join('')}</ul>
-          <p>Please log in to the Parent Portal and visit Requirements to upload corrected copies.</p>
-          <p><a href="${siteUrl}/login">Log in to the Parent Portal</a></p>
-        `,
-      })
+      // Best-effort — the document-status update above is already
+      // committed, so a failed notification email shouldn't fail the
+      // whole corrections request.
+      try {
+        await sendEmail({
+          to: application.parent_email,
+          subject: `Action needed: documents for ${application.student_first_name} ${application.student_last_name}`,
+          html: `
+            <p>Hi ${application.parent_first_name},</p>
+            <p>A few documents for ${application.student_first_name} ${application.student_last_name}'s enrollment need to be resubmitted:</p>
+            <ul>${needsCorrection.map((label) => `<li>${label}</li>`).join('')}</ul>
+            <p>Please log in to the Parent Portal and visit Requirements to upload corrected copies.</p>
+            <p><a href="${siteUrl}/login">Log in to the Parent Portal</a></p>
+          `,
+        })
+      } catch (err) {
+        console.error('sendEmail failed for requestCorrections:', err)
+      }
     }
   }
 

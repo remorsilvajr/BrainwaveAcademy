@@ -83,20 +83,27 @@ export async function approveApplication(applicationId: string) {
 
   if (tempPassword) {
     const siteUrl = getSiteUrl()
-    await sendEmail({
-      to: application.parent_email,
-      subject: 'Your Brainwave Preschool Academy Parent Portal Account',
-      html: `
-        <h2>Welcome to Brainwave Preschool Academy!</h2>
-        <p>Your enrollment request for ${application.student_first_name} ${application.student_last_name} has been approved.</p>
-        <p>You can now log in to the Parent Portal with:</p>
-        <p><strong>Email:</strong> ${application.parent_email}<br/>
-        <strong>Temporary Password:</strong> ${tempPassword}</p>
-        <p>For your security, please change this password after logging in (Sidebar &gt; Settings).</p>
-        <p><strong>Next step:</strong> log in and visit the Requirements page to upload the documents needed to complete enrollment.</p>
-        <p><a href="${siteUrl}/login">Log in to the Parent Portal</a></p>
-      `,
-    })
+    // Best-effort, like logActivity elsewhere — the account/student/link
+    // rows above are already committed, so a failed welcome email shouldn't
+    // fail the whole approval.
+    try {
+      await sendEmail({
+        to: application.parent_email,
+        subject: 'Your Brainwave Preschool Academy Parent Portal Account',
+        html: `
+          <h2>Welcome to Brainwave Preschool Academy!</h2>
+          <p>Your enrollment request for ${application.student_first_name} ${application.student_last_name} has been approved.</p>
+          <p>You can now log in to the Parent Portal with:</p>
+          <p><strong>Email:</strong> ${application.parent_email}<br/>
+          <strong>Temporary Password:</strong> ${tempPassword}</p>
+          <p>For your security, please change this password after logging in (Sidebar &gt; Settings).</p>
+          <p><strong>Next step:</strong> log in and visit the Requirements page to upload the documents needed to complete enrollment.</p>
+          <p><a href="${siteUrl}/login">Log in to the Parent Portal</a></p>
+        `,
+      })
+    } catch (err) {
+      console.error('sendEmail failed for approveApplication welcome email:', err)
+    }
   }
 
   const {
