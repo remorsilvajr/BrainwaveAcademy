@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { isValidName, NAME_VALIDATION_MESSAGE } from '@/lib/name'
 import { logActivity } from '@/lib/activity-log'
 
 export type SubmitStudentState = {
@@ -19,11 +20,6 @@ const requiredFields: Record<string, string> = {
 
 const allFieldKeys = [...Object.keys(requiredFields), 'student_middle_name']
 const nameFields = ['student_first_name', 'student_middle_name', 'student_last_name']
-const NAME_PATTERN = /^[a-zA-ZÀ-ÖØ-öø-ÿ' -]+$/
-
-function isValidName(value: string) {
-  return NAME_PATTERN.test(value)
-}
 
 function toTitleCase(value: string) {
   return value
@@ -49,7 +45,7 @@ export async function submitStudent(
   for (const key of nameFields) {
     const value = values[key]
     if (value && !isValidName(value)) {
-      fieldErrors[key] = 'Only letters, spaces, hyphens, and apostrophes are allowed.'
+      fieldErrors[key] = NAME_VALIDATION_MESSAGE
     }
   }
 

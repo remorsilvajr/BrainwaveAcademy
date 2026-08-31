@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email'
 import { generateTempPassword } from '@/lib/password'
 import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
+import { isValidName, NAME_VALIDATION_MESSAGE } from '@/lib/name'
 import { logActivity } from '@/lib/activity-log'
 import { getSiteUrl } from '@/lib/site-url'
 
@@ -37,8 +38,19 @@ export async function createSystemUser(
 
   const fieldErrors: Record<string, string> = {}
 
-  if (!values.first_name) fieldErrors.first_name = 'First name is required.'
-  if (!values.last_name) fieldErrors.last_name = 'Last name is required.'
+  if (!values.first_name) {
+    fieldErrors.first_name = 'First name is required.'
+  } else if (!isValidName(values.first_name)) {
+    fieldErrors.first_name = NAME_VALIDATION_MESSAGE
+  }
+  if (!values.last_name) {
+    fieldErrors.last_name = 'Last name is required.'
+  } else if (!isValidName(values.last_name)) {
+    fieldErrors.last_name = NAME_VALIDATION_MESSAGE
+  }
+  if (values.middle_name && !isValidName(values.middle_name)) {
+    fieldErrors.middle_name = NAME_VALIDATION_MESSAGE
+  }
   if (!roles.includes(values.role)) fieldErrors.role = 'Select a role.'
 
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/

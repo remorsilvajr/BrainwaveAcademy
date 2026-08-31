@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { isValidName, NAME_VALIDATION_MESSAGE } from '@/lib/name'
 import { logActivity } from '@/lib/activity-log'
 
 export async function updateStudentRecord(
@@ -18,16 +19,20 @@ export async function updateStudentRecord(
 
   const firstName = updates.first_name.trim()
   const lastName = updates.last_name.trim()
+  const middleName = updates.middle_name.trim()
 
   if (!firstName || !lastName || !updates.date_of_birth || !updates.gender) {
     throw new Error('First name, last name, date of birth, and gender are required.')
+  }
+  if (!isValidName(firstName) || !isValidName(lastName) || (middleName && !isValidName(middleName))) {
+    throw new Error(NAME_VALIDATION_MESSAGE)
   }
 
   const { error } = await supabase
     .from('students')
     .update({
       first_name: firstName,
-      middle_name: updates.middle_name.trim() || null,
+      middle_name: middleName || null,
       last_name: lastName,
       date_of_birth: updates.date_of_birth,
       gender: updates.gender,

@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
+import { isValidName, NAME_VALIDATION_MESSAGE } from '@/lib/name'
 import { logActivity } from '@/lib/activity-log'
 
 export type SubmitApplicationState = {
@@ -36,12 +37,6 @@ const nameFields = [
   'parent_last_name',
 ]
 
-const NAME_PATTERN = /^[a-zA-ZÀ-ÖØ-öø-ÿ' -]+$/
-
-function isValidName(value: string) {
-  return NAME_PATTERN.test(value)
-}
-
 function toTitleCase(value: string) {
   return value
     .toLowerCase()
@@ -68,7 +63,7 @@ export async function submitApplication(
   for (const key of nameFields) {
     const value = values[key]
     if (value && !isValidName(value)) {
-      fieldErrors[key] = 'Only letters, spaces, hyphens, and apostrophes are allowed.'
+      fieldErrors[key] = NAME_VALIDATION_MESSAGE
     }
   }
 

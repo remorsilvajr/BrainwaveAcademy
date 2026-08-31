@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
+import { isValidName, NAME_VALIDATION_MESSAGE } from '@/lib/name'
 import { logActivity } from '@/lib/activity-log'
 
 // A parent account that isn't active (inactive or blocked) shouldn't leave
@@ -98,6 +99,17 @@ export async function updateUserProfile(
 ) {
   const supabase = await createClient()
 
+  const firstName = updates.first_name.trim()
+  const lastName = updates.last_name.trim()
+  const middleName = updates.middle_name.trim()
+
+  if (!firstName || !lastName) {
+    throw new Error('First name and last name are required.')
+  }
+  if (!isValidName(firstName) || !isValidName(lastName) || (middleName && !isValidName(middleName))) {
+    throw new Error(NAME_VALIDATION_MESSAGE)
+  }
+
   const phone = updates.phone_number.trim()
   if (phone && !isValidPhilippineMobile(phone)) {
     throw new Error('Enter a valid PH mobile number, e.g. 0917 123 4567 or +63 917 123 4567.')
@@ -106,9 +118,9 @@ export async function updateUserProfile(
   const { error } = await supabase
     .from('profiles')
     .update({
-      first_name: updates.first_name,
-      middle_name: updates.middle_name.trim() || null,
-      last_name: updates.last_name,
+      first_name: firstName,
+      middle_name: middleName || null,
+      last_name: lastName,
       role: updates.role,
       phone_number: phone ? normalizePhilippineMobile(phone) : null,
       relationship_to_student: updates.role === 'parent' ? updates.relationship_to_student || null : null,
