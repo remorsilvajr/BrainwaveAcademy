@@ -7,9 +7,12 @@ import { requestPasswordReset } from '@/app/forgot-password/actions'
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   async function handleSubmit(formData: FormData) {
+    setIsSubmitting(true)
     await requestPasswordReset(formData)
+    setIsSubmitting(false)
     setSubmitted(true)
   }
 
@@ -59,9 +62,10 @@ export function ForgotPasswordForm() {
 
           <button
             type="submit"
-            className="flex items-center justify-center gap-2 rounded-lg bg-[#e6007e] py-2.5 text-sm font-semibold text-white hover:bg-[#c9006e] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b1b62]"
+            disabled={isSubmitting}
+            className="flex items-center justify-center gap-2 rounded-lg bg-[#e6007e] py-2.5 text-sm font-semibold text-white hover:bg-[#c9006e] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b1b62] disabled:opacity-60"
           >
-            Send Password Reset Link
+            {isSubmitting ? 'Sending…' : 'Send Password Reset Link'}
             <Send className="h-4 w-4" />
           </button>
         </form>

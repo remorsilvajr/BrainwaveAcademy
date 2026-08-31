@@ -1,8 +1,26 @@
 'use client'
 
 import { useState } from 'react'
+import { useFormStatus } from 'react-dom'
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { login } from '@/app/login/actions'
+
+// useFormStatus() only reports the parent <form>'s pending state from a
+// component nested inside it, not from the component rendering the <form>
+// tag itself — hence the separate component rather than a hook call
+// straight in LoginForm.
+function LoginSubmitButton() {
+  const { pending } = useFormStatus()
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="w-full rounded-lg bg-[#e6007e] py-3 text-sm font-semibold text-white hover:bg-[#c9006e] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b1b62] disabled:opacity-60"
+    >
+      {pending ? 'Logging in…' : 'Log In'}
+    </button>
+  )
+}
 
 export function LoginForm({ error }: { error?: string }) {
   const [showPassword, setShowPassword] = useState(false)
@@ -85,12 +103,7 @@ export function LoginForm({ error }: { error?: string }) {
           </a>
         </div>
 
-        <button
-          type="submit"
-          className="w-full rounded-lg bg-[#e6007e] py-3 text-sm font-semibold text-white hover:bg-[#c9006e] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b1b62]"
-        >
-          Log In
-        </button>
+        <LoginSubmitButton />
       </form>
     </div>
   )
