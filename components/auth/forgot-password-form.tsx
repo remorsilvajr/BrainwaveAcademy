@@ -1,18 +1,35 @@
 'use client'
 
 import { useState } from 'react'
-import { Mail, Send, ArrowLeft, Info } from 'lucide-react'
+import { useFormStatus } from 'react-dom'
+import { Mail, ArrowLeft, Info } from 'lucide-react'
 import { requestPasswordReset } from '@/app/forgot-password/actions'
+
+// useFormStatus() only reports the parent <form>'s pending state from a
+// component nested inside it, not from the component rendering the <form>
+// tag itself — same reasoning as LoginSubmitButton in login-form.tsx. A
+// manually-toggled useState around the async action (the previous approach
+// here) doesn't reliably paint its intermediate state, since React's own
+// action-pending tracking is what useFormStatus reads from.
+function ForgotPasswordSubmitButton() {
+  const { pending } = useFormStatus()
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="flex items-center justify-center gap-2 rounded-lg bg-[#e6007e] py-2.5 text-sm font-semibold text-white hover:bg-[#c9006e] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b1b62] disabled:opacity-60"
+    >
+      {pending ? 'Sending…' : 'Send Password Reset Link'}
+    </button>
+  )
+}
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
   async function handleSubmit(formData: FormData) {
-    setIsSubmitting(true)
     await requestPasswordReset(formData)
-    setIsSubmitting(false)
     setSubmitted(true)
   }
 
@@ -60,14 +77,7 @@ export function ForgotPasswordForm() {
             </p>
           </div>
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="flex items-center justify-center gap-2 rounded-lg bg-[#e6007e] py-2.5 text-sm font-semibold text-white hover:bg-[#c9006e] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b1b62] disabled:opacity-60"
-          >
-            {isSubmitting ? 'Sending…' : 'Send Password Reset Link'}
-            <Send className="h-4 w-4" />
-          </button>
+          <ForgotPasswordSubmitButton />
         </form>
       )}
 

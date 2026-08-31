@@ -196,7 +196,7 @@ export function CreateAccountForm() {
                 {roleOptions.map((r) => (
                   <label
                     key={r.value}
-                    className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-4 py-3 text-sm font-medium text-gray-700 has-[:checked]:border-[#00a3e0] has-[:checked]:bg-sky-50 has-[:checked]:text-[#0b1b62]"
+                    className="flex cursor-pointer items-center justify-center rounded-lg border border-slate-200 px-4 py-3 text-sm font-medium text-gray-700 has-[:checked]:border-[#00a3e0] has-[:checked]:bg-sky-50 has-[:checked]:text-[#0b1b62]"
                   >
                     <input
                       type="radio"
@@ -204,7 +204,7 @@ export function CreateAccountForm() {
                       value={r.value}
                       checked={role === r.value}
                       onChange={() => setRole(r.value)}
-                      className="accent-[#00a3e0]"
+                      className="sr-only"
                     />
                     {r.label}
                   </label>
