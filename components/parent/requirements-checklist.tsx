@@ -13,6 +13,18 @@ type EnrollmentRecord = {
   documents: DocRow[]
 }
 
+// Vercel's serverless functions cap request bodies at 4.5MB regardless of
+// this repo's own next.config.ts `experimental.serverActions.bodySizeLimit`
+// (10mb) — see the same note on components/ui/avatar-editor.tsx. A large
+// scanned document or a phone-camera photo of an ID/certificate used to
+// sail past this upload with no feedback and hit that platform limit at
+// the network layer, surfacing as a generic framework error (a minified
+// React error like #441, or "An unexpected response was received from the
+// server") instead of a normal caught message. Set to 4MB rather than the
+// avatars bucket's stricter 2MB since the `documents` bucket itself has no
+// file_size_limit — 4MB still leaves headroom under Vercel's 4.5MB cap.
+const MAX_DOCUMENT_BYTES = 4 * 1024 * 1024
+
 const statusMeta: Record<
   string,
   { label: string; className: string; icon: typeof CheckCircle2 }
@@ -66,6 +78,10 @@ export function RequirementsChecklist({
 
   function handleFileChange(type: string, file: File | null) {
     if (!file || !applicationId) return
+    if (file.size > MAX_DOCUMENT_BYTES) {
+      setErrorMessage('That file is too large — please choose one under 4MB.')
+      return
+    }
     setErrorMessage('')
     const formData = new FormData()
     formData.append('file', file)

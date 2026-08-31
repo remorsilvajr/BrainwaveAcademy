@@ -20,10 +20,19 @@ export async function uploadRequirementDocument(
   const extension = file.name.split('.').pop() || 'bin'
   const path = `${applicationId}/${documentType}.${extension}`
 
-  // RLS (parents_upload_own_documents/parents_replace_own_documents on
-  // storage.objects) enforces that this parent actually owns the
-  // application tied to applicationId, via applications.created_parent_id —
-  // no manual ownership check needed here, the database rejects it otherwise.
+  // RLS (parents_upload_own_documents/parents_replace_own_documents/
+  // parents_view_own_documents_storage on storage.objects) enforces that
+  // this parent actually owns the application tied to applicationId, via
+  // applications.created_parent_id — no manual ownership check needed
+  // here, the database rejects it otherwise. The SELECT policy specifically
+  // is required for upsert:true to work at all — Storage's upsert path
+  // does an existence check before deciding insert vs. update, and without
+  // a SELECT policy that check is silently denied, failing the whole
+  // upload with a generic RLS error even though the INSERT policy alone
+  // would have permitted the write. Real bug, found live: this bucket only
+  // had narrow per-command INSERT/UPDATE policies (no SELECT), unlike the
+  // avatars bucket's `for ALL` policies which cover SELECT implicitly —
+  // that's why avatar uploads (also upsert:true) never hit this.
   const { error: uploadError } = await supabase.storage
     .from('documents')
     .upload(path, file, { upsert: true })
