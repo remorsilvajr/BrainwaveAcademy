@@ -7,7 +7,7 @@ import { sendEmail } from '@/lib/email'
 import { generateTempPassword } from '@/lib/password'
 import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
 import { logActivity } from '@/lib/activity-log'
-import { requireEnv } from '@/lib/env'
+import { getSiteUrl } from '@/lib/site-url'
 
 export type CreateSystemUserState = {
   error?: string
@@ -139,7 +139,7 @@ export async function createSystemUser(
   })
 
   if (autoGenerate) {
-    const siteUrl = requireEnv('NEXT_PUBLIC_SITE_URL')
+    const siteUrl = getSiteUrl()
     await sendEmail({
       to: values.email,
       subject: 'Your Brainwave Preschool Academy Account',

@@ -6,7 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email'
 import { documentShortLabels } from '@/lib/documents'
 import { logActivity } from '@/lib/activity-log'
-import { requireEnv } from '@/lib/env'
+import { getSiteUrl } from '@/lib/site-url'
 
 type DocumentStatuses = Record<string, 'valid' | 'needs_correction' | 'pending'>
 
@@ -61,7 +61,7 @@ export async function requestCorrections(
       .single()
 
     if (application) {
-      const siteUrl = requireEnv('NEXT_PUBLIC_SITE_URL')
+      const siteUrl = getSiteUrl()
       await sendEmail({
         to: application.parent_email,
         subject: `Action needed: documents for ${application.student_first_name} ${application.student_last_name}`,

@@ -1,13 +1,13 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { requireEnv } from '@/lib/env'
+import { getSiteUrl } from '@/lib/site-url'
 
 export async function requestPasswordReset(formData: FormData) {
   const supabase = await createClient()
   const email = formData.get('email') as string
 
-  const siteUrl = requireEnv('NEXT_PUBLIC_SITE_URL')
+  const siteUrl = getSiteUrl()
   await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${siteUrl}/auth/confirm?next=/reset-password`,
   })
