@@ -63,9 +63,24 @@ export function CreateAccountForm() {
   const [autoGenerate, setAutoGenerate] = useState(true)
   const [showPassword, setShowPassword] = useState(false)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
+  const [photoError, setPhotoError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Vercel's serverless functions cap request bodies at 4.5MB regardless of
+  // next.config.ts's own `serverActions.bodySizeLimit` (10mb) — that only
+  // governs Next's application-level check, not the platform's. An oversized
+  // photo used to sail past this form and hit that platform limit at the
+  // network layer, which doesn't surface as a normal caught error — it
+  // crashes the whole submission generically with no indication of why.
+  const MAX_PHOTO_BYTES = 4 * 1024 * 1024
+
   function handlePhotoChange(file: File | null) {
+    if (file && file.size > MAX_PHOTO_BYTES) {
+      setPhotoError('That photo is too large — please choose one under 4MB.')
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+    setPhotoError('')
     if (photoPreview) URL.revokeObjectURL(photoPreview)
     setPhotoPreview(file ? URL.createObjectURL(file) : null)
   }
@@ -104,6 +119,7 @@ export function CreateAccountForm() {
               {photoPreview ? 'Change Profile Photo' : 'Upload Profile Photo'}
             </span>
             <span className="text-xs text-gray-400">Optional — JPG, PNG or GIF up to 2MB</span>
+            {photoError && <span className="text-xs text-red-600">{photoError}</span>}
           </button>
           <input
             ref={fileInputRef}

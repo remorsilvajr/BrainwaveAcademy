@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { updateMyProfile, uploadMyAvatar, removeMyAvatar } from '@/app/parent/my-profile/actions'
 import { formatDateShort } from '@/lib/format'
+import { isValidPhilippineMobile } from '@/lib/phone'
 import { AvatarEditor } from '@/components/ui/avatar-editor'
 
 type Profile = {
@@ -60,6 +61,18 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
   }
 
   async function handleSave() {
+    // Validate before touching the avatar — uploadMyAvatar/removeMyAvatar
+    // commit straight to the database with no way to undo, so running them
+    // first meant a field error below (e.g. an invalid phone number) still
+    // silently kept the new photo while reporting the whole save as failed.
+    if (phone.trim() && !isValidPhilippineMobile(phone.trim())) {
+      setMessage({
+        text: 'Enter a valid PH mobile number, e.g. 0917 123 4567 or +63 917 123 4567.',
+        isError: true,
+      })
+      return
+    }
+
     setIsSaving(true)
     setMessage(null)
     try {
