@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email'
 import { documentShortLabels } from '@/lib/documents'
 import { logActivity } from '@/lib/activity-log'
+import { requireEnv } from '@/lib/env'
 
 type DocumentStatuses = Record<string, 'valid' | 'needs_correction' | 'pending'>
 
@@ -60,6 +61,7 @@ export async function requestCorrections(
       .single()
 
     if (application) {
+      const siteUrl = requireEnv('NEXT_PUBLIC_SITE_URL')
       await sendEmail({
         to: application.parent_email,
         subject: `Action needed: documents for ${application.student_first_name} ${application.student_last_name}`,
@@ -68,7 +70,7 @@ export async function requestCorrections(
           <p>A few documents for ${application.student_first_name} ${application.student_last_name}'s enrollment need to be resubmitted:</p>
           <ul>${needsCorrection.map((label) => `<li>${label}</li>`).join('')}</ul>
           <p>Please log in to the Parent Portal and visit Requirements to upload corrected copies.</p>
-          <p><a href="http://localhost:3000/login">Log in to the Parent Portal</a></p>
+          <p><a href="${siteUrl}/login">Log in to the Parent Portal</a></p>
         `,
       })
     }

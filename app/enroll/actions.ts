@@ -158,9 +158,8 @@ export async function submitApplication(
   })
 
   if (error) {
-    // TEMPORARY DEBUG — remove the "DEBUG:" prefix once reliably working.
     return {
-      error: `DEBUG: ${error.message}`,
+      error: 'Something went wrong submitting your application. Please try again.',
       values,
     }
   }

@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email'
 import { generateTempPassword } from '@/lib/password'
 import { logActivity } from '@/lib/activity-log'
+import { requireEnv } from '@/lib/env'
 
 // Creates ONLY the parent account. The student record is intentionally NOT
 // created here — it's created later, in app/admin/applications/actions.ts,
@@ -81,6 +82,7 @@ export async function approveApplication(applicationId: string) {
   }
 
   if (tempPassword) {
+    const siteUrl = requireEnv('NEXT_PUBLIC_SITE_URL')
     await sendEmail({
       to: application.parent_email,
       subject: 'Your Brainwave Preschool Academy Parent Portal Account',
@@ -92,7 +94,7 @@ export async function approveApplication(applicationId: string) {
         <strong>Temporary Password:</strong> ${tempPassword}</p>
         <p>For your security, please change this password after logging in (Sidebar &gt; Settings).</p>
         <p><strong>Next step:</strong> log in and visit the Requirements page to upload the documents needed to complete enrollment.</p>
-        <p><a href="http://localhost:3000/login">Log in to the Parent Portal</a></p>
+        <p><a href="${siteUrl}/login">Log in to the Parent Portal</a></p>
       `,
     })
   }
