@@ -71,16 +71,20 @@ export default async function AdminDashboardPage() {
           <p className="mt-1 text-3xl font-bold text-gray-900">{feedbackItems.length}</p>
           <p className="mt-1 text-xs text-gray-400">Parent inquiries needing response</p>
         </div>
-        {/* Payments aren't wired up yet — left as static placeholder. */}
+        {/* No `payments` table/UI exists yet — shown as an honest empty
+            state rather than fabricated numbers. See the matching note on
+            the Recent Financial Transactions card below. */}
         <div className="rounded-xl border border-gray-200 border-l-4 border-l-sky-400 bg-white p-4 shadow-sm">
           <p className="text-sm text-gray-500">Total Collections Today</p>
-          <p className="mt-1 text-3xl font-bold text-gray-900">₱48,500.00</p>
-          <p className="mt-1 text-xs text-gray-400">6 transactions completed today</p>
+          <p className="mt-1 text-3xl font-bold text-gray-900">₱0.00</p>
+          <p className="mt-1 text-xs text-gray-400">No transactions yet</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Payments aren't wired up yet — left as static placeholder. */}
+        {/* Payments aren't wired up yet — no `payments` table exists, so
+            this stays an empty shell (matching every other list's own
+            empty state) rather than fabricated rows. */}
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
           <h2 className="mb-3 font-semibold text-[#0b1b62]">Recent Financial Transactions</h2>
           <div className="overflow-x-auto">
@@ -96,41 +100,8 @@ export default async function AdminDashboardPage() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               <tr>
-                <td className="py-2 align-top">
-                  TXN-9021
-                  <br />
-                  <span className="text-xs text-gray-400">Today, 10:42 AM</span>
-                </td>
-                <td className="py-2 align-top">
-                  Maria Santos
-                  <br />
-                  <span className="text-xs text-gray-400">Leo Santos (Nursery)</span>
-                </td>
-                <td className="py-2 align-top">GCash</td>
-                <td className="py-2 align-top">₱12,500.00</td>
-                <td className="py-2 align-top">
-                  <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs text-green-700">
-                    Verified
-                  </span>
-                </td>
-              </tr>
-              <tr>
-                <td className="py-2 align-top">
-                  TXN-9020
-                  <br />
-                  <span className="text-xs text-gray-400">Today, 09:15 AM</span>
-                </td>
-                <td className="py-2 align-top">
-                  Juan Dela Cruz
-                  <br />
-                  <span className="text-xs text-gray-400">Anna Dela Cruz (Pre-K)</span>
-                </td>
-                <td className="py-2 align-top">BDO Transfer</td>
-                <td className="py-2 align-top">₱8,000.00</td>
-                <td className="py-2 align-top">
-                  <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs text-green-700">
-                    Verified
-                  </span>
+                <td colSpan={5} className="py-8 text-center text-gray-400">
+                  No transactions recorded yet.
                 </td>
               </tr>
             </tbody>
