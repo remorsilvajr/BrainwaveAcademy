@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { logActivity } from '@/lib/activity-log'
 
 const ATTENDANCE_STATUSES = ['present', 'absent', 'late'] as const
 const MILESTONE_CATEGORIES = [
@@ -55,6 +56,13 @@ export async function recordAttendance(input: { student_id: string; date: string
   if (error) {
     throw new Error(error.message)
   }
+
+  await logActivity(supabase, {
+    actorId: user.id,
+    action: `Recorded attendance (${input.status})`,
+    targetTable: 'attendance',
+    targetId: input.student_id,
+  })
 
   revalidatePath('/teacher/student-dashboard')
   revalidatePath('/teacher')
@@ -118,6 +126,13 @@ export async function submitMilestoneAssessment(input: {
   if (error) {
     throw new Error(error.message)
   }
+
+  await logActivity(supabase, {
+    actorId: user.id,
+    action: `Submitted milestone assessment (${input.category})`,
+    targetTable: 'milestones',
+    targetId: input.student_id,
+  })
 
   revalidatePath('/teacher/student-dashboard')
   revalidatePath('/teacher')

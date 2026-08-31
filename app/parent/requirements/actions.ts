@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { logActivity } from '@/lib/activity-log'
 
 export async function uploadRequirementDocument(
   applicationId: string,
@@ -73,6 +74,16 @@ export async function uploadRequirementDocument(
       }
     }
   }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  await logActivity(supabase, {
+    actorId: user?.id ?? null,
+    action: `Uploaded ${documentType} document`,
+    targetTable: 'application_documents',
+    targetId: applicationId,
+  })
 
   revalidatePath('/parent/requirements')
   revalidatePath('/parent/students')

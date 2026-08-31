@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { logActivity } from '@/lib/activity-log'
 
 export async function updateStudentRecord(
   studentId: string,
@@ -37,6 +38,16 @@ export async function updateStudentRecord(
     throw new Error(error.message)
   }
 
+  const {
+    data: { user: actingAdmin },
+  } = await supabase.auth.getUser()
+  await logActivity(supabase, {
+    actorId: actingAdmin?.id ?? null,
+    action: 'Edited student record',
+    targetTable: 'students',
+    targetId: studentId,
+  })
+
   revalidatePath('/admin/students')
 }
 
@@ -64,6 +75,16 @@ export async function updateStudentAvatar(studentId: string, formData: FormData)
     throw new Error(updateError.message)
   }
 
+  const {
+    data: { user: actingAdmin },
+  } = await supabase.auth.getUser()
+  await logActivity(supabase, {
+    actorId: actingAdmin?.id ?? null,
+    action: 'Updated student photo',
+    targetTable: 'students',
+    targetId: studentId,
+  })
+
   revalidatePath('/admin/students')
   revalidatePath('/admin/student-dashboard')
   return avatarUrl
@@ -76,6 +97,16 @@ export async function removeStudentAvatar(studentId: string) {
   if (error) {
     throw new Error(error.message)
   }
+
+  const {
+    data: { user: actingAdmin },
+  } = await supabase.auth.getUser()
+  await logActivity(supabase, {
+    actorId: actingAdmin?.id ?? null,
+    action: 'Removed student photo',
+    targetTable: 'students',
+    targetId: studentId,
+  })
 
   revalidatePath('/admin/students')
   revalidatePath('/admin/student-dashboard')

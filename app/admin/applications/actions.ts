@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email'
 import { documentShortLabels } from '@/lib/documents'
+import { logActivity } from '@/lib/activity-log'
 
 type DocumentStatuses = Record<string, 'valid' | 'needs_correction' | 'pending'>
 
@@ -24,6 +25,16 @@ export async function saveDocumentReview(
   }
 
   await supabase.from('applications').update({ review_notes: notes }).eq('id', applicationId)
+
+  const {
+    data: { user: actingAdmin },
+  } = await supabase.auth.getUser()
+  await logActivity(supabase, {
+    actorId: actingAdmin?.id ?? null,
+    action: 'Reviewed application documents',
+    targetTable: 'applications',
+    targetId: applicationId,
+  })
 
   revalidatePath('/admin/applications')
   revalidatePath('/parent/requirements')
@@ -62,6 +73,17 @@ export async function requestCorrections(
       })
     }
   }
+
+  const supabaseForLog = await createClient()
+  const {
+    data: { user: actingAdmin },
+  } = await supabaseForLog.auth.getUser()
+  await logActivity(supabaseForLog, {
+    actorId: actingAdmin?.id ?? null,
+    action: 'Requested application corrections',
+    targetTable: 'applications',
+    targetId: applicationId,
+  })
 
   revalidatePath('/admin/applications')
   revalidatePath('/parent/requirements')
@@ -132,6 +154,16 @@ export async function approveAndCreateStudentRecord(applicationId: string) {
   if (updateError) {
     throw new Error(updateError.message)
   }
+
+  const {
+    data: { user: actingAdmin },
+  } = await supabase.auth.getUser()
+  await logActivity(supabase, {
+    actorId: actingAdmin?.id ?? null,
+    action: `Approved application & created student record for ${application.student_first_name} ${application.student_last_name}`,
+    targetTable: 'students',
+    targetId: student.id,
+  })
 
   revalidatePath('/admin/applications')
   revalidatePath('/admin/students')

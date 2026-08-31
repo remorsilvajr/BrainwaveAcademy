@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { logPasswordChanged } from './actions'
 
 export function ChangePasswordForm() {
   const [currentPassword, setCurrentPassword] = useState('')
@@ -74,6 +75,9 @@ export function ChangePasswordForm() {
     setCurrentPassword('')
     setNewPassword('')
     setConfirmPassword('')
+    // Awaited so a quick subsequent navigation can't cancel the in-flight
+    // request before the audit-log write lands.
+    await logPasswordChanged().catch(() => {})
   }
 
   return (

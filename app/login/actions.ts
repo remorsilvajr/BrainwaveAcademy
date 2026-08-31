@@ -5,10 +5,23 @@ import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 
 export async function login(formData: FormData) {
-  const supabase = await createClient()
-
   const email = formData.get('email') as string
   const password = formData.get('password') as string
+  const rememberMe = formData.get('remember-me') === 'on'
+
+  // Must be set BEFORE createClient()/signInWithPassword() below — its
+  // setAll() reads this same cookie (via the same request-scoped cookie
+  // jar) to decide whether the sb-* auth cookies it's about to write should
+  // be session-only. See lib/supabase/remember-me.ts.
+  const cookieStore = await cookies()
+  cookieStore.set('remember_me', rememberMe ? 'true' : 'false', {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+    ...(rememberMe ? { maxAge: 60 * 60 * 24 * 30 } : {}),
+  })
+
+  const supabase = await createClient()
 
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -36,7 +49,6 @@ export async function login(formData: FormData) {
   // single navigation — see middleware.ts. Short-lived so a role change
   // (rare for this app) is picked up again soon rather than staying stale
   // for the rest of the session.
-  const cookieStore = await cookies()
   cookieStore.set('user_role', role, {
     httpOnly: true,
     sameSite: 'lax',
@@ -60,6 +72,7 @@ export async function logout() {
 
   const cookieStore = await cookies()
   cookieStore.delete('user_role')
+  cookieStore.delete('remember_me')
 }
 
 // Same not-calling-redirect() reasoning as logout() above. scope: 'global'
@@ -71,4 +84,5 @@ export async function logoutAllDevices() {
 
   const cookieStore = await cookies()
   cookieStore.delete('user_role')
+  cookieStore.delete('remember_me')
 }

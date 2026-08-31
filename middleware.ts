@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { applyRememberMe } from '@/lib/supabase/remember-me'
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
@@ -13,10 +14,15 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
+          // See lib/supabase/remember-me.ts — this runs on every request
+          // (getUser() below refreshes the token whenever it's near
+          // expiry), so it's what actually keeps a "not remembered" login
+          // from quietly becoming persistent again on the next refresh.
+          const rememberMe = request.cookies.get('remember_me')?.value !== 'false'
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           supabaseResponse = NextResponse.next({ request })
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
+            supabaseResponse.cookies.set(name, value, applyRememberMe(name, value, options, rememberMe))
           )
         },
       },
@@ -29,9 +35,30 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  // A Server Action invocation (form action / useActionState / a plain
+  // async-function call from a Client Component) POSTs to the same URL the
+  // page was rendered at, carrying this header. Next.js's client-side action
+  // runtime expects a specific action-response envelope back, not a raw
+  // HTTP redirect — if middleware's own NextResponse.redirect() below fires
+  // for one of these requests (e.g. a /login tab left open in the
+  // background while the user authenticates in another tab, then submits
+  // the stale form once the shared cookies already show them logged in),
+  // the client blows up with "An unexpected response was received from the
+  // server" instead of anything resembling the intended redirect. A
+  // Server Action's own `redirect()` call already integrates correctly with
+  // that protocol, so for these requests we skip straight to letting the
+  // action run — auth/role checks still happen there (most already check
+  // `auth.getUser()`, and RLS backs up the rest), just without middleware's
+  // page-navigation-oriented redirect getting in the way.
+  const isServerAction = request.headers.has('next-action')
+
   const path = request.nextUrl.pathname
   const protectedPaths = ['/parent', '/teacher', '/admin']
   const isProtected = protectedPaths.some((p) => path.startsWith(p))
+
+  if (isServerAction) {
+    return supabaseResponse
+  }
 
   // Logged-in users have no reason to see the public marketing/auth pages —
   // e.g. hitting /login or the landing page while already signed in should

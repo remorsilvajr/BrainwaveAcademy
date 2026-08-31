@@ -1,10 +1,50 @@
-import { AlertTriangle, Mail, UserPlus } from 'lucide-react'
+import { createClient } from '@/lib/supabase/server'
+import { PriorityFeedbackLog } from '@/components/admin/priority-feedback-log'
 
-// TODO: every number and row on this page is still static demo data.
-// Wiring this to real Supabase queries (pending application counts,
-// active enrollment, payments, feedback) is a separate follow-up task.
+type FeedbackRow = {
+  id: string
+  subject: string
+  message: string
+  created_at: string
+  profiles: { first_name: string; last_name: string } | null
+}
 
-export default function AdminDashboardPage() {
+export default async function AdminDashboardPage() {
+  const supabase = await createClient()
+
+  const [{ data: applications }, { data: students }, { data: feedbackRows }] = await Promise.all([
+    supabase.from('applications').select('status, created_student_id'),
+    supabase.from('students').select('enrollment_status'),
+    supabase
+      .from('feedback')
+      .select('id, subject, message, created_at, profiles(first_name, last_name)')
+      .eq('resolved', false)
+      .order('created_at', { ascending: false })
+      .limit(5)
+      .returns<FeedbackRow[]>(),
+  ])
+
+  // "Pending Applications" spans both stages of the pipeline: enrollment
+  // requests that haven't been approved yet (Enroll A Student's queue) and
+  // approved requests whose documents aren't fully verified yet, i.e. no
+  // student record created (Applications' queue) — see CLAUDE.md's note on
+  // why these are two separate, easily-confused features.
+  const pendingReviewCount = (applications ?? []).filter((a) => a.status === 'pending_review').length
+  const pendingDocumentsCount = (applications ?? []).filter(
+    (a) => a.status === 'approved' && !a.created_student_id
+  ).length
+  const pendingApplicationsCount = pendingReviewCount + pendingDocumentsCount
+
+  const activeEnrollmentCount = (students ?? []).filter((s) => s.enrollment_status === 'active').length
+
+  const feedbackItems = (feedbackRows ?? []).map((f) => ({
+    id: f.id,
+    subject: f.subject,
+    message: f.message,
+    created_at: f.created_at,
+    submitter_name: f.profiles ? `${f.profiles.first_name} ${f.profiles.last_name}` : 'Unknown',
+  }))
+
   return (
     <div className="space-y-6">
       <div>
@@ -18,19 +58,20 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <div className="rounded-xl border border-gray-200 border-l-4 border-l-amber-400 bg-white p-4 shadow-sm">
           <p className="text-sm text-gray-500">Pending Applications</p>
-          <p className="mt-1 text-3xl font-bold text-gray-900">14</p>
+          <p className="mt-1 text-3xl font-bold text-gray-900">{pendingApplicationsCount}</p>
           <p className="mt-1 text-xs text-gray-400">Awaiting review &amp; document validation</p>
         </div>
         <div className="rounded-xl border border-gray-200 border-l-4 border-l-green-400 bg-white p-4 shadow-sm">
           <p className="text-sm text-gray-500">Active Student Enrollment</p>
-          <p className="mt-1 text-3xl font-bold text-gray-900">128</p>
-          <p className="mt-1 text-xs text-gray-400">Across Nursery, Pre-K, and ITED</p>
+          <p className="mt-1 text-3xl font-bold text-gray-900">{activeEnrollmentCount}</p>
+          <p className="mt-1 text-xs text-gray-400">Currently active students</p>
         </div>
         <div className="rounded-xl border border-gray-200 border-l-4 border-l-red-400 bg-white p-4 shadow-sm">
           <p className="text-sm text-gray-500">Unresolved Feedback</p>
-          <p className="mt-1 text-3xl font-bold text-gray-900">3</p>
+          <p className="mt-1 text-3xl font-bold text-gray-900">{feedbackItems.length}</p>
           <p className="mt-1 text-xs text-gray-400">Parent inquiries needing response</p>
         </div>
+        {/* Payments aren't wired up yet — left as static placeholder. */}
         <div className="rounded-xl border border-gray-200 border-l-4 border-l-sky-400 bg-white p-4 shadow-sm">
           <p className="text-sm text-gray-500">Total Collections Today</p>
           <p className="mt-1 text-3xl font-bold text-gray-900">₱48,500.00</p>
@@ -39,6 +80,7 @@ export default function AdminDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Payments aren't wired up yet — left as static placeholder. */}
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
           <h2 className="mb-3 font-semibold text-[#0b1b62]">Recent Financial Transactions</h2>
           <table className="w-full text-sm">
@@ -94,45 +136,7 @@ export default function AdminDashboardPage() {
           </table>
         </div>
 
-        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-          <h2 className="mb-3 font-semibold text-[#0b1b62]">Priority Actions &amp; Feedback Log</h2>
-          <div className="space-y-3">
-            <div className="flex items-start justify-between gap-3 rounded-lg border border-gray-100 p-3">
-              <div className="flex gap-2">
-                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-pink-500" />
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Mrs. Santos</p>
-                  <p className="text-xs text-gray-500">Question regarding nursery school supplies list</p>
-                </div>
-              </div>
-              <button className="shrink-0 rounded border px-3 py-1 text-xs font-medium">Reply</button>
-            </div>
-            <div className="flex items-start justify-between gap-3 rounded-lg border border-red-100 bg-red-50 p-3">
-              <div className="flex gap-2">
-                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
-                <div>
-                  <p className="text-sm font-medium text-gray-900">System Flag</p>
-                  <p className="text-xs text-gray-500">
-                    2 new student health records uploaded with severe allergy notes
-                  </p>
-                </div>
-              </div>
-              <button className="shrink-0 rounded bg-red-600 px-3 py-1 text-xs font-medium text-white">
-                Review
-              </button>
-            </div>
-            <div className="flex items-start justify-between gap-3 rounded-lg border border-gray-100 p-3">
-              <div className="flex gap-2">
-                <UserPlus className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
-                <div>
-                  <p className="text-sm font-medium text-gray-900">Account Request</p>
-                  <p className="text-xs text-gray-500">1 new teacher profile created</p>
-                </div>
-              </div>
-              <button className="shrink-0 rounded border px-3 py-1 text-xs font-medium">Manage</button>
-            </div>
-          </div>
-        </div>
+        <PriorityFeedbackLog items={feedbackItems} />
       </div>
     </div>
   )

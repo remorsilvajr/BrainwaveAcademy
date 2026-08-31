@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { logActivity } from '@/lib/activity-log'
 
 export type SubmitStudentState = {
   error?: string
@@ -119,6 +120,12 @@ export async function submitStudent(
   if (error) {
     return { error: error.message, values }
   }
+
+  await logActivity(supabase, {
+    actorId: user.id,
+    action: `Enrollment application submitted for ${values.student_first_name} ${values.student_last_name}`,
+    targetTable: 'applications',
+  })
 
   redirect('/parent/enroll-a-student?submitted=true')
 }

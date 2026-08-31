@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { requireEnv } from '@/lib/env'
+import { applyRememberMe } from '@/lib/supabase/remember-me'
 
 // Use this inside Server Components, Server Actions, and Route Handlers.
 // Must be awaited: const supabase = await createClient()
@@ -17,8 +18,12 @@ export async function createClient() {
         },
         setAll(cookiesToSet) {
           try {
+            // Absent or 'true' -> remembered (matches Supabase's own
+            // default); only an explicit 'false' shortens the sb-* cookies
+            // to session-only. See lib/supabase/remember-me.ts.
+            const rememberMe = cookieStore.get('remember_me')?.value !== 'false'
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
+              cookieStore.set(name, value, applyRememberMe(name, value, options, rememberMe))
             )
           } catch {
             // Called from a Server Component — safe to ignore because

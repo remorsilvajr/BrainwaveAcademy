@@ -32,6 +32,7 @@ export function StudentDashboardContent({
   attendance,
   milestones,
   avatarEditor,
+  readOnly = false,
 }: {
   student: Student
   attendance: AttendanceRow[]
@@ -45,6 +46,11 @@ export function StudentDashboardContent({
     onFileSelected: (formData: FormData) => Promise<string>
     onRemove: () => Promise<void>
   }
+  // Parent view: no attendance-marking or assessment-editing controls —
+  // parents have SELECT-only RLS on attendance/milestones, so those
+  // mutations would fail anyway. Teacher/admin both omit this (default
+  // false) since they hold the only write access to these tables.
+  readOnly?: boolean
 }) {
   const router = useRouter()
   const fullName = `${student.first_name}${student.middle_name ? ' ' + student.middle_name : ''} ${student.last_name}`
@@ -184,23 +190,25 @@ export function StudentDashboardContent({
             <p className="mt-3 text-sm text-gray-500">Not marked for today.</p>
           )}
           {attendanceError && <p className="mt-2 text-sm text-red-600">{attendanceError}</p>}
-          <div className="mt-4 flex gap-2">
-            {['present', 'late', 'absent'].map((status) => (
-              <button
-                key={status}
-                type="button"
-                disabled={isMarking}
-                onClick={() => handleMarkAttendance(status)}
-                className={`flex-1 rounded-lg border px-3 py-2 text-sm font-semibold capitalize disabled:opacity-60 ${
-                  todayRecord?.status === status
-                    ? 'border-[#0b1b62] bg-[#0b1b62] text-white'
-                    : 'border-gray-200 text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                {status}
-              </button>
-            ))}
-          </div>
+          {!readOnly && (
+            <div className="mt-4 flex gap-2">
+              {['present', 'late', 'absent'].map((status) => (
+                <button
+                  key={status}
+                  type="button"
+                  disabled={isMarking}
+                  onClick={() => handleMarkAttendance(status)}
+                  className={`flex-1 rounded-lg border px-3 py-2 text-sm font-semibold capitalize disabled:opacity-60 ${
+                    todayRecord?.status === status
+                      ? 'border-[#0b1b62] bg-[#0b1b62] text-white'
+                      : 'border-gray-200 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  {status}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="rounded-2xl border border-gray-200 bg-white p-6">
@@ -241,7 +249,7 @@ export function StudentDashboardContent({
                   <p className="mt-1 text-xs text-gray-400">Not yet assessed</p>
                 )}
 
-                {assessingCategory === category ? (
+                {readOnly ? null : assessingCategory === category ? (
                   <div className="mt-3 space-y-2">
                     <textarea
                       value={notes}

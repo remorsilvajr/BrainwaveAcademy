@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
+import { logActivity } from '@/lib/activity-log'
 
 export type SubmitApplicationState = {
   error?: string
@@ -137,6 +138,10 @@ export async function submitApplication(
 
   const supabase = await createClient()
 
+  // No .select() chained onto this insert — anon has no SELECT policy on
+  // applications (parent_view_own_applications requires auth.uid()), so
+  // asking PostgREST to return the inserted row would fail the whole
+  // request even though the insert itself succeeded.
   const { error } = await supabase.from('applications').insert({
     student_first_name: toTitleCase(values.student_first_name),
     student_middle_name: values.student_middle_name ? toTitleCase(values.student_middle_name) : null,
@@ -159,6 +164,13 @@ export async function submitApplication(
       values,
     }
   }
+
+  // actorId is null — this is the public, unauthenticated enrollment form.
+  await logActivity(supabase, {
+    actorId: null,
+    action: `New enrollment application submitted (public site) for ${values.student_first_name} ${values.student_last_name}`,
+    targetTable: 'applications',
+  })
 
   redirect('/enroll?submitted=true')
 }

@@ -2,7 +2,7 @@
 
 import { useActionState, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Camera } from 'lucide-react'
+import { Camera, Eye, EyeOff } from 'lucide-react'
 import { createSystemUser, type CreateSystemUserState } from '@/app/admin/create-new-account/actions'
 import { Toggle } from '@/components/ui/toggle'
 
@@ -61,6 +61,7 @@ export function CreateAccountForm() {
   const [relationship, setRelationship] = useState(values.relationship_to_student ?? '')
   const [gender, setGender] = useState(values.gender ?? '')
   const [autoGenerate, setAutoGenerate] = useState(true)
+  const [showPassword, setShowPassword] = useState(false)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -250,14 +251,35 @@ export function CreateAccountForm() {
 
             {!autoGenerate && (
               <div className="mt-4">
-                <Field
-                  label="Password"
-                  name="manual_password"
-                  type="password"
-                  placeholder="At least 8 characters"
-                  required
-                  error={fieldErrors.manual_password}
-                />
+                <label htmlFor="manual_password" className="mb-1 block text-sm font-semibold text-[#0b1b62]">
+                  Password <span className="text-[#e6007e]">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    id="manual_password"
+                    name="manual_password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="At least 8 characters"
+                    required
+                    className={`w-full rounded-lg border px-3 py-2.5 pr-10 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none ${
+                      fieldErrors.manual_password
+                        ? 'border-red-400 focus:border-red-500'
+                        : 'border-slate-200 focus:border-[#0b1b62]'
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    aria-pressed={showPassword}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {fieldErrors.manual_password && (
+                  <p className="mt-1 text-xs text-red-600">{fieldErrors.manual_password}</p>
+                )}
               </div>
             )}
           </div>

@@ -21,7 +21,11 @@ const sections: NavSection[] = [
   },
   {
     title: 'Admin',
-    items: [{ label: 'Log Out', isLogout: true, icon: 'logout' }],
+    items: [
+      { label: 'Activity Log', href: '/admin/logs', icon: 'checklist' },
+      { label: 'Settings', href: '/admin/settings', icon: 'settings' },
+      { label: 'Log Out', isLogout: true, icon: 'logout' },
+    ],
   },
 ]
 

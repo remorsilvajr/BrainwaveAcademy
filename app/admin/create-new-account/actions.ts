@@ -1,10 +1,12 @@
 'use server'
 
 import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email'
 import { generateTempPassword } from '@/lib/password'
 import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
+import { logActivity } from '@/lib/activity-log'
 
 export type CreateSystemUserState = {
   error?: string
@@ -123,6 +125,17 @@ export async function createSystemUser(
     await admin.auth.admin.deleteUser(userId)
     return { error: profileError.message, values }
   }
+
+  const supabase = await createClient()
+  const {
+    data: { user: actingAdmin },
+  } = await supabase.auth.getUser()
+  await logActivity(supabase, {
+    actorId: actingAdmin?.id ?? null,
+    action: `Created ${values.role} account for ${values.email}`,
+    targetTable: 'profiles',
+    targetId: userId,
+  })
 
   if (autoGenerate) {
     await sendEmail({

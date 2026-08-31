@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
+import { logActivity } from '@/lib/activity-log'
 
 // A parent account that isn't active (inactive or blocked) shouldn't leave
 // their linked students showing as actively enrolled — keeps the Students
@@ -42,6 +43,16 @@ export async function toggleBlockUser(userId: string, currentStatus: string) {
 
   await syncLinkedStudentsStatus(supabase, userId, newStatus)
 
+  const {
+    data: { user: actingAdmin },
+  } = await supabase.auth.getUser()
+  await logActivity(supabase, {
+    actorId: actingAdmin?.id ?? null,
+    action: newStatus === 'blocked' ? 'Blocked user account' : 'Unblocked user account',
+    targetTable: 'profiles',
+    targetId: userId,
+  })
+
   revalidatePath('/admin/user-management')
   revalidatePath('/admin/students')
 }
@@ -59,6 +70,16 @@ export async function updateAccountStatus(userId: string, status: 'active' | 'in
   }
 
   await syncLinkedStudentsStatus(supabase, userId, status)
+
+  const {
+    data: { user: actingAdmin },
+  } = await supabase.auth.getUser()
+  await logActivity(supabase, {
+    actorId: actingAdmin?.id ?? null,
+    action: `Set user account to ${status}`,
+    targetTable: 'profiles',
+    targetId: userId,
+  })
 
   revalidatePath('/admin/user-management')
   revalidatePath('/admin/students')
@@ -98,6 +119,16 @@ export async function updateUserProfile(
     throw new Error(error.message)
   }
 
+  const {
+    data: { user: actingAdmin },
+  } = await supabase.auth.getUser()
+  await logActivity(supabase, {
+    actorId: actingAdmin?.id ?? null,
+    action: 'Edited user account',
+    targetTable: 'profiles',
+    targetId: userId,
+  })
+
   revalidatePath('/admin/user-management')
 }
 
@@ -125,6 +156,16 @@ export async function updateUserAvatar(userId: string, formData: FormData) {
     throw new Error(updateError.message)
   }
 
+  const {
+    data: { user: actingAdmin },
+  } = await supabase.auth.getUser()
+  await logActivity(supabase, {
+    actorId: actingAdmin?.id ?? null,
+    action: 'Updated user account photo',
+    targetTable: 'profiles',
+    targetId: userId,
+  })
+
   revalidatePath('/admin/user-management')
   return avatarUrl
 }
@@ -136,6 +177,16 @@ export async function removeUserAvatar(userId: string) {
   if (error) {
     throw new Error(error.message)
   }
+
+  const {
+    data: { user: actingAdmin },
+  } = await supabase.auth.getUser()
+  await logActivity(supabase, {
+    actorId: actingAdmin?.id ?? null,
+    action: 'Removed user account photo',
+    targetTable: 'profiles',
+    targetId: userId,
+  })
 
   revalidatePath('/admin/user-management')
 }

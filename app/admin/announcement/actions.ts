@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { logActivity } from '@/lib/activity-log'
 
 const TARGET_ROLES = ['parent', 'teacher', 'all'] as const
 
@@ -32,6 +33,12 @@ export async function postAnnouncement(input: { title: string; body: string; tar
     throw new Error(error.message)
   }
 
+  await logActivity(supabase, {
+    actorId: user.id,
+    action: `Posted announcement (${input.target_role})`,
+    targetTable: 'announcements',
+  })
+
   revalidatePath('/admin/announcement')
   revalidatePath('/parent')
   revalidatePath('/parent/announcement')
@@ -46,6 +53,16 @@ export async function deleteAnnouncement(id: string) {
   if (error) {
     throw new Error(error.message)
   }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  await logActivity(supabase, {
+    actorId: user?.id ?? null,
+    action: 'Deleted announcement',
+    targetTable: 'announcements',
+    targetId: id,
+  })
 
   revalidatePath('/admin/announcement')
   revalidatePath('/parent')

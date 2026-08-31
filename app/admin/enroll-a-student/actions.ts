@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email'
 import { generateTempPassword } from '@/lib/password'
+import { logActivity } from '@/lib/activity-log'
 
 // Creates ONLY the parent account. The student record is intentionally NOT
 // created here — it's created later, in app/admin/applications/actions.ts,
@@ -96,6 +97,16 @@ export async function approveApplication(applicationId: string) {
     })
   }
 
+  const {
+    data: { user: actingAdmin },
+  } = await supabase.auth.getUser()
+  await logActivity(supabase, {
+    actorId: actingAdmin?.id ?? null,
+    action: `Approved enrollment request for ${application.student_first_name} ${application.student_last_name}`,
+    targetTable: 'applications',
+    targetId: application.id,
+  })
+
   revalidatePath('/admin/enroll-a-student')
   revalidatePath('/admin/applications')
 }
@@ -114,6 +125,16 @@ export async function dismissApplication(applicationId: string) {
   if (error) {
     throw new Error(error.message)
   }
+
+  const {
+    data: { user: actingAdmin },
+  } = await supabase.auth.getUser()
+  await logActivity(supabase, {
+    actorId: actingAdmin?.id ?? null,
+    action: 'Rejected enrollment request',
+    targetTable: 'applications',
+    targetId: applicationId,
+  })
 
   revalidatePath('/admin/enroll-a-student')
 }

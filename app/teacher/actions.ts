@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { logActivity } from '@/lib/activity-log'
 
 export async function postAnnouncement(input: { title: string; body: string }) {
   const supabase = await createClient()
@@ -28,6 +29,12 @@ export async function postAnnouncement(input: { title: string; body: string }) {
   if (error) {
     throw new Error(error.message)
   }
+
+  await logActivity(supabase, {
+    actorId: user.id,
+    action: 'Posted classroom announcement',
+    targetTable: 'announcements',
+  })
 
   revalidatePath('/teacher')
   revalidatePath('/parent/announcement')

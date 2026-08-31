@@ -1,15 +1,96 @@
-import { ClipboardList } from 'lucide-react'
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
+import { StudentDashboardContent } from '@/components/teacher/student-dashboard-content'
 
-const milestoneCategories = [
-  'Physical Health & Motor',
-  'Character & Values',
-  'Language',
-  'Social-Emotional',
-  'Cognitive',
-  'Creative',
-]
+export default async function ParentStudentDashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ student?: string }>
+}) {
+  const { student: studentParam } = await searchParams
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-export default function StudentDashboardPage() {
+  // Matches app/parent/layout.tsx's selector: `student` in the URL is an
+  // applications.id, not a students.id — the same application id the
+  // top bar's student switcher already uses everywhere else in the parent
+  // portal, so it stays in sync when you switch children from any page.
+  const { data: applications } = await supabase
+    .from('applications')
+    .select('id, student_first_name, student_last_name, created_student_id')
+    .or(`created_parent_id.eq.${user?.id ?? ''},parent_email.eq.${user?.email ?? ''}`)
+    .order('submitted_at', { ascending: true })
+
+  const application =
+    (applications ?? []).find((a) => a.id === studentParam) ?? applications?.[0] ?? null
+
+  if (!application) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-[#0b1b62]">Student Dashboard</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Attendance, assessments, and development milestones for your child.
+          </p>
+        </div>
+        <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-500">
+          No students on file yet.{' '}
+          <Link href="/parent/enroll-a-student" className="font-semibold text-[#00a3e0] hover:underline">
+            Enroll a student
+          </Link>{' '}
+          to get started.
+        </div>
+      </div>
+    )
+  }
+
+  // Attendance/milestones only exist once the application has become a
+  // real students row (post document-review, see /admin/applications) —
+  // before that there's nothing to track yet.
+  if (!application.created_student_id) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-[#0b1b62]">Student Dashboard</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Attendance, assessments, and development milestones for your child.
+          </p>
+        </div>
+        <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-500">
+          {application.student_first_name} {application.student_last_name} isn&apos;t enrolled yet — attendance
+          and milestone tracking begin once enrollment is complete.{' '}
+          <Link href="/parent/enrollment-status" className="font-semibold text-[#00a3e0] hover:underline">
+            Check Enrollment Status
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  const studentId = application.created_student_id
+
+  const [{ data: student }, { data: attendance }, { data: milestones }] = await Promise.all([
+    supabase
+      .from('students')
+      .select('id, first_name, middle_name, last_name, date_of_birth, gender, enrollment_status, avatar_url')
+      .eq('id', studentId)
+      .single(),
+    supabase
+      .from('attendance')
+      .select('id, date, status')
+      .eq('student_id', studentId)
+      .order('date', { ascending: false })
+      .limit(14),
+    supabase
+      .from('milestones')
+      .select('id, category, assessment_date, notes')
+      .eq('student_id', studentId)
+      .order('assessment_date', { ascending: false })
+      .order('created_at', { ascending: false }),
+  ])
+
   return (
     <div className="space-y-6">
       <div>
@@ -19,36 +100,14 @@ export default function StudentDashboardPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <div className="rounded-2xl border border-gray-200 bg-white p-6">
-          <h2 className="text-lg font-semibold text-gray-900">Attendance</h2>
-          <p className="mt-3 text-sm text-gray-500">No attendance records yet.</p>
-        </div>
-        <div className="rounded-2xl border border-gray-200 bg-white p-6">
-          <h2 className="text-lg font-semibold text-gray-900">Latest Assessment</h2>
-          <p className="mt-3 text-sm text-gray-500">No assessments on file yet.</p>
-        </div>
-      </div>
-
-      <div className="rounded-2xl border border-gray-200 bg-white p-6">
-        <h2 className="text-lg font-semibold text-gray-900">Development Milestone Tracker</h2>
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
-          {milestoneCategories.map((category) => (
-            <div key={category} className="rounded-xl border border-gray-200 p-4">
-              <p className="text-sm font-medium text-gray-900">{category}</p>
-              <p className="mt-1 text-xs text-gray-400">Not yet assessed</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="rounded-2xl border border-gray-200 bg-white p-6">
-        <div className="flex items-center gap-2">
-          <ClipboardList className="h-5 w-5 text-[#e6007e]" />
-          <h2 className="text-lg font-semibold text-gray-900">Recent Daily Attendance</h2>
-        </div>
-        <p className="mt-3 text-sm text-gray-500">No records yet.</p>
-      </div>
+      {student && (
+        <StudentDashboardContent
+          student={student}
+          attendance={attendance ?? []}
+          milestones={milestones ?? []}
+          readOnly
+        />
+      )}
     </div>
   )
 }

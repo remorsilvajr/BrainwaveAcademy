@@ -1,0 +1,23 @@
+import { Lock } from 'lucide-react'
+import { ChangePasswordForm } from '@/components/settings/change-password-form'
+
+export default function AdminSettingsPage() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-[#0b1b62]">Settings</h1>
+        <p className="mt-1 text-sm text-gray-500">Manage your account security.</p>
+      </div>
+
+      <section className="rounded-2xl border border-gray-200 bg-white">
+        <div className="flex items-center gap-2 border-b border-gray-100 px-6 py-4">
+          <Lock className="h-5 w-5 text-[#e6007e]" />
+          <h2 className="text-lg font-bold text-gray-900">Password &amp; Security</h2>
+        </div>
+        <div className="p-6">
+          <ChangePasswordForm />
+        </div>
+      </section>
+    </div>
+  )
+}
