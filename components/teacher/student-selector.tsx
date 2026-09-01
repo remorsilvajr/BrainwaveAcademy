@@ -70,7 +70,7 @@ export function StudentSelector({
       {isOpen && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 z-20 mt-2 w-72 rounded-lg border border-gray-200 bg-white shadow-lg">
+          <div className="absolute left-0 z-20 mt-2 w-72 rounded-lg border border-gray-200 bg-white shadow-lg sm:left-auto sm:right-0">
             <div className="flex items-center gap-2 border-b border-gray-100 px-3 py-2">
               <Search className="h-4 w-4 shrink-0 text-gray-400" />
               <input

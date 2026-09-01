@@ -208,6 +208,22 @@ export function Sidebar({
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
+  // The drawer itself is position:fixed (doesn't move with scroll), but
+  // nothing was stopping the page underneath it from scrolling — on mobile,
+  // a fast scroll gesture behind the open drawer let the browser's own
+  // address/toolbar collapse mid-scroll, which visibly lagged the fixed
+  // drawer's bottom edge for a frame and let the page behind show through.
+  // Locking body scroll while the drawer is open removes the underlying
+  // scroll gesture entirely, which removes the trigger for that lag.
+  useEffect(() => {
+    if (!isMobileOpen) return
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [isMobileOpen])
+
   // Intercepts a normal left-click to route it through startTransition (so
   // TopProgressBar's `isPending` tracks it) instead of letting <Link> do
   // its own default navigation. Modified clicks (ctrl/cmd/shift/middle) are
