@@ -21,6 +21,19 @@ export function ParentTopBar({
   const router = useRouter()
   const searchParams = useSearchParams()
   const [studentMenuOpen, setStudentMenuOpen] = useState(false)
+  const [lastPathname, setLastPathname] = useState(pathname)
+
+  // The dropdown's own click-away backdrop only closes it on a click
+  // *outside* the panel — a sidebar link click navigates via router.push
+  // without ever triggering that backdrop, so the panel was staying open
+  // (and stale) across a tab change. Closing it here, inline during render
+  // when pathname changes, matches this app's established pattern for
+  // adjusting state off a changed value (see TopProgressBar/Pagination)
+  // rather than a useEffect, which would trigger a needless extra render.
+  if (pathname !== lastPathname) {
+    setLastPathname(pathname)
+    setStudentMenuOpen(false)
+  }
 
   const title =
     pathname === '/parent'
@@ -59,7 +72,7 @@ export function ParentTopBar({
               {studentMenuOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setStudentMenuOpen(false)} />
-                  <div className="absolute right-0 z-20 mt-2 w-56 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+                  <div className="absolute left-0 z-20 mt-2 w-56 rounded-lg border border-gray-200 bg-white py-1 shadow-lg sm:left-auto sm:right-0">
                     {students.map((s) => (
                       <button
                         key={s.id}
