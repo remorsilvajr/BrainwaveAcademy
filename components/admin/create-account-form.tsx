@@ -36,6 +36,9 @@ function Field({
       <label htmlFor={name} className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
         {label} {required && <span className="text-[#e6007e]">*</span>}
       </label>
+      {/* Tweaked input styles here: added background colors for light/dark mode 
+        so text doesn't blend in when browser autofills or in high-contrast themes.
+      */}
       <input
         id={name}
         name={name}
@@ -43,9 +46,10 @@ function Field({
         placeholder={placeholder}
         required={required}
         defaultValue={defaultValue}
-        className={`w-full rounded-lg border px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 placeholder:text-gray-400 focus:outline-none ${
-          error ? 'border-red-400 focus:border-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-[#0b1b62] dark:focus:border-indigo-400'
-        }`}
+        className={`w-full rounded-lg border bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none ${error
+            ? 'border-red-400 focus:border-red-500'
+            : 'border-slate-200 dark:border-slate-700 focus:border-[#0b1b62] dark:focus:border-indigo-400'
+          }`}
       />
       {error && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{error}</p>}
     </div>
@@ -66,15 +70,7 @@ export function CreateAccountForm() {
   const [photoError, setPhotoError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // The `avatars` bucket this uploads to already enforces a 2MB
-  // file_size_limit server-side — matching it here gives an immediate
-  // client-side message instead of a round trip that fails at Storage
-  // anyway, and stays safely under Vercel's separate 4.5MB platform-level
-  // cap on serverless function request bodies (independent of this repo's
-  // own next.config.ts `serverActions.bodySizeLimit`, which only governs
-  // Next's application-level check, not the platform's) — a photo that
-  // snuck past a looser check used to hit that platform limit instead,
-  // crashing the whole submission generically with no indication of why.
+  // Client-side guard matching storage bucket limits to avoid payload crashes.
   const MAX_PHOTO_BYTES = 2 * 1024 * 1024
 
   function handlePhotoChange(file: File | null) {
@@ -87,6 +83,9 @@ export function CreateAccountForm() {
     if (photoPreview) URL.revokeObjectURL(photoPreview)
     setPhotoPreview(file ? URL.createObjectURL(file) : null)
   }
+
+  // Common styling for dropdown options in dark mode (browsers ignore dark bg on native <select> unless explicitly set per option)
+  const selectOptionStyles = "bg-white text-gray-900 dark:bg-gray-800 dark:text-gray-100"
 
   return (
     <form
@@ -101,10 +100,11 @@ export function CreateAccountForm() {
 
       <div className="mt-6 grid grid-cols-1 gap-8 md:grid-cols-3">
         <div>
+          {/* Added hover state for dark mode so the dropzone responds nicely on hover */}
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex w-full flex-col items-center gap-2 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/60 py-10 hover:bg-gray-100"
+            className="flex w-full flex-col items-center gap-2 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/60 py-10 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           >
             {photoPreview ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -194,9 +194,12 @@ export function CreateAccountForm() {
               </p>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 {roleOptions.map((r) => (
+                  /* Added dark state highlights for selected radio cards:
+                    Used dark:has-[:checked]:bg-indigo-950/40 and dark:has-[:checked]:border-indigo-400 so the selected state looks natural in dark mode.
+                  */
                   <label
                     key={r.value}
-                    className="flex cursor-pointer items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 has-[:checked]:border-[#00a3e0] has-[:checked]:bg-sky-50 has-[:checked]:text-[#0b1b62]"
+                    className="flex cursor-pointer items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-gray-800 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 has-[:checked]:border-[#00a3e0] has-[:checked]:bg-sky-50 has-[:checked]:text-[#0b1b62] dark:has-[:checked]:border-indigo-400 dark:has-[:checked]:bg-indigo-950/40 dark:has-[:checked]:text-indigo-200 transition-colors"
                   >
                     <input
                       type="radio"
@@ -221,17 +224,18 @@ export function CreateAccountForm() {
                 >
                   Relationship to Student
                 </label>
+                {/* Fixed select dropdown dark background & native option text color */}
                 <select
                   id="relationship_to_student"
                   name="relationship_to_student"
                   value={relationship}
                   onChange={(e) => setRelationship(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+                  className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
                 >
-                  <option value="">Not set</option>
-                  <option value="Mother">Mother</option>
-                  <option value="Father">Father</option>
-                  <option value="Guardian">Guardian</option>
+                  <option value="" className={selectOptionStyles}>Not set</option>
+                  <option value="Mother" className={selectOptionStyles}>Mother</option>
+                  <option value="Father" className={selectOptionStyles}>Father</option>
+                  <option value="Guardian" className={selectOptionStyles}>Guardian</option>
                 </select>
               </div>
             )}
@@ -246,16 +250,16 @@ export function CreateAccountForm() {
                   name="gender"
                   value={gender}
                   onChange={(e) => setGender(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+                  className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
                 >
-                  <option value="">Not set</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
+                  <option value="" className={selectOptionStyles}>Not set</option>
+                  <option value="male" className={selectOptionStyles}>Male</option>
+                  <option value="female" className={selectOptionStyles}>Female</option>
                 </select>
               </div>
             )}
 
-            <div className="mt-4 flex items-center justify-between gap-4 rounded-xl bg-gray-50 dark:bg-gray-800/60 px-4 py-3">
+            <div className="mt-4 flex items-center justify-between gap-4 rounded-xl bg-gray-50 dark:bg-gray-800/60 px-4 py-3 border border-transparent dark:border-gray-800">
               <div>
                 <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Auto-generate Password</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -280,18 +284,18 @@ export function CreateAccountForm() {
                     type={showPassword ? 'text' : 'password'}
                     placeholder="At least 8 characters"
                     required
-                    className={`w-full rounded-lg border px-3 py-2.5 pr-10 text-sm text-gray-700 dark:text-gray-300 placeholder:text-gray-400 focus:outline-none ${
-                      fieldErrors.manual_password
+                    className={`w-full rounded-lg border bg-white dark:bg-gray-800 px-3 py-2.5 pr-10 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none ${fieldErrors.manual_password
                         ? 'border-red-400 focus:border-red-500'
                         : 'border-slate-200 dark:border-slate-700 focus:border-[#0b1b62] dark:focus:border-indigo-400'
-                    }`}
+                      }`}
                   />
+                  {/* Added hover transition on eye toggle button for dark mode consistency */}
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                     aria-pressed={showPassword}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -306,16 +310,17 @@ export function CreateAccountForm() {
       </div>
 
       <div className="mt-8 flex gap-2 border-t border-gray-100 dark:border-gray-800 pt-6">
+        {/* Added dark hover states for action buttons */}
         <Link
           href="/admin/user-management"
-          className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50"
+          className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
         >
           Cancel
         </Link>
         <button
           type="submit"
           disabled={isPending}
-          className="flex-1 rounded-lg bg-[#e6007e] py-3 text-sm font-semibold text-white hover:bg-[#c9006e] disabled:opacity-60"
+          className="flex-1 rounded-lg bg-[#e6007e] py-3 text-sm font-semibold text-white hover:bg-[#c9006e] active:scale-[0.99] disabled:opacity-60 transition-all"
         >
           {isPending ? 'Creating…' : 'Create & Issue Credentials'}
         </button>
