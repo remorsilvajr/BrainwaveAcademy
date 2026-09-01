@@ -6,6 +6,7 @@ const sections: NavSection[] = [
       { label: 'Dashboard', href: '/admin', icon: 'dashboard' },
       { label: 'Announcement', href: '/admin/announcement', icon: 'announcement' },
       { label: 'User Management', href: '/admin/user-management', icon: 'users' },
+      { label: 'Teachers', href: '/admin/teachers', icon: 'teacher' },
       { label: 'Create New Account', href: '/admin/create-new-account', icon: 'checklist' },
       { label: 'Enroll A Student', href: '/admin/enroll-a-student', icon: 'userPlus' },
       { label: 'Applications', href: '/admin/applications', icon: 'file' },
@@ -15,7 +16,6 @@ const sections: NavSection[] = [
     title: 'Student',
     items: [
       { label: 'Students', href: '/admin/students', icon: 'user' },
-      { label: 'Teachers', href: '/admin/teachers', icon: 'teacher' },
       { label: 'Attendance', href: '/admin/attendance', icon: 'checklist' },
       { label: 'Student Dashboard', href: '/admin/student-dashboard', icon: 'graduationCap' },
     ],
