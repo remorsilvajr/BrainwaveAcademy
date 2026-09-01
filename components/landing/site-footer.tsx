@@ -1,4 +1,4 @@
-const quickLinks = ['About Us', 'Programs', '6 Domains']
+import { navigationItems } from './nav-items'
 
 export function SiteFooter() {
   return (
@@ -48,13 +48,13 @@ export function SiteFooter() {
               Quick Links
             </h2>
             <ul className="flex flex-col items-start gap-2 list-none m-0 p-0">
-              {quickLinks.map((link) => (
-                <li key={link}>
+              {navigationItems.map((item) => (
+                <li key={item.label}>
                   <a
-                    href="#"
+                    href={item.href}
                     className="text-base leading-6 text-[#bac3ff] no-underline hover:text-white"
                   >
-                    {link}
+                    {item.label}
                   </a>
                 </li>
               ))}

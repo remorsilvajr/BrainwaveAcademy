@@ -4,12 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Menu, X } from 'lucide-react'
 import { ThemeToggle } from '@/components/theme-toggle'
-
-const navigationItems = [
-  { label: 'About Us', href: '/#about-us' },
-  { label: 'Programs', href: '/#programs' },
-  { label: '6 Domains', href: '/#domains' },
-]
+import { navigationItems } from './nav-items'
 
 export function SiteHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
