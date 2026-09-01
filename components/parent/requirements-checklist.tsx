@@ -148,7 +148,7 @@ export function RequirementsChecklist({
           return (
             <div
               key={type}
-              className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-5"
+              className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="flex items-start gap-3">
                 <div className="rounded-full bg-gray-100 p-2">
@@ -164,7 +164,7 @@ export function RequirementsChecklist({
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {canView && (
                   <button
                     onClick={() => handleViewDocument(type)}

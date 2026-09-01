@@ -99,20 +99,20 @@ export function RosterCheckin({
         {pageItems.map((s) => {
           const status = statusByStudent[s.id]
           return (
-            <div key={s.id} className="flex items-center justify-between gap-4 py-3">
+            <div key={s.id} className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <p className="text-sm font-medium text-gray-900">
                 {s.first_name} {s.last_name}
               </p>
               {readOnly ? (
                 <span
-                  className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${
+                  className={`w-fit rounded-full px-3 py-1 text-xs font-semibold capitalize ${
                     status ? statusMeta[status] : 'bg-gray-100 text-gray-400'
                   }`}
                 >
                   {status ?? 'Not marked'}
                 </span>
               ) : (
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {savedId === s.id && (
                     <span className="flex items-center gap-1 text-xs font-medium text-green-600">
                       <Check className="h-3.5 w-3.5" /> Saved
