@@ -68,6 +68,22 @@ export async function login(formData: FormData) {
 // navigates itself once this resolves.
 export async function logout() {
   const supabase = await createClient()
+
+  // Without this, the admin's "Online" indicator (User Management) kept
+  // showing green for up to the full 5-minute window after someone
+  // explicitly logged out — last_seen_at only ever got *set* (by
+  // middleware's presence ping), never cleared, so it just held whatever
+  // it was at the moment of logout regardless of session state. Reported
+  // live. Must run BEFORE signOut() below — profiles' self-update RLS
+  // policy checks auth.uid(), which stops resolving to this user the
+  // moment the session is actually torn down.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (user) {
+    await supabase.from('profiles').update({ last_seen_at: null }).eq('id', user.id)
+  }
+
   await supabase.auth.signOut()
 
   const cookieStore = await cookies()
@@ -82,6 +98,15 @@ export async function logout() {
 // signs them out of every device, not only this browser.
 export async function logoutAllDevices() {
   const supabase = await createClient()
+
+  // Same reasoning as logout() above — clear before signOut(), not after.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (user) {
+    await supabase.from('profiles').update({ last_seen_at: null }).eq('id', user.id)
+  }
+
   await supabase.auth.signOut({ scope: 'global' })
 
   const cookieStore = await cookies()

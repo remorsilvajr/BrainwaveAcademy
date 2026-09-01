@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { toggleBlockUser, updateAccountStatus, forceLogoutUser } from '@/app/admin/user-management/actions'
 import { formatDateShort } from '@/lib/format'
 import { UserEditModal } from '@/components/admin/user-edit-modal'
@@ -40,6 +41,7 @@ const roleBadgeClasses: Record<string, string> = {
 }
 
 export function UserManagementTable({ users }: { users: Profile[] }) {
+  const router = useRouter()
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -49,6 +51,20 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
   const editingUser = editingUserId ? (users.find((u) => u.id === editingUserId) ?? null) : null
   const [confirmingBlockId, setConfirmingBlockId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+
+  // The Online indicator only reflects however-fresh `users` was when this
+  // page last rendered — reported live as feeling stuck/stale, since
+  // nothing was re-fetching it without an actual navigation. This alone
+  // doesn't make it real-time (still the same last_seen_at heuristic,
+  // still only as fresh as the last refresh), but keeps it from looking
+  // frozen while an admin is just sitting on this page watching it.
+  // search/roleFilter/statusFilter/editingUserId/confirmingBlockId are all
+  // local state untouched by router.refresh(), so this doesn't reset an
+  // open modal, an in-progress block confirmation, or the current filters.
+  useEffect(() => {
+    const interval = setInterval(() => router.refresh(), 20000)
+    return () => clearInterval(interval)
+  }, [router])
 
   const filtered = users.filter((u) => {
     if (roleFilter !== 'all' && u.role !== roleFilter) return false

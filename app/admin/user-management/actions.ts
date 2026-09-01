@@ -60,6 +60,13 @@ export async function toggleBlockUser(userId: string, currentStatus: string) {
     throw new Error(banError.message)
   }
 
+  // Same last_seen_at reasoning as forceLogoutUser below — blocking also
+  // ends the user's session, so the Online indicator shouldn't keep
+  // showing green for someone who was just blocked.
+  if (newStatus === 'blocked') {
+    await admin.from('profiles').update({ last_seen_at: null }).eq('id', userId)
+  }
+
   await syncLinkedStudentsStatus(supabase, userId, newStatus)
 
   const {
@@ -240,6 +247,14 @@ export async function forceLogoutUser(userId: string) {
   if (error) {
     throw new Error(error.message)
   }
+
+  // Same reasoning as logout()/logoutAllDevices() in app/login/actions.ts —
+  // last_seen_at only ever gets set by middleware's presence ping, never
+  // cleared, so without this the target still shows "Online" until the
+  // 5-minute window naturally lapses even though their session just ended.
+  // Uses the admin client since this is someone else's row, not the
+  // caller's own — self-update RLS doesn't apply here.
+  await admin.from('profiles').update({ last_seen_at: null }).eq('id', userId)
 
   const supabase = await createClient()
   const {
