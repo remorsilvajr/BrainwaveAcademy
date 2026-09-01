@@ -24,8 +24,11 @@ export function SiteHeader() {
           {/* The logo asset itself has dark navy linework designed for a
               light backing — rather than fabricate a dark-mode variant that
               doesn't exist, it keeps a small white card behind it in dark
-              mode so it stays legible without needing a second asset. */}
-          <span className="flex h-10 items-center rounded-md dark:bg-white dark:px-2">
+              mode so it stays legible without needing a second asset. Even
+              padding on all sides + a generous radius (not just horizontal
+              padding on a height-matched box) is what keeps this reading as
+              a deliberate badge rather than a cropped white rectangle. */}
+          <span className="flex items-center dark:rounded-lg dark:bg-white dark:p-1.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               className="h-10 w-auto"
