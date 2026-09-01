@@ -77,6 +77,69 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // app/login/actions.ts already refuses a blocked account at sign-in, but
+  // that was the *only* enforcement point — an account blocked while
+  // already logged in (a tab left open, or Force Log Out below) kept full
+  // access until they happened to log out and back in, since nothing
+  // re-checked account_status on an existing session. Mirrors the
+  // user_role caching pattern right below, but with a much shorter TTL
+  // (60s, not 1h) — role changes are rare and low-stakes to leave briefly
+  // stale, but "should this blocked account still be in the portal" isn't,
+  // so this deliberately re-queries far more often at some perf cost.
+  // Also set server-side (see toggleBlockUser/forceLogoutUser in
+  // app/admin/user-management/actions.ts) as the same admin action also
+  // sets a real Supabase Auth ban_duration, which independently fails
+  // getUser() above on this same request without waiting on this cookie at
+  // all — this cookie check is a second, guaranteed-consistent layer for
+  // wherever ban_duration's propagation is slower than expected, not the
+  // only thing standing between a blocked account and continued access.
+  if (user && isProtected) {
+    let accountStatus = request.cookies.get('account_status')?.value
+
+    if (!accountStatus) {
+      const { data: statusProfile } = await supabase
+        .from('profiles')
+        .select('account_status')
+        .eq('id', user.id)
+        .single()
+
+      accountStatus = statusProfile?.account_status
+      if (accountStatus) {
+        supabaseResponse.cookies.set('account_status', accountStatus, {
+          httpOnly: true,
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 60,
+        })
+      }
+    }
+
+    if (accountStatus === 'blocked') {
+      await supabase.auth.signOut()
+      const url = request.nextUrl.clone()
+      url.pathname = '/login'
+      url.searchParams.set('error', 'This account has been blocked. Contact the school.')
+      return NextResponse.redirect(url)
+    }
+
+    // Throttled "last seen" ping for the admin's Online indicator in User
+    // Management — at most one write per ~60s per user (gated by a cookie,
+    // not a DB read, so a stale-but-present cookie skips the query
+    // entirely) regardless of how many pages they navigate in that window.
+    // An unthrottled write on every single request would reintroduce
+    // exactly the kind of per-navigation DB cost the user_role cookie
+    // above was specifically added to avoid.
+    if (!request.cookies.get('presence_ping')?.value) {
+      supabaseResponse.cookies.set('presence_ping', '1', {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 60,
+      })
+      await supabase.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', user.id)
+    }
+  }
+
   // Logged in -> make sure they're inside their OWN role's section (e.g. a
   // parent hitting /admin/* gets bounced back to /parent), and keep them
   // off the public-only pages above.

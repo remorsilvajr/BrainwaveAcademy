@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
 import { isValidName, NAME_VALIDATION_MESSAGE } from '@/lib/name'
 import { logActivity } from '@/lib/activity-log'
@@ -40,6 +41,23 @@ export async function toggleBlockUser(userId: string, currentStatus: string) {
 
   if (error) {
     throw new Error(error.message)
+  }
+
+  // profiles.account_status is this app's own record of the block (used
+  // for the UI, filtering, and middleware's short-TTL cookie check), but
+  // it's not what actually stops a blocked user's *existing* session —
+  // Supabase Auth doesn't know or care about our own columns. ban_duration
+  // is the real enforcement: GoTrue rejects auth.getUser() for a banned
+  // user almost immediately (independent of, and faster than, middleware's
+  // own cookie-cache window), and also rejects any new sign-in attempt.
+  // '876000h' (100 years) mirrors the Supabase admin SDK's own documented
+  // example for "ban a user"; 'none' lifts it.
+  const admin = createAdminClient()
+  const { error: banError } = await admin.auth.admin.updateUserById(userId, {
+    ban_duration: newStatus === 'blocked' ? '876000h' : 'none',
+  })
+  if (banError) {
+    throw new Error(banError.message)
   }
 
   await syncLinkedStudentsStatus(supabase, userId, newStatus)
@@ -201,4 +219,36 @@ export async function removeUserAvatar(userId: string) {
   })
 
   revalidatePath('/admin/user-management')
+}
+
+// Ends a user's *current* session without blocking them — unlike
+// toggleBlockUser's ban_duration: '876000h' (until manually unblocked),
+// this sets a brief ban (see middleware.ts's account_status check for the
+// other enforcement layer this pairs with) just long enough to reliably
+// fail their next request's auth.getUser() call, then expires on its own
+// so they can simply log back in right away. There's no direct "revoke
+// this specific session" call in Supabase's admin API — ban_duration is
+// the only real lever, so a short one is what "force log out" is built
+// from here. A user who tries to log back in inside that ~15s window will
+// briefly see "Incorrect email or password" (the generic error
+// app/login/actions.ts already shows for a banned sign-in attempt) even
+// though their password is fine — an accepted rough edge given how narrow
+// the window is, not worth a special-cased error message for.
+export async function forceLogoutUser(userId: string) {
+  const admin = createAdminClient()
+  const { error } = await admin.auth.admin.updateUserById(userId, { ban_duration: '15s' })
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  const supabase = await createClient()
+  const {
+    data: { user: actingAdmin },
+  } = await supabase.auth.getUser()
+  await logActivity(supabase, {
+    actorId: actingAdmin?.id ?? null,
+    action: 'Forced user log out',
+    targetTable: 'profiles',
+    targetId: userId,
+  })
 }

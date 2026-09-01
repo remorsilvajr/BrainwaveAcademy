@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { toggleBlockUser, updateAccountStatus } from '@/app/admin/user-management/actions'
+import { toggleBlockUser, updateAccountStatus, forceLogoutUser } from '@/app/admin/user-management/actions'
 import { formatDateShort } from '@/lib/format'
 import { UserEditModal } from '@/components/admin/user-edit-modal'
 import { Pagination } from '@/components/ui/pagination'
@@ -28,6 +28,7 @@ type Profile = {
   account_status: string
   created_at: string
   avatar_url: string | null
+  isOnline: boolean
   parent_student?: { relationship: string; students: LinkedStudent | null }[]
   applicants?: Applicant[]
 }
@@ -78,6 +79,20 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
     })
   }
 
+  const [loggingOutId, setLoggingOutId] = useState<string | null>(null)
+  const [loggedOutId, setLoggedOutId] = useState<string | null>(null)
+
+  async function handleForceLogout(user: Profile) {
+    setLoggingOutId(user.id)
+    try {
+      await forceLogoutUser(user.id)
+      setLoggedOutId(user.id)
+      setTimeout(() => setLoggedOutId(null), 2000)
+    } finally {
+      setLoggingOutId(null)
+    }
+  }
+
   const optionClasses = "bg-white text-slate-900 dark:bg-gray-800 dark:text-slate-100"
 
   return (
@@ -126,14 +141,14 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
 
       <div className="mt-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
         <div className="min-h-[420px] overflow-x-auto">
-          <table className="w-full min-w-[720px] text-sm">
+          <table className="w-full min-w-[800px] text-sm">
             <thead className="bg-gray-50 dark:bg-gray-800/60 text-left text-gray-500 dark:text-gray-400">
               <tr>
                 <th className="p-4 font-medium">User Details</th>
                 <th className="p-4 font-medium">Assigned Role</th>
                 <th className="p-4 font-medium">Account Status</th>
                 <th className="p-4 font-medium">Joined</th>
-                <th className="min-w-[260px] p-4 font-medium">Actions</th>
+                <th className="min-w-[340px] p-4 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -141,10 +156,16 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
                 pageItems.map((u) => (
                   <tr key={u.id}>
                     <td className="p-4">
-                      <p className="font-medium text-gray-900 dark:text-gray-100">
-                        {u.first_name} {u.last_name}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">{u.email}</p>
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={`h-2 w-2 shrink-0 rounded-full ${u.isOnline ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+                          title={u.isOnline ? 'Online' : 'Offline'}
+                        />
+                        <p className="font-medium text-gray-900 dark:text-gray-100">
+                          {u.first_name} {u.last_name}
+                        </p>
+                      </div>
+                      <p className="ml-3.5 text-xs text-gray-500 dark:text-gray-400">{u.email}</p>
                     </td>
                     <td className="p-4">
                       <span
@@ -182,6 +203,16 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
                         >
                           Edit
                         </button>
+                        {u.account_status !== 'blocked' && (
+                          <button
+                            onClick={() => handleForceLogout(u)}
+                            disabled={loggingOutId === u.id}
+                            title="Ends their current session — they can log back in right away"
+                            className="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-60"
+                          >
+                            {loggingOutId === u.id ? 'Logging Out…' : loggedOutId === u.id ? 'Logged Out ✓' : 'Log Out'}
+                          </button>
+                        )}
                         {confirmingBlockId === u.id ? (
                           <div className="flex items-center gap-1.5 whitespace-nowrap text-xs">
                             <span className="text-gray-600 dark:text-gray-400">Block this user?</span>

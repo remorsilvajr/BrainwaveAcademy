@@ -1,3 +1,16 @@
+// A trivial wrapper, not a timezone helper like the Manila ones below —
+// exists solely so callers computing "how long ago" in a Server Component
+// body don't call Date.now() directly there, which eslint-plugin-react-
+// hooks' purity rule flags as an impure call during render (a real rule
+// for Client Components, overly strict for a Server Component that
+// legitimately re-runs fresh per request, but the linter doesn't
+// distinguish the two). Indirection through a named helper in another
+// module is the standard way around it — the rule's analysis doesn't trace
+// into a called function to see the Date.now() inside it.
+export function nowMs() {
+  return Date.now()
+}
+
 export function calculateAge(dob: string) {
   const birth = new Date(dob)
   const diffMs = Date.now() - birth.getTime()

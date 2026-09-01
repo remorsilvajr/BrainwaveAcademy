@@ -73,6 +73,8 @@ export async function logout() {
   const cookieStore = await cookies()
   cookieStore.delete('user_role')
   cookieStore.delete('remember_me')
+  cookieStore.delete('account_status')
+  cookieStore.delete('presence_ping')
 }
 
 // Same not-calling-redirect() reasoning as logout() above. scope: 'global'
@@ -85,4 +87,6 @@ export async function logoutAllDevices() {
   const cookieStore = await cookies()
   cookieStore.delete('user_role')
   cookieStore.delete('remember_me')
+  cookieStore.delete('account_status')
+  cookieStore.delete('presence_ping')
 }

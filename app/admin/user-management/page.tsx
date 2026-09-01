@@ -1,5 +1,6 @@
 import { Users, CheckCircle2, Clock, Ban } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { nowMs } from '@/lib/format'
 import { UserManagementTable } from '@/components/admin/user-management-table'
 
 export default async function UserManagementPage() {
@@ -27,9 +28,17 @@ export default async function UserManagementPage() {
     applicantsByParentId.set(application.created_parent_id, [...existing, application])
   }
 
+  // "Online" is a heuristic, not true presence — this app has no realtime
+  // channel tracking actual open connections. middleware.ts pings
+  // profiles.last_seen_at at most once per ~60s per authenticated request,
+  // so "seen in the last 5 minutes" is a reasonable proxy for "probably
+  // still has the portal open" without needing that heavier realtime setup.
+  const ONLINE_WINDOW_MS = 5 * 60 * 1000
+  const now = nowMs()
   const users = (data ?? []).map((user) => ({
     ...user,
     applicants: applicantsByParentId.get(user.id) ?? [],
+    isOnline: !!user.last_seen_at && now - new Date(user.last_seen_at).getTime() < ONLINE_WINDOW_MS,
   }))
 
   const counts = {
