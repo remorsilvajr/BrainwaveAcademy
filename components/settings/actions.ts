@@ -45,7 +45,11 @@ export async function requestPasswordResetEmail() {
     throw new Error('Your session has expired. Please log in again.')
   }
 
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role, first_name, last_name')
+    .eq('id', user.id)
+    .single()
 
   // TEMPORARY, requested 2026-09-01: admin's own "Email Me a New Password"
   // always sends to this fixed inbox instead of the requesting admin's real
@@ -53,9 +57,14 @@ export async function requestPasswordResetEmail() {
   // are unaffected — this only checks the role, not which portal route the
   // action was called from. The password itself still changes for the
   // actual logged-in admin account; only the notification's destination is
-  // overridden. Remove this override (revert recipientEmail to user.email
-  // unconditionally) once no longer needed.
-  const recipientEmail = profile?.role === 'admin' ? 'rsilva1@addu.edu.ph' : user.email
+  // overridden. Since every admin's email now lands in the same inbox
+  // rather than each admin's own, the email body says which admin account
+  // it's actually for (name + real login email) so that's not ambiguous.
+  // Remove this whole override (revert recipientEmail to user.email
+  // unconditionally, drop the "for" line below) once no longer needed.
+  const isAdmin = profile?.role === 'admin'
+  const recipientEmail = isAdmin ? 'rsilva1@addu.edu.ph' : user.email
+  const accountLabel = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ')
 
   const newPassword = generateTempPassword()
   const siteUrl = getSiteUrl()
@@ -72,6 +81,7 @@ export async function requestPasswordResetEmail() {
     html: `
       <h2>Password Reset</h2>
       <p>You requested a password reset from your Settings page.</p>
+      ${isAdmin ? `<p><strong>For account:</strong> ${accountLabel} (${user.email})</p>` : ''}
       <p><strong>New Password:</strong> ${newPassword}</p>
       <p>Use this to log in, then change it to something memorable from Settings &gt; Password &amp; Security.</p>
       <p>If you didn't request this, contact the school office — your password has already changed.</p>
