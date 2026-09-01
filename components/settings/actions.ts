@@ -45,6 +45,18 @@ export async function requestPasswordResetEmail() {
     throw new Error('Your session has expired. Please log in again.')
   }
 
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+
+  // TEMPORARY, requested 2026-09-01: admin's own "Email Me a New Password"
+  // always sends to this fixed inbox instead of the requesting admin's real
+  // address, regardless of which admin account triggers it. Parent/teacher
+  // are unaffected — this only checks the role, not which portal route the
+  // action was called from. The password itself still changes for the
+  // actual logged-in admin account; only the notification's destination is
+  // overridden. Remove this override (revert recipientEmail to user.email
+  // unconditionally) once no longer needed.
+  const recipientEmail = profile?.role === 'admin' ? 'rsilva1@addu.edu.ph' : user.email
+
   const newPassword = generateTempPassword()
   const siteUrl = getSiteUrl()
 
@@ -55,7 +67,7 @@ export async function requestPasswordResetEmail() {
   // first means a failure here just fails the request cleanly, leaving
   // their existing (still-working) password untouched.
   await sendEmail({
-    to: user.email,
+    to: recipientEmail,
     subject: 'Your Brainwave Preschool Academy password has been reset',
     html: `
       <h2>Password Reset</h2>
