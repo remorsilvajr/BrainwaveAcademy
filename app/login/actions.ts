@@ -72,7 +72,7 @@ export async function login(formData: FormData) {
     httpOnly: true,
     sameSite: 'lax',
     path: '/',
-    maxAge: 60,
+    maxAge: 60 * 5, // matches middleware.ts's own account_status TTL
   })
   cookieStore.set('presence_ping', '1', {
     httpOnly: true,

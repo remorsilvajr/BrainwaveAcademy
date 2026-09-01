@@ -1,8 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
+import { NextResponse, type NextFetchEvent, type NextRequest } from 'next/server'
 import { applyRememberMe } from '@/lib/supabase/remember-me'
 
-export async function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest, event: NextFetchEvent) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -82,17 +82,22 @@ export async function middleware(request: NextRequest) {
   // already logged in (a tab left open, or Force Log Out below) kept full
   // access until they happened to log out and back in, since nothing
   // re-checked account_status on an existing session. Mirrors the
-  // user_role caching pattern right below, but with a much shorter TTL
-  // (60s, not 1h) — role changes are rare and low-stakes to leave briefly
-  // stale, but "should this blocked account still be in the portal" isn't,
-  // so this deliberately re-queries far more often at some perf cost.
-  // Also set server-side (see toggleBlockUser/forceLogoutUser in
-  // app/admin/user-management/actions.ts) as the same admin action also
-  // sets a real Supabase Auth ban_duration, which independently fails
-  // getUser() above on this same request without waiting on this cookie at
-  // all — this cookie check is a second, guaranteed-consistent layer for
-  // wherever ban_duration's propagation is slower than expected, not the
-  // only thing standing between a blocked account and continued access.
+  // user_role caching pattern right below. TTL is 5 minutes, not
+  // user_role's 1 hour, but no longer the aggressive 60s this started at —
+  // reported live as a real, intermittent page-load slowness pattern
+  // ("loads fine the second time, but the first time after being idle a
+  // while it lags badly"), which is exactly what an extra synchronous DB
+  // round trip on every protected navigation past a short cookie TTL looks
+  // like, for every logged-in user on every role. Safe to relax: this
+  // cookie was never the *primary* block enforcement even at 60s —
+  // toggleBlockUser/forceLogoutUser (app/admin/user-management/actions.ts)
+  // also set a real Supabase Auth ban_duration, which independently fails
+  // getUser() above almost immediately for a banned user, on this same
+  // request, without waiting on this cookie at all. This is only a second,
+  // guaranteed-consistent layer for wherever ban_duration's propagation is
+  // slower than expected — a 5-minute staleness window on a backup check
+  // is a fine trade for cutting how often *every* navigation pays this
+  // cost by 5x.
   if (user && isProtected) {
     let accountStatus = request.cookies.get('account_status')?.value
 
@@ -109,7 +114,7 @@ export async function middleware(request: NextRequest) {
           httpOnly: true,
           sameSite: 'lax',
           path: '/',
-          maxAge: 60,
+          maxAge: 60 * 5,
         })
       }
     }
@@ -126,9 +131,13 @@ export async function middleware(request: NextRequest) {
     // Management — at most one write per ~60s per user (gated by a cookie,
     // not a DB read, so a stale-but-present cookie skips the query
     // entirely) regardless of how many pages they navigate in that window.
-    // An unthrottled write on every single request would reintroduce
-    // exactly the kind of per-navigation DB cost the user_role cookie
-    // above was specifically added to avoid.
+    // event.waitUntil() (not await) is what actually matters here, though:
+    // this write doesn't gate the redirect decision the way account_status
+    // above does, so there's no reason for the response to wait on it —
+    // the cookie throttling the *next* request's ping is set synchronously
+    // either way, this just stops today's version of this exact "why does
+    // this page sometimes lag" complaint from coming back for this half of
+    // the check once account_status's own TTL is relaxed.
     if (!request.cookies.get('presence_ping')?.value) {
       supabaseResponse.cookies.set('presence_ping', '1', {
         httpOnly: true,
@@ -136,7 +145,15 @@ export async function middleware(request: NextRequest) {
         path: '/',
         maxAge: 60,
       })
-      await supabase.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', user.id)
+      // waitUntil() requires a real Promise — Supabase's query builder is
+      // thenable (awaitable) but not a strict Promise instance, so
+      // TypeScript rejects passing it directly. Promise.resolve() on a
+      // thenable correctly adopts its eventual result either way.
+      event.waitUntil(
+        Promise.resolve(
+          supabase.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', user.id)
+        )
+      )
     }
   }
 
