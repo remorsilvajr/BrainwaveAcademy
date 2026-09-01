@@ -57,12 +57,16 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
   // nothing was re-fetching it without an actual navigation. This alone
   // doesn't make it real-time (still the same last_seen_at heuristic,
   // still only as fresh as the last refresh), but keeps it from looking
-  // frozen while an admin is just sitting on this page watching it.
-  // search/roleFilter/statusFilter/editingUserId/confirmingBlockId are all
-  // local state untouched by router.refresh(), so this doesn't reset an
-  // open modal, an in-progress block confirmation, or the current filters.
+  // frozen while an admin is just sitting on this page watching it. 10s
+  // (not the original 20s) after a second live report that 20s felt like
+  // "not updating at all" rather than "updating slowly" — paired with the
+  // manual "Refresh Now" button below for whenever even that's too slow to
+  // wait on. search/roleFilter/statusFilter/editingUserId/confirmingBlockId
+  // are all local state untouched by router.refresh(), so neither this nor
+  // the manual button resets an open modal, an in-progress block
+  // confirmation, or the current filters.
   useEffect(() => {
-    const interval = setInterval(() => router.refresh(), 20000)
+    const interval = setInterval(() => router.refresh(), 10000)
     return () => clearInterval(interval)
   }, [router])
 
@@ -110,10 +114,24 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
   }
 
   const optionClasses = "bg-white text-slate-900 dark:bg-gray-800 dark:text-slate-100"
+  const [isRefreshing, startRefresh] = useTransition()
 
   return (
     <>
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-xs text-gray-400 dark:text-gray-500">
+            Online status refreshes automatically every 10s.
+          </p>
+          <button
+            type="button"
+            onClick={() => startRefresh(() => router.refresh())}
+            disabled={isRefreshing}
+            className="rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-60"
+          >
+            {isRefreshing ? 'Refreshing…' : 'Refresh Now'}
+          </button>
+        </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_160px_160px]">
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Search</label>

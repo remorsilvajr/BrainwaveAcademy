@@ -56,6 +56,32 @@ export async function login(formData: FormData) {
     maxAge: 60 * 60,
   })
 
+  // account_status and presence_ping are otherwise only ever set
+  // reactively by middleware.ts, never by login() itself — which is
+  // exactly the bug reported live: logging in as a *different* account in
+  // the same browser (cookies are shared per-browser, not per-identity)
+  // could inherit a stale account_status cookie from whoever used this
+  // browser last, and definitely inherited a still-valid presence_ping
+  // cookie that suppressed the new user's very first "last seen" ping for
+  // up to its own 60s TTL. Setting both explicitly here, plus last_seen_at
+  // itself directly (more precise than waiting on middleware's next pass
+  // anyway — this *is* the moment they became active), means a fresh
+  // login is correct immediately, with nothing left for the next request
+  // to sort out.
+  cookieStore.set('account_status', profile?.account_status ?? 'active', {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60,
+  })
+  cookieStore.set('presence_ping', '1', {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60,
+  })
+  await supabase.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', data.user.id)
+
   redirect(`/${role}`)
 }
 
