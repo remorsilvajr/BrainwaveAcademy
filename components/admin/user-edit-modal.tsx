@@ -96,14 +96,21 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
     }
   }
 
+  const optionClasses = "bg-white text-slate-900 dark:bg-gray-800 dark:text-slate-100"
+  const inputClasses = "w-full rounded-lg border border-slate-200 bg-white text-slate-900 placeholder-slate-400 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 dark:placeholder-slate-500 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative w-full max-w-md rounded-2xl bg-white dark:bg-gray-900 p-6 shadow-xl">
+      <div className="relative w-full max-w-md rounded-2xl bg-white dark:bg-gray-900 p-6 shadow-xl border border-gray-100 dark:border-gray-800">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Edit User</h2>
-          <button onClick={onClose} aria-label="Close" className="text-gray-400 dark:text-gray-500 hover:text-gray-600">
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="rounded-lg p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -125,7 +132,7 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
             <input
               disabled
               value={user.email}
-              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-gray-100 dark:bg-gray-800 px-3 py-2 text-sm text-gray-500 dark:text-gray-400"
+              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-gray-100 dark:bg-gray-800/50 px-3 py-2 text-sm text-gray-500 dark:text-gray-400 cursor-not-allowed"
             />
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -135,7 +142,7 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 required
-                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+                className={inputClasses}
               />
             </div>
             <div>
@@ -144,7 +151,7 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
                 value={middleName}
                 onChange={(e) => setMiddleName(e.target.value)}
                 placeholder="Optional"
-                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+                className={inputClasses}
               />
             </div>
             <div>
@@ -153,7 +160,7 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 required
-                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+                className={inputClasses}
               />
             </div>
           </div>
@@ -171,7 +178,7 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="0917 123 4567 or +63 917 123 4567"
-              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+              className={inputClasses}
             />
             <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
               Any valid PH mobile format works — it&apos;ll be saved consistently as +63 9XX XXX XXXX.
@@ -182,11 +189,11 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+              className={inputClasses}
             >
-              <option value="parent">Parent</option>
-              <option value="teacher">Teacher</option>
-              <option value="admin">Admin</option>
+              <option value="parent" className={optionClasses}>Parent</option>
+              <option value="teacher" className={optionClasses}>Teacher</option>
+              <option value="admin" className={optionClasses}>Admin</option>
             </select>
           </div>
 
@@ -198,12 +205,12 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
               <select
                 value={relationship}
                 onChange={(e) => setRelationship(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+                className={inputClasses}
               >
-                <option value="">Not set</option>
-                <option value="Mother">Mother</option>
-                <option value="Father">Father</option>
-                <option value="Guardian">Guardian</option>
+                <option value="" className={optionClasses}>Not set</option>
+                <option value="Mother" className={optionClasses}>Mother</option>
+                <option value="Father" className={optionClasses}>Father</option>
+                <option value="Guardian" className={optionClasses}>Guardian</option>
               </select>
             </div>
           )}
@@ -232,7 +239,7 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
               <p className="mb-1 text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
                 Applicants <span className="font-normal text-gray-400 dark:text-gray-500">(not yet enrolled)</span>
               </p>
-              <ul className="space-y-1 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
+              <ul className="space-y-1 rounded-lg border border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 text-sm text-amber-800 dark:text-amber-300">
                 {applicants.map((a) => (
                   <li key={a.id}>
                     {a.student_first_name} {a.student_middle_name ? `${a.student_middle_name} ` : ''}
@@ -244,21 +251,23 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
           )}
 
           {errorMessage && (
-            <p className="rounded-lg bg-red-50 dark:bg-red-950/30 px-3 py-2 text-sm text-red-600 dark:text-red-400">{errorMessage}</p>
+            <p className="rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 px-3 py-2 text-sm text-red-600 dark:text-red-400">
+              {errorMessage}
+            </p>
           )}
 
           <div className="flex gap-2 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50"
+              className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 rounded-lg bg-[#0b1b62] py-2.5 text-sm font-semibold text-white hover:bg-[#08154d] disabled:opacity-60"
+              className="flex-1 rounded-lg bg-[#0b1b62] dark:bg-indigo-600 py-2.5 text-sm font-semibold text-white hover:bg-[#08154d] dark:hover:bg-indigo-500 disabled:opacity-60"
             >
               {isSubmitting ? 'Saving…' : 'Save Changes'}
             </button>

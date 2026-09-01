@@ -33,9 +33,9 @@ type Profile = {
 }
 
 const roleBadgeClasses: Record<string, string> = {
-  parent: 'bg-sky-50 dark:bg-sky-950/30 text-sky-700 dark:text-sky-300',
-  teacher: 'bg-pink-50 dark:bg-pink-950/30 text-pink-700',
-  admin: 'bg-purple-50 text-purple-700',
+  parent: 'bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300',
+  teacher: 'bg-pink-50 dark:bg-pink-950/40 text-pink-700 dark:text-pink-300',
+  admin: 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300',
 }
 
 export function UserManagementTable({ users }: { users: Profile[] }) {
@@ -78,6 +78,8 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
     })
   }
 
+  const optionClasses = "bg-white text-slate-900 dark:bg-gray-800 dark:text-slate-100"
+
   return (
     <>
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
@@ -88,20 +90,22 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Name or email"
-              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+              className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 placeholder-slate-400 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 dark:placeholder-slate-500 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Role</label>
+            <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">
+              Role
+            </label>
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+              className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 focus:border-[#0b1b62] focus:outline-none dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 dark:focus:border-indigo-400 px-3 py-2 text-sm"
             >
-              <option value="all">All Roles</option>
-              <option value="parent">Parent</option>
-              <option value="teacher">Teacher</option>
-              <option value="admin">Admin</option>
+              <option value="all" className={optionClasses}>All Roles</option>
+              <option value="parent" className={optionClasses}>Parent</option>
+              <option value="teacher" className={optionClasses}>Teacher</option>
+              <option value="admin" className={optionClasses}>Admin</option>
             </select>
           </div>
           <div>
@@ -109,12 +113,12 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+              className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 focus:border-[#0b1b62] focus:outline-none dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 dark:focus:border-indigo-400 px-3 py-2 text-sm"
             >
-              <option value="all">All Statuses</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="blocked">Blocked</option>
+              <option value="all" className={optionClasses}>All Statuses</option>
+              <option value="active" className={optionClasses}>Active</option>
+              <option value="inactive" className={optionClasses}>Inactive</option>
+              <option value="blocked" className={optionClasses}>Blocked</option>
             </select>
           </div>
         </div>
@@ -122,108 +126,107 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
 
       <div className="mt-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
         <div className="min-h-[420px] overflow-x-auto">
-        <table className="w-full min-w-[720px] text-sm">
-          <thead className="bg-gray-50 dark:bg-gray-800/60 text-left text-gray-500 dark:text-gray-400">
-            <tr>
-              <th className="p-4 font-medium">User Details</th>
-              <th className="p-4 font-medium">Assigned Role</th>
-              <th className="p-4 font-medium">Account Status</th>
-              <th className="p-4 font-medium">Joined</th>
-              <th className="min-w-[260px] p-4 font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {pageItems.length > 0 ? (
-              pageItems.map((u) => (
-                <tr key={u.id}>
-                  <td className="p-4">
-                    <p className="font-medium text-gray-900 dark:text-gray-100">
-                      {u.first_name} {u.last_name}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{u.email}</p>
-                  </td>
-                  <td className="p-4">
-                    <span
-                      className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium capitalize ${
-                        roleBadgeClasses[u.role] ?? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
-                      }`}
-                    >
-                      {u.role}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <select
-                      value={u.account_status}
-                      disabled={u.account_status === 'blocked' || isPending}
-                      onChange={(e) => handleStatusChange(u, e.target.value)}
-                      className={`rounded-lg border px-2 py-1 text-sm capitalize disabled:opacity-60 ${
-                        u.account_status === 'active'
-                          ? 'border-green-200 text-green-700'
-                          : u.account_status === 'blocked'
-                            ? 'border-red-200 dark:border-red-800 text-red-700 dark:text-red-400'
-                            : 'border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300'
-                      }`}
-                    >
-                      {u.account_status === 'blocked' && <option value="blocked">Blocked</option>}
-                      <option value="active">Active</option>
-                      <option value="inactive">Inactive</option>
-                    </select>
-                  </td>
-                  <td className="p-4 text-gray-500 dark:text-gray-400">{formatDateShort(u.created_at)}</td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => setEditingUserId(u.id)}
-                        className="rounded border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50"
-                      >
-                        Edit
-                      </button>
-                      {confirmingBlockId === u.id ? (
-                        <div className="flex items-center gap-1.5 whitespace-nowrap text-xs">
-                          <span className="text-gray-600 dark:text-gray-400">Block this user?</span>
-                          <button
-                            onClick={() => setConfirmingBlockId(null)}
-                            className="font-semibold text-gray-500 dark:text-gray-400 underline"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            onClick={() => handleToggleBlock(u)}
-                            className="font-semibold text-red-700 dark:text-red-400 underline"
-                          >
-                            Yes, Block
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() =>
-                            u.account_status === 'blocked'
-                              ? handleToggleBlock(u)
-                              : setConfirmingBlockId(u.id)
-                          }
-                          disabled={isPending}
-                          className={`rounded border px-3 py-1.5 text-xs font-semibold disabled:opacity-60 ${
-                            u.account_status === 'blocked'
-                              ? 'border-green-300 text-green-700 hover:bg-green-50'
-                              : 'border-red-300 text-red-700 dark:text-red-400 hover:bg-red-50'
+          <table className="w-full min-w-[720px] text-sm">
+            <thead className="bg-gray-50 dark:bg-gray-800/60 text-left text-gray-500 dark:text-gray-400">
+              <tr>
+                <th className="p-4 font-medium">User Details</th>
+                <th className="p-4 font-medium">Assigned Role</th>
+                <th className="p-4 font-medium">Account Status</th>
+                <th className="p-4 font-medium">Joined</th>
+                <th className="min-w-[260px] p-4 font-medium">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+              {pageItems.length > 0 ? (
+                pageItems.map((u) => (
+                  <tr key={u.id}>
+                    <td className="p-4">
+                      <p className="font-medium text-gray-900 dark:text-gray-100">
+                        {u.first_name} {u.last_name}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{u.email}</p>
+                    </td>
+                    <td className="p-4">
+                      <span
+                        className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium capitalize ${roleBadgeClasses[u.role] ?? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
                           }`}
+                      >
+                        {u.role}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <select
+                        value={u.account_status}
+                        disabled={u.account_status === 'blocked' || isPending}
+                        onChange={(e) => handleStatusChange(u, e.target.value)}
+                        className={`rounded-lg border px-2 py-1 text-sm capitalize disabled:opacity-60 focus:outline-none ${u.account_status === 'active'
+                            ? 'border-green-200 dark:border-green-800 bg-white dark:bg-gray-800 text-green-700 dark:text-green-400'
+                            : u.account_status === 'blocked'
+                              ? 'border-red-200 dark:border-red-800 bg-white dark:bg-gray-800 text-red-700 dark:text-red-400'
+                              : 'border-amber-200 dark:border-amber-800 bg-white dark:bg-gray-800 text-amber-700 dark:text-amber-300'
+                          }`}
+                      >
+                        {u.account_status === 'blocked' && (
+                          <option value="blocked" className={optionClasses}>Blocked</option>
+                        )}
+                        <option value="active" className={optionClasses}>Active</option>
+                        <option value="inactive" className={optionClasses}>Inactive</option>
+                      </select>
+                    </td>
+                    <td className="p-4 text-gray-500 dark:text-gray-400">{formatDateShort(u.created_at)}</td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setEditingUserId(u.id)}
+                          className="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                         >
-                          {u.account_status === 'blocked' ? 'Unblock' : 'Block'}
+                          Edit
                         </button>
-                      )}
-                    </div>
+                        {confirmingBlockId === u.id ? (
+                          <div className="flex items-center gap-1.5 whitespace-nowrap text-xs">
+                            <span className="text-gray-600 dark:text-gray-400">Block this user?</span>
+                            <button
+                              onClick={() => setConfirmingBlockId(null)}
+                              className="font-semibold text-gray-500 dark:text-gray-400 underline"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={() => handleToggleBlock(u)}
+                              className="font-semibold text-red-700 dark:text-red-400 underline"
+                            >
+                              Yes, Block
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() =>
+                              u.account_status === 'blocked'
+                                ? handleToggleBlock(u)
+                                : setConfirmingBlockId(u.id)
+                            }
+                            disabled={isPending}
+                            className={`rounded border px-3 py-1.5 text-xs font-semibold disabled:opacity-60 ${u.account_status === 'blocked'
+                                ? 'border-green-300 dark:border-green-700 text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-950/40'
+                                : 'border-red-300 dark:border-red-800 text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40'
+                              }`}
+                          >
+                            {u.account_status === 'blocked' ? 'Unblock' : 'Block'}
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} className="p-8 text-center text-gray-400 dark:text-gray-500">
+                    No users match your filters.
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={5} className="p-8 text-center text-gray-400 dark:text-gray-500">
-                  No users match your filters.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
         </div>
         <Pagination
           page={page}
