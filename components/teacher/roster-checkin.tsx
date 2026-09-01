@@ -11,9 +11,9 @@ import { usePagination } from '@/lib/use-pagination'
 type Student = { id: string; first_name: string; last_name: string }
 
 const statusMeta: Record<string, string> = {
-  present: 'text-green-600 bg-green-50',
-  absent: 'text-red-600 bg-red-50',
-  late: 'text-amber-600 bg-amber-50',
+  present: 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/30',
+  absent: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30',
+  late: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30',
 }
 
 export function RosterCheckin({
@@ -71,27 +71,27 @@ export function RosterCheckin({
   const isToday = date === todayIso()
 
   return (
-    <div id="roster" className="rounded-2xl border border-gray-200 bg-white p-6">
+    <div id="roster" className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-gray-900">
+        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
           {isToday ? "Today's Roster Check-In" : 'Roster Attendance'}
         </h2>
-        <span className="text-sm text-gray-500">{formatDateLong(date)}</span>
+        <span className="text-sm text-gray-500 dark:text-gray-400">{formatDateLong(date)}</span>
       </div>
       {readOnly && (
-        <p className="mt-1 text-xs text-gray-400">
+        <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
           Viewing a past date — attendance can only be changed by an admin.
         </p>
       )}
 
-      {errorMessage && <p className="mt-3 text-sm text-red-600">{errorMessage}</p>}
+      {errorMessage && <p className="mt-3 text-sm text-red-600 dark:text-red-400">{errorMessage}</p>}
 
       <div className="mt-4">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search students…"
-          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
+          className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
         />
       </div>
 
@@ -100,13 +100,13 @@ export function RosterCheckin({
           const status = statusByStudent[s.id]
           return (
             <div key={s.id} className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-              <p className="text-sm font-medium text-gray-900">
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                 {s.first_name} {s.last_name}
               </p>
               {readOnly ? (
                 <span
                   className={`w-fit rounded-full px-3 py-1 text-xs font-semibold capitalize ${
-                    status ? statusMeta[status] : 'bg-gray-100 text-gray-400'
+                    status ? statusMeta[status] : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'
                   }`}
                 >
                   {status ?? 'Not marked'}
@@ -114,7 +114,7 @@ export function RosterCheckin({
               ) : (
                 <div className="flex flex-wrap items-center gap-2">
                   {savedId === s.id && (
-                    <span className="flex items-center gap-1 text-xs font-medium text-green-600">
+                    <span className="flex items-center gap-1 text-xs font-medium text-green-600 dark:text-green-400">
                       <Check className="h-3.5 w-3.5" /> Saved
                     </span>
                   )}
@@ -127,7 +127,7 @@ export function RosterCheckin({
                       className={`rounded-full border px-3 py-1 text-xs font-semibold capitalize disabled:opacity-60 ${
                         status === option
                           ? statusMeta[option]
-                          : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+                          : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50'
                       }`}
                     >
                       {option}
@@ -139,7 +139,7 @@ export function RosterCheckin({
           )
         })}
         {pageItems.length === 0 && (
-          <p className="py-6 text-center text-sm text-gray-500">
+          <p className="py-6 text-center text-sm text-gray-500 dark:text-gray-400">
             {students.length === 0 ? 'No students on file yet.' : 'No students match your search.'}
           </p>
         )}

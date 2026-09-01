@@ -30,10 +30,10 @@ const statusMeta: Record<
   string,
   { label: string; className: string; icon: typeof CheckCircle2 }
 > = {
-  valid: { label: 'Submitted', className: 'text-green-600', icon: CheckCircle2 },
-  pending: { label: 'Pending Review', className: 'text-amber-600', icon: Clock },
-  needs_correction: { label: 'Needs Correction', className: 'text-red-600', icon: XCircle },
-  not_submitted: { label: 'Not Submitted', className: 'text-red-600', icon: XCircle },
+  valid: { label: 'Submitted', className: 'text-green-600 dark:text-green-400', icon: CheckCircle2 },
+  pending: { label: 'Pending Review', className: 'text-amber-600 dark:text-amber-400', icon: Clock },
+  needs_correction: { label: 'Needs Correction', className: 'text-red-600 dark:text-red-400', icon: XCircle },
+  not_submitted: { label: 'Not Submitted', className: 'text-red-600 dark:text-red-400', icon: XCircle },
 }
 
 export function RequirementsChecklist({
@@ -51,7 +51,7 @@ export function RequirementsChecklist({
 
   if (!record) {
     return (
-      <p className="text-gray-500">
+      <p className="text-gray-500 dark:text-gray-400">
         {selectedElsewhereNotEligible
           ? "This student's enrollment request hasn't been approved yet — Requirements will be available here once it is."
           : 'No enrollment application found for your account yet. If you just received your login details, this may take a moment — otherwise, contact the school office.'}
@@ -112,30 +112,30 @@ export function RequirementsChecklist({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-[#0b1b62]">Enrollment Requirements Checklist</h2>
-        <p className="mt-1 text-sm text-gray-500">
+        <h2 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Enrollment Requirements Checklist</h2>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Please submit the following documents to complete your child&apos;s enrollment for the
           upcoming academic year.
         </p>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Verification Progress</h3>
-          <span className="rounded-full bg-indigo-50 px-3 py-1 text-sm font-medium text-indigo-700">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Verification Progress</h3>
+          <span className="rounded-full bg-indigo-50 dark:bg-indigo-950/40 px-3 py-1 text-sm font-medium text-indigo-700 dark:text-indigo-300">
             {progressPercent}% Complete
           </span>
         </div>
-        <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
+        <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
           <div className="h-full bg-sky-500" style={{ width: `${progressPercent}%` }} />
         </div>
-        <p className="mt-2 text-sm text-gray-500">
+        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
           {validCount} of {documentOrder.length} requirements submitted successfully
         </p>
       </div>
 
       {errorMessage && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{errorMessage}</p>
+        <p className="rounded-lg bg-red-50 dark:bg-red-950/30 px-3 py-2 text-sm text-red-600 dark:text-red-400">{errorMessage}</p>
       )}
 
       <div className="space-y-4">
@@ -148,15 +148,15 @@ export function RequirementsChecklist({
           return (
             <div
               key={type}
-              className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-5 sm:flex-row sm:items-center sm:justify-between"
+              className="flex flex-col gap-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="flex items-start gap-3">
-                <div className="rounded-full bg-gray-100 p-2">
-                  <FileText className="h-4 w-4 text-gray-500" />
+                <div className="rounded-full bg-gray-100 dark:bg-gray-800 p-2">
+                  <FileText className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900">{documentShortLabels[type]}</p>
-                  <p className="text-sm text-gray-500">{documentDescriptions[type]}</p>
+                  <p className="font-semibold text-gray-900 dark:text-gray-100">{documentShortLabels[type]}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{documentDescriptions[type]}</p>
                   <p className={`mt-1 flex items-center gap-1 text-xs font-semibold uppercase ${meta.className}`}>
                     <StatusIcon className="h-3.5 w-3.5" />
                     {meta.label}
@@ -168,7 +168,7 @@ export function RequirementsChecklist({
                 {canView && (
                   <button
                     onClick={() => handleViewDocument(type)}
-                    className="rounded-lg border border-[#0b1b62] px-4 py-2 text-sm font-semibold text-[#0b1b62] hover:bg-[#0b1b62]/5"
+                    className="rounded-lg border border-[#0b1b62] dark:border-indigo-300 px-4 py-2 text-sm font-semibold text-[#0b1b62] dark:text-indigo-300 hover:bg-[#0b1b62]/5"
                   >
                     View Document
                   </button>

@@ -33,8 +33,8 @@ type Profile = {
 }
 
 const roleBadgeClasses: Record<string, string> = {
-  parent: 'bg-sky-50 text-sky-700',
-  teacher: 'bg-pink-50 text-pink-700',
+  parent: 'bg-sky-50 dark:bg-sky-950/30 text-sky-700 dark:text-sky-300',
+  teacher: 'bg-pink-50 dark:bg-pink-950/30 text-pink-700',
   admin: 'bg-purple-50 text-purple-700',
 }
 
@@ -80,23 +80,23 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
 
   return (
     <>
-      <div className="rounded-xl border border-gray-200 bg-white p-4">
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_160px_160px]">
           <div>
-            <label className="mb-1 block text-xs font-medium text-gray-500">Search</label>
+            <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Search</label>
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Name or email"
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
+              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-gray-500">Role</label>
+            <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Role</label>
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
+              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
             >
               <option value="all">All Roles</option>
               <option value="parent">Parent</option>
@@ -105,11 +105,11 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-gray-500">Status</label>
+            <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Status</label>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
+              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
             >
               <option value="all">All Statuses</option>
               <option value="active">Active</option>
@@ -120,10 +120,10 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
         </div>
       </div>
 
-      <div className="mt-4 rounded-xl border border-gray-200 bg-white">
+      <div className="mt-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
         <div className="min-h-[420px] overflow-x-auto">
         <table className="w-full min-w-[720px] text-sm">
-          <thead className="bg-gray-50 text-left text-gray-500">
+          <thead className="bg-gray-50 dark:bg-gray-800/60 text-left text-gray-500 dark:text-gray-400">
             <tr>
               <th className="p-4 font-medium">User Details</th>
               <th className="p-4 font-medium">Assigned Role</th>
@@ -137,15 +137,15 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
               pageItems.map((u) => (
                 <tr key={u.id}>
                   <td className="p-4">
-                    <p className="font-medium text-gray-900">
+                    <p className="font-medium text-gray-900 dark:text-gray-100">
                       {u.first_name} {u.last_name}
                     </p>
-                    <p className="text-xs text-gray-500">{u.email}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{u.email}</p>
                   </td>
                   <td className="p-4">
                     <span
                       className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium capitalize ${
-                        roleBadgeClasses[u.role] ?? 'bg-gray-100 text-gray-700'
+                        roleBadgeClasses[u.role] ?? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
                       }`}
                     >
                       {u.role}
@@ -160,8 +160,8 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
                         u.account_status === 'active'
                           ? 'border-green-200 text-green-700'
                           : u.account_status === 'blocked'
-                            ? 'border-red-200 text-red-700'
-                            : 'border-amber-200 text-amber-700'
+                            ? 'border-red-200 dark:border-red-800 text-red-700 dark:text-red-400'
+                            : 'border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300'
                       }`}
                     >
                       {u.account_status === 'blocked' && <option value="blocked">Blocked</option>}
@@ -169,27 +169,27 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
                       <option value="inactive">Inactive</option>
                     </select>
                   </td>
-                  <td className="p-4 text-gray-500">{formatDateShort(u.created_at)}</td>
+                  <td className="p-4 text-gray-500 dark:text-gray-400">{formatDateShort(u.created_at)}</td>
                   <td className="p-4">
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => setEditingUserId(u.id)}
-                        className="rounded border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                        className="rounded border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50"
                       >
                         Edit
                       </button>
                       {confirmingBlockId === u.id ? (
                         <div className="flex items-center gap-1.5 whitespace-nowrap text-xs">
-                          <span className="text-gray-600">Block this user?</span>
+                          <span className="text-gray-600 dark:text-gray-400">Block this user?</span>
                           <button
                             onClick={() => setConfirmingBlockId(null)}
-                            className="font-semibold text-gray-500 underline"
+                            className="font-semibold text-gray-500 dark:text-gray-400 underline"
                           >
                             Cancel
                           </button>
                           <button
                             onClick={() => handleToggleBlock(u)}
-                            className="font-semibold text-red-700 underline"
+                            className="font-semibold text-red-700 dark:text-red-400 underline"
                           >
                             Yes, Block
                           </button>
@@ -205,7 +205,7 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
                           className={`rounded border px-3 py-1.5 text-xs font-semibold disabled:opacity-60 ${
                             u.account_status === 'blocked'
                               ? 'border-green-300 text-green-700 hover:bg-green-50'
-                              : 'border-red-300 text-red-700 hover:bg-red-50'
+                              : 'border-red-300 text-red-700 dark:text-red-400 hover:bg-red-50'
                           }`}
                         >
                           {u.account_status === 'blocked' ? 'Unblock' : 'Block'}
@@ -217,7 +217,7 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="p-8 text-center text-gray-400">
+                <td colSpan={5} className="p-8 text-center text-gray-400 dark:text-gray-500">
                   No users match your filters.
                 </td>
               </tr>

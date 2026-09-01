@@ -119,7 +119,7 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
   return (
     <div>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 text-center">
+        <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6 text-center">
           <AvatarEditor
             imageUrl={displayedAvatarUrl}
             onFileSelected={handlePhotoChange}
@@ -127,46 +127,46 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
             disabled={isSaving}
           />
 
-          <p className="mt-4 text-lg font-bold text-gray-900">{fullName}</p>
-          <span className="mt-1 inline-block rounded-full bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700">
+          <p className="mt-4 text-lg font-bold text-gray-900 dark:text-gray-100">{fullName}</p>
+          <span className="mt-1 inline-block rounded-full bg-sky-50 dark:bg-sky-950/30 px-3 py-1 text-xs font-medium text-sky-700 dark:text-sky-300">
             Primary Guardian / Parent
           </span>
 
-          <div className="mt-6 space-y-2 border-t border-gray-100 pt-4 text-left text-sm">
+          <div className="mt-6 space-y-2 border-t border-gray-100 dark:border-gray-800 pt-4 text-left text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-500">Account ID</span>
-              <span className="font-semibold text-gray-900">{profile.account_id ?? '—'}</span>
+              <span className="text-gray-500 dark:text-gray-400">Account ID</span>
+              <span className="font-semibold text-gray-900 dark:text-gray-100">{profile.account_id ?? '—'}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500">Status</span>
-              <span className={`font-semibold ${profile.is_verified ? 'text-green-600' : 'text-amber-600'}`}>
+              <span className="text-gray-500 dark:text-gray-400">Status</span>
+              <span className={`font-semibold ${profile.is_verified ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}`}>
                 {profile.is_verified ? 'Verified Account' : 'Not Verified'}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500">Member Since</span>
-              <span className="font-semibold text-gray-900">{formatDateShort(profile.created_at)}</span>
+              <span className="text-gray-500 dark:text-gray-400">Member Since</span>
+              <span className="font-semibold text-gray-900 dark:text-gray-100">{formatDateShort(profile.created_at)}</span>
             </div>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 md:col-span-2">
-          <h2 className="border-b border-gray-100 pb-3 text-lg font-bold text-gray-900">
+        <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6 md:col-span-2">
+          <h2 className="border-b border-gray-100 dark:border-gray-800 pb-3 text-lg font-bold text-gray-900 dark:text-gray-100">
             Personal Details
           </h2>
 
           <div className="mt-4">
-            <label className="mb-1 block text-sm font-semibold text-[#0b1b62]">Parent Full Name</label>
-            <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-gray-100 px-3 py-2.5 text-sm text-gray-600">
+            <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Parent Full Name</label>
+            <div className="flex items-center justify-between rounded-lg border border-slate-200 dark:border-slate-700 bg-gray-100 dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-600 dark:text-gray-400">
               {fullName}
-              <span className="text-xs text-gray-400">🔒</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500">🔒</span>
             </div>
-            <p className="mt-1 text-xs text-gray-400">To change your legal name, please contact the school office.</p>
+            <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">To change your legal name, please contact the school office.</p>
           </div>
 
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label htmlFor="phone" className="mb-1 block text-sm font-semibold text-[#0b1b62]">
+              <label htmlFor="phone" className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
                 Phone Number
               </label>
               <input
@@ -174,24 +174,24 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="0917 123 4567"
-                className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-gray-700 focus:border-[#0b1b62] focus:outline-none"
+                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
               />
             </div>
             <div>
-              <label className="mb-1 flex items-center justify-between text-sm font-semibold text-[#0b1b62]">
+              <label className="mb-1 flex items-center justify-between text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
                 Email Address
                 {profile.is_verified && (
-                  <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
+                  <span className="rounded-full bg-green-50 dark:bg-green-950/30 px-2 py-0.5 text-xs font-medium text-green-700">
                     Verified
                   </span>
                 )}
               </label>
-              <div className="rounded-lg border border-slate-200 bg-gray-100 px-3 py-2.5 text-sm text-gray-600">
+              <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-gray-100 dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-600 dark:text-gray-400">
                 {profile.email}
               </div>
             </div>
             <div>
-              <label htmlFor="dob" className="mb-1 block text-sm font-semibold text-[#0b1b62]">
+              <label htmlFor="dob" className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
                 Date of Birth
               </label>
               <input
@@ -199,18 +199,18 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
                 type="date"
                 value={dob}
                 onChange={(e) => setDob(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-gray-700 focus:border-[#0b1b62] focus:outline-none"
+                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
               />
             </div>
             <div>
-              <label htmlFor="relationship" className="mb-1 block text-sm font-semibold text-[#0b1b62]">
+              <label htmlFor="relationship" className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
                 Relationship to Student
               </label>
               <select
                 id="relationship"
                 value={relationship}
                 onChange={(e) => setRelationship(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-gray-700 focus:border-[#0b1b62] focus:outline-none"
+                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
               >
                 <option value="">Not set</option>
                 <option value="Mother">Mother</option>
@@ -223,7 +223,7 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
       </div>
 
       {message && (
-        <p className={`mt-4 rounded-lg px-3 py-2 text-sm ${message.isError ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-700'}`}>
+        <p className={`mt-4 rounded-lg px-3 py-2 text-sm ${message.isError ? 'bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400' : 'bg-green-50 dark:bg-green-950/30 text-green-700'}`}>
           {message.text}
         </p>
       )}
@@ -234,7 +234,7 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
             type="button"
             onClick={handleCancel}
             disabled={isSaving}
-            className="text-sm font-semibold text-[#00a3e0] hover:underline disabled:opacity-60"
+            className="text-sm font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline disabled:opacity-60"
           >
             Cancel / Discard
           </button>

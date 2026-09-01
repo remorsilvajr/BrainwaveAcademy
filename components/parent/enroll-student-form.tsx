@@ -26,7 +26,7 @@ function Field({
 }) {
   return (
     <div>
-      <label htmlFor={name} className="mb-1 block text-sm font-semibold text-[#0b1b62]">
+      <label htmlFor={name} className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
         {label}
       </label>
       <input
@@ -36,11 +36,11 @@ function Field({
         placeholder={placeholder}
         required={required}
         defaultValue={defaultValue}
-        className={`w-full rounded-lg border px-3 py-2.5 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none ${
-          error ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-[#0b1b62]'
+        className={`w-full rounded-lg border px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 placeholder:text-gray-400 focus:outline-none ${
+          error ? 'border-red-400 focus:border-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-[#0b1b62] dark:focus:border-indigo-400'
         }`}
       />
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+      {error && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{error}</p>}
     </div>
   )
 }
@@ -54,21 +54,21 @@ export function EnrollStudentForm({ parentName }: { parentName: string }) {
 
   return (
     <form action={formAction} className="space-y-6">
-      <div className="flex items-start gap-3 rounded-xl bg-sky-50 p-4">
-        <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-[#0b1b62]" />
+      <div className="flex items-start gap-3 rounded-xl bg-sky-50 dark:bg-sky-950/30 p-4">
+        <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-[#0b1b62] dark:text-indigo-300" />
         <div>
-          <p className="text-sm font-semibold text-[#0b1b62]">Parent Account Linked: {parentName}</p>
-          <p className="text-sm text-[#0b1b62]/80">(No need to re-enter guardian details)</p>
+          <p className="text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Parent Account Linked: {parentName}</p>
+          <p className="text-sm text-[#0b1b62]/80 dark:text-indigo-300/80">(No need to re-enter guardian details)</p>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-gray-200 bg-white p-6">
-        <h2 className="border-l-4 border-[#00a3e0] pl-3 text-lg font-bold text-gray-900">
+      <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
+        <h2 className="border-l-4 border-[#00a3e0] pl-3 text-lg font-bold text-gray-900 dark:text-gray-100">
           Student Information
         </h2>
 
         {state.error && (
-          <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{state.error}</p>
+          <p className="mt-4 rounded-lg bg-red-50 dark:bg-red-950/30 px-3 py-2 text-sm text-red-600 dark:text-red-400">{state.error}</p>
         )}
 
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -106,13 +106,13 @@ export function EnrollStudentForm({ parentName }: { parentName: string }) {
         </div>
 
         <div className="mt-4">
-          <p className="mb-1 text-sm font-semibold text-[#0b1b62]">Gender</p>
-          <div className="inline-flex overflow-hidden rounded-lg border border-slate-200">
+          <p className="mb-1 text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Gender</p>
+          <div className="inline-flex overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
             {['male', 'female'].map((g) => (
               <label
                 key={g}
                 className={`cursor-pointer px-6 py-2 text-sm font-medium capitalize ${
-                  gender === g ? 'bg-[#0b1b62] text-white' : 'bg-white text-gray-600 hover:bg-gray-50'
+                  gender === g ? 'bg-[#0b1b62] text-white' : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-50'
                 }`}
               >
                 <input
@@ -132,7 +132,7 @@ export function EnrollStudentForm({ parentName }: { parentName: string }) {
       </div>
 
       <div className="flex items-center justify-between">
-        <Link href="/parent" className="text-sm font-semibold text-[#00a3e0] hover:underline">
+        <Link href="/parent" className="text-sm font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline">
           Cancel
         </Link>
         <button

@@ -23,14 +23,14 @@ export default async function EnrollAStudentPage({
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-[#0b1b62]">Enroll A Student</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Enroll A Student</h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Register a sibling or additional learner under your existing parent account.
         </p>
       </div>
 
       {submitted === 'true' ? (
-        <div className="rounded-2xl border border-green-200 bg-green-50 p-8 text-center">
+        <div className="rounded-2xl border border-green-200 bg-green-50 dark:bg-green-950/30 p-8 text-center">
           <p className="text-lg font-semibold text-green-800">Application submitted!</p>
           <p className="mt-1 text-sm text-green-700">
             Our admissions team will review it and notify you once it&apos;s approved.

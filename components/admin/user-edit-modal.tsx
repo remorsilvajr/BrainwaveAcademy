@@ -100,10 +100,10 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
 
-      <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+      <div className="relative w-full max-w-md rounded-2xl bg-white dark:bg-gray-900 p-6 shadow-xl">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">Edit User</h2>
-          <button onClick={onClose} aria-label="Close" className="text-gray-400 hover:text-gray-600">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Edit User</h2>
+          <button onClick={onClose} aria-label="Close" className="text-gray-400 dark:text-gray-500 hover:text-gray-600">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -116,73 +116,73 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
             disabled={isSavingAvatar}
             sizeClassName="h-20 w-20"
           />
-          {avatarError && <p className="mt-2 text-center text-xs text-red-600">{avatarError}</p>}
+          {avatarError && <p className="mt-2 text-center text-xs text-red-600 dark:text-red-400">{avatarError}</p>}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-semibold text-[#0b1b62]">Email</label>
+            <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Email</label>
             <input
               disabled
               value={user.email}
-              className="w-full rounded-lg border border-slate-200 bg-gray-100 px-3 py-2 text-sm text-gray-500"
+              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-gray-100 dark:bg-gray-800 px-3 py-2 text-sm text-gray-500 dark:text-gray-400"
             />
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div>
-              <label className="mb-1 block text-sm font-semibold text-[#0b1b62]">First Name</label>
+              <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">First Name</label>
               <input
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 required
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
+                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-semibold text-[#0b1b62]">Middle Name</label>
+              <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Middle Name</label>
               <input
                 value={middleName}
                 onChange={(e) => setMiddleName(e.target.value)}
                 placeholder="Optional"
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
+                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-semibold text-[#0b1b62]">Last Name</label>
+              <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Last Name</label>
               <input
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 required
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
+                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
               />
             </div>
           </div>
           {user.date_of_birth && (
             <div>
-              <p className="mb-1 text-sm font-semibold text-[#0b1b62]">Date of Birth</p>
-              <p className="rounded-lg border border-slate-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+              <p className="mb-1 text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Date of Birth</p>
+              <p className="rounded-lg border border-slate-200 dark:border-slate-700 bg-gray-50 dark:bg-gray-800/60 px-3 py-2 text-sm text-gray-700 dark:text-gray-300">
                 {formatDateLong(user.date_of_birth)} ({calculateAge(user.date_of_birth)} years old)
               </p>
             </div>
           )}
           <div>
-            <label className="mb-1 block text-sm font-semibold text-[#0b1b62]">Phone Number</label>
+            <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Phone Number</label>
             <input
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="0917 123 4567 or +63 917 123 4567"
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
+              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
             />
-            <p className="mt-1 text-xs text-gray-400">
+            <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
               Any valid PH mobile format works — it&apos;ll be saved consistently as +63 9XX XXX XXXX.
             </p>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-semibold text-[#0b1b62]">Role</label>
+            <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Role</label>
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
+              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
             >
               <option value="parent">Parent</option>
               <option value="teacher">Teacher</option>
@@ -192,13 +192,13 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
 
           {role === 'parent' && (
             <div>
-              <label className="mb-1 block text-sm font-semibold text-[#0b1b62]">
+              <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
                 Relationship to Student
               </label>
               <select
                 value={relationship}
                 onChange={(e) => setRelationship(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
+                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
               >
                 <option value="">Not set</option>
                 <option value="Mother">Mother</option>
@@ -210,9 +210,9 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
 
           {role === 'parent' && (
             <div>
-              <p className="mb-1 text-sm font-semibold text-[#0b1b62]">Enrolled Students</p>
+              <p className="mb-1 text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Enrolled Students</p>
               {linkedStudents.length > 0 ? (
-                <ul className="space-y-1 rounded-lg border border-slate-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                <ul className="space-y-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-gray-50 dark:bg-gray-800/60 px-3 py-2 text-sm text-gray-700 dark:text-gray-300">
                   {linkedStudents.map((s) => (
                     <li key={s.id}>
                       {s.first_name} {s.middle_name ? `${s.middle_name} ` : ''}{s.last_name}
@@ -220,7 +220,7 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
                   ))}
                 </ul>
               ) : (
-                <p className="rounded-lg border border-slate-200 bg-gray-50 px-3 py-2 text-sm text-gray-400">
+                <p className="rounded-lg border border-slate-200 dark:border-slate-700 bg-gray-50 dark:bg-gray-800/60 px-3 py-2 text-sm text-gray-400 dark:text-gray-500">
                   No enrolled students yet.
                 </p>
               )}
@@ -229,10 +229,10 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
 
           {role === 'parent' && applicants.length > 0 && (
             <div>
-              <p className="mb-1 text-sm font-semibold text-[#0b1b62]">
-                Applicants <span className="font-normal text-gray-400">(not yet enrolled)</span>
+              <p className="mb-1 text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
+                Applicants <span className="font-normal text-gray-400 dark:text-gray-500">(not yet enrolled)</span>
               </p>
-              <ul className="space-y-1 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              <ul className="space-y-1 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
                 {applicants.map((a) => (
                   <li key={a.id}>
                     {a.student_first_name} {a.student_middle_name ? `${a.student_middle_name} ` : ''}
@@ -244,14 +244,14 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
           )}
 
           {errorMessage && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{errorMessage}</p>
+            <p className="rounded-lg bg-red-50 dark:bg-red-950/30 px-3 py-2 text-sm text-red-600 dark:text-red-400">{errorMessage}</p>
           )}
 
           <div className="flex gap-2 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-lg border border-gray-300 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+              className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50"
             >
               Cancel
             </button>

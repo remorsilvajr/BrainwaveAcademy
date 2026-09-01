@@ -23,7 +23,7 @@ export function Toggle({
         checked ? 'justify-end bg-green-500' : 'justify-start bg-gray-300'
       }`}
     >
-      <span className="h-5 w-5 rounded-full bg-white shadow" />
+      <span className="h-5 w-5 rounded-full bg-white dark:bg-gray-900 shadow" />
     </button>
   )
 }

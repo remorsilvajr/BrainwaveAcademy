@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Menu, X } from 'lucide-react'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 const navigationItems = [
   { label: 'About Us', href: '/#about-us' },
@@ -14,18 +15,24 @@ export function SiteHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-[#c6c5d2] bg-[#fbf8ff] shadow-[0px_1px_2px_#0000000d]">
+    <header className="sticky top-0 z-50 w-full border-b border-[#c6c5d2] bg-[#fbf8ff] shadow-[0px_1px_2px_#0000000d] dark:border-slate-700 dark:bg-slate-900">
       <nav
         className="mx-auto flex w-full max-w-screen-xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:grid lg:grid-cols-[auto_1fr_auto]"
         aria-label="Primary navigation"
       >
         <Link href="/" className="block h-10 w-auto shrink-0" aria-label="Home">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            className="h-10 w-auto"
-            alt="Brainwave Preschool Academy"
-            src="/images/landing/logo.svg"
-          />
+          {/* The logo asset itself has dark navy linework designed for a
+              light backing — rather than fabricate a dark-mode variant that
+              doesn't exist, it keeps a small white card behind it in dark
+              mode so it stays legible without needing a second asset. */}
+          <span className="flex h-10 items-center rounded-md dark:bg-white dark:px-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className="h-10 w-auto"
+              alt="Brainwave Preschool Academy"
+              src="/images/landing/logo.svg"
+            />
+          </span>
         </Link>
 
         <ul className="hidden list-none items-center justify-center gap-6 p-0 m-0 lg:flex lg:gap-8">
@@ -33,7 +40,7 @@ export function SiteHeader() {
             <li key={item.label}>
               <a
                 href={item.href}
-                className="text-sm font-semibold tracking-[0.14px] text-[#454650] hover:text-[#0b1b62] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b1b62]"
+                className="text-sm font-semibold tracking-[0.14px] text-[#454650] hover:text-[#0b1b62] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b1b62] dark:text-slate-300 dark:hover:text-white"
               >
                 {item.label}
               </a>
@@ -60,12 +67,14 @@ export function SiteHeader() {
             Log In
           </a>
 
+          <ThemeToggle className="text-[#0b1b62] hover:bg-black/5 dark:text-slate-200 dark:hover:bg-white/10" />
+
           <button
             type="button"
             onClick={() => setIsMenuOpen((v) => !v)}
             aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={isMenuOpen}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#0b1b62] hover:bg-black/5 lg:hidden"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#0b1b62] hover:bg-black/5 dark:text-slate-200 dark:hover:bg-white/10 lg:hidden"
           >
             {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
@@ -73,7 +82,7 @@ export function SiteHeader() {
       </nav>
 
       {isMenuOpen && (
-        <div className="border-t border-[#c6c5d2] bg-[#fbf8ff] px-4 py-4 lg:hidden">
+        <div className="border-t border-[#c6c5d2] bg-[#fbf8ff] px-4 py-4 dark:border-slate-700 dark:bg-slate-900 lg:hidden">
           {/* Enroll/Log In live in the persistent header bar now (visible at
               every width), so this drawer only needs the anchor nav links. */}
           <ul className="flex list-none flex-col gap-1 p-0 m-0">
@@ -82,7 +91,7 @@ export function SiteHeader() {
                 <a
                   href={item.href}
                   onClick={() => setIsMenuOpen(false)}
-                  className="block rounded-lg px-3 py-2.5 text-sm font-semibold text-[#454650] hover:bg-black/5 hover:text-[#0b1b62]"
+                  className="block rounded-lg px-3 py-2.5 text-sm font-semibold text-[#454650] hover:bg-black/5 hover:text-[#0b1b62] dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
                 >
                   {item.label}
                 </a>

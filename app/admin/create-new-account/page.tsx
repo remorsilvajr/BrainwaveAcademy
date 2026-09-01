@@ -4,8 +4,8 @@ export default function CreateNewAccountPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-[#0b1b62]">Create New Account</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Create New Account</h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Provision a new user account and assign its role.
         </p>
       </div>

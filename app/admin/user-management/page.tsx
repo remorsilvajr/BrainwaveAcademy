@@ -42,48 +42,48 @@ export default async function UserManagementPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-[#0b1b62]">User Account Management</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">User Account Management</h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Provision user accounts, assign roles, and modify account statuses (active, inactive,
           blocked).
         </p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-        <div className="flex items-center justify-between rounded-xl border border-gray-200 border-l-4 border-l-gray-400 bg-white p-4">
+        <div className="flex items-center justify-between rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-gray-400 dark:border-l-gray-600 bg-white dark:bg-gray-900 p-4">
           <div>
-            <p className="text-sm text-gray-500">Total Users</p>
-            <p className="mt-1 text-3xl font-bold text-gray-900">{counts.total}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Total Users</p>
+            <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">{counts.total}</p>
           </div>
-          <div className="rounded-full bg-gray-100 p-2.5">
-            <Users className="h-5 w-5 text-gray-500" />
+          <div className="rounded-full bg-gray-100 dark:bg-gray-800 p-2.5">
+            <Users className="h-5 w-5 text-gray-500 dark:text-gray-400" />
           </div>
         </div>
-        <div className="flex items-center justify-between rounded-xl border border-gray-200 border-l-4 border-l-green-400 bg-white p-4">
+        <div className="flex items-center justify-between rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-green-400 dark:border-l-green-600 bg-white dark:bg-gray-900 p-4">
           <div>
-            <p className="text-sm text-gray-500">Active</p>
-            <p className="mt-1 text-3xl font-bold text-green-600">{counts.active}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Active</p>
+            <p className="mt-1 text-3xl font-bold text-green-600 dark:text-green-400">{counts.active}</p>
           </div>
-          <div className="rounded-full bg-green-50 p-2.5">
-            <CheckCircle2 className="h-5 w-5 text-green-600" />
+          <div className="rounded-full bg-green-50 dark:bg-green-950/30 p-2.5">
+            <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
           </div>
         </div>
-        <div className="flex items-center justify-between rounded-xl border border-gray-200 border-l-4 border-l-amber-400 bg-white p-4">
+        <div className="flex items-center justify-between rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-amber-400 dark:border-l-amber-600 bg-white dark:bg-gray-900 p-4">
           <div>
-            <p className="text-sm text-gray-500">Inactive</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Inactive</p>
             <p className="mt-1 text-3xl font-bold text-amber-500">{counts.inactive}</p>
           </div>
-          <div className="rounded-full bg-amber-50 p-2.5">
+          <div className="rounded-full bg-amber-50 dark:bg-amber-950/30 p-2.5">
             <Clock className="h-5 w-5 text-amber-500" />
           </div>
         </div>
-        <div className="flex items-center justify-between rounded-xl border border-gray-200 border-l-4 border-l-red-400 bg-white p-4">
+        <div className="flex items-center justify-between rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-red-400 dark:border-l-red-600 bg-white dark:bg-gray-900 p-4">
           <div>
-            <p className="text-sm text-gray-500">Blocked</p>
-            <p className="mt-1 text-3xl font-bold text-red-600">{counts.blocked}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Blocked</p>
+            <p className="mt-1 text-3xl font-bold text-red-600 dark:text-red-400">{counts.blocked}</p>
           </div>
-          <div className="rounded-full bg-red-50 p-2.5">
-            <Ban className="h-5 w-5 text-red-600" />
+          <div className="rounded-full bg-red-50 dark:bg-red-950/30 p-2.5">
+            <Ban className="h-5 w-5 text-red-600 dark:text-red-400" />
           </div>
         </div>
       </div>

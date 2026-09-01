@@ -38,7 +38,7 @@ const journeyItems = [
   {
     year: '2011',
     label: 'Nursery & Kinder',
-    color: 'text-[#00a3e0]',
+    color: 'text-[#00a3e0] dark:text-sky-400',
     description:
       'Expanded programs to formally include comprehensive Nursery and Kindergarten curriculums.',
   },
@@ -166,7 +166,7 @@ export function AcademyOverview() {
         </div>
         <h1
           id="academy-heading"
-          className="text-4xl font-bold leading-[46px] tracking-[-0.96px] text-[#0b1b62] sm:text-5xl sm:leading-[56px]"
+          className="text-4xl font-bold leading-[46px] tracking-[-0.96px] text-[#0b1b62] dark:text-indigo-300 sm:text-5xl sm:leading-[56px]"
         >
           Nurturing Young Learners
           <br />
@@ -174,7 +174,7 @@ export function AcademyOverview() {
           <br />
           Years
         </h1>
-        <p className="text-base leading-7 text-[#454650] sm:text-lg">
+        <p className="text-base leading-7 text-[#454650] dark:text-slate-300 sm:text-lg">
           Guided by Directress Dr. Elena C. Lagrimas, Brainwave Preschool
           Academy provides a holistic, vibrant environment where every
           child&apos;s potential is recognized and cultivated.
@@ -193,7 +193,7 @@ export function AcademyOverview() {
           <button
             type="button"
             onClick={scrollToDomains}
-            className="rounded-full border-2 border-[#00a3e0] px-8 py-4 text-sm font-semibold tracking-[0.14px] text-[#00a3e0] transition-colors hover:bg-[#00a3e00d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00a3e0]"
+            className="rounded-full border-2 border-[#00a3e0] px-8 py-4 text-sm font-semibold tracking-[0.14px] text-[#00a3e0] dark:text-sky-400 transition-colors hover:bg-[#00a3e00d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00a3e0]"
           >
             Learn About Our 6 Domains
           </button>
@@ -203,18 +203,18 @@ export function AcademyOverview() {
       {/* Journey + Founder */}
       <section
         id="about-us"
-        className="flex w-full flex-col items-center bg-[#f5f2f9] px-0 py-12"
+        className="flex w-full flex-col items-center bg-[#f5f2f9] dark:bg-gray-900 px-0 py-12"
         aria-labelledby="journey-heading"
       >
         <div className="flex w-full max-w-screen-xl flex-col items-center gap-8 px-6">
           <header className="flex w-full flex-col items-center gap-2">
             <h2
               id="journey-heading"
-              className="text-center text-[32px] font-bold leading-10 tracking-[-0.32px] text-[#0b1b62]"
+              className="text-center text-[32px] font-bold leading-10 tracking-[-0.32px] text-[#0b1b62] dark:text-indigo-300"
             >
               Our Journey
             </h2>
-            <p className="max-w-2xl text-center text-lg leading-7 text-[#454650]">
+            <p className="max-w-2xl text-center text-lg leading-7 text-[#454650] dark:text-slate-300">
               Building a foundation of excellence in early childhood education
               since 2005.
             </p>
@@ -223,7 +223,7 @@ export function AcademyOverview() {
             {journeyItems.map((item) => (
               <li
                 key={item.year}
-                className="relative min-h-[186px] overflow-hidden rounded-xl border border-[#c6c5d2] bg-[#fbf8ff] px-6 pb-8 pt-6 shadow-[0px_1px_2px_#0000000d]"
+                className="relative min-h-[186px] overflow-hidden rounded-xl border border-[#c6c5d2] dark:border-slate-700 bg-[#fbf8ff] dark:bg-slate-900 px-6 pb-8 pt-6 shadow-[0px_1px_2px_#0000000d]"
               >
                 {item.decorative && (
                   <span
@@ -231,7 +231,7 @@ export function AcademyOverview() {
                     aria-hidden="true"
                   />
                 )}
-                <time className="relative block text-2xl font-semibold leading-8 text-[#0b1b62]">
+                <time className="relative block text-2xl font-semibold leading-8 text-[#0b1b62] dark:text-indigo-300">
                   {item.year}
                 </time>
                 <p
@@ -239,14 +239,14 @@ export function AcademyOverview() {
                 >
                   {item.label}
                 </p>
-                <p className="relative mt-1 text-base leading-6 text-[#454650]">
+                <p className="relative mt-1 text-base leading-6 text-[#454650] dark:text-slate-300">
                   {item.description}
                 </p>
               </li>
             ))}
           </ol>
-          <article className="flex w-full max-w-4xl flex-col items-center gap-8 rounded-2xl border border-[#c6c5d2] bg-[#fbf8ff] px-8 pb-8 pt-12 shadow-[0px_1px_2px_#0000000d] sm:flex-row">
-            <div className="relative h-48 w-48 shrink-0 overflow-hidden rounded-full border-4 border-[#f5f2f9] shadow-[inset_0px_2px_4px_4px_#0000000d]">
+          <article className="flex w-full max-w-4xl flex-col items-center gap-8 rounded-2xl border border-[#c6c5d2] dark:border-slate-700 bg-[#fbf8ff] dark:bg-slate-900 px-8 pb-8 pt-12 shadow-[0px_1px_2px_#0000000d] sm:flex-row">
+            <div className="relative h-48 w-48 shrink-0 overflow-hidden rounded-full border-4 border-[#f5f2f9] shadow-[inset_0px_2px_4px_4px_#0000000d] dark:border-gray-800">
               <Image
                 src="/images/landing/founder.jpg"
                 alt="Dr. Elena C. Lagrimas"
@@ -256,13 +256,13 @@ export function AcademyOverview() {
               />
             </div>
             <div>
-              <h3 className="text-2xl font-semibold leading-8 text-[#0b1b62]">
+              <h3 className="text-2xl font-semibold leading-8 text-[#0b1b62] dark:text-indigo-300">
                 Dr. Elena C. Lagrimas
               </h3>
               <p className="mt-1 text-sm font-semibold leading-5 tracking-[0.14px] text-[#e6007e]">
                 Directress &amp; Founder
               </p>
-              <blockquote className="mt-3 text-lg italic leading-7 text-[#454650]">
+              <blockquote className="mt-3 text-lg italic leading-7 text-[#454650] dark:text-slate-300">
                 &quot;Our mission is to create a nurturing space where every
                 child feels safe to explore, make mistakes, and grow into
                 their unique potential. Education in these early years shapes
@@ -282,11 +282,11 @@ export function AcademyOverview() {
         <header className="flex w-full flex-col items-center gap-2">
           <h2
             id="programs-heading"
-            className="text-center text-[32px] font-bold leading-10 tracking-[-0.32px] text-[#0b1b62]"
+            className="text-center text-[32px] font-bold leading-10 tracking-[-0.32px] text-[#0b1b62] dark:text-indigo-300"
           >
             Our Educational Programs
           </h2>
-          <p className="max-w-2xl text-center text-lg leading-7 text-[#454650]">
+          <p className="max-w-2xl text-center text-lg leading-7 text-[#454650] dark:text-slate-300">
             Tailored curriculums designed for every stage of early childhood
             development.
           </p>
@@ -295,23 +295,23 @@ export function AcademyOverview() {
           {programs.map((program) => (
             <article
               key={program.title}
-              className="overflow-hidden rounded-xl border border-[#c6c5d2] bg-[#fbf8ff] shadow-[0px_1px_2px_#0000000d]"
+              className="overflow-hidden rounded-xl border border-[#c6c5d2] dark:border-slate-700 bg-[#fbf8ff] dark:bg-slate-900 shadow-[0px_1px_2px_#0000000d]"
             >
-              <div className="relative h-48 w-full bg-[#f5f2f9]">
+              <div className="relative h-48 w-full bg-[#f5f2f9] dark:bg-gray-900">
                 <ProgramPhoto
                   src={program.image}
                   alt={`${program.title} program`}
                   sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw"
                 />
-                <span className="absolute right-4 top-4 rounded-full bg-[#ffffffe6] px-2 py-1 text-xs font-medium tracking-[0.24px] text-[#0b1b62] backdrop-blur-[2px]">
+                <span className="absolute right-4 top-4 rounded-full bg-[#ffffffe6] px-2 py-1 text-xs font-medium tracking-[0.24px] text-[#0b1b62] dark:text-indigo-300 backdrop-blur-[2px]">
                   {program.age}
                 </span>
               </div>
               <div className="min-h-[149px] px-6 pb-10 pt-6">
-                <h3 className="text-2xl font-semibold leading-8 text-[#0b1b62]">
+                <h3 className="text-2xl font-semibold leading-8 text-[#0b1b62] dark:text-indigo-300">
                   {program.title}
                 </h3>
-                <p className="mt-1 text-base leading-6 text-[#454650]">
+                <p className="mt-1 text-base leading-6 text-[#454650] dark:text-slate-300">
                   {program.description}
                 </p>
               </div>
@@ -321,14 +321,14 @@ export function AcademyOverview() {
           {supportPrograms.map((program) => (
             <article
               key={program.title}
-              className="flex min-h-[342px] flex-col justify-center rounded-xl border border-[#c6c5d2] bg-[#fbf8ff] px-6 py-6 shadow-[0px_1px_2px_#0000000d]"
+              className="flex min-h-[342px] flex-col justify-center rounded-xl border border-[#c6c5d2] dark:border-slate-700 bg-[#fbf8ff] dark:bg-slate-900 px-6 py-6 shadow-[0px_1px_2px_#0000000d]"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img className="h-5 w-5" src={program.icon} alt="" aria-hidden="true" />
-              <h3 className="mt-4 text-2xl font-semibold leading-8 text-[#0b1b62]">
+              <h3 className="mt-4 text-2xl font-semibold leading-8 text-[#0b1b62] dark:text-indigo-300">
                 {program.title}
               </h3>
-              <p className="mt-1 text-base leading-6 text-[#454650]">
+              <p className="mt-1 text-base leading-6 text-[#454650] dark:text-slate-300">
                 {program.description}
               </p>
             </article>

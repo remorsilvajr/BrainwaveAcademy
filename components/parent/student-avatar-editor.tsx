@@ -46,7 +46,7 @@ export function StudentAvatarEditor({ studentId, avatarUrl }: { studentId: strin
         onRemove={avatarUrl ? handleRemove : undefined}
         disabled={isSaving}
       />
-      {errorMessage && <p className="mt-2 text-center text-xs text-red-600">{errorMessage}</p>}
+      {errorMessage && <p className="mt-2 text-center text-xs text-red-600 dark:text-red-400">{errorMessage}</p>}
     </div>
   )
 }

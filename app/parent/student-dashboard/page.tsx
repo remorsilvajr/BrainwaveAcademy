@@ -30,14 +30,14 @@ export default async function ParentStudentDashboardPage({
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#0b1b62]">Student Dashboard</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Student Dashboard</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Attendance, assessments, and development milestones for your child.
           </p>
         </div>
-        <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-500">
+        <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-8 text-center text-sm text-gray-500 dark:text-gray-400">
           No students on file yet.{' '}
-          <Link href="/parent/enroll-a-student" className="font-semibold text-[#00a3e0] hover:underline">
+          <Link href="/parent/enroll-a-student" className="font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline">
             Enroll a student
           </Link>{' '}
           to get started.
@@ -53,15 +53,15 @@ export default async function ParentStudentDashboardPage({
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#0b1b62]">Student Dashboard</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Student Dashboard</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Attendance, assessments, and development milestones for your child.
           </p>
         </div>
-        <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-500">
+        <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-8 text-center text-sm text-gray-500 dark:text-gray-400">
           {application.student_first_name} {application.student_last_name} isn&apos;t enrolled yet — attendance
           and milestone tracking begin once enrollment is complete.{' '}
-          <Link href="/parent/enrollment-status" className="font-semibold text-[#00a3e0] hover:underline">
+          <Link href="/parent/enrollment-status" className="font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline">
             Check Enrollment Status
           </Link>
         </div>
@@ -94,8 +94,8 @@ export default async function ParentStudentDashboardPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-[#0b1b62]">Student Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Student Dashboard</h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Attendance, assessments, and development milestones for your child.
         </p>
       </div>

@@ -83,32 +83,32 @@ export function ChangePasswordForm() {
   return (
     <form onSubmit={handleSubmit} className="max-w-sm space-y-4">
       <div>
-        <label className="mb-1 block text-sm font-semibold text-[#0b1b62]">Current Password</label>
+        <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Current Password</label>
         <input
           type="password"
           value={currentPassword}
           onChange={(e) => setCurrentPassword(e.target.value)}
-          className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-gray-700 focus:border-[#0b1b62] focus:outline-none"
+          className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
         />
       </div>
       <div>
-        <label className="mb-1 block text-sm font-semibold text-[#0b1b62]">New Password</label>
+        <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">New Password</label>
         <input
           type="password"
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
           required
-          className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-gray-700 focus:border-[#0b1b62] focus:outline-none"
+          className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
         />
       </div>
       <div>
-        <label className="mb-1 block text-sm font-semibold text-[#0b1b62]">Confirm New Password</label>
+        <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Confirm New Password</label>
         <input
           type="password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
-          className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm text-gray-700 focus:border-[#0b1b62] focus:outline-none"
+          className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
         />
       </div>
 
@@ -121,7 +121,7 @@ export function ChangePasswordForm() {
       </button>
 
       {message && (
-        <p className={`text-sm ${isError ? 'text-red-600' : 'text-green-600'}`}>{message}</p>
+        <p className={`text-sm ${isError ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>{message}</p>
       )}
     </form>
   )

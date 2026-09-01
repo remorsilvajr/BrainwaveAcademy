@@ -57,12 +57,12 @@ export default async function EnrollmentStatusPage({
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#0b1b62]">Enrollment Status</h1>
-          <p className="mt-1 text-sm text-gray-500">Track your child&apos;s enrollment progress.</p>
+          <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Enrollment Status</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Track your child&apos;s enrollment progress.</p>
         </div>
-        <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-500">
+        <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-8 text-center text-sm text-gray-500 dark:text-gray-400">
           No enrollment application on file yet.{' '}
-          <Link href="/parent/enroll-a-student" className="font-semibold text-[#00a3e0] hover:underline">
+          <Link href="/parent/enroll-a-student" className="font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline">
             Enroll a student
           </Link>{' '}
           to get started.
@@ -83,29 +83,29 @@ export default async function EnrollmentStatusPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-[#0b1b62]">Enrollment Status</h1>
-        <p className="mt-1 text-sm text-gray-500">Track your child&apos;s enrollment progress.</p>
+        <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Enrollment Status</h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Track your child&apos;s enrollment progress.</p>
       </div>
 
-      <div className="rounded-2xl border border-gray-200 bg-white p-6">
+      <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-lg font-bold text-gray-900">
+            <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
               {application.student_first_name} {application.student_last_name}
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               {application.application_ref} • Submitted {formatDateLong(application.submitted_at)}
             </p>
           </div>
         </div>
 
         {stage === 'rejected' ? (
-          <div className="mt-6 flex items-start gap-3 rounded-xl bg-red-50 p-4">
-            <FileWarning className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
+          <div className="mt-6 flex items-start gap-3 rounded-xl bg-red-50 dark:bg-red-950/30 p-4">
+            <FileWarning className="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
             <div>
               <p className="text-sm font-semibold text-red-800">This application was not approved.</p>
               {application.review_notes && (
-                <p className="mt-1 text-sm text-red-700">{application.review_notes}</p>
+                <p className="mt-1 text-sm text-red-700 dark:text-red-400">{application.review_notes}</p>
               )}
             </div>
           </div>
@@ -116,21 +116,21 @@ export default async function EnrollmentStatusPage({
               return (
                 <div key={step.key} className="flex items-center gap-3">
                   {status === 'done' ? (
-                    <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600" />
+                    <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600 dark:text-green-400" />
                   ) : status === 'current' ? (
-                    <Circle className="h-5 w-5 shrink-0 fill-amber-100 text-amber-600" />
+                    <Circle className="h-5 w-5 shrink-0 fill-amber-100 text-amber-600 dark:text-amber-400" />
                   ) : (
                     <Circle className="h-5 w-5 shrink-0 text-gray-300" />
                   )}
                   <p
                     className={`text-sm ${
-                      status === 'upcoming' ? 'text-gray-400' : 'font-medium text-gray-900'
+                      status === 'upcoming' ? 'text-gray-400 dark:text-gray-500' : 'font-medium text-gray-900 dark:text-gray-100'
                     }`}
                   >
                     {step.label}
                   </p>
                   {status === 'current' && (
-                    <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+                    <span className="rounded-full bg-amber-50 dark:bg-amber-950/30 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-300">
                       In Progress
                     </span>
                   )}
@@ -143,7 +143,7 @@ export default async function EnrollmentStatusPage({
         {stage === 'documents' && (
           <Link
             href="/parent/requirements"
-            className="mt-6 inline-block text-sm font-semibold text-[#00a3e0] hover:underline"
+            className="mt-6 inline-block text-sm font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline"
           >
             Go to Requirements →
           </Link>

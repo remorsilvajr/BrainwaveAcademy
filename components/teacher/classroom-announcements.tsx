@@ -70,9 +70,9 @@ export function ClassroomAnnouncements({
   }
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-6">
+    <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-gray-900">Classroom Announcements</h2>
+        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Classroom Announcements</h2>
         <button
           type="button"
           onClick={() => setIsPosting((v) => !v)}
@@ -83,21 +83,21 @@ export function ClassroomAnnouncements({
       </div>
 
       {isPosting && (
-        <div className="mt-4 space-y-2 rounded-xl border border-gray-200 p-4">
+        <div className="mt-4 space-y-2 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Announcement title"
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
+            className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
           />
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
             placeholder="Write a message for parents…"
             rows={3}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
+            className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
           />
-          {errorMessage && <p className="text-sm text-red-600">{errorMessage}</p>}
+          {errorMessage && <p className="text-sm text-red-600 dark:text-red-400">{errorMessage}</p>}
           <button
             type="button"
             onClick={handlePost}
@@ -111,33 +111,33 @@ export function ClassroomAnnouncements({
 
       {isFullList && (
         <div className="mt-4">
-          <label className="mb-1 block text-xs font-medium text-gray-500">Search</label>
+          <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Search</label>
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Title, message, or author"
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
+            className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
           />
         </div>
       )}
 
       <div className={`mt-4 space-y-3 ${isFullList ? 'min-h-[360px]' : ''}`}>
         {displayed.map((a) => (
-          <div key={a.id} className="flex gap-3 rounded-xl border border-gray-100 p-4">
-            <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-pink-50 text-[#e6007e]">
+          <div key={a.id} className="flex gap-3 rounded-xl border border-gray-100 dark:border-gray-800 p-4">
+            <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-pink-50 dark:bg-pink-950/30 text-[#e6007e]">
               <Megaphone className="h-4 w-4" />
             </span>
             <div>
-              <p className="text-sm font-semibold text-gray-900">{a.title}</p>
-              <p className="mt-1 text-sm text-gray-600">{a.body}</p>
-              <p className="mt-1 text-xs text-gray-400">
+              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{a.title}</p>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{a.body}</p>
+              <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
                 Posted {formatRelativeTime(a.created_at)} by {a.posted_by_name}
               </p>
             </div>
           </div>
         ))}
         {displayed.length === 0 && (
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             {announcements.length === 0 ? 'No announcements posted yet.' : 'No announcements match your search.'}
           </p>
         )}
@@ -158,7 +158,7 @@ export function ClassroomAnnouncements({
       {viewAllHref && (
         <Link
           href={viewAllHref}
-          className="mt-4 inline-block text-sm font-semibold text-[#00a3e0] hover:underline"
+          className="mt-4 inline-block text-sm font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline"
         >
           View All →
         </Link>

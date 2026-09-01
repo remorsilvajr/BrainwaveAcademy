@@ -67,22 +67,22 @@ export default async function ParentDashboardPage({
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-[#0b1b62]">
+      <h1 className="text-3xl font-bold text-[#0b1b62] dark:text-indigo-300">
         Welcome back{profile?.first_name ? `, ${profile.first_name}` : ''}
       </h1>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <div className="rounded-xl border border-gray-200 bg-white p-6">
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">Enrollment Progress</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Enrollment Progress</h2>
             {selectedApplication && (
               <span
                 className={`rounded-full px-2.5 py-1 text-xs font-medium ${
                   progressLabel === 'Enrolled'
-                    ? 'bg-green-50 text-green-700'
+                    ? 'bg-green-50 dark:bg-green-950/30 text-green-700'
                     : progressLabel === 'Needs Correction'
                       ? 'bg-orange-50 text-orange-700'
-                      : 'bg-amber-50 text-amber-700'
+                      : 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300'
                 }`}
               >
                 {progressLabel}
@@ -92,23 +92,23 @@ export default async function ParentDashboardPage({
 
           {selectedApplication ? (
             <>
-              <p className="mt-4 text-sm text-gray-600">
+              <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">
                 {validCount} of {documentOrder.length} Requirements Completed
               </p>
-              <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-gray-100">
+              <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
                 <div className="h-full bg-sky-500" style={{ width: `${progressPercent}%` }} />
               </div>
               <Link
                 href="/parent/requirements"
-                className="mt-4 inline-block text-sm font-semibold text-[#00a3e0] hover:underline"
+                className="mt-4 inline-block text-sm font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline"
               >
                 View Requirements →
               </Link>
             </>
           ) : (
-            <p className="mt-4 text-sm text-gray-500">
+            <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
               No enrollment application on file yet.{' '}
-              <Link href="/parent/enroll-a-student" className="font-semibold text-[#00a3e0] hover:underline">
+              <Link href="/parent/enroll-a-student" className="font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline">
                 Enroll a student
               </Link>{' '}
               to get started.
@@ -116,33 +116,33 @@ export default async function ParentDashboardPage({
           )}
         </div>
 
-        <div className="rounded-xl border border-gray-200 bg-white p-6">
-          <h2 className="text-lg font-semibold text-gray-900">Due Balance</h2>
-          <p className="mt-4 text-3xl font-bold text-[#0b1b62]">₱0.00</p>
-          <p className="mt-2 flex items-center gap-1.5 text-sm text-gray-500">
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Due Balance</h2>
+          <p className="mt-4 text-3xl font-bold text-[#0b1b62] dark:text-indigo-300">₱0.00</p>
+          <p className="mt-2 flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
             <CalendarClock className="h-4 w-4" />
             No payments due at this time.
           </p>
         </div>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">Recent Announcements &amp; School Updates</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Recent Announcements &amp; School Updates</h2>
         </div>
         {announcements.length === 0 ? (
-          <p className="mt-4 text-sm text-gray-500">No announcements yet.</p>
+          <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">No announcements yet.</p>
         ) : (
           <div className="mt-4 space-y-3">
             {announcements.map((a) => (
               <div key={a.id} className="flex gap-3">
-                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-700">
+                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300">
                   <Megaphone className="h-4 w-4" />
                 </span>
                 <div>
-                  <p className="text-sm font-semibold text-gray-900">{a.title}</p>
-                  <p className="mt-1 text-sm text-gray-600">{a.body}</p>
-                  <p className="mt-1 text-xs text-gray-400">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{a.title}</p>
+                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{a.body}</p>
+                  <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
                     Posted {formatRelativeTime(a.created_at)} by{' '}
                     {a.profiles ? `${a.profiles.first_name} ${a.profiles.last_name}` : 'Staff'}
                   </p>
@@ -153,7 +153,7 @@ export default async function ParentDashboardPage({
         )}
         <Link
           href="/parent/announcement"
-          className="mt-4 inline-block text-sm font-semibold text-[#00a3e0] hover:underline"
+          className="mt-4 inline-block text-sm font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline"
         >
           View All →
         </Link>

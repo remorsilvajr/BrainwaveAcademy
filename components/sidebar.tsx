@@ -19,6 +19,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { LogoutButton } from './logout-button'
+import { ThemeToggle } from './theme-toggle'
 
 // Icons are resolved here, inside the Client Component, from a plain
 // string name — NOT passed in as actual component references from a
@@ -252,6 +253,7 @@ export function Sidebar({
           <p className="text-sm font-bold text-white">{schoolName}</p>
           {portalLabel && <p className="text-[11px] text-[#8f9bd6]">{portalLabel}</p>}
         </div>
+        <ThemeToggle className="ml-auto text-white hover:bg-white/10" />
       </div>
 
       {isMobileOpen && (
@@ -290,9 +292,12 @@ export function Sidebar({
       )}
 
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 shrink-0 flex-col overflow-y-auto bg-[#0b1b62] p-4 lg:flex">
-        <div className="mb-6 px-2">
-          <p className="text-lg font-bold text-white">{schoolName}</p>
-          {portalLabel && <p className="text-xs text-[#8f9bd6]">{portalLabel}</p>}
+        <div className="mb-6 flex items-center justify-between gap-2 px-2">
+          <div>
+            <p className="text-lg font-bold text-white">{schoolName}</p>
+            {portalLabel && <p className="text-xs text-[#8f9bd6]">{portalLabel}</p>}
+          </div>
+          <ThemeToggle className="text-white hover:bg-white/10" />
         </div>
 
         <nav className="flex-1 space-y-6">

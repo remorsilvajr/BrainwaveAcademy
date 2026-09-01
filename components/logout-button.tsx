@@ -41,19 +41,19 @@ export function LogoutButton({ icon }: { icon?: IconName }) {
         createPortal(
           <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/30" onClick={() => setConfirming(false)} />
-            <div className="relative w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
-              <h2 className="text-lg font-semibold text-gray-900">Log out?</h2>
-              <p className="mt-1 text-sm text-gray-500">
+            <div className="relative w-full max-w-sm rounded-xl bg-white dark:bg-gray-900 p-6 shadow-xl">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Log out?</h2>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 You&apos;ll need to sign in again to access your account.
               </p>
               {errorMessage && (
-                <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{errorMessage}</p>
+                <p className="mt-3 rounded-lg bg-red-50 dark:bg-red-950/30 px-3 py-2 text-sm text-red-600 dark:text-red-400">{errorMessage}</p>
               )}
               <div className="mt-6 flex gap-2">
                 <button
                   onClick={() => setConfirming(false)}
                   disabled={isLoggingOut}
-                  className="flex-1 rounded-lg border border-gray-300 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                  className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 disabled:opacity-60"
                 >
                   Cancel
                 </button>

@@ -31,15 +31,15 @@ export function DocumentPreviewModal({
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative flex h-full max-h-[90vh] w-full max-w-3xl flex-col rounded-2xl bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b border-gray-100 px-5 py-3">
-          <p className="truncate pr-4 text-sm font-semibold text-gray-900">{title ?? 'Document'}</p>
+      <div className="relative flex h-full max-h-[90vh] w-full max-w-3xl flex-col rounded-2xl bg-white dark:bg-gray-900 shadow-xl">
+        <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-5 py-3">
+          <p className="truncate pr-4 text-sm font-semibold text-gray-900 dark:text-gray-100">{title ?? 'Document'}</p>
           <div className="flex shrink-0 items-center gap-4">
             <a
               href={url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 text-xs font-medium text-[#00a3e0] hover:underline"
+              className="flex items-center gap-1 text-xs font-medium text-[#00a3e0] dark:text-sky-400 hover:underline"
             >
               Open in new tab
               <ExternalLink className="h-3 w-3" />
@@ -48,18 +48,18 @@ export function DocumentPreviewModal({
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="text-gray-400 hover:text-gray-600"
+              className="text-gray-400 dark:text-gray-500 hover:text-gray-600"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
         </div>
-        <div className="flex-1 overflow-auto bg-gray-50 p-3">
+        <div className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-800/60 p-3">
           {isPdfUrl(url) ? (
             <iframe
               src={url}
               title={title ?? 'Document preview'}
-              className="h-full min-h-[70vh] w-full rounded-lg border-0 bg-white"
+              className="h-full min-h-[70vh] w-full rounded-lg border-0 bg-white dark:bg-gray-900"
             />
           ) : (
             // eslint-disable-next-line @next/next/no-img-element

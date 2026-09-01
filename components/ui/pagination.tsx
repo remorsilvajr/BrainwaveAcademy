@@ -64,10 +64,10 @@ export function Pagination({
   }
 
   return (
-    <div className="flex flex-col items-center justify-between gap-3 border-t border-gray-100 px-4 py-3 sm:flex-row">
-      <p className="text-xs text-gray-500">
-        Showing <span className="font-medium text-gray-700">{startItem}–{endItem}</span> of{' '}
-        <span className="font-medium text-gray-700">{totalItems}</span>
+    <div className="flex flex-col items-center justify-between gap-3 border-t border-gray-100 dark:border-gray-800 px-4 py-3 sm:flex-row">
+      <p className="text-xs text-gray-500 dark:text-gray-400">
+        Showing <span className="font-medium text-gray-700 dark:text-gray-300">{startItem}–{endItem}</span> of{' '}
+        <span className="font-medium text-gray-700 dark:text-gray-300">{totalItems}</span>
       </p>
 
       <div className="flex items-center gap-1">
@@ -76,13 +76,13 @@ export function Pagination({
           onClick={() => onPageChange(page - 1)}
           disabled={page === 1}
           aria-label="Previous page"
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
         {pageNumbers().map((n, i) =>
           n === '…' ? (
-            <span key={`ellipsis-${i}`} className="px-1.5 text-sm text-gray-400">
+            <span key={`ellipsis-${i}`} className="px-1.5 text-sm text-gray-400 dark:text-gray-500">
               …
             </span>
           ) : (
@@ -92,7 +92,7 @@ export function Pagination({
               onClick={() => onPageChange(n)}
               aria-current={n === page ? 'page' : undefined}
               className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm font-medium ${
-                n === page ? 'bg-[#0b1b62] text-white' : 'text-gray-600 hover:bg-gray-50'
+                n === page ? 'bg-[#0b1b62] text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50'
               }`}
             >
               {n}
@@ -104,13 +104,13 @@ export function Pagination({
           onClick={() => onPageChange(page + 1)}
           disabled={page === totalPages}
           aria-label="Next page"
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <ChevronRight className="h-4 w-4" />
         </button>
       </div>
 
-      <div className="flex items-center gap-2 text-xs text-gray-500">
+      <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
         <label htmlFor={inputId} className="whitespace-nowrap">
           Go to page
         </label>
@@ -128,7 +128,7 @@ export function Pagination({
               commitGoTo()
             }
           }}
-          className="w-14 rounded-lg border border-gray-200 px-2 py-1 text-center text-sm focus:border-[#0b1b62] focus:outline-none"
+          className="w-14 rounded-lg border border-gray-200 dark:border-gray-700 px-2 py-1 text-center text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
         />
         <span className="whitespace-nowrap">of {totalPages}</span>
       </div>

@@ -58,21 +58,21 @@ export function StudentSelector({
         type="button"
         aria-labelledby="student-selector-label"
         onClick={() => (isOpen ? setIsOpen(false) : open())}
-        className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 focus:border-[#0b1b62] focus:outline-none"
+        className="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
       >
-        <span className="text-gray-500">Student:</span>
-        <span className="font-medium text-gray-900">
+        <span className="text-gray-500 dark:text-gray-400">Student:</span>
+        <span className="font-medium text-gray-900 dark:text-gray-100">
           {selected ? `${selected.first_name} ${selected.last_name}` : 'Select a student'}
         </span>
-        <ChevronDown className="h-4 w-4 text-gray-400" />
+        <ChevronDown className="h-4 w-4 text-gray-400 dark:text-gray-500" />
       </button>
 
       {isOpen && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-          <div className="absolute left-0 z-20 mt-2 w-72 rounded-lg border border-gray-200 bg-white shadow-lg sm:left-auto sm:right-0">
-            <div className="flex items-center gap-2 border-b border-gray-100 px-3 py-2">
-              <Search className="h-4 w-4 shrink-0 text-gray-400" />
+          <div className="absolute left-0 z-20 mt-2 w-72 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg sm:left-auto sm:right-0">
+            <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-3 py-2">
+              <Search className="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500" />
               <input
                 ref={inputRef}
                 value={search}
@@ -82,7 +82,7 @@ export function StudentSelector({
                   if (e.key === 'Enter' && filtered.length > 0) selectStudent(filtered[0].id)
                 }}
                 placeholder="Search students…"
-                className="w-full text-sm text-gray-700 focus:outline-none"
+                className="w-full text-sm text-gray-700 dark:text-gray-300 focus:outline-none"
               />
             </div>
             <div className="max-h-64 overflow-y-auto py-1">
@@ -93,14 +93,14 @@ export function StudentSelector({
                     type="button"
                     onClick={() => selectStudent(s.id)}
                     className={`block w-full px-3 py-2 text-left text-sm hover:bg-gray-50 ${
-                      s.id === selectedId ? 'font-semibold text-[#0b1b62]' : 'text-gray-700'
+                      s.id === selectedId ? 'font-semibold text-[#0b1b62] dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300'
                     }`}
                   >
                     {s.first_name} {s.last_name}
                   </button>
                 ))
               ) : (
-                <p className="px-3 py-4 text-center text-sm text-gray-400">No students found.</p>
+                <p className="px-3 py-4 text-center text-sm text-gray-400 dark:text-gray-500">No students found.</p>
               )}
             </div>
           </div>

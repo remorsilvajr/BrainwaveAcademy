@@ -51,9 +51,9 @@ export function ParentTopBar({
   }
 
   return (
-    <header className="sticky top-14 z-20 border-b border-gray-200 bg-white px-4 py-4 sm:px-8 lg:top-0">
+    <header className="sticky top-14 z-20 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-4 sm:px-8 lg:top-0">
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-        <h1 className="text-lg font-bold text-[#0b1b62] sm:text-xl">{title}</h1>
+        <h1 className="text-lg font-bold text-[#0b1b62] dark:text-indigo-300 sm:text-xl">{title}</h1>
 
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           {students.length > 0 && (
@@ -61,25 +61,25 @@ export function ParentTopBar({
               <button
                 type="button"
                 onClick={() => setStudentMenuOpen((v) => !v)}
-                className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
+                className="flex items-center gap-1.5 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
               >
                 <span aria-hidden="true">🎒</span>
                 <span className="hidden sm:inline">Child: </span>
                 {selected ? `${selected.first_name} ${selected.last_name}` : 'Select'}
-                <ChevronDown className="h-4 w-4 text-gray-400" />
+                <ChevronDown className="h-4 w-4 text-gray-400 dark:text-gray-500" />
               </button>
 
               {studentMenuOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setStudentMenuOpen(false)} />
-                  <div className="absolute left-0 z-20 mt-2 w-56 rounded-lg border border-gray-200 bg-white py-1 shadow-lg sm:left-auto sm:right-0">
+                  <div className="absolute left-0 z-20 mt-2 w-56 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 py-1 shadow-lg sm:left-auto sm:right-0">
                     {students.map((s) => (
                       <button
                         key={s.id}
                         type="button"
                         onClick={() => selectStudent(s.id)}
                         className={`block w-full px-4 py-2 text-left text-sm hover:bg-gray-50 ${
-                          s.id === selectedId ? 'font-semibold text-[#0b1b62]' : 'text-gray-700'
+                          s.id === selectedId ? 'font-semibold text-[#0b1b62] dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300'
                         }`}
                       >
                         {s.first_name} {s.last_name}
@@ -100,15 +100,15 @@ export function ParentTopBar({
                 className="h-9 w-9 rounded-full object-cover"
               />
             ) : (
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 text-sky-700">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300">
                 <UserIcon className="h-5 w-5" />
               </span>
             )}
             <div className="leading-tight">
-              <p className="text-sm font-semibold text-gray-900">
+              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                 {parent.last_name}, {parent.first_name.charAt(0)}.
               </p>
-              <p className="hidden text-xs text-gray-500 sm:block">Parent / Guardian</p>
+              <p className="hidden text-xs text-gray-500 dark:text-gray-400 sm:block">Parent / Guardian</p>
             </div>
           </div>
         </div>

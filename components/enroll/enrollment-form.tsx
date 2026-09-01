@@ -32,7 +32,7 @@ function Field({
 }) {
   return (
     <div>
-      <label htmlFor={name} className="mb-1 block text-sm font-semibold text-[#0b1b62]">
+      <label htmlFor={name} className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
         {label}
       </label>
       <input
@@ -45,11 +45,11 @@ function Field({
         title={title}
         defaultValue={defaultValue}
         onChange={onChange}
-        className={`w-full rounded-lg border px-3 py-2.5 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none ${
-          error ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-[#0b1b62]'
+        className={`w-full rounded-lg border px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 placeholder:text-gray-400 focus:outline-none ${
+          error ? 'border-red-400 focus:border-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-[#0b1b62] dark:focus:border-indigo-400'
         }`}
       />
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+      {error && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{error}</p>}
     </div>
   )
 }
@@ -92,13 +92,13 @@ export function EnrollmentForm() {
   const values = state.values ?? {}
 
   return (
-    <form action={formAction} className="space-y-8 rounded-xl border border-[#c6c5d2] bg-white p-8 shadow-sm">
+    <form action={formAction} className="space-y-8 rounded-xl border border-[#c6c5d2] dark:border-slate-700 bg-white dark:bg-gray-900 p-8 shadow-sm">
       {bannerError && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{bannerError}</p>
+        <p className="rounded-lg bg-red-50 dark:bg-red-950/30 px-3 py-2 text-sm text-red-600 dark:text-red-400">{bannerError}</p>
       )}
 
       <div>
-        <h2 className="mb-4 border-b border-[#00a3e0] pb-2 text-xl font-semibold text-[#0b1b62]">
+        <h2 className="mb-4 border-b border-[#00a3e0] pb-2 text-xl font-semibold text-[#0b1b62] dark:text-indigo-300">
           Student Information
         </h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -146,7 +146,7 @@ export function EnrollmentForm() {
             onChange={() => clearError('student_dob')}
           />
           <div>
-            <label htmlFor="student_gender" className="mb-1 block text-sm font-semibold text-[#0b1b62]">
+            <label htmlFor="student_gender" className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
               Gender
             </label>
             <select
@@ -158,10 +158,10 @@ export function EnrollmentForm() {
                 setGenderValue(e.target.value)
                 clearError('student_gender')
               }}
-              className={`w-full rounded-lg border px-3 py-2.5 text-sm text-gray-700 focus:outline-none ${
+              className={`w-full rounded-lg border px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 focus:outline-none ${
                 liveErrors.student_gender
                   ? 'border-red-400 focus:border-red-500'
-                  : 'border-slate-200 focus:border-[#0b1b62]'
+                  : 'border-slate-200 dark:border-slate-700 focus:border-[#0b1b62] dark:focus:border-indigo-400'
               }`}
             >
               <option value="">Select Gender</option>
@@ -169,14 +169,14 @@ export function EnrollmentForm() {
               <option value="female">Female</option>
             </select>
             {liveErrors.student_gender && (
-              <p className="mt-1 text-xs text-red-600">{liveErrors.student_gender}</p>
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">{liveErrors.student_gender}</p>
             )}
           </div>
         </div>
       </div>
 
       <div>
-        <h2 className="mb-4 border-b border-[#00a3e0] pb-2 text-xl font-semibold text-[#0b1b62]">
+        <h2 className="mb-4 border-b border-[#00a3e0] pb-2 text-xl font-semibold text-[#0b1b62] dark:text-indigo-300">
           Parent / Guardian Information
         </h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -224,7 +224,7 @@ export function EnrollmentForm() {
             onChange={() => clearError('parent_dob')}
           />
           <div>
-            <label htmlFor="parent_relationship" className="mb-1 block text-sm font-semibold text-[#0b1b62]">
+            <label htmlFor="parent_relationship" className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
               Relationship
             </label>
             <select
@@ -236,10 +236,10 @@ export function EnrollmentForm() {
                 setRelationshipValue(e.target.value)
                 clearError('parent_relationship')
               }}
-              className={`w-full rounded-lg border px-3 py-2.5 text-sm text-gray-700 focus:outline-none ${
+              className={`w-full rounded-lg border px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 focus:outline-none ${
                 liveErrors.parent_relationship
                   ? 'border-red-400 focus:border-red-500'
-                  : 'border-slate-200 focus:border-[#0b1b62]'
+                  : 'border-slate-200 dark:border-slate-700 focus:border-[#0b1b62] dark:focus:border-indigo-400'
               }`}
             >
               <option value="">Select Relationship</option>
@@ -248,7 +248,7 @@ export function EnrollmentForm() {
               <option value="Guardian">Guardian</option>
             </select>
             {liveErrors.parent_relationship && (
-              <p className="mt-1 text-xs text-red-600">{liveErrors.parent_relationship}</p>
+              <p className="mt-1 text-xs text-red-600 dark:text-red-400">{liveErrors.parent_relationship}</p>
             )}
           </div>
           <Field
@@ -273,15 +273,15 @@ export function EnrollmentForm() {
             error={liveErrors.parent_email}
             onChange={() => clearError('parent_email')}
           />
-          <p className="mt-1 text-xs text-[#454650]">
+          <p className="mt-1 text-xs text-[#454650] dark:text-slate-300">
             Your login credentials and admission confirmation will be sent here.
           </p>
         </div>
       </div>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <label className="flex items-start gap-2 text-sm text-[#454650]">
-          <input type="checkbox" required className="mt-1 h-4 w-4 rounded border-slate-200" />
+        <label className="flex items-start gap-2 text-sm text-[#454650] dark:text-slate-300">
+          <input type="checkbox" required className="mt-1 h-4 w-4 rounded border-slate-200 dark:border-slate-700" />
           I confirm that all information provided is accurate and true to the best of my
           knowledge.
         </label>

@@ -42,9 +42,9 @@ function progressOf(app: Application): 'corrections' | 'completed' | 'pending' {
 }
 
 const progressMeta: Record<'corrections' | 'completed' | 'pending', { label: string; className: string }> = {
-  pending: { label: 'Pending Document Review', className: 'bg-amber-50 text-amber-700' },
+  pending: { label: 'Pending Document Review', className: 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300' },
   corrections: { label: 'Needs Correction', className: 'bg-orange-50 text-orange-700' },
-  completed: { label: 'Completed', className: 'bg-green-50 text-green-700' },
+  completed: { label: 'Completed', className: 'bg-green-50 dark:bg-green-950/30 text-green-700' },
 }
 
 export function ApplicationsTable({ applications }: { applications: Application[] }) {
@@ -96,7 +96,7 @@ export function ApplicationsTable({ applications }: { applications: Application[
             className={`rounded-full px-4 py-2 text-sm font-medium ${
               tab === t.key
                 ? 'bg-[#0b1b62] text-white'
-                : 'border border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                : 'border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-50'
             }`}
           >
             {t.label} ({t.count})
@@ -104,20 +104,20 @@ export function ApplicationsTable({ applications }: { applications: Application[
         ))}
       </div>
 
-      <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
-        <label className="mb-1 block text-xs font-medium text-gray-500">Search</label>
+      <div className="mt-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
+        <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Search</label>
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Student name, parent name, email, or reference #"
-          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
+          className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
         />
       </div>
 
-      <div className="mt-4 rounded-xl border border-gray-200 bg-white">
+      <div className="mt-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
         <div className="min-h-[420px] overflow-x-auto">
         <table className="w-full min-w-[720px] text-sm">
-          <thead className="bg-gray-50 text-left text-gray-500">
+          <thead className="bg-gray-50 dark:bg-gray-800/60 text-left text-gray-500 dark:text-gray-400">
             <tr>
               <th className="p-4 font-medium">Application Ref</th>
               <th className="p-4 font-medium">Student Name</th>
@@ -131,14 +131,14 @@ export function ApplicationsTable({ applications }: { applications: Application[
             {pageItems.length > 0 ? (
               pageItems.map((app) => (
                 <tr key={app.id}>
-                  <td className="p-4 font-medium text-[#0b1b62]">{app.application_ref}</td>
-                  <td className="p-4 text-gray-900">
+                  <td className="p-4 font-medium text-[#0b1b62] dark:text-indigo-300">{app.application_ref}</td>
+                  <td className="p-4 text-gray-900 dark:text-gray-100">
                     {app.student_first_name} {app.student_last_name}
                   </td>
-                  <td className="p-4 text-gray-700">
+                  <td className="p-4 text-gray-700 dark:text-gray-300">
                     {app.parent_first_name} {app.parent_last_name}
                   </td>
-                  <td className="p-4 text-gray-700">
+                  <td className="p-4 text-gray-700 dark:text-gray-300">
                     {app.documents.length}/{documentOrder.length} Uploaded
                   </td>
                   <td className="p-4">
@@ -160,7 +160,7 @@ export function ApplicationsTable({ applications }: { applications: Application[
               ))
             ) : (
               <tr>
-                <td colSpan={6} className="p-8 text-center text-gray-400">
+                <td colSpan={6} className="p-8 text-center text-gray-400 dark:text-gray-500">
                   No applications in this view.
                 </td>
               </tr>

@@ -22,9 +22,9 @@ type AttendanceRow = { id: string; date: string; status: string }
 type MilestoneRow = { id: string; category: string; assessment_date: string; notes: string }
 
 const attendanceStatusMeta: Record<string, string> = {
-  present: 'text-green-600 bg-green-50',
-  absent: 'text-red-600 bg-red-50',
-  late: 'text-amber-600 bg-amber-50',
+  present: 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/30',
+  absent: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30',
+  late: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30',
 }
 
 export function StudentDashboardContent({
@@ -146,7 +146,7 @@ export function StudentDashboardContent({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4 rounded-2xl border border-gray-200 bg-white p-6">
+      <div className="flex items-center gap-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
         {avatarEditor ? (
           <div>
             <AvatarEditor
@@ -156,19 +156,19 @@ export function StudentDashboardContent({
               disabled={isSavingAvatar}
               sizeClassName="h-16 w-16"
             />
-            {avatarError && <p className="mt-1 max-w-[64px] text-center text-[10px] text-red-600">{avatarError}</p>}
+            {avatarError && <p className="mt-1 max-w-[64px] text-center text-[10px] text-red-600 dark:text-red-400">{avatarError}</p>}
           </div>
         ) : avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={avatarUrl} alt="" className="h-16 w-16 rounded-full object-cover" />
         ) : (
-          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-sky-100 text-sky-700">
+          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300">
             <UserIcon className="h-7 w-7" />
           </span>
         )}
         <div>
-          <p className="text-lg font-bold text-gray-900">{fullName}</p>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{fullName}</p>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             {formatDateLong(student.date_of_birth)} &middot; <span className="capitalize">{student.gender}</span> &middot;{' '}
             <span className="capitalize">{student.enrollment_status}</span>
           </p>
@@ -176,10 +176,10 @@ export function StudentDashboardContent({
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <div className="rounded-2xl border border-gray-200 bg-white p-6">
-          <h2 className="text-lg font-semibold text-gray-900">Attendance</h2>
+        <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Attendance</h2>
           {todayRecord ? (
-            <p className="mt-3 text-sm text-gray-600">
+            <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">
               Marked{' '}
               <span className={`rounded-full px-2 py-0.5 text-xs font-semibold uppercase ${attendanceStatusMeta[todayRecord.status]}`}>
                 {todayRecord.status}
@@ -187,9 +187,9 @@ export function StudentDashboardContent({
               for today.
             </p>
           ) : (
-            <p className="mt-3 text-sm text-gray-500">Not marked for today.</p>
+            <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">Not marked for today.</p>
           )}
-          {attendanceError && <p className="mt-2 text-sm text-red-600">{attendanceError}</p>}
+          {attendanceError && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{attendanceError}</p>}
           {!readOnly && (
             <div className="mt-4 flex gap-2">
               {['present', 'late', 'absent'].map((status) => (
@@ -200,8 +200,8 @@ export function StudentDashboardContent({
                   onClick={() => handleMarkAttendance(status)}
                   className={`flex-1 rounded-lg border px-3 py-2 text-sm font-semibold capitalize disabled:opacity-60 ${
                     todayRecord?.status === status
-                      ? 'border-[#0b1b62] bg-[#0b1b62] text-white'
-                      : 'border-gray-200 text-gray-700 hover:bg-gray-50'
+                      ? 'border-[#0b1b62] dark:border-indigo-300 bg-[#0b1b62] text-white'
+                      : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50'
                   }`}
                 >
                   {status}
@@ -211,26 +211,26 @@ export function StudentDashboardContent({
           )}
         </div>
 
-        <div className="rounded-2xl border border-gray-200 bg-white p-6">
-          <h2 className="text-lg font-semibold text-gray-900">Latest Assessment</h2>
+        <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Latest Assessment</h2>
           {latestOverall ? (
             <>
-              <p className="mt-3 text-sm font-semibold text-gray-900">
+              <p className="mt-3 text-sm font-semibold text-gray-900 dark:text-gray-100">
                 {milestoneCategoryLabels[latestOverall.category]}
               </p>
-              <p className="mt-1 text-xs text-gray-400">{formatDateLong(latestOverall.assessment_date)}</p>
-              <p className="mt-2 text-sm text-gray-600">{latestOverall.notes}</p>
+              <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">{formatDateLong(latestOverall.assessment_date)}</p>
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{latestOverall.notes}</p>
             </>
           ) : (
-            <p className="mt-3 text-sm text-gray-500">No assessments on file yet.</p>
+            <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">No assessments on file yet.</p>
           )}
         </div>
       </div>
 
-      <div className="rounded-2xl border border-gray-200 bg-white p-6">
+      <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
         <div className="flex items-center justify-between">
-          <h2 className="font-bold text-gray-900">Development Milestone Tracker</h2>
-          <span className="rounded-full bg-indigo-50 px-3 py-1 text-sm font-medium text-indigo-700">
+          <h2 className="font-bold text-gray-900 dark:text-gray-100">Development Milestone Tracker</h2>
+          <span className="rounded-full bg-indigo-50 dark:bg-indigo-950/40 px-3 py-1 text-sm font-medium text-indigo-700 dark:text-indigo-300">
             {completedCount}/{milestoneCategoryOrder.length} Domains Assessed
           </span>
         </div>
@@ -238,15 +238,15 @@ export function StudentDashboardContent({
           {milestoneCategoryOrder.map((category) => {
             const latest = latestByCategory.get(category)
             return (
-              <div key={category} className="rounded-xl border border-gray-200 p-4">
-                <p className="text-sm font-medium text-gray-900">{milestoneCategoryLabels[category]}</p>
+              <div key={category} className="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{milestoneCategoryLabels[category]}</p>
                 {latest ? (
                   <>
-                    <p className="mt-1 text-xs text-gray-400">{formatDateLong(latest.assessment_date)}</p>
-                    <p className="mt-1 text-xs text-gray-500">{latest.notes}</p>
+                    <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">{formatDateLong(latest.assessment_date)}</p>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{latest.notes}</p>
                   </>
                 ) : (
-                  <p className="mt-1 text-xs text-gray-400">Not yet assessed</p>
+                  <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Not yet assessed</p>
                 )}
 
                 {readOnly ? null : assessingCategory === category ? (
@@ -256,15 +256,15 @@ export function StudentDashboardContent({
                       onChange={(e) => setNotes(e.target.value)}
                       placeholder="Assessment notes…"
                       rows={3}
-                      className="w-full rounded-lg border border-gray-200 p-2 text-xs text-gray-700 focus:border-[#0b1b62] focus:outline-none"
+                      className="w-full rounded-lg border border-gray-200 dark:border-gray-700 p-2 text-xs text-gray-700 dark:text-gray-300 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
                     />
-                    {assessmentError && <p className="text-xs text-red-600">{assessmentError}</p>}
+                    {assessmentError && <p className="text-xs text-red-600 dark:text-red-400">{assessmentError}</p>}
                     <div className="flex gap-2">
                       <button
                         type="button"
                         onClick={() => setAssessingCategory(null)}
                         disabled={isSubmittingAssessment}
-                        className="flex-1 rounded-lg border border-gray-200 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-60"
+                        className="flex-1 rounded-lg border border-gray-200 dark:border-gray-700 py-1.5 text-xs font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-50 disabled:opacity-60"
                       >
                         Cancel
                       </button>
@@ -293,19 +293,19 @@ export function StudentDashboardContent({
         </div>
       </div>
 
-      <div className="rounded-2xl border border-gray-200 bg-white p-6">
+      <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
         <div className="flex items-center gap-2">
           <ClipboardList className="h-5 w-5 text-[#e6007e]" />
-          <h2 className="text-lg font-semibold text-gray-900">Recent Daily Attendance</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Recent Daily Attendance</h2>
         </div>
         {attendance.length === 0 ? (
-          <p className="mt-3 text-sm text-gray-500">No records yet.</p>
+          <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">No records yet.</p>
         ) : (
           <div className="mt-3 divide-y divide-gray-100">
             {attendance.map((a) => (
               <div key={a.id} className="flex items-center justify-between py-2 text-sm">
-                <div className="flex items-center gap-2 text-gray-600">
-                  <CalendarCheck className="h-4 w-4 text-gray-400" />
+                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                  <CalendarCheck className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                   {formatDateLong(a.date)}
                 </div>
                 <span className={`rounded-full px-2 py-0.5 text-xs font-semibold uppercase ${attendanceStatusMeta[a.status]}`}>

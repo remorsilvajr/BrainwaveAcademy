@@ -37,8 +37,8 @@ type DocStatus = 'valid' | 'needs_correction' | 'pending'
 function InfoField({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs text-gray-400">{label}</p>
-      <p className="text-sm font-medium text-gray-900">{value}</p>
+      <p className="text-xs text-gray-400 dark:text-gray-500">{label}</p>
+      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{value}</p>
     </div>
   )
 }
@@ -148,22 +148,22 @@ export function ApplicationReviewSlideover({
     <div className="fixed inset-0 z-50 flex justify-end">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
 
-      <div className="relative flex h-full w-full max-w-lg flex-col bg-white shadow-xl">
-        <div className="flex items-start justify-between border-b border-gray-100 p-6">
+      <div className="relative flex h-full w-full max-w-lg flex-col bg-white dark:bg-gray-900 shadow-xl">
+        <div className="flex items-start justify-between border-b border-gray-100 dark:border-gray-800 p-6">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Document Review</h2>
-            <p className="text-sm text-gray-500">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Document Review</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               {application.application_ref} • {studentName}
             </p>
           </div>
-          <button onClick={onClose} aria-label="Close" className="text-gray-400 hover:text-gray-600">
+          <button onClick={onClose} aria-label="Close" className="text-gray-400 dark:text-gray-500 hover:text-gray-600">
             <X className="h-5 w-5" />
           </button>
         </div>
 
         <div ref={contentRef} className="flex-1 overflow-y-auto p-6">
           {result && (
-            <div className="mb-4 rounded-lg border border-green-200 bg-green-50 p-4 text-center">
+            <div className="mb-4 rounded-lg border border-green-200 bg-green-50 dark:bg-green-950/30 p-4 text-center">
               <p className="font-medium text-green-800">
                 {result === 'saved' && 'Review saved.'}
                 {result === 'corrections' && 'Corrections requested — parent notified by email.'}
@@ -173,22 +173,22 @@ export function ApplicationReviewSlideover({
           )}
 
           {!hasParentAccount && (
-            <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700">
+            <p className="mb-4 rounded-lg bg-amber-50 dark:bg-amber-950/30 px-3 py-2 text-sm text-amber-700 dark:text-amber-300">
               No parent account exists for this application yet — approve it via Enroll A
               Student first.
             </p>
           )}
 
           {alreadyHasStudent && (
-            <p className="mb-4 rounded-lg bg-sky-50 px-3 py-2 text-sm text-sky-700">
+            <p className="mb-4 rounded-lg bg-sky-50 dark:bg-sky-950/30 px-3 py-2 text-sm text-sky-700 dark:text-sky-300">
               A student record already exists for this application.
             </p>
           )}
 
-          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-400">
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
             Applicant Summary
           </p>
-          <div className="grid grid-cols-1 gap-4 rounded-xl bg-gray-50 p-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 rounded-xl bg-gray-50 dark:bg-gray-800/60 p-4 sm:grid-cols-2">
             <InfoField
               label="Date of Birth"
               value={`${formatDateLong(application.student_dob)} (${calculateAge(application.student_dob)}y)`}
@@ -201,12 +201,12 @@ export function ApplicationReviewSlideover({
             <InfoField label="Phone" value={application.parent_contact_number} />
           </div>
 
-          <p className="mb-2 mt-6 text-xs font-medium uppercase tracking-wide text-gray-400">
+          <p className="mb-2 mt-6 text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
             Document Verification
           </p>
 
           {!hasUploadedDocs && (
-            <p className="mb-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700">
+            <p className="mb-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 px-3 py-2 text-sm text-amber-700 dark:text-amber-300">
               This parent hasn&apos;t uploaded any documents yet — nothing to review until they
               visit Requirements in their portal.
             </p>
@@ -216,24 +216,24 @@ export function ApplicationReviewSlideover({
             {documentOrder.map((type) => {
               const doc = application.documents.find((d) => d.document_type === type)
               return (
-                <div key={type} className="rounded-xl border border-gray-200 p-4">
+                <div key={type} className="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
                   <div className="mb-2 flex items-center gap-2">
-                    <FileText className="h-4 w-4 shrink-0 text-gray-400" />
-                    <p className="text-sm font-medium text-gray-900">{documentLabels[type]}</p>
+                    <FileText className="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500" />
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{documentLabels[type]}</p>
                   </div>
                   {doc ? (
                     <button
                       onClick={() => handleViewDocument(type)}
-                      className="mb-3 text-sm text-[#00a3e0] underline"
+                      className="mb-3 text-sm text-[#00a3e0] dark:text-sky-400 underline"
                     >
                       View Document
                     </button>
                   ) : (
-                    <p className="mb-3 text-sm text-gray-400">Not uploaded yet</p>
+                    <p className="mb-3 text-sm text-gray-400 dark:text-gray-500">Not uploaded yet</p>
                   )}
                   {doc && (
-                    <div className="flex gap-4 rounded-lg bg-gray-50 px-3 py-2">
-                      <label className="flex items-center gap-1.5 text-sm text-gray-700">
+                    <div className="flex gap-4 rounded-lg bg-gray-50 dark:bg-gray-800/60 px-3 py-2">
+                      <label className="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
                         <input
                           type="radio"
                           name={`status-${type}`}
@@ -242,7 +242,7 @@ export function ApplicationReviewSlideover({
                         />
                         Valid
                       </label>
-                      <label className="flex items-center gap-1.5 text-sm text-gray-700">
+                      <label className="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
                         <input
                           type="radio"
                           name={`status-${type}`}
@@ -261,7 +261,7 @@ export function ApplicationReviewSlideover({
           </div>
 
           <div className="mt-6">
-            <label htmlFor="review-notes" className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-400">
+            <label htmlFor="review-notes" className="mb-1 block text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
               Review Notes (Internal)
             </label>
             <textarea
@@ -270,16 +270,16 @@ export function ApplicationReviewSlideover({
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
               placeholder="Add any notes regarding this application..."
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-[#0b1b62] focus:outline-none"
+              className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
             />
           </div>
 
           {errorMessage && (
-            <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{errorMessage}</p>
+            <p className="mt-4 rounded-lg bg-red-50 dark:bg-red-950/30 px-3 py-2 text-sm text-red-600 dark:text-red-400">{errorMessage}</p>
           )}
         </div>
 
-        <div className="flex flex-col gap-2 border-t border-gray-100 p-6">
+        <div className="flex flex-col gap-2 border-t border-gray-100 dark:border-gray-800 p-6">
           {hasParentAccount && !alreadyHasStudent && (
             <button
               onClick={handleApproveAndCreateStudent}
@@ -294,7 +294,7 @@ export function ApplicationReviewSlideover({
             <button
               onClick={handleRequestCorrections}
               disabled={isSubmitting || !hasUploadedDocs}
-              className="flex-1 rounded-lg border border-gray-300 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+              className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 disabled:opacity-60"
             >
               Request Corrections
             </button>

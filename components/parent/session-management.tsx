@@ -39,20 +39,20 @@ export function SessionManagement({ lastSignInAt }: { lastSignInAt: string | nul
 
   return (
     <div>
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-gray-500 dark:text-gray-400">
         Manage your active session. If you notice unfamiliar activity, sign out of all devices
         immediately.
       </p>
 
-      <div className="mt-4 flex items-center gap-3 rounded-xl border border-sky-100 bg-sky-50 p-4">
-        <Laptop className="h-5 w-5 shrink-0 text-[#0b1b62]" />
+      <div className="mt-4 flex items-center gap-3 rounded-xl border border-sky-100 bg-sky-50 dark:bg-sky-950/30 p-4">
+        <Laptop className="h-5 w-5 shrink-0 text-[#0b1b62] dark:text-indigo-300" />
         <div>
-          <p className="text-sm font-semibold text-[#0b1b62]">Active Session: This Device</p>
-          <p className="text-xs text-[#0b1b62]/70">Signed in {signedInLabel} • Current Device</p>
+          <p className="text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Active Session: This Device</p>
+          <p className="text-xs text-[#0b1b62]/70 dark:text-indigo-300/70">Signed in {signedInLabel} • Current Device</p>
         </div>
       </div>
 
-      {errorMessage && <p className="mt-3 text-sm text-red-600">{errorMessage}</p>}
+      {errorMessage && <p className="mt-3 text-sm text-red-600 dark:text-red-400">{errorMessage}</p>}
 
       <div className="mt-4 flex items-center gap-4">
         <button
@@ -67,7 +67,7 @@ export function SessionManagement({ lastSignInAt }: { lastSignInAt: string | nul
           type="button"
           onClick={() => handleLogout('all')}
           disabled={isLoggingOut !== null}
-          className="text-sm font-semibold text-gray-700 underline hover:text-gray-900 disabled:opacity-60"
+          className="text-sm font-semibold text-gray-700 dark:text-gray-300 underline hover:text-gray-900 disabled:opacity-60"
         >
           {isLoggingOut === 'all' ? 'Logging out of all devices…' : 'Log Out of All Devices'}
         </button>

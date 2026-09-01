@@ -8,7 +8,7 @@ export function DateSelector({ date, basePath }: { date: string; basePath: strin
 
   return (
     <div className="flex items-center gap-2">
-      <label htmlFor="attendance-date" className="text-sm font-medium text-gray-600">
+      <label htmlFor="attendance-date" className="text-sm font-medium text-gray-600 dark:text-gray-400">
         Date:
       </label>
       <input
@@ -17,7 +17,7 @@ export function DateSelector({ date, basePath }: { date: string; basePath: strin
         value={date}
         max={todayIso()}
         onChange={(e) => e.target.value && router.push(`${basePath}?date=${e.target.value}`)}
-        className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-[#0b1b62] focus:outline-none"
+        className="rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
       />
     </div>
   )

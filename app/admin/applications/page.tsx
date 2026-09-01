@@ -26,7 +26,7 @@ export default async function ApplicationsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-[#0b1b62]">Pending Student Applications</h1>
+      <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Pending Student Applications</h1>
       <ApplicationsTable applications={appsWithDocs} />
     </div>
   )

@@ -37,9 +37,9 @@ type Tab = 'personal' | 'guardian' | 'documents'
 
 function InfoField({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg bg-gray-50 p-3">
-      <p className="text-xs text-gray-400">{label}</p>
-      <p className="text-sm font-medium text-gray-900">{value}</p>
+    <div className="rounded-lg bg-gray-50 dark:bg-gray-800/60 p-3">
+      <p className="text-xs text-gray-400 dark:text-gray-500">{label}</p>
+      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{value}</p>
     </div>
   )
 }
@@ -144,8 +144,8 @@ export function StudentRecordSlideover({ student, onClose }: { student: Student;
     <div className="fixed inset-0 z-50 flex justify-end">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
 
-      <div className="relative flex h-full w-full max-w-lg flex-col bg-white shadow-xl">
-        <div className="border-b border-gray-100 p-6">
+      <div className="relative flex h-full w-full max-w-lg flex-col bg-white dark:bg-gray-900 shadow-xl">
+        <div className="border-b border-gray-100 dark:border-gray-800 p-6">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-4">
               <div>
@@ -156,36 +156,36 @@ export function StudentRecordSlideover({ student, onClose }: { student: Student;
                   disabled={isSavingAvatar}
                   sizeClassName="h-16 w-16"
                 />
-                {avatarError && <p className="mt-1 max-w-[64px] text-center text-[10px] text-red-600">{avatarError}</p>}
+                {avatarError && <p className="mt-1 max-w-[64px] text-center text-[10px] text-red-600 dark:text-red-400">{avatarError}</p>}
               </div>
               <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold text-gray-900">{student.first_name} {student.last_name}</h2>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{student.first_name} {student.last_name}</h2>
                 <span
                   className={`rounded-full px-2 py-0.5 text-xs font-medium uppercase ${
                     student.enrollment_status === 'active'
-                      ? 'bg-green-50 text-green-700'
-                      : 'bg-gray-100 text-gray-600'
+                      ? 'bg-green-50 dark:bg-green-950/30 text-green-700'
+                      : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
                   }`}
                 >
                   {student.enrollment_status}
                 </span>
               </div>
-              <p className="mt-1 text-sm text-gray-500">Student ID: {student.student_id ?? '—'}</p>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Student ID: {student.student_id ?? '—'}</p>
               </div>
             </div>
-            <button onClick={onClose} aria-label="Close" className="text-gray-400 hover:text-gray-600">
+            <button onClick={onClose} aria-label="Close" className="text-gray-400 dark:text-gray-500 hover:text-gray-600">
               <X className="h-5 w-5" />
             </button>
           </div>
 
-          <div className="mt-4 flex gap-4 border-b border-gray-100">
+          <div className="mt-4 flex gap-4 border-b border-gray-100 dark:border-gray-800">
             {tabs.map((t) => (
               <button
                 key={t.key}
                 onClick={() => setTab(t.key)}
                 className={`border-b-2 px-1 pb-3 text-sm font-medium ${
-                  tab === t.key ? 'border-[#e6007e] text-[#e6007e]' : 'border-transparent text-gray-500'
+                  tab === t.key ? 'border-[#e6007e] text-[#e6007e]' : 'border-transparent text-gray-500 dark:text-gray-400'
                 }`}
               >
                 {t.label}
@@ -207,7 +207,7 @@ export function StudentRecordSlideover({ student, onClose }: { student: Student;
               </div>
               <button
                 onClick={() => setIsEditing(true)}
-                className="mt-4 rounded-lg border border-[#0b1b62] px-4 py-2 text-sm font-semibold text-[#0b1b62] hover:bg-[#0b1b62]/5"
+                className="mt-4 rounded-lg border border-[#0b1b62] dark:border-indigo-300 px-4 py-2 text-sm font-semibold text-[#0b1b62] dark:text-indigo-300 hover:bg-[#0b1b62]/5"
               >
                 Edit Personal Details
               </button>
@@ -218,50 +218,50 @@ export function StudentRecordSlideover({ student, onClose }: { student: Student;
             <div className="space-y-3">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <div>
-                  <label className="mb-1 block text-sm font-semibold text-[#0b1b62]">First Name</label>
+                  <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">First Name</label>
                   <input
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     required
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
+                    className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-semibold text-[#0b1b62]">Middle Name</label>
+                  <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Middle Name</label>
                   <input
                     value={middleName}
                     onChange={(e) => setMiddleName(e.target.value)}
                     placeholder="Optional"
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
+                    className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-semibold text-[#0b1b62]">Last Name</label>
+                  <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Last Name</label>
                   <input
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     required
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
+                    className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-sm font-semibold text-[#0b1b62]">Date of Birth</label>
+                  <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Date of Birth</label>
                   <input
                     type="date"
                     value={dob}
                     onChange={(e) => setDob(e.target.value)}
                     required
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
+                    className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-semibold text-[#0b1b62]">Gender</label>
+                  <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Gender</label>
                   <select
                     value={gender}
                     onChange={(e) => setGender(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
+                    className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
                   >
                     <option value="male">Male</option>
                     <option value="female">Female</option>
@@ -270,14 +270,14 @@ export function StudentRecordSlideover({ student, onClose }: { student: Student;
               </div>
 
               {saveError && (
-                <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{saveError}</p>
+                <p className="rounded-lg bg-red-50 dark:bg-red-950/30 px-3 py-2 text-sm text-red-600 dark:text-red-400">{saveError}</p>
               )}
 
               <div className="flex gap-2 pt-1">
                 <button
                   onClick={handleCancelEdit}
                   disabled={isSaving}
-                  className="flex-1 rounded-lg border border-gray-300 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                  className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 disabled:opacity-60"
                 >
                   Cancel
                 </button>
@@ -296,16 +296,16 @@ export function StudentRecordSlideover({ student, onClose }: { student: Student;
             <div className="space-y-3">
               {student.guardians.length > 0 ? (
                 student.guardians.map((g, i) => (
-                  <div key={i} className="rounded-lg border border-gray-200 p-4">
-                    <p className="font-medium text-gray-900">
-                      {g.name} {g.relationship && <span className="text-xs text-gray-500">({g.relationship})</span>}
+                  <div key={i} className="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                    <p className="font-medium text-gray-900 dark:text-gray-100">
+                      {g.name} {g.relationship && <span className="text-xs text-gray-500 dark:text-gray-400">({g.relationship})</span>}
                     </p>
-                    {g.email && <p className="mt-1 text-sm text-gray-600">{g.email}</p>}
-                    {g.phone && <p className="text-sm text-gray-600">{g.phone}</p>}
+                    {g.email && <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{g.email}</p>}
+                    {g.phone && <p className="text-sm text-gray-600 dark:text-gray-400">{g.phone}</p>}
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-gray-500">No linked guardian on file.</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">No linked guardian on file.</p>
               )}
             </div>
           )}
@@ -315,17 +315,17 @@ export function StudentRecordSlideover({ student, onClose }: { student: Student;
               {documentOrder.map((type) => {
                 const doc = student.documents.find((d) => d.document_type === type)
                 return (
-                  <div key={type} className="flex items-center justify-between rounded-lg border border-gray-200 p-3">
+                  <div key={type} className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 p-3">
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{documentLabels[type]}</p>
-                      <p className="text-xs capitalize text-gray-500">
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{documentLabels[type]}</p>
+                      <p className="text-xs capitalize text-gray-500 dark:text-gray-400">
                         {doc ? doc.verification_status.replace('_', ' ') : 'Not on file'}
                       </p>
                     </div>
                     {doc && (
                       <button
                         onClick={() => handleViewDocument(doc.file_url, documentLabels[type])}
-                        className="text-sm font-medium text-[#0b1b62] underline"
+                        className="text-sm font-medium text-[#0b1b62] dark:text-indigo-300 underline"
                       >
                         View
                       </button>
@@ -334,16 +334,16 @@ export function StudentRecordSlideover({ student, onClose }: { student: Student;
                 )
               })}
               {errorMessage && (
-                <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{errorMessage}</p>
+                <p className="rounded-lg bg-red-50 dark:bg-red-950/30 px-3 py-2 text-sm text-red-600 dark:text-red-400">{errorMessage}</p>
               )}
             </div>
           )}
         </div>
 
-        <div className="border-t border-gray-100 p-6">
+        <div className="border-t border-gray-100 dark:border-gray-800 p-6">
           <button
             onClick={onClose}
-            className="w-full rounded-lg border border-gray-300 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50"
           >
             Close Record
           </button>

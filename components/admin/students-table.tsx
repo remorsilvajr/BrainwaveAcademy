@@ -59,23 +59,23 @@ export function StudentsTable({ students }: { students: Student[] }) {
 
   return (
     <>
-      <div className="rounded-xl border border-gray-200 bg-white p-4">
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_200px]">
           <div>
-            <label className="mb-1 block text-xs font-medium text-gray-500">Search Students</label>
+            <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Search Students</label>
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Student Name, ID, or Parent Name"
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
+              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-gray-500">Status</label>
+            <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Status</label>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
+              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
             >
               <option value="all">All</option>
               {statuses.map((s) => (
@@ -88,10 +88,10 @@ export function StudentsTable({ students }: { students: Student[] }) {
         </div>
       </div>
 
-      <div className="mt-4 rounded-xl border border-gray-200 bg-white">
+      <div className="mt-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
         <div className="min-h-[420px] overflow-x-auto">
         <table className="w-full min-w-[640px] text-sm">
-          <thead className="bg-gray-50 text-left text-gray-500">
+          <thead className="bg-gray-50 dark:bg-gray-800/60 text-left text-gray-500 dark:text-gray-400">
             <tr>
               <th className="p-4 font-medium">Student</th>
               <th className="p-4 font-medium">Guardian Contact</th>
@@ -111,34 +111,34 @@ export function StudentsTable({ students }: { students: Student[] }) {
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={s.avatar_url} alt="" className="h-9 w-9 rounded-full object-cover" />
                         ) : (
-                          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 text-sky-700">
+                          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300">
                             <UserIcon className="h-4 w-4" />
                           </span>
                         )}
                         <div>
-                          <p className="font-medium text-[#0b1b62]">
+                          <p className="font-medium text-[#0b1b62] dark:text-indigo-300">
                             {s.first_name} {s.last_name}
                           </p>
-                          <p className="text-xs text-gray-400">{s.student_id ?? '—'}</p>
+                          <p className="text-xs text-gray-400 dark:text-gray-500">{s.student_id ?? '—'}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="p-4 text-gray-700">
+                    <td className="p-4 text-gray-700 dark:text-gray-300">
                       {guardian ? (
                         <>
                           <p>{guardian.name}</p>
-                          <p className="text-xs text-gray-500">{guardian.phone}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{guardian.phone}</p>
                         </>
                       ) : (
-                        <span className="text-gray-400">—</span>
+                        <span className="text-gray-400 dark:text-gray-500">—</span>
                       )}
                     </td>
                     <td className="p-4">
                       <span
                         className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium capitalize ${
                           s.enrollment_status === 'active'
-                            ? 'bg-green-50 text-green-700'
-                            : 'bg-gray-100 text-gray-600'
+                            ? 'bg-green-50 dark:bg-green-950/30 text-green-700'
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
                         }`}
                       >
                         {s.enrollment_status}
@@ -147,7 +147,7 @@ export function StudentsTable({ students }: { students: Student[] }) {
                     <td className="p-4">
                       <button
                         onClick={() => setSelectedId(s.id)}
-                        className="rounded-full border border-[#0b1b62] px-4 py-1.5 text-xs font-semibold text-[#0b1b62] hover:bg-[#0b1b62] hover:text-white"
+                        className="rounded-full border border-[#0b1b62] dark:border-indigo-300 px-4 py-1.5 text-xs font-semibold text-[#0b1b62] dark:text-indigo-300 hover:bg-[#0b1b62] hover:text-white"
                       >
                         Open Full Record
                       </button>
@@ -157,7 +157,7 @@ export function StudentsTable({ students }: { students: Student[] }) {
               })
             ) : (
               <tr>
-                <td colSpan={4} className="p-8 text-center text-gray-400">
+                <td colSpan={4} className="p-8 text-center text-gray-400 dark:text-gray-500">
                   No students match your search.
                 </td>
               </tr>

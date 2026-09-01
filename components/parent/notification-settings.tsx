@@ -45,8 +45,8 @@ export function NotificationSettings({
     <div className="divide-y divide-gray-100">
       <div className="flex items-center justify-between gap-4 py-4">
         <div>
-          <p className="text-sm font-semibold text-gray-900">Email Notifications</p>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Email Notifications</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             Receive daily summaries, billing receipts, and administrative updates via email.
           </p>
         </div>
@@ -59,8 +59,8 @@ export function NotificationSettings({
       </div>
       <div className="flex items-center justify-between gap-4 py-4">
         <div>
-          <p className="text-sm font-semibold text-gray-900">SMS Alerts</p>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">SMS Alerts</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             Get immediate text alerts for urgent announcements, attendance issues, or emergency
             closures.
           </p>
@@ -72,7 +72,7 @@ export function NotificationSettings({
           label="SMS alerts"
         />
       </div>
-      {errorMessage && <p className="pt-2 text-sm text-red-600">{errorMessage}</p>}
+      {errorMessage && <p className="pt-2 text-sm text-red-600 dark:text-red-400">{errorMessage}</p>}
     </div>
   )
 }

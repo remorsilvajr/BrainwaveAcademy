@@ -28,9 +28,9 @@ type PendingAction = 'approve' | 'dismiss' | null
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-start justify-between border-b border-gray-100 py-3 last:border-b-0">
-      <span className="text-sm text-gray-500">{label}</span>
-      <span className="max-w-[60%] text-right text-sm font-medium text-gray-900">{value}</span>
+    <div className="flex items-start justify-between border-b border-gray-100 dark:border-gray-800 py-3 last:border-b-0">
+      <span className="text-sm text-gray-500 dark:text-gray-400">{label}</span>
+      <span className="max-w-[60%] text-right text-sm font-medium text-gray-900 dark:text-gray-100">{value}</span>
     </div>
   )
 }
@@ -85,20 +85,20 @@ export function EnrollmentRequestSlideover({
     <div className="fixed inset-0 z-50 flex justify-end">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
 
-      <div className="relative flex h-full w-full max-w-md flex-col bg-white shadow-xl">
-        <div className="flex items-start justify-between border-b border-gray-100 p-6">
+      <div className="relative flex h-full w-full max-w-md flex-col bg-white dark:bg-gray-900 shadow-xl">
+        <div className="flex items-start justify-between border-b border-gray-100 dark:border-gray-800 p-6">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Landing Page Request:</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Landing Page Request:</h2>
             <p className="text-lg font-semibold text-[#e6007e]">{studentName}</p>
           </div>
-          <button onClick={onClose} aria-label="Close" className="text-gray-400 hover:text-gray-600">
+          <button onClick={onClose} aria-label="Close" className="text-gray-400 dark:text-gray-500 hover:text-gray-600">
             <X className="h-5 w-5" />
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
           {result ? (
-            <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-center">
+            <div className="rounded-lg border border-green-200 bg-green-50 dark:bg-green-950/30 p-4 text-center">
               <p className="font-medium text-green-800">
                 {result === 'approved'
                   ? `Approved! ${application.parent_first_name} has been notified by email.`
@@ -111,8 +111,8 @@ export function EnrollmentRequestSlideover({
                 <div
                   className={`mb-4 rounded-lg p-3 text-sm font-medium ${
                     application.status === 'approved'
-                      ? 'bg-green-50 text-green-700'
-                      : 'bg-red-50 text-red-700'
+                      ? 'bg-green-50 dark:bg-green-950/30 text-green-700'
+                      : 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400'
                   }`}
                 >
                   This request was {formatStatus(application.status).toLowerCase()}
@@ -120,10 +120,10 @@ export function EnrollmentRequestSlideover({
                 </div>
               )}
 
-              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-400">
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
                 Submitted Information Check
               </p>
-              <div className="rounded-xl border border-gray-200 px-4">
+              <div className="rounded-xl border border-gray-200 dark:border-gray-700 px-4">
                 <InfoRow label="Student Full Name" value={studentName} />
                 <InfoRow label="Student Date of Birth" value={formatDateLong(application.student_dob)} />
                 <InfoRow label="Student Age" value={`${calculateAge(application.student_dob)} years old`} />
@@ -142,9 +142,9 @@ export function EnrollmentRequestSlideover({
               </div>
 
               {!alreadyDecided && pendingAction === null && (
-                <div className="mt-6 rounded-xl border border-sky-100 bg-sky-50 p-4">
+                <div className="mt-6 rounded-xl border border-sky-100 bg-sky-50 dark:bg-sky-950/30 p-4">
                   <div className="mb-2 flex items-center gap-2">
-                    <ShieldCheck className="h-4 w-4 text-sky-600" />
+                    <ShieldCheck className="h-4 w-4 text-sky-600 dark:text-sky-400" />
                     <p className="text-sm font-semibold text-sky-900">Automated Workflow Preview</p>
                   </div>
                   <p className="mb-2 text-sm text-sky-800">Approving this request will instantly:</p>
@@ -159,7 +159,7 @@ export function EnrollmentRequestSlideover({
                       Send an automated email with login details to {application.parent_email}.
                     </li>
                   </ul>
-                  <p className="mt-2 text-xs text-sky-700">
+                  <p className="mt-2 text-xs text-sky-700 dark:text-sky-300">
                     The student record isn&apos;t created yet — that happens in Applications, once
                     the parent uploads documents and they&apos;re verified.
                   </p>
@@ -167,12 +167,12 @@ export function EnrollmentRequestSlideover({
               )}
 
               {pendingAction && (
-                <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                <div className="mt-6 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-4">
                   <div className="mb-2 flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-amber-600" />
+                    <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                     <p className="text-sm font-semibold text-amber-900">Please confirm</p>
                   </div>
-                  <p className="text-sm text-amber-800">
+                  <p className="text-sm text-amber-800 dark:text-amber-200">
                     {pendingAction === 'approve'
                       ? `Are you sure you want to approve this request? This will create a parent account and email ${application.parent_email} immediately.`
                       : 'Are you sure you want to reject this request? This cannot be undone from here.'}
@@ -181,13 +181,13 @@ export function EnrollmentRequestSlideover({
               )}
 
               {errorMessage && (
-                <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{errorMessage}</p>
+                <p className="mt-4 rounded-lg bg-red-50 dark:bg-red-950/30 px-3 py-2 text-sm text-red-600 dark:text-red-400">{errorMessage}</p>
               )}
             </>
           )}
         </div>
 
-        <div className="flex gap-3 border-t border-gray-100 p-6">
+        <div className="flex gap-3 border-t border-gray-100 dark:border-gray-800 p-6">
           {result ? (
             <button
               onClick={onClose}
@@ -198,7 +198,7 @@ export function EnrollmentRequestSlideover({
           ) : alreadyDecided ? (
             <button
               onClick={onClose}
-              className="w-full rounded-lg border border-gray-300 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50"
             >
               Close
             </button>
@@ -207,7 +207,7 @@ export function EnrollmentRequestSlideover({
               <button
                 onClick={() => setPendingAction(null)}
                 disabled={isSubmitting}
-                className="flex-1 rounded-lg border border-gray-300 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 disabled:opacity-60"
               >
                 Cancel
               </button>
@@ -224,7 +224,7 @@ export function EnrollmentRequestSlideover({
               <button
                 onClick={() => setPendingAction(null)}
                 disabled={isSubmitting}
-                className="flex-1 rounded-lg border border-gray-300 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 disabled:opacity-60"
               >
                 Cancel
               </button>
@@ -240,7 +240,7 @@ export function EnrollmentRequestSlideover({
             <>
               <button
                 onClick={() => setPendingAction('dismiss')}
-                className="flex-1 rounded-lg border border-gray-300 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50"
               >
                 Dismiss Request
               </button>

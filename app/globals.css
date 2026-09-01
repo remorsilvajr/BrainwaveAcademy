@@ -1,5 +1,28 @@
 @import "tailwindcss";
 
+/* Tailwind v4's dark: variant is prefers-color-scheme-only by default. This
+   swaps it to a class strategy so ThemeToggle (components/theme-toggle.tsx)
+   can drive it explicitly instead of only following the OS setting — the
+   class is applied to <html> by an inline script in app/layout.tsx before
+   first paint (reading localStorage, falling back to prefers-color-scheme)
+   so there's no flash of the wrong theme on load. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Tells the browser which color schemes this page actually supports, kept
+   in sync with the real applied theme. Without this, some browsers' own
+   automatic dark-mode-for-websites feature will forcibly invert any
+   unstyled area to black when the OS is in dark mode, regardless of what
+   class is on <html> — this exact thing previously broke admin pages
+   before dark mode existed here at all, which is why app/layout.tsx used
+   to hard-code color-scheme: light. Declaring both and following the class
+   here is what lets the browser trust our own styling instead. */
+:root {
+  color-scheme: light;
+}
+:root.dark {
+  color-scheme: dark;
+}
+
 /* Native <button> elements default to cursor: default in most browsers,
    unlike <a> tags (which is why the header's Enroll/Log In links already
    showed a hand cursor while every <button> elsewhere in the app didn't).

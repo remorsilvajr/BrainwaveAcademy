@@ -51,7 +51,7 @@ export default async function TeacherLayout({ children }: { children: React.Reac
             avatar_url: profile?.avatar_url ?? null,
           }}
         />
-        <main className="bg-[#faf9fc] p-4 sm:p-8">{children}</main>
+        <main className="bg-[#faf9fc] dark:bg-gray-950 p-4 sm:p-8">{children}</main>
       </div>
     </div>
   )

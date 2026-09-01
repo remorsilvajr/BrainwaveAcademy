@@ -31,20 +31,20 @@ export function TeacherStudentsTable({ students }: { students: Student[] }) {
 
   return (
     <>
-      <div className="rounded-2xl border border-gray-200 bg-white p-4">
-        <label className="mb-1 block text-xs font-medium text-gray-500">Search Students</label>
+      <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
+        <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Search Students</label>
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Student name"
-          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#0b1b62] focus:outline-none"
+          className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
         />
       </div>
 
-      <div className="mt-4 rounded-2xl border border-gray-200 bg-white">
+      <div className="mt-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
         <div className="min-h-[420px] overflow-x-auto">
         <table className="w-full min-w-[640px] text-sm">
-          <thead className="bg-gray-50 text-left text-gray-500">
+          <thead className="bg-gray-50 dark:bg-gray-800/60 text-left text-gray-500 dark:text-gray-400">
             <tr>
               <th className="p-4 font-medium">Name</th>
               <th className="p-4 font-medium">Date of Birth</th>
@@ -55,33 +55,33 @@ export function TeacherStudentsTable({ students }: { students: Student[] }) {
           </thead>
           <tbody>
             {pageItems.map((s) => (
-              <tr key={s.id} className="border-t border-gray-100">
+              <tr key={s.id} className="border-t border-gray-100 dark:border-gray-800">
                 <td className="p-4">
                   <div className="flex items-center gap-3">
                     {s.avatar_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={s.avatar_url} alt="" className="h-9 w-9 rounded-full object-cover" />
                     ) : (
-                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 text-sky-700">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300">
                         <UserIcon className="h-4 w-4" />
                       </span>
                     )}
-                    <span className="font-medium text-gray-900">
+                    <span className="font-medium text-gray-900 dark:text-gray-100">
                       {s.first_name}
                       {s.middle_name ? ` ${s.middle_name}` : ''} {s.last_name}
                     </span>
                   </div>
                 </td>
-                <td className="p-4 text-gray-600">
+                <td className="p-4 text-gray-600 dark:text-gray-400">
                   {formatDateLong(s.date_of_birth)} ({calculateAge(s.date_of_birth)}y)
                 </td>
-                <td className="p-4 capitalize text-gray-600">{s.gender}</td>
+                <td className="p-4 capitalize text-gray-600 dark:text-gray-400">{s.gender}</td>
                 <td className="p-4">
                   <span
                     className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${
                       s.enrollment_status === 'active'
-                        ? 'bg-green-50 text-green-700'
-                        : 'bg-gray-100 text-gray-600'
+                        ? 'bg-green-50 dark:bg-green-950/30 text-green-700'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
                     }`}
                   >
                     {s.enrollment_status}
@@ -90,7 +90,7 @@ export function TeacherStudentsTable({ students }: { students: Student[] }) {
                 <td className="p-4 text-right">
                   <Link
                     href={`/teacher/student-dashboard?student=${s.id}`}
-                    className="text-sm font-semibold text-[#00a3e0] hover:underline"
+                    className="text-sm font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline"
                   >
                     Show Student Record
                   </Link>
@@ -99,7 +99,7 @@ export function TeacherStudentsTable({ students }: { students: Student[] }) {
             ))}
             {pageItems.length === 0 && (
               <tr>
-                <td colSpan={5} className="p-8 text-center text-sm text-gray-500">
+                <td colSpan={5} className="p-8 text-center text-sm text-gray-500 dark:text-gray-400">
                   {students.length === 0 ? 'No students on file yet.' : 'No students match your search.'}
                 </td>
               </tr>
