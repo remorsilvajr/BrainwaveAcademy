@@ -21,21 +21,12 @@ export function SiteHeader() {
         aria-label="Primary navigation"
       >
         <Link href="/" className="block h-10 w-auto shrink-0" aria-label="Home">
-          {/* The logo asset itself has dark navy linework designed for a
-              light backing — rather than fabricate a dark-mode variant that
-              doesn't exist, it keeps a small white card behind it in dark
-              mode so it stays legible without needing a second asset. Even
-              padding on all sides + a generous radius (not just horizontal
-              padding on a height-matched box) is what keeps this reading as
-              a deliberate badge rather than a cropped white rectangle. */}
-          <span className="flex items-center dark:rounded-lg dark:bg-white dark:p-1.5">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              className="h-10 w-auto"
-              alt="Brainwave Preschool Academy"
-              src="/images/landing/logo.svg"
-            />
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            className="h-10 w-auto"
+            alt="Brainwave Preschool Academy"
+            src="/images/landing/logo.svg"
+          />
         </Link>
 
         <ul className="hidden list-none items-center justify-center gap-6 p-0 m-0 lg:flex lg:gap-8">
