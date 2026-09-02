@@ -245,7 +245,7 @@ export function EnrollmentRequestsTable({ applications }: { applications: Applic
                         <button
                           onClick={() => handleArchiveToggle(app)}
                           disabled={archivingId === app.id}
-                          className="text-xs font-semibold text-gray-500 dark:text-gray-400 underline disabled:opacity-60"
+                          className="rounded-full border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-xs font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-60"
                         >
                           {archivingId === app.id ? 'Working…' : app.archived ? 'Unarchive' : 'Archive'}
                         </button>
