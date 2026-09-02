@@ -86,9 +86,6 @@ export async function submitMilestoneAssessment(input: {
   if (!(MILESTONE_CATEGORIES as readonly string[]).includes(input.category)) {
     throw new Error('Invalid milestone category.')
   }
-  if (!input.notes.trim()) {
-    throw new Error('Add a short note for this assessment.')
-  }
 
   // One current record per student+category, not an append-only history —
   // re-assessing a domain updates its existing row so it stays editable
@@ -106,12 +103,37 @@ export async function submitMilestoneAssessment(input: {
     .limit(1)
   const existing = existingRows?.[0]
 
+  const trimmedNotes = input.notes.trim()
+
+  // Submitting with the notes cleared removes the assessment outright
+  // instead of saving an empty note — the domain just goes back to "Not
+  // yet assessed" — rather than a separate Remove control elsewhere on
+  // the page. No-op (not an error) when there was nothing to remove.
+  if (!trimmedNotes) {
+    if (existing) {
+      const { error } = await supabase.from('milestones').delete().eq('id', existing.id)
+      if (error) {
+        throw new Error(error.message)
+      }
+      await logActivity(supabase, {
+        actorId: user.id,
+        action: `Removed milestone assessment (${input.category})`,
+        targetTable: 'milestones',
+        targetId: input.student_id,
+      })
+    }
+    revalidatePath('/teacher/student-dashboard')
+    revalidatePath('/teacher')
+    revalidatePath('/parent/student-dashboard')
+    return
+  }
+
   const { error } = existing
     ? await supabase
         .from('milestones')
         .update({
           assessment_date: input.assessment_date,
-          notes: input.notes.trim(),
+          notes: trimmedNotes,
           assessed_by: user.id,
         })
         .eq('id', existing.id)
@@ -119,7 +141,7 @@ export async function submitMilestoneAssessment(input: {
         student_id: input.student_id,
         category: input.category,
         assessment_date: input.assessment_date,
-        notes: input.notes.trim(),
+        notes: trimmedNotes,
         assessed_by: user.id,
       })
 
@@ -130,38 +152,6 @@ export async function submitMilestoneAssessment(input: {
   await logActivity(supabase, {
     actorId: user.id,
     action: `Submitted milestone assessment (${input.category})`,
-    targetTable: 'milestones',
-    targetId: input.student_id,
-  })
-
-  revalidatePath('/teacher/student-dashboard')
-  revalidatePath('/teacher')
-  revalidatePath('/parent/student-dashboard')
-}
-
-export async function removeMilestoneAssessment(input: {
-  milestone_id: string
-  student_id: string
-  category: string
-}) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    throw new Error('Your session has expired. Please log in again.')
-  }
-
-  const { error } = await supabase.from('milestones').delete().eq('id', input.milestone_id)
-
-  if (error) {
-    throw new Error(error.message)
-  }
-
-  await logActivity(supabase, {
-    actorId: user.id,
-    action: `Removed milestone assessment (${input.category})`,
     targetTable: 'milestones',
     targetId: input.student_id,
   })

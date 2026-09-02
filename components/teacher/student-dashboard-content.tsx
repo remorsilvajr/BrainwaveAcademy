@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { CalendarCheck, ClipboardList, User as UserIcon } from 'lucide-react'
-import { recordAttendance, submitMilestoneAssessment, removeMilestoneAssessment } from '@/app/teacher/student-dashboard/actions'
+import { recordAttendance, submitMilestoneAssessment } from '@/app/teacher/student-dashboard/actions'
 import { milestoneCategoryLabels, milestoneCategoryOrder } from '@/lib/milestones'
 import { formatDateLong, todayIso } from '@/lib/format'
 import { AvatarEditor } from '@/components/ui/avatar-editor'
@@ -68,10 +68,6 @@ export function StudentDashboardContent({
   const [isSubmittingAssessment, setIsSubmittingAssessment] = useState(false)
   const [assessmentError, setAssessmentError] = useState('')
 
-  const [confirmingRemoveCategory, setConfirmingRemoveCategory] = useState<string | null>(null)
-  const [isRemovingAssessment, setIsRemovingAssessment] = useState(false)
-  const [removeError, setRemoveError] = useState('')
-
   const latestByCategory = new Map<string, MilestoneRow>()
   for (const m of milestones) {
     if (!latestByCategory.has(m.category)) latestByCategory.set(m.category, m)
@@ -126,7 +122,6 @@ export function StudentDashboardContent({
     setAssessingCategory(category)
     setNotes(latestByCategory.get(category)?.notes ?? '')
     setAssessmentError('')
-    setConfirmingRemoveCategory(null)
   }
 
   async function handleSubmitAssessment(category: string) {
@@ -146,22 +141,6 @@ export function StudentDashboardContent({
       setAssessmentError(err instanceof Error ? err.message : 'Something went wrong.')
     } finally {
       setIsSubmittingAssessment(false)
-    }
-  }
-
-  async function handleRemoveAssessment(category: string) {
-    const latest = latestByCategory.get(category)
-    if (!latest) return
-    setIsRemovingAssessment(true)
-    setRemoveError('')
-    try {
-      await removeMilestoneAssessment({ milestone_id: latest.id, student_id: student.id, category })
-      setConfirmingRemoveCategory(null)
-      router.refresh()
-    } catch (err) {
-      setRemoveError(err instanceof Error ? err.message : 'Something went wrong.')
-    } finally {
-      setIsRemovingAssessment(false)
     }
   }
 
@@ -279,6 +258,9 @@ export function StudentDashboardContent({
                       rows={3}
                       className="w-full rounded-lg border border-gray-200 dark:border-gray-700 p-2 text-xs text-gray-700 dark:text-gray-300 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
                     />
+                    {latest && !notes.trim() && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Clearing the notes removes this assessment.</p>
+                    )}
                     {assessmentError && <p className="text-xs text-red-600 dark:text-red-400">{assessmentError}</p>}
                     <div className="flex gap-2">
                       <button
@@ -293,57 +275,26 @@ export function StudentDashboardContent({
                         type="button"
                         onClick={() => handleSubmitAssessment(category)}
                         disabled={isSubmittingAssessment}
-                        className="flex-1 rounded-lg bg-[#e6007e] py-1.5 text-xs font-semibold text-white hover:bg-[#c9006e] disabled:opacity-60"
+                        className={`flex-1 rounded-lg py-1.5 text-xs font-semibold text-white disabled:opacity-60 ${
+                          latest && !notes.trim() ? 'bg-red-600 hover:bg-red-700' : 'bg-[#e6007e] hover:bg-[#c9006e]'
+                        }`}
                       >
-                        {isSubmittingAssessment ? 'Saving…' : 'Submit'}
-                      </button>
-                    </div>
-                  </div>
-                ) : confirmingRemoveCategory === category ? (
-                  <div className="mt-3 space-y-2">
-                    <p className="text-xs text-gray-600 dark:text-gray-400">Remove this assessment?</p>
-                    {removeError && <p className="text-xs text-red-600 dark:text-red-400">{removeError}</p>}
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setConfirmingRemoveCategory(null)}
-                        disabled={isRemovingAssessment}
-                        className="flex-1 rounded-lg border border-gray-200 dark:border-gray-700 py-1.5 text-xs font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-50 disabled:opacity-60"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveAssessment(category)}
-                        disabled={isRemovingAssessment}
-                        className="flex-1 rounded-lg border border-red-300 dark:border-red-800 py-1.5 text-xs font-semibold text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 disabled:opacity-60"
-                      >
-                        {isRemovingAssessment ? 'Removing…' : 'Yes, Remove'}
+                        {isSubmittingAssessment
+                          ? 'Saving…'
+                          : latest && !notes.trim()
+                            ? 'Remove Assessment'
+                            : 'Submit'}
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div className="mt-3 flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => openAssessment(category)}
-                      className="flex-1 rounded-lg bg-[#e6007e] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#c9006e]"
-                    >
-                      {latest ? 'Edit Assessment' : 'Assess Now'}
-                    </button>
-                    {latest && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setConfirmingRemoveCategory(category)
-                          setRemoveError('')
-                        }}
-                        className="rounded-lg border border-red-300 dark:border-red-800 px-3 py-1.5 text-xs font-semibold text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40"
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => openAssessment(category)}
+                    className="mt-3 rounded-lg bg-[#e6007e] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#c9006e]"
+                  >
+                    {latest ? 'Edit Assessment' : 'Assess Now'}
+                  </button>
                 )}
               </div>
             )
