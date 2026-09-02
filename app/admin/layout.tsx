@@ -1,4 +1,5 @@
 import { Sidebar, type NavSection } from '@/components/sidebar'
+import { createClient } from '@/lib/supabase/server'
 
 const sections: NavSection[] = [
   {
@@ -35,10 +36,27 @@ const sections: NavSection[] = [
   },
 ]
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  // Everything else about this layout — sections, routes, styling — is
+  // identical for a super admin ("the portal should look exactly like the
+  // admin", per CLAUDE.md's Super admin note); this label is the one
+  // deliberate exception, so it's visible at a glance which kind of admin
+  // account is signed in.
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('is_super_admin')
+    .eq('id', user?.id ?? '')
+    .maybeSingle()
+
+  const portalLabel = profile?.is_super_admin ? 'Super Admin Portal' : 'Admin Portal'
+
   return (
     <div className="flex">
-      <Sidebar sections={sections} schoolName="Brainwave Academy" portalLabel="Admin Portal" />
+      <Sidebar sections={sections} schoolName="Brainwave Academy" portalLabel={portalLabel} />
       <main className="min-w-0 flex-1 bg-[#faf9fc] dark:bg-gray-950 px-4 pb-8 pt-20 lg:ml-64 lg:px-8 lg:pt-8">{children}</main>
     </div>
   )

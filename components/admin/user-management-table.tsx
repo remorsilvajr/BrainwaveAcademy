@@ -7,6 +7,7 @@ import { formatDateShort } from '@/lib/format'
 import { UserEditModal } from '@/components/admin/user-edit-modal'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
+import { canBlockAccount, type AccountForBlocking } from '@/lib/permissions'
 
 type LinkedStudent = { id: string; first_name: string; middle_name: string | null; last_name: string }
 type Applicant = {
@@ -31,6 +32,7 @@ type Profile = {
   created_at: string
   avatar_url: string | null
   isOnline: boolean
+  is_super_admin: boolean
   parent_student?: { relationship: string; students: LinkedStudent | null }[]
   applicants?: Applicant[]
 }
@@ -41,7 +43,13 @@ const roleBadgeClasses: Record<string, string> = {
   admin: 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300',
 }
 
-export function UserManagementTable({ users }: { users: Profile[] }) {
+export function UserManagementTable({
+  users,
+  currentUser,
+}: {
+  users: Profile[]
+  currentUser: AccountForBlocking & { id: string }
+}) {
   const router = useRouter()
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState('all')
@@ -204,10 +212,13 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
                     </td>
                     <td className="p-4">
                       <span
-                        className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium capitalize ${roleBadgeClasses[u.role] ?? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
-                          }`}
+                        className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium capitalize ${
+                          u.is_super_admin
+                            ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300'
+                            : (roleBadgeClasses[u.role] ?? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300')
+                        }`}
                       >
-                        {u.role}
+                        {u.is_super_admin ? 'Super Admin' : u.role}
                       </span>
                     </td>
                     <td className="p-4">
@@ -249,7 +260,31 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
                             {loggingOutId === u.id ? 'Logging Out…' : loggedOutId === u.id ? 'Logged Out ✓' : 'Log Out'}
                           </button>
                         )}
-                        {confirmingBlockId === u.id ? (
+                        {u.account_status === 'blocked' ? (
+                          // Unblocking is never gated by canBlockAccount — see
+                          // toggleBlockUser's own comment for why an
+                          // already-blocked protected account (e.g. blocked
+                          // before being promoted to super admin) still needs
+                          // to be recoverable rather than permanently stuck.
+                          <button
+                            onClick={() => handleToggleBlock(u)}
+                            disabled={isPending}
+                            className="rounded border border-green-300 dark:border-green-700 px-3 py-1.5 text-xs font-semibold text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-950/40 disabled:opacity-60"
+                          >
+                            Unblock
+                          </button>
+                        ) : !canBlockAccount(currentUser, u) ? (
+                          <span
+                            title={
+                              u.is_super_admin
+                                ? "Super admin accounts can't be blocked."
+                                : 'Only a super admin can block an admin account.'
+                            }
+                            className="cursor-default rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 px-3 py-1.5 text-xs font-semibold text-gray-400 dark:text-gray-500"
+                          >
+                            Protected
+                          </span>
+                        ) : confirmingBlockId === u.id ? (
                           <div className="flex items-center gap-1.5 whitespace-nowrap text-xs">
                             <span className="text-gray-600 dark:text-gray-400">Block this user?</span>
                             <button
@@ -267,18 +302,11 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
                           </div>
                         ) : (
                           <button
-                            onClick={() =>
-                              u.account_status === 'blocked'
-                                ? handleToggleBlock(u)
-                                : setConfirmingBlockId(u.id)
-                            }
+                            onClick={() => setConfirmingBlockId(u.id)}
                             disabled={isPending}
-                            className={`rounded border px-3 py-1.5 text-xs font-semibold disabled:opacity-60 ${u.account_status === 'blocked'
-                                ? 'border-green-300 dark:border-green-700 text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-950/40'
-                                : 'border-red-300 dark:border-red-800 text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40'
-                              }`}
+                            className="rounded border border-red-300 dark:border-red-800 px-3 py-1.5 text-xs font-semibold text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 disabled:opacity-60"
                           >
-                            {u.account_status === 'blocked' ? 'Unblock' : 'Block'}
+                            Block
                           </button>
                         )}
                       </div>

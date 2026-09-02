@@ -8,6 +8,7 @@ import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
 import { isValidDob, dobRangeMessage, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
 import { genderFromParentRelationship } from '@/lib/gender'
 import { logActivity } from '@/lib/activity-log'
+import { canBlockAccount } from '@/lib/permissions'
 
 // A parent account that isn't active (inactive or blocked) shouldn't leave
 // their linked students showing as actively enrolled — keeps the Students
@@ -35,6 +36,29 @@ async function syncLinkedStudentsStatus(
 export async function toggleBlockUser(userId: string, currentStatus: string) {
   const supabase = await createClient()
   const newStatus = currentStatus === 'blocked' ? 'active' : 'blocked'
+
+  // Only gates the *blocking* direction — an already-blocked protected
+  // account (e.g. one blocked before being promoted to super admin) can
+  // still be unblocked by anyone who could unblock it before, so a
+  // protection change never leaves an account permanently stuck. The
+  // client (user-management-table.tsx) already hides/disables the Block
+  // button for a protected target, but this is the actual enforcement —
+  // a direct call to this action has to be checked here regardless of
+  // what the UI shows.
+  if (newStatus === 'blocked') {
+    const {
+      data: { user: actingUser },
+    } = await supabase.auth.getUser()
+
+    const [{ data: actorProfile }, { data: targetProfile }] = await Promise.all([
+      supabase.from('profiles').select('role, is_super_admin').eq('id', actingUser?.id ?? '').single(),
+      supabase.from('profiles').select('role, is_super_admin').eq('id', userId).single(),
+    ])
+
+    if (!actorProfile || !targetProfile || !canBlockAccount(actorProfile, targetProfile)) {
+      throw new Error('You do not have permission to block this account.')
+    }
+  }
 
   const { error } = await supabase
     .from('profiles')

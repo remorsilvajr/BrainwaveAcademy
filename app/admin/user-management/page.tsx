@@ -5,6 +5,9 @@ import { UserManagementTable } from '@/components/admin/user-management-table'
 
 export default async function UserManagementPage() {
   const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   const [{ data }, { data: pendingApplications }] = await Promise.all([
     supabase
       .from('profiles')
@@ -28,6 +31,11 @@ export default async function UserManagementPage() {
     applicantsByParentId.set(application.created_parent_id, [...existing, application])
   }
 
+  // Needed so the table knows whether the acting admin is a super admin
+  // (see lib/permissions.ts's canBlockAccount) — read from the same
+  // already-fetched `data` rather than a second round trip.
+  const currentProfile = (data ?? []).find((row) => row.id === user?.id) ?? null
+
   // "Online" is a heuristic, not true presence — this app has no realtime
   // channel tracking actual open connections. middleware.ts pings
   // profiles.last_seen_at at most once per ~60s per authenticated request,
@@ -35,10 +43,10 @@ export default async function UserManagementPage() {
   // still has the portal open" without needing that heavier realtime setup.
   const ONLINE_WINDOW_MS = 5 * 60 * 1000
   const now = nowMs()
-  const users = (data ?? []).map((user) => ({
-    ...user,
-    applicants: applicantsByParentId.get(user.id) ?? [],
-    isOnline: !!user.last_seen_at && now - new Date(user.last_seen_at).getTime() < ONLINE_WINDOW_MS,
+  const users = (data ?? []).map((row) => ({
+    ...row,
+    applicants: applicantsByParentId.get(row.id) ?? [],
+    isOnline: !!row.last_seen_at && now - new Date(row.last_seen_at).getTime() < ONLINE_WINDOW_MS,
   }))
 
   const counts = {
@@ -97,7 +105,14 @@ export default async function UserManagementPage() {
         </div>
       </div>
 
-      <UserManagementTable users={users} />
+      <UserManagementTable
+        users={users}
+        currentUser={{
+          id: user?.id ?? '',
+          role: currentProfile?.role ?? 'admin',
+          is_super_admin: currentProfile?.is_super_admin ?? false,
+        }}
+      />
     </div>
   )
 }
