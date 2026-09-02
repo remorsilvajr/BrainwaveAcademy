@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useState } from 'react'
 import { submitApplication, type SubmitApplicationState } from '@/app/enroll/actions'
+import { dobInputMin, dobInputMax, MIN_STUDENT_AGE, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
 
 const initialState: SubmitApplicationState = {}
 const NAME_PATTERN = "[A-Za-zÀ-ÖØ-öø-ÿ' -]+"
@@ -18,6 +19,9 @@ function Field({
   title,
   defaultValue,
   onChange,
+  min,
+  max,
+  minLength,
 }: {
   label: string
   name: string
@@ -29,6 +33,9 @@ function Field({
   title?: string
   defaultValue?: string
   onChange?: () => void
+  min?: string
+  max?: string
+  minLength?: number
 }) {
   return (
     <div>
@@ -45,6 +52,9 @@ function Field({
         title={title}
         defaultValue={defaultValue}
         onChange={onChange}
+        min={min}
+        max={max}
+        minLength={minLength}
         className={`w-full rounded-lg border px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 placeholder:text-gray-400 focus:outline-none ${
           error ? 'border-red-400 focus:border-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-[#0b1b62] dark:focus:border-indigo-400'
         }`}
@@ -109,6 +119,7 @@ export function EnrollmentForm() {
             required
             pattern={NAME_PATTERN}
             title={NAME_TITLE}
+            minLength={2}
             defaultValue={values.student_first_name}
             error={liveErrors.student_first_name}
             onChange={() => clearError('student_first_name')}
@@ -119,6 +130,7 @@ export function EnrollmentForm() {
             placeholder="e.g. Grace"
             pattern={NAME_PATTERN}
             title={NAME_TITLE}
+            minLength={2}
             defaultValue={values.student_middle_name}
             error={liveErrors.student_middle_name}
             onChange={() => clearError('student_middle_name')}
@@ -130,6 +142,7 @@ export function EnrollmentForm() {
             required
             pattern={NAME_PATTERN}
             title={NAME_TITLE}
+            minLength={2}
             defaultValue={values.student_last_name}
             error={liveErrors.student_last_name}
             onChange={() => clearError('student_last_name')}
@@ -143,6 +156,8 @@ export function EnrollmentForm() {
             required
             defaultValue={values.student_dob}
             error={liveErrors.student_dob}
+            min={dobInputMin(MAX_AGE)}
+            max={dobInputMax(MIN_STUDENT_AGE)}
             onChange={() => clearError('student_dob')}
           />
           <div>
@@ -187,6 +202,7 @@ export function EnrollmentForm() {
             required
             pattern={NAME_PATTERN}
             title={NAME_TITLE}
+            minLength={2}
             defaultValue={values.parent_first_name}
             error={liveErrors.parent_first_name}
             onChange={() => clearError('parent_first_name')}
@@ -197,6 +213,7 @@ export function EnrollmentForm() {
             placeholder="Optional"
             pattern={NAME_PATTERN}
             title={NAME_TITLE}
+            minLength={2}
             defaultValue={values.parent_middle_name}
             error={liveErrors.parent_middle_name}
             onChange={() => clearError('parent_middle_name')}
@@ -208,6 +225,7 @@ export function EnrollmentForm() {
             required
             pattern={NAME_PATTERN}
             title={NAME_TITLE}
+            minLength={2}
             defaultValue={values.parent_last_name}
             error={liveErrors.parent_last_name}
             onChange={() => clearError('parent_last_name')}
@@ -221,6 +239,8 @@ export function EnrollmentForm() {
             required
             defaultValue={values.parent_dob}
             error={liveErrors.parent_dob}
+            min={dobInputMin(MAX_AGE)}
+            max={dobInputMax(MIN_ADULT_AGE)}
             onChange={() => clearError('parent_dob')}
           />
           <div>

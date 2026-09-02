@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { isValidName, NAME_VALIDATION_MESSAGE } from '@/lib/name'
+import { isValidDob, dobRangeMessage, MIN_STUDENT_AGE, MAX_AGE } from '@/lib/dob'
 import { logActivity } from '@/lib/activity-log'
 
 export type SubmitStudentState = {
@@ -73,18 +74,16 @@ export async function submitStudent(
   }
 
   if (values.student_dob && !fieldErrors.student_dob) {
-    const studentDob = new Date(values.student_dob)
-    const minDob = new Date()
-    minDob.setFullYear(minDob.getFullYear() - 2)
-    if (studentDob > minDob) {
-      fieldErrors.student_dob = 'Student must be at least 2 years old.'
-    }
-
-    const minParentDob = new Date(studentDob)
-    minParentDob.setFullYear(minParentDob.getFullYear() - 10)
-    if (new Date(profile.date_of_birth) > minParentDob) {
-      fieldErrors.student_dob =
-        'This date of birth would make you less than 10 years older than the student. Please check the date.'
+    if (!isValidDob(values.student_dob, { minAge: MIN_STUDENT_AGE, maxAge: MAX_AGE })) {
+      fieldErrors.student_dob = dobRangeMessage('Student', MIN_STUDENT_AGE, MAX_AGE)
+    } else {
+      const studentDob = new Date(values.student_dob)
+      const minParentDob = new Date(studentDob)
+      minParentDob.setFullYear(minParentDob.getFullYear() - 10)
+      if (new Date(profile.date_of_birth) > minParentDob) {
+        fieldErrors.student_dob =
+          'This date of birth would make you less than 10 years older than the student. Please check the date.'
+      }
     }
   }
 

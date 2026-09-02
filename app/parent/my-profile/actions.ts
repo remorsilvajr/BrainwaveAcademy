@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
+import { isValidDob, dobRangeMessage, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
 
 export async function updateMyProfile(updates: {
   phone_number: string
@@ -23,17 +24,22 @@ export async function updateMyProfile(updates: {
     throw new Error('Enter a valid PH mobile number, e.g. 0917 123 4567 or +63 917 123 4567.')
   }
 
+  const dob = updates.date_of_birth.trim()
+  if (dob && !isValidDob(dob, { minAge: MIN_ADULT_AGE, maxAge: MAX_AGE })) {
+    throw new Error(dobRangeMessage('You', MIN_ADULT_AGE, MAX_AGE))
+  }
+
   // Same "parent must be at least 10 years older than the student" rule
   // enforced at /enroll and /parent/enroll-a-student — editing DOB here
   // was the one place that could silently violate it after the fact for
   // an existing linked child.
-  if (updates.date_of_birth) {
+  if (dob) {
     const { data: applications } = await supabase
       .from('applications')
       .select('student_dob')
       .eq('created_parent_id', user.id)
 
-    const newParentDob = new Date(updates.date_of_birth)
+    const newParentDob = new Date(dob)
     for (const app of applications ?? []) {
       const minParentDob = new Date(app.student_dob)
       minParentDob.setFullYear(minParentDob.getFullYear() - 10)
@@ -47,7 +53,7 @@ export async function updateMyProfile(updates: {
 
   const normalized = {
     phone_number: phone ? normalizePhilippineMobile(phone) : null,
-    date_of_birth: updates.date_of_birth || null,
+    date_of_birth: dob || null,
     relationship_to_student: updates.relationship_to_student || null,
   }
 
