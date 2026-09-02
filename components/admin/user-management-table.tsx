@@ -374,7 +374,7 @@ export function UserManagementTable({
       {confirmingDeleteUser && (
         <ConfirmDialog
           title="Delete this account?"
-          description={`${confirmingDeleteUser.first_name} ${confirmingDeleteUser.last_name} (${confirmingDeleteUser.email}) will be hidden from User Management and unable to log in. Nothing is erased — a super admin can restore it from Deleted Items.`}
+          description={`${confirmingDeleteUser.first_name} ${confirmingDeleteUser.last_name} (${confirmingDeleteUser.email}) will be hidden from User Management and unable to log in. A super admin can restore it from Deleted Items.`}
           confirmLabel="Yes, Delete Account"
           isPending={isPending}
           onConfirm={() => handleDelete(confirmingDeleteUser)}
