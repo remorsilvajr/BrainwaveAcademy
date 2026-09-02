@@ -1,7 +1,8 @@
 'use client'
 
 import { useRef, useState, useTransition } from 'react'
-import { CheckCircle2, Clock, XCircle, FileText } from 'lucide-react'
+import Link from 'next/link'
+import { CheckCircle2, Clock, XCircle, FileText, ClipboardList } from 'lucide-react'
 import { uploadRequirementDocument, getOwnDocumentSignedUrl } from '@/app/parent/requirements/actions'
 import { documentOrder, documentShortLabels, documentDescriptions } from '@/lib/documents'
 import { DocumentPreviewModal } from '@/components/ui/document-preview-modal'
@@ -51,11 +52,58 @@ export function RequirementsChecklist({
 
   if (!record) {
     return (
-      <p className="text-gray-500 dark:text-gray-400">
-        {selectedElsewhereNotEligible
-          ? "This student's enrollment request hasn't been approved yet — Requirements will be available here once it is."
-          : 'No enrollment application found for your account yet. If you just received your login details, this may take a moment — otherwise, contact the school office.'}
-      </p>
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Enrollment Requirements Checklist</h2>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Please submit the following documents to complete your child&apos;s enrollment for the
+            upcoming academic year.
+          </p>
+        </div>
+
+        {selectedElsewhereNotEligible ? (
+          <div className="rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-8 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/40">
+              <Clock className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+            </div>
+            <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-gray-100">Waiting on Admin Approval</h3>
+            <p className="mx-auto mt-2 max-w-md text-sm text-gray-600 dark:text-gray-400">
+              This enrollment request hasn&apos;t been approved yet. Once it is, document upload will open up
+              here automatically — no need to check back constantly.
+            </p>
+            <Link
+              href="/parent/enrollment-status"
+              className="mt-5 inline-block rounded-lg border border-[#0b1b62] dark:border-indigo-300 px-5 py-2.5 text-sm font-semibold text-[#0b1b62] dark:text-indigo-300 hover:bg-[#0b1b62]/5"
+            >
+              Check Enrollment Status
+            </Link>
+            <p className="mt-4 text-xs text-gray-500 dark:text-gray-400">
+              Enrolling another child in the meantime?{' '}
+              <Link href="/parent/enroll-a-student" className="font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline">
+                Enroll A Student
+              </Link>
+            </p>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-8 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-sky-50 dark:bg-sky-950/40">
+              <ClipboardList className="h-6 w-6 text-sky-600 dark:text-sky-400" />
+            </div>
+            <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-gray-100">No Enrollment Application Yet</h3>
+            <p className="mx-auto mt-2 max-w-md text-sm text-gray-600 dark:text-gray-400">
+              This checklist is where you&apos;ll upload your child&apos;s Birth Certificate, 2×2 ID Photo, Proof of
+              Address, and a Guardian Valid ID once enrollment is underway. Start an application first and this
+              page will fill in automatically.
+            </p>
+            <Link
+              href="/parent/enroll-a-student"
+              className="mt-5 inline-block rounded-lg bg-[#e6007e] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#c9006e]"
+            >
+              Enroll A Student
+            </Link>
+          </div>
+        )}
+      </div>
     )
   }
 
