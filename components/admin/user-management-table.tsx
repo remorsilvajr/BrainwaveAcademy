@@ -26,6 +26,7 @@ type Profile = {
   phone_number: string | null
   date_of_birth: string | null
   relationship_to_student: string | null
+  gender: string | null
   account_status: string
   created_at: string
   avatar_url: string | null

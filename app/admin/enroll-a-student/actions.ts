@@ -7,6 +7,7 @@ import { sendEmail } from '@/lib/email'
 import { generateTempPassword } from '@/lib/password'
 import { logActivity } from '@/lib/activity-log'
 import { getSiteUrl } from '@/lib/site-url'
+import { genderFromParentRelationship } from '@/lib/gender'
 
 // Creates ONLY the parent account. The student record is intentionally NOT
 // created here — it's created later, in app/admin/applications/actions.ts,
@@ -59,6 +60,7 @@ export async function approveApplication(applicationId: string) {
       phone_number: application.parent_contact_number,
       date_of_birth: application.parent_dob,
       relationship_to_student: application.parent_relationship,
+      gender: genderFromParentRelationship(application.parent_relationship),
       is_verified: true,
       account_status: 'active',
     })

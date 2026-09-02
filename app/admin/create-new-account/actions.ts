@@ -7,6 +7,7 @@ import { sendEmail } from '@/lib/email'
 import { generateTempPassword } from '@/lib/password'
 import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
 import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
+import { genderFromParentRelationship } from '@/lib/gender'
 import { logActivity } from '@/lib/activity-log'
 import { getSiteUrl } from '@/lib/site-url'
 
@@ -126,7 +127,12 @@ export async function createSystemUser(
     email: values.email,
     phone_number: values.phone_number ? normalizePhilippineMobile(values.phone_number) : null,
     relationship_to_student: values.role === 'parent' ? values.relationship_to_student || null : null,
-    gender: values.role === 'teacher' ? values.gender || null : null,
+    gender:
+      values.role === 'teacher'
+        ? values.gender || null
+        : values.role === 'parent'
+          ? genderFromParentRelationship(values.relationship_to_student)
+          : null,
     avatar_url: avatarUrl,
     is_verified: true,
     account_status: 'active',

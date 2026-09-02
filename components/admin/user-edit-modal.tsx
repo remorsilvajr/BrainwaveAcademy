@@ -26,6 +26,7 @@ type Profile = {
   phone_number: string | null
   date_of_birth: string | null
   relationship_to_student: string | null
+  gender: string | null
   avatar_url: string | null
   parent_student?: { relationship: string; students: LinkedStudent | null }[]
   applicants?: Applicant[]
@@ -40,6 +41,7 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
   const [lastName, setLastName] = useState(user.last_name)
   const [phone, setPhone] = useState(user.phone_number ?? '')
   const [dob, setDob] = useState(user.date_of_birth ?? '')
+  const [gender, setGender] = useState(user.gender ?? '')
   const [role, setRole] = useState(user.role)
   const [relationship, setRelationship] = useState(user.relationship_to_student ?? '')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -91,6 +93,7 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
         role,
         relationship_to_student: relationship,
         date_of_birth: dob,
+        gender,
       })
       onClose()
     } catch (err) {
@@ -166,13 +169,39 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
               />
             </div>
           </div>
-          <DobSelect
-            label="Date of Birth"
-            defaultValue={dob}
-            onChange={setDob}
-            min={dobInputMin(MAX_AGE)}
-            max={dobInputMax(MIN_ADULT_AGE)}
-          />
+          {role === 'teacher' ? (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_6.5rem]">
+              <DobSelect
+                label="Date of Birth"
+                defaultValue={dob}
+                onChange={setDob}
+                min={dobInputMin(MAX_AGE)}
+                max={dobInputMax(MIN_ADULT_AGE)}
+              />
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Gender</label>
+                {/* Matches DobSelect's "Day/Month/Year" mini-label row so this select lines up with those inputs instead of sitting a row higher. */}
+                <span aria-hidden className="mb-1 block text-xs font-medium invisible">Gender</span>
+                <select
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value)}
+                  className={inputClasses}
+                >
+                  <option value="" className={optionClasses}>Not set</option>
+                  <option value="male" className={optionClasses}>Male</option>
+                  <option value="female" className={optionClasses}>Female</option>
+                </select>
+              </div>
+            </div>
+          ) : (
+            <DobSelect
+              label="Date of Birth"
+              defaultValue={dob}
+              onChange={setDob}
+              min={dobInputMin(MAX_AGE)}
+              max={dobInputMax(MIN_ADULT_AGE)}
+            />
+          )}
           <div>
             <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Phone Number</label>
             <input

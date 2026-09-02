@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
 import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
 import { isValidDob, dobRangeMessage, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
+import { genderFromParentRelationship } from '@/lib/gender'
 import { logActivity } from '@/lib/activity-log'
 
 // A parent account that isn't active (inactive or blocked) shouldn't leave
@@ -122,6 +123,7 @@ export async function updateUserProfile(
     role: string
     relationship_to_student: string
     date_of_birth: string
+    gender: string
   }
 ) {
   const supabase = await createClient()
@@ -157,6 +159,12 @@ export async function updateUserProfile(
       phone_number: phone ? normalizePhilippineMobile(phone) : null,
       relationship_to_student: updates.role === 'parent' ? updates.relationship_to_student || null : null,
       date_of_birth: dob || null,
+      gender:
+        updates.role === 'teacher'
+          ? updates.gender || null
+          : updates.role === 'parent'
+            ? genderFromParentRelationship(updates.relationship_to_student)
+            : null,
     })
     .eq('id', userId)
 

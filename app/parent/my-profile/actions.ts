@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
 import { isValidDob, dobRangeMessage, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
+import { genderFromParentRelationship } from '@/lib/gender'
 
 export async function updateMyProfile(updates: {
   phone_number: string
@@ -51,10 +52,12 @@ export async function updateMyProfile(updates: {
     }
   }
 
+  const relationship = updates.relationship_to_student || null
   const normalized = {
     phone_number: phone ? normalizePhilippineMobile(phone) : null,
     date_of_birth: dob || null,
-    relationship_to_student: updates.relationship_to_student || null,
+    relationship_to_student: relationship,
+    gender: genderFromParentRelationship(relationship),
   }
 
   const { error } = await supabase.from('profiles').update(normalized).eq('id', user.id)
