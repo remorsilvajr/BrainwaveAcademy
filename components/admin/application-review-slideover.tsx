@@ -12,6 +12,7 @@ import {
 import { calculateAge, formatDateLong } from '@/lib/format'
 import { documentLabels, documentOrder } from '@/lib/documents'
 import { DocumentPreviewModal } from '@/components/ui/document-preview-modal'
+import { Modal } from '@/components/ui/modal'
 
 type DocRow = { document_type: string; file_url: string; verification_status: string }
 
@@ -145,10 +146,8 @@ export function ApplicationReviewSlideover({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-
-      <div className="relative flex h-full w-full max-w-lg flex-col bg-white dark:bg-gray-900 shadow-xl">
+    <>
+      <Modal onClose={onClose} maxWidth="lg">
         <div className="flex items-start justify-between border-b border-gray-100 dark:border-gray-800 p-6">
           <div>
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Document Review</h2>
@@ -307,13 +306,13 @@ export function ApplicationReviewSlideover({
             </button>
           </div>
         </div>
-      </div>
+      </Modal>
 
       <DocumentPreviewModal
         url={previewUrl}
         title={previewTitle}
         onClose={() => setPreviewUrl(null)}
       />
-    </div>
+    </>
   )
 }

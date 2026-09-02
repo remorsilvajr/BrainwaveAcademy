@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Mail, ShieldCheck, Send, X, AlertTriangle } from 'lucide-react'
 import { approveApplication, dismissApplication } from '@/app/admin/enroll-a-student/actions'
 import { calculateAge, formatDateLong, formatStatus } from '@/lib/format'
+import { Modal } from '@/components/ui/modal'
 
 type Application = {
   id: string
@@ -82,11 +83,8 @@ export function EnrollmentRequestSlideover({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-
-      <div className="relative flex h-full w-full max-w-md flex-col bg-white dark:bg-gray-900 shadow-xl">
-        <div className="flex items-start justify-between border-b border-gray-100 dark:border-gray-800 p-6">
+    <Modal onClose={onClose} maxWidth="md">
+      <div className="flex items-start justify-between border-b border-gray-100 dark:border-gray-800 p-6">
           <div>
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Landing Page Request:</h2>
             <p className="text-lg font-semibold text-[#e6007e]">{studentName}</p>
@@ -253,7 +251,6 @@ export function EnrollmentRequestSlideover({
             </>
           )}
         </div>
-      </div>
-    </div>
+    </Modal>
   )
 }

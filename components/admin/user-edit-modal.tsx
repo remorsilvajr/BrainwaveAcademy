@@ -3,8 +3,10 @@
 import { useState, type FormEvent } from 'react'
 import { X } from 'lucide-react'
 import { updateUserProfile, updateUserAvatar, removeUserAvatar } from '@/app/admin/user-management/actions'
-import { calculateAge, formatDateLong } from '@/lib/format'
+import { dobInputMin, dobInputMax, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
 import { AvatarEditor } from '@/components/ui/avatar-editor'
+import { DobSelect } from '@/components/ui/dob-select'
+import { Modal } from '@/components/ui/modal'
 
 type LinkedStudent = { id: string; first_name: string; middle_name: string | null; last_name: string }
 type Applicant = {
@@ -37,6 +39,7 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
   const [middleName, setMiddleName] = useState(user.middle_name ?? '')
   const [lastName, setLastName] = useState(user.last_name)
   const [phone, setPhone] = useState(user.phone_number ?? '')
+  const [dob, setDob] = useState(user.date_of_birth ?? '')
   const [role, setRole] = useState(user.role)
   const [relationship, setRelationship] = useState(user.relationship_to_student ?? '')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -87,6 +90,7 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
         phone_number: phone,
         role,
         relationship_to_student: relationship,
+        date_of_birth: dob,
       })
       onClose()
     } catch (err) {
@@ -100,10 +104,8 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
   const inputClasses = "w-full rounded-lg border border-slate-200 bg-white text-slate-900 placeholder-slate-400 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 dark:placeholder-slate-500 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm" onClick={onClose} />
-
-      <div className="relative w-full max-w-md rounded-2xl bg-white dark:bg-gray-900 p-6 shadow-xl border border-gray-100 dark:border-gray-800">
+    <Modal onClose={onClose} maxWidth="md">
+      <div className="overflow-y-auto p-6">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Edit User</h2>
           <button
@@ -164,14 +166,13 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
               />
             </div>
           </div>
-          {user.date_of_birth && (
-            <div>
-              <p className="mb-1 text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Date of Birth</p>
-              <p className="rounded-lg border border-slate-200 dark:border-slate-700 bg-gray-50 dark:bg-gray-800/60 px-3 py-2 text-sm text-gray-700 dark:text-gray-300">
-                {formatDateLong(user.date_of_birth)} ({calculateAge(user.date_of_birth)} years old)
-              </p>
-            </div>
-          )}
+          <DobSelect
+            label="Date of Birth"
+            defaultValue={dob}
+            onChange={setDob}
+            min={dobInputMin(MAX_AGE)}
+            max={dobInputMax(MIN_ADULT_AGE)}
+          />
           <div>
             <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Phone Number</label>
             <input
@@ -274,6 +275,6 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
           </div>
         </form>
       </div>
-    </div>
+    </Modal>
   )
 }

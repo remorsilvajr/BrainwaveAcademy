@@ -11,6 +11,7 @@ import { updateStudentRecord, updateStudentAvatar, removeStudentAvatar } from '@
 import { AvatarEditor } from '@/components/ui/avatar-editor'
 import { DocumentPreviewModal } from '@/components/ui/document-preview-modal'
 import { DobSelect } from '@/components/ui/dob-select'
+import { Modal } from '@/components/ui/modal'
 
 type Guardian = {
   name: string
@@ -143,10 +144,8 @@ export function StudentRecordSlideover({ student, onClose }: { student: Student;
   ]
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-
-      <div className="relative flex h-full w-full max-w-lg flex-col bg-white dark:bg-gray-900 shadow-xl">
+    <>
+      <Modal onClose={onClose} maxWidth="lg">
         <div className="border-b border-gray-100 dark:border-gray-800 p-6">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-4">
@@ -247,7 +246,7 @@ export function StudentRecordSlideover({ student, onClose }: { student: Student;
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_6.5rem]">
                 <DobSelect
                   label="Date of Birth"
                   required
@@ -348,13 +347,13 @@ export function StudentRecordSlideover({ student, onClose }: { student: Student;
             Close Record
           </button>
         </div>
-      </div>
+      </Modal>
 
       <DocumentPreviewModal
         url={previewUrl}
         title={previewTitle}
         onClose={() => setPreviewUrl(null)}
       />
-    </div>
+    </>
   )
 }

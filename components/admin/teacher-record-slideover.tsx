@@ -8,6 +8,7 @@ import { dobInputMin, dobInputMax, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
 import { updateTeacherRecord, updateTeacherAvatar, removeTeacherAvatar } from '@/app/admin/teachers/actions'
 import { AvatarEditor } from '@/components/ui/avatar-editor'
 import { DobSelect } from '@/components/ui/dob-select'
+import { Modal } from '@/components/ui/modal'
 
 type Teacher = {
   id: string
@@ -118,11 +119,8 @@ export function TeacherRecordSlideover({ teacher, onClose }: { teacher: Teacher;
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-
-      <div className="relative flex h-full w-full max-w-lg flex-col bg-white dark:bg-gray-900 shadow-xl">
-        <div className="border-b border-gray-100 dark:border-gray-800 p-6">
+    <Modal onClose={onClose} maxWidth="lg">
+      <div className="border-b border-gray-100 dark:border-gray-800 p-6">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-4">
               <div>
@@ -230,7 +228,7 @@ export function TeacherRecordSlideover({ teacher, onClose }: { teacher: Teacher;
                   className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 placeholder-slate-400 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 dark:placeholder-slate-500 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
                 />
               </div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_6.5rem]">
                 <DobSelect
                   label="Date of Birth"
                   defaultValue={dob}
@@ -284,7 +282,6 @@ export function TeacherRecordSlideover({ teacher, onClose }: { teacher: Teacher;
             Close Record
           </button>
         </div>
-      </div>
-    </div>
+    </Modal>
   )
 }

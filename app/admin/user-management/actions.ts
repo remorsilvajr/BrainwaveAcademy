@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
 import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
+import { isValidDob, dobRangeMessage, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
 import { logActivity } from '@/lib/activity-log'
 
 // A parent account that isn't active (inactive or blocked) shouldn't leave
@@ -120,6 +121,7 @@ export async function updateUserProfile(
     phone_number: string
     role: string
     relationship_to_student: string
+    date_of_birth: string
   }
 ) {
   const supabase = await createClient()
@@ -140,6 +142,11 @@ export async function updateUserProfile(
     throw new Error('Enter a valid PH mobile number, e.g. 0917 123 4567 or +63 917 123 4567.')
   }
 
+  const dob = updates.date_of_birth.trim()
+  if (dob && !isValidDob(dob, { minAge: MIN_ADULT_AGE, maxAge: MAX_AGE })) {
+    throw new Error(dobRangeMessage('This account', MIN_ADULT_AGE, MAX_AGE))
+  }
+
   const { error } = await supabase
     .from('profiles')
     .update({
@@ -149,6 +156,7 @@ export async function updateUserProfile(
       role: updates.role,
       phone_number: phone ? normalizePhilippineMobile(phone) : null,
       relationship_to_student: updates.role === 'parent' ? updates.relationship_to_student || null : null,
+      date_of_birth: dob || null,
     })
     .eq('id', userId)
 
