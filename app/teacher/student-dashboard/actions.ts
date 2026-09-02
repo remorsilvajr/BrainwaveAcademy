@@ -138,3 +138,35 @@ export async function submitMilestoneAssessment(input: {
   revalidatePath('/teacher')
   revalidatePath('/parent/student-dashboard')
 }
+
+export async function removeMilestoneAssessment(input: {
+  milestone_id: string
+  student_id: string
+  category: string
+}) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    throw new Error('Your session has expired. Please log in again.')
+  }
+
+  const { error } = await supabase.from('milestones').delete().eq('id', input.milestone_id)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  await logActivity(supabase, {
+    actorId: user.id,
+    action: `Removed milestone assessment (${input.category})`,
+    targetTable: 'milestones',
+    targetId: input.student_id,
+  })
+
+  revalidatePath('/teacher/student-dashboard')
+  revalidatePath('/teacher')
+  revalidatePath('/parent/student-dashboard')
+}
