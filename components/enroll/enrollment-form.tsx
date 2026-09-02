@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState } from 'react'
 import { submitApplication, type SubmitApplicationState } from '@/app/enroll/actions'
 import { dobInputMin, dobInputMax, MIN_STUDENT_AGE, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
+import { DobSelect } from '@/components/ui/dob-select'
 
 const initialState: SubmitApplicationState = {}
 const NAME_PATTERN = "[A-Za-zÀ-ÖØ-öø-ÿ' -]+"
@@ -149,10 +150,9 @@ export function EnrollmentForm() {
           />
         </div>
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field
+          <DobSelect
             label="Date of Birth"
             name="student_dob"
-            type="date"
             required
             defaultValue={values.student_dob}
             error={liveErrors.student_dob}
@@ -232,10 +232,9 @@ export function EnrollmentForm() {
           />
         </div>
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Field
+          <DobSelect
             label="Date of Birth"
             name="parent_dob"
-            type="date"
             required
             defaultValue={values.parent_dob}
             error={liveErrors.parent_dob}

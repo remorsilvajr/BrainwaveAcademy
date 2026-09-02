@@ -7,6 +7,7 @@ import { formatDateShort } from '@/lib/format'
 import { isValidPhilippineMobile } from '@/lib/phone'
 import { dobInputMin, dobInputMax, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
 import { AvatarEditor } from '@/components/ui/avatar-editor'
+import { DobSelect } from '@/components/ui/dob-select'
 
 type Profile = {
   first_name: string
@@ -189,20 +190,13 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
                 {profile.email}
               </div>
             </div>
-            <div>
-              <label htmlFor="dob" className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
-                Date of Birth
-              </label>
-              <input
-                id="dob"
-                type="date"
-                value={dob}
-                onChange={(e) => setDob(e.target.value)}
-                min={dobInputMin(MAX_AGE)}
-                max={dobInputMax(MIN_ADULT_AGE)}
-                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
-              />
-            </div>
+            <DobSelect
+              label="Date of Birth"
+              defaultValue={dob}
+              onChange={setDob}
+              min={dobInputMin(MAX_AGE)}
+              max={dobInputMax(MIN_ADULT_AGE)}
+            />
             <div>
               <label htmlFor="gender" className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
                 Gender

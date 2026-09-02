@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { CheckCircle2 } from 'lucide-react'
 import { submitStudent, type SubmitStudentState } from '@/app/parent/enroll-a-student/actions'
 import { dobInputMin, dobInputMax, MIN_STUDENT_AGE, MAX_AGE } from '@/lib/dob'
+import { DobSelect } from '@/components/ui/dob-select'
 
 const initialState: SubmitStudentState = {}
 
@@ -108,10 +109,9 @@ export function EnrollStudentForm({ parentName }: { parentName: string }) {
             defaultValue={values.student_last_name}
             minLength={2}
           />
-          <Field
+          <DobSelect
             label="Date of Birth"
             name="student_dob"
-            type="date"
             required
             error={fieldErrors.student_dob}
             defaultValue={values.student_dob}

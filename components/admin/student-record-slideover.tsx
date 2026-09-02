@@ -10,6 +10,7 @@ import { getSignedDocumentUrl } from '@/app/admin/applications/actions'
 import { updateStudentRecord, updateStudentAvatar, removeStudentAvatar } from '@/app/admin/students/actions'
 import { AvatarEditor } from '@/components/ui/avatar-editor'
 import { DocumentPreviewModal } from '@/components/ui/document-preview-modal'
+import { DobSelect } from '@/components/ui/dob-select'
 
 type Guardian = {
   name: string
@@ -247,18 +248,14 @@ export function StudentRecordSlideover({ student, onClose }: { student: Student;
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div>
-                  <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Date of Birth</label>
-                  <input
-                    type="date"
-                    value={dob}
-                    onChange={(e) => setDob(e.target.value)}
-                    required
-                    min={dobInputMin(MAX_AGE)}
-                    max={dobInputMax(MIN_STUDENT_AGE)}
-                    className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
-                  />
-                </div>
+                <DobSelect
+                  label="Date of Birth"
+                  required
+                  defaultValue={dob}
+                  onChange={setDob}
+                  min={dobInputMin(MAX_AGE)}
+                  max={dobInputMax(MIN_STUDENT_AGE)}
+                />
                 <div>
                   <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Gender</label>
                   <select
