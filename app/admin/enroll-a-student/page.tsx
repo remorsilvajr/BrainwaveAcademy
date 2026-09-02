@@ -7,6 +7,7 @@ export default async function EnrollAStudentPage() {
   const { data } = await supabase
     .from('applications')
     .select('*')
+    .is('deleted_at', null)
     .order('submitted_at', { ascending: false })
 
   const applications = data ?? []

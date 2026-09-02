@@ -5,10 +5,11 @@ import { useRouter } from 'next/navigation'
 import { Mail, Phone } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { EnrollmentRequestModal } from '@/components/admin/enrollment-request-modal'
-import { archiveApplication, unarchiveApplication } from '@/app/admin/enroll-a-student/actions'
+import { archiveApplication, unarchiveApplication, deleteApplication } from '@/app/admin/enroll-a-student/actions'
 import { calculateAge, formatStatus } from '@/lib/format'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 type Application = {
   id: string
@@ -52,7 +53,10 @@ export function EnrollmentRequestsTable({ applications }: { applications: Applic
   const [tab, setTab] = useState<Tab>('all')
   const [search, setSearch] = useState('')
   const [archivingId, setArchivingId] = useState<string | null>(null)
-  const [archiveError, setArchiveError] = useState('')
+  const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null)
+  const confirmingDeleteApp = confirmingDeleteId ? (applications.find((a) => a.id === confirmingDeleteId) ?? null) : null
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [actionError, setActionError] = useState('')
   const router = useRouter()
 
   const nonArchived = applications.filter((a) => !a.archived)
@@ -97,7 +101,7 @@ export function EnrollmentRequestsTable({ applications }: { applications: Applic
 
   async function handleArchiveToggle(app: Application) {
     setArchivingId(app.id)
-    setArchiveError('')
+    setActionError('')
     try {
       if (app.archived) {
         await unarchiveApplication(app.id)
@@ -111,9 +115,24 @@ export function EnrollmentRequestsTable({ applications }: { applications: Applic
       // completely silently, with nothing to distinguish "it worked" from
       // "it didn't" beyond the button briefly reading "Working…" and then
       // reverting. Reported live as "Archive doesn't work."
-      setArchiveError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      setActionError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
     } finally {
       setArchivingId(null)
+    }
+  }
+
+  async function handleDelete() {
+    if (!confirmingDeleteApp) return
+    setIsDeleting(true)
+    setActionError('')
+    try {
+      await deleteApplication(confirmingDeleteApp.id)
+      setConfirmingDeleteId(null)
+      router.refresh()
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -157,8 +176,8 @@ export function EnrollmentRequestsTable({ applications }: { applications: Applic
         ))}
       </div>
 
-      {archiveError && (
-        <p className="mt-4 rounded-lg bg-red-50 dark:bg-red-950/30 px-3 py-2 text-sm text-red-600 dark:text-red-400">{archiveError}</p>
+      {actionError && (
+        <p className="mt-4 rounded-lg bg-red-50 dark:bg-red-950/30 px-3 py-2 text-sm text-red-600 dark:text-red-400">{actionError}</p>
       )}
 
       <div className="mt-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
@@ -250,6 +269,12 @@ export function EnrollmentRequestsTable({ applications }: { applications: Applic
                           {archivingId === app.id ? 'Working…' : app.archived ? 'Unarchive' : 'Archive'}
                         </button>
                       )}
+                      <button
+                        onClick={() => setConfirmingDeleteId(app.id)}
+                        className="rounded-full border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 px-3 py-1.5 text-xs font-semibold text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-950/50"
+                      >
+                        Delete
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -275,6 +300,17 @@ export function EnrollmentRequestsTable({ applications }: { applications: Applic
 
       {selected && (
         <EnrollmentRequestModal application={selected} onClose={() => setSelectedId(null)} />
+      )}
+
+      {confirmingDeleteApp && (
+        <ConfirmDialog
+          title="Delete this enrollment request?"
+          description={`${confirmingDeleteApp.student_first_name} ${confirmingDeleteApp.student_last_name}'s request (${confirmingDeleteApp.application_ref}) will be hidden from this list. Nothing is erased — a super admin can restore it from Deleted Items.`}
+          confirmLabel="Yes, Delete Request"
+          isPending={isDeleting}
+          onConfirm={handleDelete}
+          onCancel={() => setConfirmingDeleteId(null)}
+        />
       )}
     </>
   )

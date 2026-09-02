@@ -8,7 +8,7 @@ import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
 import { isValidDob, dobRangeMessage, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
 import { genderFromParentRelationship } from '@/lib/gender'
 import { logActivity } from '@/lib/activity-log'
-import { canBlockAccount } from '@/lib/permissions'
+import { canModerateAccount } from '@/lib/permissions'
 
 // A parent account that isn't active (inactive or blocked) shouldn't leave
 // their linked students showing as actively enrolled — keeps the Students
@@ -55,7 +55,7 @@ export async function toggleBlockUser(userId: string, currentStatus: string) {
       supabase.from('profiles').select('role, is_super_admin').eq('id', userId).single(),
     ])
 
-    if (!actorProfile || !targetProfile || !canBlockAccount(actorProfile, targetProfile)) {
+    if (!actorProfile || !targetProfile || !canModerateAccount(actorProfile, targetProfile)) {
       throw new Error('You do not have permission to block this account.')
     }
   }
@@ -306,4 +306,109 @@ export async function forceLogoutUser(userId: string) {
     targetTable: 'profiles',
     targetId: userId,
   })
+}
+
+// Soft delete, not a real row delete — never removes anything from the
+// database, just sets profiles.deleted_at, which every profiles-listing
+// query on this page (and Teachers/Students, if a future session extends
+// this) needs to filter out. Same canModerateAccount rule as blocking: a
+// regular admin can't delete an admin account, and no one can delete a
+// super admin account. Only visible again via /admin/deleted-items
+// (super-admin-only) until restored.
+export async function deleteUserAccount(userId: string) {
+  const supabase = await createClient()
+  const {
+    data: { user: actingUser },
+  } = await supabase.auth.getUser()
+
+  const [{ data: actorProfile }, { data: targetProfile }] = await Promise.all([
+    supabase.from('profiles').select('role, is_super_admin').eq('id', actingUser?.id ?? '').single(),
+    supabase.from('profiles').select('role, is_super_admin').eq('id', userId).single(),
+  ])
+
+  if (!actorProfile || !targetProfile || !canModerateAccount(actorProfile, targetProfile)) {
+    throw new Error('You do not have permission to delete this account.')
+  }
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', userId)
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  // A deleted account can't log in either — same ban_duration mechanism as
+  // toggleBlockUser, applied regardless of the account's prior status.
+  // restoreUserAccounts re-derives the correct ban state from
+  // account_status on the way back rather than unconditionally lifting it,
+  // so a deleted-while-blocked account comes back blocked, not secretly
+  // unbanned.
+  const admin = createAdminClient()
+  const { error: banError } = await admin.auth.admin.updateUserById(userId, { ban_duration: '876000h' })
+  if (banError) {
+    throw new Error(banError.message)
+  }
+  await admin.from('profiles').update({ last_seen_at: null }).eq('id', userId)
+
+  await logActivity(supabase, {
+    actorId: actingUser?.id ?? null,
+    action: 'Deleted user account',
+    targetTable: 'profiles',
+    targetId: userId,
+  })
+
+  revalidatePath('/admin/user-management')
+  revalidatePath('/admin/deleted-items')
+}
+
+// Bulk restore for the checkbox-list UI on /admin/deleted-items — restores
+// every id in one call rather than the page firing one request per row.
+// Not gated by canModerateAccount: only a super admin can ever reach this
+// (the page itself is super-admin-only), and canModerateAccount already
+// guarantees no super-admin account could have been deleted in the first
+// place, so there's nothing left to protect against here — same reasoning
+// toggleBlockUser's unblock path already uses for not gating the reverse
+// direction.
+export async function restoreUserAccounts(userIds: string[]) {
+  if (userIds.length === 0) return
+
+  const supabase = await createClient()
+  const admin = createAdminClient()
+
+  const { data: targets, error: fetchError } = await admin
+    .from('profiles')
+    .select('id, account_status')
+    .in('id', userIds)
+  if (fetchError) {
+    throw new Error(fetchError.message)
+  }
+
+  const { error } = await supabase.from('profiles').update({ deleted_at: null }).in('id', userIds)
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  await Promise.all(
+    (targets ?? []).map((t) =>
+      admin.auth.admin.updateUserById(t.id, {
+        ban_duration: t.account_status === 'blocked' ? '876000h' : 'none',
+      })
+    )
+  )
+
+  const {
+    data: { user: actingAdmin },
+  } = await supabase.auth.getUser()
+  for (const userId of userIds) {
+    await logActivity(supabase, {
+      actorId: actingAdmin?.id ?? null,
+      action: 'Restored user account',
+      targetTable: 'profiles',
+      targetId: userId,
+    })
+  }
+
+  revalidatePath('/admin/user-management')
+  revalidatePath('/admin/deleted-items')
 }

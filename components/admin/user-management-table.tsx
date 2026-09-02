@@ -2,12 +2,18 @@
 
 import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { toggleBlockUser, updateAccountStatus, forceLogoutUser } from '@/app/admin/user-management/actions'
+import {
+  toggleBlockUser,
+  updateAccountStatus,
+  forceLogoutUser,
+  deleteUserAccount,
+} from '@/app/admin/user-management/actions'
 import { formatDateShort } from '@/lib/format'
 import { UserEditModal } from '@/components/admin/user-edit-modal'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
-import { canBlockAccount, type AccountForBlocking } from '@/lib/permissions'
+import { canModerateAccount, type AccountForModeration } from '@/lib/permissions'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 type LinkedStudent = { id: string; first_name: string; middle_name: string | null; last_name: string }
 type Applicant = {
@@ -48,7 +54,7 @@ export function UserManagementTable({
   currentUser,
 }: {
   users: Profile[]
-  currentUser: AccountForBlocking & { id: string }
+  currentUser: AccountForModeration & { id: string }
 }) {
   const router = useRouter()
   const [search, setSearch] = useState('')
@@ -59,6 +65,10 @@ export function UserManagementTable({
   const [editingUserId, setEditingUserId] = useState<string | null>(null)
   const editingUser = editingUserId ? (users.find((u) => u.id === editingUserId) ?? null) : null
   const [confirmingBlockId, setConfirmingBlockId] = useState<string | null>(null)
+  const confirmingBlockUser = confirmingBlockId ? (users.find((u) => u.id === confirmingBlockId) ?? null) : null
+  const [confirmingDeleteId, setConfirmingDeleteId] = useState<string | null>(null)
+  const confirmingDeleteUser = confirmingDeleteId ? (users.find((u) => u.id === confirmingDeleteId) ?? null) : null
+  const [actionError, setActionError] = useState('')
   const [isPending, startTransition] = useTransition()
 
   // The Online indicator only reflects however-fresh `users` was when this
@@ -70,10 +80,10 @@ export function UserManagementTable({
   // (not the original 20s) after a second live report that 20s felt like
   // "not updating at all" rather than "updating slowly" — paired with the
   // manual "Refresh Now" button below for whenever even that's too slow to
-  // wait on. search/roleFilter/statusFilter/editingUserId/confirmingBlockId
-  // are all local state untouched by router.refresh(), so neither this nor
-  // the manual button resets an open modal, an in-progress block
-  // confirmation, or the current filters.
+  // wait on. search/roleFilter/statusFilter/editingUserId/confirmingBlockId/
+  // confirmingDeleteId are all local state untouched by router.refresh(),
+  // so neither this nor the manual button resets an open modal, an
+  // in-progress block/delete confirmation, or the current filters.
   useEffect(() => {
     const interval = setInterval(() => router.refresh(), 10000)
     return () => clearInterval(interval)
@@ -96,10 +106,27 @@ export function UserManagementTable({
   )
 
   function handleToggleBlock(user: Profile) {
+    setActionError('')
     startTransition(async () => {
-      await toggleBlockUser(user.id, user.account_status)
+      try {
+        await toggleBlockUser(user.id, user.account_status)
+      } catch (err) {
+        setActionError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      }
     })
     setConfirmingBlockId(null)
+  }
+
+  function handleDelete(user: Profile) {
+    setActionError('')
+    startTransition(async () => {
+      try {
+        await deleteUserAccount(user.id)
+      } catch (err) {
+        setActionError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      }
+    })
+    setConfirmingDeleteId(null)
   }
 
   function handleStatusChange(user: Profile, status: string) {
@@ -127,6 +154,10 @@ export function UserManagementTable({
 
   return (
     <>
+      {actionError && (
+        <p className="mb-4 rounded-lg bg-red-50 dark:bg-red-950/30 px-3 py-2 text-sm text-red-600 dark:text-red-400">{actionError}</p>
+      )}
+
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
         <div className="mb-3 flex items-center justify-between">
           <p className="text-xs text-gray-400 dark:text-gray-500">
@@ -261,8 +292,8 @@ export function UserManagementTable({
                           </button>
                         )}
                         {u.account_status === 'blocked' ? (
-                          // Unblocking is never gated by canBlockAccount — see
-                          // toggleBlockUser's own comment for why an
+                          // Unblocking is never gated by canModerateAccount —
+                          // see toggleBlockUser's own comment for why an
                           // already-blocked protected account (e.g. blocked
                           // before being promoted to super admin) still needs
                           // to be recoverable rather than permanently stuck.
@@ -273,33 +304,17 @@ export function UserManagementTable({
                           >
                             Unblock
                           </button>
-                        ) : !canBlockAccount(currentUser, u) ? (
+                        ) : !canModerateAccount(currentUser, u) ? (
                           <span
                             title={
                               u.is_super_admin
-                                ? "Super admin accounts can't be blocked."
-                                : 'Only a super admin can block an admin account.'
+                                ? "Super admin accounts can't be blocked or deleted."
+                                : 'Only a super admin can block or delete an admin account.'
                             }
                             className="cursor-default rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 px-3 py-1.5 text-xs font-semibold text-gray-400 dark:text-gray-500"
                           >
                             Protected
                           </span>
-                        ) : confirmingBlockId === u.id ? (
-                          <div className="flex items-center gap-1.5 whitespace-nowrap text-xs">
-                            <span className="text-gray-600 dark:text-gray-400">Block this user?</span>
-                            <button
-                              onClick={() => setConfirmingBlockId(null)}
-                              className="font-semibold text-gray-500 dark:text-gray-400 underline"
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              onClick={() => handleToggleBlock(u)}
-                              className="font-semibold text-red-700 dark:text-red-400 underline"
-                            >
-                              Yes, Block
-                            </button>
-                          </div>
                         ) : (
                           <button
                             onClick={() => setConfirmingBlockId(u.id)}
@@ -307,6 +322,15 @@ export function UserManagementTable({
                             className="rounded border border-red-300 dark:border-red-800 px-3 py-1.5 text-xs font-semibold text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 disabled:opacity-60"
                           >
                             Block
+                          </button>
+                        )}
+                        {canModerateAccount(currentUser, u) && (
+                          <button
+                            onClick={() => setConfirmingDeleteId(u.id)}
+                            disabled={isPending}
+                            className="rounded border border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/30 px-3 py-1.5 text-xs font-semibold text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-950/50 disabled:opacity-60"
+                          >
+                            Delete
                           </button>
                         )}
                       </div>
@@ -334,6 +358,28 @@ export function UserManagementTable({
 
       {editingUser && (
         <UserEditModal user={editingUser} onClose={() => setEditingUserId(null)} />
+      )}
+
+      {confirmingBlockUser && (
+        <ConfirmDialog
+          title="Block this account?"
+          description={`${confirmingBlockUser.first_name} ${confirmingBlockUser.last_name} (${confirmingBlockUser.email}) will immediately lose access and be signed out of any active session. You can unblock them again at any time.`}
+          confirmLabel="Yes, Block Account"
+          isPending={isPending}
+          onConfirm={() => handleToggleBlock(confirmingBlockUser)}
+          onCancel={() => setConfirmingBlockId(null)}
+        />
+      )}
+
+      {confirmingDeleteUser && (
+        <ConfirmDialog
+          title="Delete this account?"
+          description={`${confirmingDeleteUser.first_name} ${confirmingDeleteUser.last_name} (${confirmingDeleteUser.email}) will be hidden from User Management and unable to log in. Nothing is erased — a super admin can restore it from Deleted Items.`}
+          confirmLabel="Yes, Delete Account"
+          isPending={isPending}
+          onConfirm={() => handleDelete(confirmingDeleteUser)}
+          onCancel={() => setConfirmingDeleteId(null)}
+        />
       )}
     </>
   )

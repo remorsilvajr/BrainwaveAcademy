@@ -6,22 +6,28 @@
 // they get the admin portal completely unchanged (same routes, same
 // sidebar, same everything) for free. The only place the two diverge is
 // this permission check.
-export type AccountForBlocking = { role: string; is_super_admin: boolean }
+export type AccountForModeration = { role: string; is_super_admin: boolean }
 
-// Can `actor` block `target`'s account?
+// Can `actor` take a destructive/restrictive moderation action against
+// `target`'s account — block or delete?
 //
-// - A super admin account can never be blocked, by anyone — not even by
-//   another super admin, and not by itself.
-// - A regular admin can't block ANY role = 'admin' account — which,
-//   structurally, already covers super admins too (their role is still
-//   'admin'), so that case never needs its own check.
-// - A super admin can block admins, parents, and teachers.
-// - Parent/teacher targets are blockable by both, unchanged from before.
+// - A super admin account can never be blocked or deleted, by anyone — not
+//   even by another super admin, and not by itself.
+// - A regular admin can't block or delete ANY role = 'admin' account —
+//   which, structurally, already covers super admins too (their role is
+//   still 'admin'), so that case never needs its own check.
+// - A super admin can block/delete admins, parents, and teachers.
+// - Parent/teacher targets are actionable by both, unchanged from before.
 //
-// Deliberately does NOT gate *unblocking* — see toggleBlockUser's own
-// comment for why an already-blocked protected account should still be
-// recoverable rather than permanently stuck.
-export function canBlockAccount(actor: AccountForBlocking, target: AccountForBlocking): boolean {
+// Deliberately does NOT gate the *reverse* actions (unblock, restore) —
+// see toggleBlockUser's/restoreUserAccounts' own comments for why an
+// already-blocked-or-deleted protected account (e.g. one blocked/deleted
+// before being promoted to super admin) should still be recoverable
+// rather than permanently stuck.
+//
+// Originally named canBlockAccount, before deleteUserAccount needed the
+// exact same rule — renamed rather than left stale once its scope grew.
+export function canModerateAccount(actor: AccountForModeration, target: AccountForModeration): boolean {
   if (target.is_super_admin) return false
   if (target.role === 'admin' && !actor.is_super_admin) return false
   return true

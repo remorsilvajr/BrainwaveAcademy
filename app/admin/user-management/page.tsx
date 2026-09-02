@@ -12,6 +12,7 @@ export default async function UserManagementPage() {
     supabase
       .from('profiles')
       .select('*, parent_student(relationship, students(id, first_name, middle_name, last_name))')
+      .is('deleted_at', null)
       .order('created_at', { ascending: false }),
     // Children who exist only as an application (no students row yet) —
     // shown as "Applicants" in the edit modal alongside genuinely enrolled

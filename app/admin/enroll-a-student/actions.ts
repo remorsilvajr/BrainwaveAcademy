@@ -197,3 +197,64 @@ export async function unarchiveApplication(applicationId: string) {
 
   revalidatePath('/admin/enroll-a-student')
 }
+
+// Soft delete, not a real row delete — never removes anything from the
+// database. Any admin can delete any enrollment request regardless of
+// status (unlike Archive, which excludes still-pending requests); this is
+// a stronger, more final action than archiving, and takes priority over it
+// — a deleted-but-archived row is excluded from every tab in
+// EnrollmentRequestsTable, including its own Archived tab, not just the
+// default view. Only visible again via /admin/deleted-items
+// (super-admin-only) until restored.
+export async function deleteApplication(applicationId: string) {
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from('applications')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', applicationId)
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  const {
+    data: { user: actingAdmin },
+  } = await supabase.auth.getUser()
+  await logActivity(supabase, {
+    actorId: actingAdmin?.id ?? null,
+    action: 'Deleted enrollment request',
+    targetTable: 'applications',
+    targetId: applicationId,
+  })
+
+  revalidatePath('/admin/enroll-a-student')
+  revalidatePath('/admin/deleted-items')
+}
+
+// Bulk restore for the checkbox-list UI on /admin/deleted-items — restores
+// every id in one call rather than the page firing one request per row.
+export async function restoreApplications(applicationIds: string[]) {
+  if (applicationIds.length === 0) return
+
+  const supabase = await createClient()
+
+  const { error } = await supabase.from('applications').update({ deleted_at: null }).in('id', applicationIds)
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  const {
+    data: { user: actingAdmin },
+  } = await supabase.auth.getUser()
+  for (const applicationId of applicationIds) {
+    await logActivity(supabase, {
+      actorId: actingAdmin?.id ?? null,
+      action: 'Restored enrollment request',
+      targetTable: 'applications',
+      targetId: applicationId,
+    })
+  }
+
+  revalidatePath('/admin/enroll-a-student')
+  revalidatePath('/admin/deleted-items')
+}
