@@ -63,11 +63,31 @@ export default async function RequirementsPage({
   const record = records.find((r) => r.applicationId === effectiveStudentParam) ?? null
   const isEligibleStudentSelectedElsewhere = !!effectiveStudentParam && !record
 
+  // A "selected elsewhere but not eligible" application isn't always just
+  // *pending* — it could equally be one that was already reviewed and
+  // rejected (which also never gets created_parent_id set, so it lands here
+  // the same way a genuinely pending one does). Reported live: this page
+  // showed "Waiting on Admin Approval" for a child that Enrollment Status
+  // and Enrollment Profile — both reading `status` directly — correctly
+  // showed as "Rejected". Fetched separately rather than folded into the
+  // queries above since it's only ever needed for this one not-eligible
+  // case, not the common path.
+  let selectedElsewhereStatus: string | null = null
+  if (isEligibleStudentSelectedElsewhere) {
+    const { data: statusRow } = await supabase
+      .from('applications')
+      .select('status')
+      .eq('id', effectiveStudentParam ?? '')
+      .maybeSingle()
+    selectedElsewhereStatus = statusRow?.status ?? null
+  }
+
   return (
     <div>
       <RequirementsChecklist
         record={record}
         selectedElsewhereNotEligible={!!isEligibleStudentSelectedElsewhere}
+        selectedElsewhereStatus={selectedElsewhereStatus}
       />
     </div>
   )

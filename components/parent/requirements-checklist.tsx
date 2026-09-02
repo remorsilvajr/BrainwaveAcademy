@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState, useTransition } from 'react'
-import { CheckCircle2, Clock, XCircle, FileText, ClipboardList } from 'lucide-react'
+import { CheckCircle2, Clock, XCircle, FileText, ClipboardList, FileWarning } from 'lucide-react'
 import { uploadRequirementDocument, getOwnDocumentSignedUrl } from '@/app/parent/requirements/actions'
 import { documentOrder, documentShortLabels, documentDescriptions } from '@/lib/documents'
 import { DocumentPreviewModal } from '@/components/ui/document-preview-modal'
@@ -40,9 +40,11 @@ const statusMeta: Record<
 export function RequirementsChecklist({
   record,
   selectedElsewhereNotEligible,
+  selectedElsewhereStatus,
 }: {
   record: EnrollmentRecord | null
   selectedElsewhereNotEligible: boolean
+  selectedElsewhereStatus?: string | null
 }) {
   const [isPending, startTransition] = useTransition()
   const [errorMessage, setErrorMessage] = useState('')
@@ -61,7 +63,20 @@ export function RequirementsChecklist({
           </p>
         </div>
 
-        {selectedElsewhereNotEligible ? (
+        {selectedElsewhereNotEligible && selectedElsewhereStatus === 'rejected' ? (
+          <EmptyState
+            icon={FileWarning}
+            tone="error"
+            title="Enrollment Request Not Approved"
+            description="This enrollment request wasn't approved, so there's nothing to upload documents for. Check Enrollment Status for the reason, or start a new request if you'd like to try again."
+            action={{ href: '/parent/enrollment-status', label: 'Check Enrollment Status' }}
+            secondaryAction={{
+              href: '/parent/enroll-a-student',
+              label: 'Enroll A Student',
+              prefix: 'Ready to try again?',
+            }}
+          />
+        ) : selectedElsewhereNotEligible ? (
           <EmptyState
             icon={Clock}
             tone="warning"
