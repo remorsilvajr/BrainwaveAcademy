@@ -25,6 +25,7 @@ type Application = {
   parent_last_name: string
   parent_dob: string
   parent_relationship: string
+  parent_gender: string | null
   parent_contact_number: string
   parent_email: string
 }

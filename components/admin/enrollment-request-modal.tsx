@@ -21,6 +21,7 @@ type Application = {
   parent_last_name: string
   parent_dob: string
   parent_relationship: string
+  parent_gender: string | null
   parent_contact_number: string
   parent_email: string
 }
@@ -135,6 +136,18 @@ export function EnrollmentRequestModal({
                 />
                 <InfoRow label="Parent Date of Birth" value={formatDateLong(application.parent_dob)} />
                 <InfoRow label="Relationship" value={application.parent_relationship} />
+                {application.parent_relationship === 'Guardian' && (
+                  <InfoRow
+                    label="Gender"
+                    value={
+                      application.parent_gender === 'male'
+                        ? 'Male'
+                        : application.parent_gender === 'female'
+                          ? 'Female'
+                          : 'Not set'
+                    }
+                  />
+                )}
                 <InfoRow label="Contact Number" value={application.parent_contact_number} />
                 <InfoRow label="Contact Email" value={application.parent_email} />
               </div>

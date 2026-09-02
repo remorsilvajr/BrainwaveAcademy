@@ -60,7 +60,7 @@ export async function approveApplication(applicationId: string) {
       phone_number: application.parent_contact_number,
       date_of_birth: application.parent_dob,
       relationship_to_student: application.parent_relationship,
-      gender: genderFromParentRelationship(application.parent_relationship),
+      gender: genderFromParentRelationship(application.parent_relationship, application.parent_gender),
       is_verified: true,
       account_status: 'active',
     })

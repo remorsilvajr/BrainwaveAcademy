@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
 import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
 import { isValidDob, dobRangeMessage, MIN_STUDENT_AGE, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
+import { genderFromParentRelationship } from '@/lib/gender'
 import { logActivity } from '@/lib/activity-log'
 
 export type SubmitApplicationState = {
@@ -27,7 +28,7 @@ const requiredFields: Record<string, string> = {
   parent_email: 'Email address',
 }
 
-const allFieldKeys = [...Object.keys(requiredFields), 'student_middle_name', 'parent_middle_name']
+const allFieldKeys = [...Object.keys(requiredFields), 'student_middle_name', 'parent_middle_name', 'parent_gender']
 
 const nameFields = [
   'student_first_name',
@@ -146,6 +147,7 @@ export async function submitApplication(
     parent_last_name: toTitleCase(values.parent_last_name),
     parent_dob: values.parent_dob,
     parent_relationship: values.parent_relationship,
+    parent_gender: genderFromParentRelationship(values.parent_relationship, values.parent_gender),
     parent_contact_number: normalizePhilippineMobile(values.parent_contact_number),
     parent_email: values.parent_email.toLowerCase(),
   })
