@@ -37,22 +37,20 @@ const baseSections: NavSection[] = [
 ]
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  // Everything else about this layout — routes, styling — is identical for
-  // a super admin ("the portal should look exactly like the admin", per
-  // CLAUDE.md's Super admin note). Deliberate exceptions, all keyed off
-  // isSuperAdmin below: the portal label, the bottom sidebar section's
-  // title ("Super Admin" instead of "Admin" — asked for explicitly
-  // 2026-09-03, so the section housing account-wide/destructive tools
-  // reads as clearly super-admin-flavored even though every regular admin
-  // already has Activity Log/Settings/Log Out too), and — added the same
-  // day as the section-title rename — one extra nav item in that section,
-  // "Deleted Items" (app/admin/deleted-items). `sections` moved from
-  // module scope into the function body so it can be built per-request off
-  // `profile`; app/admin/deleted-items/page.tsx enforces the Deleted Items
-  // restriction server-side too (redirects a regular admin who navigates
-  // there directly), so hiding the link here is only the visible half of
-  // that particular gate, not the real one — the section *title*, unlike
-  // that link, has no access implication of its own to enforce elsewhere.
+  // Reverted 2026-09-04 (was briefly a distinct "Super Admin Portal" label
+  // and a renamed "Super Admin" section — see CLAUDE.md's Super admin note
+  // for the full history): the concept of a super admin tier must not be
+  // discoverable anywhere in the portal by a regular admin, full stop —
+  // asked for explicitly, no exceptions. Portal label and section title
+  // are now identical for every admin session, whatever `is_super_admin`
+  // is. The one remaining, deliberately unannounced difference is which
+  // nav items render — a super admin session gets one additional item,
+  // "Deleted Items" (app/admin/deleted-items), spliced into the ordinary
+  // Admin section with no renaming or explanation — so `sections` still
+  // needs building per-request off `profile` rather than living at module
+  // scope. That page enforces the same restriction server-side too
+  // (redirects a regular admin who navigates there directly), so hiding
+  // the link here is only the visible half of that gate, not the real one.
   const supabase = await createClient()
   const {
     data: { user },
@@ -64,13 +62,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     .maybeSingle()
 
   const isSuperAdmin = !!profile?.is_super_admin
-  const portalLabel = isSuperAdmin ? 'Super Admin Portal' : 'Admin Portal'
 
   const sections: NavSection[] = baseSections.map((section) =>
     section.title === 'Admin' && isSuperAdmin
       ? {
           ...section,
-          title: 'Super Admin',
           items: [
             { label: 'Deleted Items', href: '/admin/deleted-items', icon: 'trash' },
             ...section.items,
@@ -81,7 +77,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="flex">
-      <Sidebar sections={sections} schoolName="Brainwave Academy" portalLabel={portalLabel} />
+      <Sidebar sections={sections} schoolName="Brainwave Academy" portalLabel="Admin Portal" />
       <main className="min-w-0 flex-1 bg-[#faf9fc] dark:bg-gray-950 px-4 pb-8 pt-20 lg:ml-64 lg:px-8 lg:pt-8">{children}</main>
     </div>
   )

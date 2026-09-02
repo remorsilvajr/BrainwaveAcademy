@@ -305,7 +305,7 @@ export function EnrollmentRequestsTable({ applications }: { applications: Applic
       {confirmingDeleteApp && (
         <ConfirmDialog
           title="Delete this enrollment request?"
-          description={`${confirmingDeleteApp.student_first_name} ${confirmingDeleteApp.student_last_name}'s request (${confirmingDeleteApp.application_ref}) will be hidden from this list. A super admin can restore it from Deleted Items.`}
+          description={`${confirmingDeleteApp.student_first_name} ${confirmingDeleteApp.student_last_name}'s request (${confirmingDeleteApp.application_ref}) will be hidden from this list. It can be restored later.`}
           confirmLabel="Yes, Delete Request"
           isPending={isDeleting}
           onConfirm={handleDelete}

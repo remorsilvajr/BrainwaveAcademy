@@ -10,9 +10,10 @@ import {
   approveAndCreateStudentRecord,
 } from '@/app/admin/applications/actions'
 import { calculateAge, formatDateLong } from '@/lib/format'
-import { documentLabels, documentOrder } from '@/lib/documents'
+import { documentLabels, documentShortLabels, documentOrder } from '@/lib/documents'
 import { DocumentPreviewModal } from '@/components/ui/document-preview-modal'
 import { Modal } from '@/components/ui/modal'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 type DocRow = { document_type: string; file_url: string; verification_status: string }
 
@@ -69,9 +70,11 @@ export function ApplicationReviewModal({
   const contentRef = useRef<HTMLDivElement>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewTitle, setPreviewTitle] = useState('')
+  const [confirmingCorrections, setConfirmingCorrections] = useState(false)
 
   const hasUploadedDocs = application.documents.length > 0
   const allValid = documentOrder.every((type) => statuses[type] === 'valid')
+  const needsCorrectionTypes = documentOrder.filter((type) => statuses[type] === 'needs_correction')
   const hasParentAccount = !!application.created_parent_id
   // Local `result` state, not just the (possibly stale, until the parent
   // Server Component re-renders after router.refresh()) `application` prop —
@@ -121,9 +124,14 @@ export function ApplicationReviewModal({
     setErrorMessage('')
     try {
       await requestCorrections(application.id, statuses, notes)
+      setConfirmingCorrections(false)
       showResult('corrections')
       router.refresh()
     } catch (err) {
+      // Closed on error too, not just success — ConfirmDialog has no error
+      // slot of its own, so the errorMessage banner below (rendered in the
+      // main modal body) would otherwise be invisible behind it.
+      setConfirmingCorrections(false)
       setErrorMessage(err instanceof Error ? err.message : 'Something went wrong.')
     } finally {
       setIsSubmitting(false)
@@ -231,27 +239,38 @@ export function ApplicationReviewModal({
                     <p className="mb-3 text-sm text-gray-400 dark:text-gray-500">Not uploaded yet</p>
                   )}
                   {doc && (
-                    <div className="flex gap-4 rounded-lg bg-gray-50 dark:bg-gray-800/60 px-3 py-2">
-                      <label className="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
-                        <input
-                          type="radio"
-                          name={`status-${type}`}
-                          checked={statuses[type] === 'valid'}
-                          onChange={() => setStatuses((prev) => ({ ...prev, [type]: 'valid' }))}
-                        />
+                    // Two toggle buttons, not native <input type="radio">
+                    // pairs — those were unstyled, and the browser's own
+                    // native hover/focus rendering for a bare radio control
+                    // was reported live as intermittently shifting this
+                    // row's height by a subpixel amount, misaligning the
+                    // borders above/below it. A plain CSS button has no
+                    // such native rendering variance. Same
+                    // selected/unselected pill pattern as the attendance
+                    // Present/Late/Absent buttons in roster-checkin.tsx.
+                    <div className="flex flex-wrap gap-2 rounded-lg bg-gray-50 dark:bg-gray-800/60 px-3 py-2">
+                      <button
+                        type="button"
+                        onClick={() => setStatuses((prev) => ({ ...prev, [type]: 'valid' }))}
+                        className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+                          statuses[type] === 'valid'
+                            ? 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400'
+                            : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                        }`}
+                      >
                         Valid
-                      </label>
-                      <label className="flex items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
-                        <input
-                          type="radio"
-                          name={`status-${type}`}
-                          checked={statuses[type] === 'needs_correction'}
-                          onChange={() =>
-                            setStatuses((prev) => ({ ...prev, [type]: 'needs_correction' }))
-                          }
-                        />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setStatuses((prev) => ({ ...prev, [type]: 'needs_correction' }))}
+                        className={`rounded-full border px-3 py-1 text-xs font-semibold ${
+                          statuses[type] === 'needs_correction'
+                            ? 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400'
+                            : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                        }`}
+                      >
                         Needs Correction
-                      </label>
+                      </button>
                     </div>
                   )}
                 </div>
@@ -291,9 +310,10 @@ export function ApplicationReviewModal({
           )}
           <div className="flex gap-2">
             <button
-              onClick={handleRequestCorrections}
-              disabled={isSubmitting || !hasUploadedDocs}
-              className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 disabled:opacity-60"
+              onClick={() => setConfirmingCorrections(true)}
+              disabled={isSubmitting || !hasUploadedDocs || needsCorrectionTypes.length === 0}
+              title={needsCorrectionTypes.length === 0 ? 'Mark at least one document as Needs Correction first' : undefined}
+              className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
               Request Corrections
             </button>
@@ -313,6 +333,18 @@ export function ApplicationReviewModal({
         title={previewTitle}
         onClose={() => setPreviewUrl(null)}
       />
+
+      {confirmingCorrections && (
+        <ConfirmDialog
+          tone="neutral"
+          title="Request corrections from the parent?"
+          description={`This emails ${application.parent_first_name} at ${application.parent_email} asking them to resubmit: ${needsCorrectionTypes.map((type) => documentShortLabels[type] ?? type).join(', ')}.`}
+          confirmLabel="Yes, Send Request"
+          isPending={isSubmitting}
+          onConfirm={handleRequestCorrections}
+          onCancel={() => setConfirmingCorrections(false)}
+        />
+      )}
     </>
   )
 }

@@ -242,14 +242,14 @@ export function UserManagementTable({
                       <p className="ml-3.5 text-xs text-gray-500 dark:text-gray-400">{u.email}</p>
                     </td>
                     <td className="p-4">
+                      {/* Deliberately identical for every admin-role row regardless
+                          of is_super_admin — see the Protected label below and
+                          app/admin/layout.tsx for why that distinction must not be
+                          visible anywhere in this portal. */}
                       <span
-                        className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium capitalize ${
-                          u.is_super_admin
-                            ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300'
-                            : (roleBadgeClasses[u.role] ?? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300')
-                        }`}
+                        className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium capitalize ${roleBadgeClasses[u.role] ?? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'}`}
                       >
-                        {u.is_super_admin ? 'Super Admin' : u.role}
+                        {u.role}
                       </span>
                     </td>
                     <td className="p-4">
@@ -306,11 +306,7 @@ export function UserManagementTable({
                           </button>
                         ) : !canModerateAccount(currentUser, u) ? (
                           <span
-                            title={
-                              u.is_super_admin
-                                ? "Super admin accounts can't be blocked or deleted."
-                                : 'Only a super admin can block or delete an admin account.'
-                            }
+                            title="You don't have permission to block or delete this account."
                             className="cursor-default rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 px-3 py-1.5 text-xs font-semibold text-gray-400 dark:text-gray-500"
                           >
                             Protected
@@ -374,7 +370,7 @@ export function UserManagementTable({
       {confirmingDeleteUser && (
         <ConfirmDialog
           title="Delete this account?"
-          description={`${confirmingDeleteUser.first_name} ${confirmingDeleteUser.last_name} (${confirmingDeleteUser.email}) will be hidden from User Management and unable to log in. A super admin can restore it from Deleted Items.`}
+          description={`${confirmingDeleteUser.first_name} ${confirmingDeleteUser.last_name} (${confirmingDeleteUser.email}) will be hidden from User Management and unable to log in. It can be restored later.`}
           confirmLabel="Yes, Delete Account"
           isPending={isPending}
           onConfirm={() => handleDelete(confirmingDeleteUser)}
