@@ -52,6 +52,7 @@ export function EnrollmentRequestsTable({ applications }: { applications: Applic
   const [tab, setTab] = useState<Tab>('all')
   const [search, setSearch] = useState('')
   const [archivingId, setArchivingId] = useState<string | null>(null)
+  const [archiveError, setArchiveError] = useState('')
   const router = useRouter()
 
   const nonArchived = applications.filter((a) => !a.archived)
@@ -96,6 +97,7 @@ export function EnrollmentRequestsTable({ applications }: { applications: Applic
 
   async function handleArchiveToggle(app: Application) {
     setArchivingId(app.id)
+    setArchiveError('')
     try {
       if (app.archived) {
         await unarchiveApplication(app.id)
@@ -103,6 +105,13 @@ export function EnrollmentRequestsTable({ applications }: { applications: Applic
         await archiveApplication(app.id)
       }
       router.refresh()
+    } catch (err) {
+      // Previously had no catch at all — a failed archive/unarchive (e.g.
+      // the applications.archived column not existing yet) failed
+      // completely silently, with nothing to distinguish "it worked" from
+      // "it didn't" beyond the button briefly reading "Working…" and then
+      // reverting. Reported live as "Archive doesn't work."
+      setArchiveError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
     } finally {
       setArchivingId(null)
     }
@@ -147,6 +156,10 @@ export function EnrollmentRequestsTable({ applications }: { applications: Applic
           </button>
         ))}
       </div>
+
+      {archiveError && (
+        <p className="mt-4 rounded-lg bg-red-50 dark:bg-red-950/30 px-3 py-2 text-sm text-red-600 dark:text-red-400">{archiveError}</p>
+      )}
 
       <div className="mt-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
         <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Search</label>
