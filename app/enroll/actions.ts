@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
 import { isValidName, NAME_VALIDATION_MESSAGE } from '@/lib/name'
+import { isValidDob, dobRangeMessage, MIN_STUDENT_AGE, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
 import { logActivity } from '@/lib/activity-log'
 
 export type SubmitApplicationState = {
@@ -78,11 +79,14 @@ export async function submitApplication(
   }
 
   if (values.student_dob && !fieldErrors.student_dob) {
-    const studentDob = new Date(values.student_dob)
-    const minDob = new Date()
-    minDob.setFullYear(minDob.getFullYear() - 2)
-    if (studentDob > minDob) {
-      fieldErrors.student_dob = 'Student must be at least 2 years old.'
+    if (!isValidDob(values.student_dob, { minAge: MIN_STUDENT_AGE, maxAge: MAX_AGE })) {
+      fieldErrors.student_dob = dobRangeMessage('Student', MIN_STUDENT_AGE, MAX_AGE)
+    }
+  }
+
+  if (values.parent_dob && !fieldErrors.parent_dob) {
+    if (!isValidDob(values.parent_dob, { minAge: MIN_ADULT_AGE, maxAge: MAX_AGE })) {
+      fieldErrors.parent_dob = dobRangeMessage('Parent', MIN_ADULT_AGE, MAX_AGE)
     }
   }
 

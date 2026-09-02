@@ -4,6 +4,7 @@ import { useActionState, useState } from 'react'
 import Link from 'next/link'
 import { CheckCircle2 } from 'lucide-react'
 import { submitStudent, type SubmitStudentState } from '@/app/parent/enroll-a-student/actions'
+import { dobInputMin, dobInputMax, MIN_STUDENT_AGE, MAX_AGE } from '@/lib/dob'
 
 const initialState: SubmitStudentState = {}
 
@@ -15,6 +16,9 @@ function Field({
   required,
   error,
   defaultValue,
+  min,
+  max,
+  minLength,
 }: {
   label: string
   name: string
@@ -23,6 +27,9 @@ function Field({
   required?: boolean
   error?: string
   defaultValue?: string
+  min?: string
+  max?: string
+  minLength?: number
 }) {
   return (
     <div>
@@ -36,6 +43,9 @@ function Field({
         placeholder={placeholder}
         required={required}
         defaultValue={defaultValue}
+        min={min}
+        max={max}
+        minLength={minLength}
         className={`w-full rounded-lg border px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 placeholder:text-gray-400 focus:outline-none ${
           error ? 'border-red-400 focus:border-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-[#0b1b62] dark:focus:border-indigo-400'
         }`}
@@ -79,6 +89,7 @@ export function EnrollStudentForm({ parentName }: { parentName: string }) {
             required
             error={fieldErrors.student_first_name}
             defaultValue={values.student_first_name}
+            minLength={2}
           />
           <Field
             label="Middle Name"
@@ -86,6 +97,7 @@ export function EnrollStudentForm({ parentName }: { parentName: string }) {
             placeholder="Optional"
             error={fieldErrors.student_middle_name}
             defaultValue={values.student_middle_name}
+            minLength={2}
           />
           <Field
             label="Last Name"
@@ -94,6 +106,7 @@ export function EnrollStudentForm({ parentName }: { parentName: string }) {
             required
             error={fieldErrors.student_last_name}
             defaultValue={values.student_last_name}
+            minLength={2}
           />
           <Field
             label="Date of Birth"
@@ -102,6 +115,8 @@ export function EnrollStudentForm({ parentName }: { parentName: string }) {
             required
             error={fieldErrors.student_dob}
             defaultValue={values.student_dob}
+            min={dobInputMin(MAX_AGE)}
+            max={dobInputMax(MIN_STUDENT_AGE)}
           />
         </div>
 

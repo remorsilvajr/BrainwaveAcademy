@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { X } from 'lucide-react'
 import { calculateAge, formatDateLong } from '@/lib/format'
+import { dobInputMin, dobInputMax, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
 import { updateTeacherRecord, updateTeacherAvatar, removeTeacherAvatar } from '@/app/admin/teachers/actions'
 import { AvatarEditor } from '@/components/ui/avatar-editor'
 
@@ -235,6 +236,8 @@ export function TeacherRecordSlideover({ teacher, onClose }: { teacher: Teacher;
                     type="date"
                     value={dob}
                     onChange={(e) => setDob(e.target.value)}
+                    min={dobInputMin(MAX_AGE)}
+                    max={dobInputMax(MIN_ADULT_AGE)}
                     className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
                   />
                 </div>
