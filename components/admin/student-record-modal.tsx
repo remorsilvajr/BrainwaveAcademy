@@ -257,6 +257,8 @@ export function StudentRecordModal({ student, onClose }: { student: Student; onC
                 />
                 <div>
                   <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Gender</label>
+                  {/* Matches DobSelect's "Day/Month/Year" mini-label row so this select lines up with those inputs instead of sitting a row higher. */}
+                  <span aria-hidden className="mb-1 block text-xs font-medium invisible">Gender</span>
                   <select
                     value={gender}
                     onChange={(e) => setGender(e.target.value)}
