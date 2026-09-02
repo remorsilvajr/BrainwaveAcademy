@@ -23,30 +23,42 @@ export default async function AdminLogsPage() {
   const logRowsData = logRows ?? []
 
   // `target_id` is a generic polymorphic reference (target_table names which
-  // table it points into — profiles, students, attendance, etc.), not a
-  // declared FK Supabase can auto-join the way it does actor_id above, so
-  // resolving "which user/student is this actually about" takes a separate
-  // batched lookup per target table rather than one join. Scoped to
-  // profiles and students specifically — the two cases an admin actually
-  // needs a name for (every account-management action targets profiles;
-  // several student-record actions target students) — rather than every
-  // target_table logActivity uses (attendance/milestones/announcements/etc.
-  // still show their raw table+id in the Details modal, just not resolved
-  // to a friendly name inline).
+  // table it points into — profiles, students, applications, attendance,
+  // etc.), not a declared FK Supabase can auto-join the way it does
+  // actor_id above, so resolving "which user/student/request is this
+  // actually about" takes a separate batched lookup per target table
+  // rather than one join. Scoped to profiles, students, and (added
+  // 2026-09-03, reported live as missing once Archive/Delete/Restore on
+  // enrollment requests started generating a lot of these) applications —
+  // every account-management action targets profiles, several
+  // student-record actions target students, and every Enrollment Requests
+  // action (approve/reject/archive/delete/restore) targets applications —
+  // rather than every target_table logActivity uses
+  // (attendance/milestones/announcements/etc. still show their raw
+  // table+id in the Details modal, just not resolved to a friendly name
+  // inline).
   const profileTargetIds = [...new Set(logRowsData.filter((l) => l.target_table === 'profiles' && l.target_id).map((l) => l.target_id!))]
   const studentTargetIds = [...new Set(logRowsData.filter((l) => l.target_table === 'students' && l.target_id).map((l) => l.target_id!))]
+  const applicationTargetIds = [...new Set(logRowsData.filter((l) => l.target_table === 'applications' && l.target_id).map((l) => l.target_id!))]
 
-  const [{ data: targetProfiles }, { data: targetStudents }] = await Promise.all([
+  const [{ data: targetProfiles }, { data: targetStudents }, { data: targetApplications }] = await Promise.all([
     profileTargetIds.length > 0
       ? supabase.from('profiles').select('id, first_name, last_name, email').in('id', profileTargetIds)
       : Promise.resolve({ data: [] as { id: string; first_name: string; last_name: string; email: string }[] }),
     studentTargetIds.length > 0
       ? supabase.from('students').select('id, first_name, last_name').in('id', studentTargetIds)
       : Promise.resolve({ data: [] as { id: string; first_name: string; last_name: string }[] }),
+    applicationTargetIds.length > 0
+      ? supabase
+          .from('applications')
+          .select('id, student_first_name, student_last_name, application_ref')
+          .in('id', applicationTargetIds)
+      : Promise.resolve({ data: [] as { id: string; student_first_name: string; student_last_name: string; application_ref: string }[] }),
   ])
 
   const profileById = new Map((targetProfiles ?? []).map((p) => [p.id, p]))
   const studentById = new Map((targetStudents ?? []).map((s) => [s.id, s]))
+  const applicationById = new Map((targetApplications ?? []).map((a) => [a.id, a]))
 
   function resolveTargetLabel(log: LogRow): string | null {
     if (log.target_table === 'profiles' && log.target_id) {
@@ -56,6 +68,10 @@ export default async function AdminLogsPage() {
     if (log.target_table === 'students' && log.target_id) {
       const s = studentById.get(log.target_id)
       return s ? `${s.first_name} ${s.last_name}` : null
+    }
+    if (log.target_table === 'applications' && log.target_id) {
+      const a = applicationById.get(log.target_id)
+      return a ? `${a.student_first_name} ${a.student_last_name} (${a.application_ref})` : null
     }
     return null
   }
