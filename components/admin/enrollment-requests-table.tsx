@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Mail, Phone } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { EnrollmentRequestModal } from '@/components/admin/enrollment-request-modal'
+import { archiveApplication, unarchiveApplication } from '@/app/admin/enroll-a-student/actions'
 import { calculateAge, formatStatus } from '@/lib/format'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
@@ -15,6 +16,7 @@ type Application = {
   submitted_at: string
   status: string
   reviewed_at: string | null
+  archived: boolean
   student_first_name: string
   student_middle_name: string | null
   student_last_name: string
@@ -30,7 +32,16 @@ type Application = {
   parent_email: string
 }
 
-type Tab = 'all' | 'pending_review' | 'approved' | 'rejected'
+// 'archived' is orthogonal to status, not a fifth status value — an
+// approved or rejected request can be archived, so All/Pending/
+// Approved/Rejected all exclude archived rows (see `counts`/`filtered`
+// below) and this tab is the only place they're shown. This is admin's own
+// declutter flag, independent from the parent-facing hidden_from_parent
+// column on the same applications table (see
+// components/parent/remove-application-button.tsx) — a parent removing a
+// rejected application from their own portal has no effect here, and
+// archiving here has no effect on what a parent sees.
+type Tab = 'all' | 'pending_review' | 'approved' | 'rejected' | 'archived'
 
 export function EnrollmentRequestsTable({ applications }: { applications: Application[] }) {
   // See students-table.tsx for why this is derived rather than its own
@@ -40,27 +51,35 @@ export function EnrollmentRequestsTable({ applications }: { applications: Applic
   const selected = selectedId ? (applications.find((a) => a.id === selectedId) ?? null) : null
   const [tab, setTab] = useState<Tab>('all')
   const [search, setSearch] = useState('')
+  const [archivingId, setArchivingId] = useState<string | null>(null)
   const router = useRouter()
 
+  const nonArchived = applications.filter((a) => !a.archived)
   const counts = {
-    all: applications.length,
-    pending_review: applications.filter((a) => a.status === 'pending_review').length,
-    approved: applications.filter((a) => a.status === 'approved').length,
-    rejected: applications.filter((a) => a.status === 'rejected').length,
+    all: nonArchived.length,
+    pending_review: nonArchived.filter((a) => a.status === 'pending_review').length,
+    approved: nonArchived.filter((a) => a.status === 'approved').length,
+    rejected: nonArchived.filter((a) => a.status === 'rejected').length,
+    archived: applications.filter((a) => a.archived).length,
   }
 
-  const filtered = (tab === 'all' ? applications : applications.filter((a) => a.status === tab)).filter(
-    (app) => {
-      if (!search.trim()) return true
-      const term = search.toLowerCase()
-      return (
-        `${app.student_first_name} ${app.student_last_name}`.toLowerCase().includes(term) ||
-        `${app.parent_first_name} ${app.parent_last_name}`.toLowerCase().includes(term) ||
-        app.parent_email.toLowerCase().includes(term) ||
-        app.application_ref.toLowerCase().includes(term)
-      )
-    }
-  )
+  const tabItems =
+    tab === 'archived'
+      ? applications.filter((a) => a.archived)
+      : tab === 'all'
+        ? nonArchived
+        : nonArchived.filter((a) => a.status === tab)
+
+  const filtered = tabItems.filter((app) => {
+    if (!search.trim()) return true
+    const term = search.toLowerCase()
+    return (
+      `${app.student_first_name} ${app.student_last_name}`.toLowerCase().includes(term) ||
+      `${app.parent_first_name} ${app.parent_last_name}`.toLowerCase().includes(term) ||
+      app.parent_email.toLowerCase().includes(term) ||
+      app.application_ref.toLowerCase().includes(term)
+    )
+  })
 
   const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(
     filtered,
@@ -72,7 +91,22 @@ export function EnrollmentRequestsTable({ applications }: { applications: Applic
     { key: 'pending_review', label: 'Pending', count: counts.pending_review },
     { key: 'approved', label: 'Approved', count: counts.approved },
     { key: 'rejected', label: 'Rejected', count: counts.rejected },
+    { key: 'archived', label: 'Archived', count: counts.archived },
   ]
+
+  async function handleArchiveToggle(app: Application) {
+    setArchivingId(app.id)
+    try {
+      if (app.archived) {
+        await unarchiveApplication(app.id)
+      } else {
+        await archiveApplication(app.id)
+      }
+      router.refresh()
+    } finally {
+      setArchivingId(null)
+    }
+  }
 
   // Live updates: re-fetch this route's data whenever any row in
   // `applications` changes (a new public submission, or a status change
@@ -187,12 +221,23 @@ export function EnrollmentRequestsTable({ applications }: { applications: Applic
                     </span>
                   </td>
                   <td className="p-4">
-                    <button
-                      onClick={() => setSelectedId(app.id)}
-                      className="rounded-full border border-[#0b1b62] dark:border-indigo-300 px-4 py-1.5 text-xs font-semibold text-[#0b1b62] dark:text-indigo-300 hover:bg-[#0b1b62] hover:text-white"
-                    >
-                      View Submission
-                    </button>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <button
+                        onClick={() => setSelectedId(app.id)}
+                        className="rounded-full border border-[#0b1b62] dark:border-indigo-300 px-4 py-1.5 text-xs font-semibold text-[#0b1b62] dark:text-indigo-300 hover:bg-[#0b1b62] hover:text-white"
+                      >
+                        View Submission
+                      </button>
+                      {app.status !== 'pending_review' && (
+                        <button
+                          onClick={() => handleArchiveToggle(app)}
+                          disabled={archivingId === app.id}
+                          className="text-xs font-semibold text-gray-500 dark:text-gray-400 underline disabled:opacity-60"
+                        >
+                          {archivingId === app.id ? 'Working…' : app.archived ? 'Unarchive' : 'Archive'}
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))

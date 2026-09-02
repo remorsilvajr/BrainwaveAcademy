@@ -149,3 +149,51 @@ export async function dismissApplication(applicationId: string) {
 
   revalidatePath('/admin/enroll-a-student')
 }
+
+// Archiving is orthogonal to status (an approved or rejected request can be
+// archived, a still-open pending one can't — see the table's own guard on
+// this) and never deletes the row — it's purely a "declutter the default
+// tabs" flag, independent from the parent-facing hidden_from_parent column
+// on the same table (see components/parent/remove-application-button.tsx).
+// Reversible, so no confirm step in the UI.
+export async function archiveApplication(applicationId: string) {
+  const supabase = await createClient()
+
+  const { error } = await supabase.from('applications').update({ archived: true }).eq('id', applicationId)
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  const {
+    data: { user: actingAdmin },
+  } = await supabase.auth.getUser()
+  await logActivity(supabase, {
+    actorId: actingAdmin?.id ?? null,
+    action: 'Archived enrollment request',
+    targetTable: 'applications',
+    targetId: applicationId,
+  })
+
+  revalidatePath('/admin/enroll-a-student')
+}
+
+export async function unarchiveApplication(applicationId: string) {
+  const supabase = await createClient()
+
+  const { error } = await supabase.from('applications').update({ archived: false }).eq('id', applicationId)
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  const {
+    data: { user: actingAdmin },
+  } = await supabase.auth.getUser()
+  await logActivity(supabase, {
+    actorId: actingAdmin?.id ?? null,
+    action: 'Unarchived enrollment request',
+    targetTable: 'applications',
+    targetId: applicationId,
+  })
+
+  revalidatePath('/admin/enroll-a-student')
+}

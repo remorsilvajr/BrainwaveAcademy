@@ -2,6 +2,7 @@ import { ClipboardList, Clock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { StudentDashboardContent } from '@/components/teacher/student-dashboard-content'
 import { EmptyState } from '@/components/ui/empty-state'
+import { parentApplicationsFilter } from '@/lib/parent-applications'
 
 export default async function ParentStudentDashboardPage({
   searchParams,
@@ -21,7 +22,8 @@ export default async function ParentStudentDashboardPage({
   const { data: applications } = await supabase
     .from('applications')
     .select('id, student_first_name, student_last_name, created_student_id')
-    .or(`created_parent_id.eq.${user?.id ?? ''},parent_email.eq.${user?.email ?? ''}`)
+    .eq('hidden_from_parent', false)
+    .or(parentApplicationsFilter(user))
     .order('submitted_at', { ascending: true })
 
   const application =

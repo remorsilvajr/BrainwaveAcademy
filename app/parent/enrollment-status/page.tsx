@@ -3,6 +3,8 @@ import { CheckCircle2, Circle, FileWarning, ClipboardList } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { formatDateLong } from '@/lib/format'
 import { EmptyState } from '@/components/ui/empty-state'
+import { parentApplicationsFilter } from '@/lib/parent-applications'
+import { RemoveApplicationButton } from '@/components/parent/remove-application-button'
 
 type Stage = 'submitted' | 'approved' | 'documents' | 'enrolled' | 'rejected'
 
@@ -45,11 +47,12 @@ export default async function EnrollmentStatusPage({
   } = await supabase.auth.getUser()
 
   // See app/parent/layout.tsx for why this matches on parent_email too, not
-  // just created_parent_id.
+  // just created_parent_id, and why hidden_from_parent is filtered here too.
   const { data: applications } = await supabase
     .from('applications')
     .select('*')
-    .or(`created_parent_id.eq.${user?.id ?? ''},parent_email.eq.${user?.email ?? ''}`)
+    .eq('hidden_from_parent', false)
+    .or(parentApplicationsFilter(user))
     .order('submitted_at', { ascending: true })
 
   const application = (applications ?? []).find((a) => a.id === studentParam) ?? applications?.[0] ?? null
@@ -102,11 +105,14 @@ export default async function EnrollmentStatusPage({
         {stage === 'rejected' ? (
           <div className="mt-6 flex items-start gap-3 rounded-xl bg-red-50 dark:bg-red-950/30 p-4">
             <FileWarning className="mt-0.5 h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
-            <div>
+            <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-red-800">This application was not approved.</p>
               {application.review_notes && (
                 <p className="mt-1 text-sm text-red-700 dark:text-red-400">{application.review_notes}</p>
               )}
+              <div className="mt-3">
+                <RemoveApplicationButton applicationId={application.id} />
+              </div>
             </div>
           </div>
         ) : (

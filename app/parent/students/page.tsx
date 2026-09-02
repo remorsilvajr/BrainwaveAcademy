@@ -5,6 +5,7 @@ import { calculateAge, formatDateLong } from '@/lib/format'
 import { documentOrder, documentShortLabels } from '@/lib/documents'
 import { StudentAvatarEditor } from '@/components/parent/student-avatar-editor'
 import { EmptyState } from '@/components/ui/empty-state'
+import { parentApplicationsFilter } from '@/lib/parent-applications'
 
 export default async function StudentProfilePage({
   searchParams,
@@ -23,7 +24,8 @@ export default async function StudentProfilePage({
     supabase
       .from('applications')
       .select('*')
-      .or(`created_parent_id.eq.${user?.id ?? ''},parent_email.eq.${user?.email ?? ''}`)
+      .eq('hidden_from_parent', false)
+      .or(parentApplicationsFilter(user))
       .order('submitted_at', { ascending: true }),
     supabase
       .from('profiles')

@@ -1,6 +1,7 @@
 import { Sidebar, type NavSection } from '@/components/sidebar'
 import { ParentTopBar } from '@/components/parent/parent-topbar'
 import { createClient } from '@/lib/supabase/server'
+import { parentApplicationsFilter } from '@/lib/parent-applications'
 
 const sections: NavSection[] = [
   {
@@ -50,6 +51,12 @@ export default async function ParentLayout({ children }: { children: React.React
   // possible before the request is approved), but the selector, Dashboard,
   // Enrollment Status, and Student Profile all need to reflect a
   // still-pending submission too.
+  //
+  // hidden_from_parent excludes a rejected application the parent has
+  // explicitly removed via RemoveApplicationButton — the row stays in the
+  // database and fully visible to admin (see the "archived" note on
+  // components/admin/enrollment-requests-table.tsx for the admin-side
+  // equivalent), it's just filtered out of every parent-facing query.
   const [{ data: profile }, { data: applications }] = await Promise.all([
     supabase
       .from('profiles')
@@ -59,7 +66,8 @@ export default async function ParentLayout({ children }: { children: React.React
     supabase
       .from('applications')
       .select('id, student_first_name, student_last_name')
-      .or(`created_parent_id.eq.${user?.id ?? ''},parent_email.eq.${user?.email ?? ''}`)
+      .eq('hidden_from_parent', false)
+      .or(parentApplicationsFilter(user))
       .order('submitted_at', { ascending: true }),
   ])
 

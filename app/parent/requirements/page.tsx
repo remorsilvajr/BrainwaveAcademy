@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { RequirementsChecklist } from '@/components/parent/requirements-checklist'
+import { parentApplicationsFilter } from '@/lib/parent-applications'
 
 export default async function RequirementsPage({
   searchParams,
@@ -53,7 +54,8 @@ export default async function RequirementsPage({
     const { data: broaderDefault } = await supabase
       .from('applications')
       .select('id')
-      .or(`created_parent_id.eq.${user?.id ?? ''},parent_email.eq.${user?.email ?? ''}`)
+      .eq('hidden_from_parent', false)
+      .or(parentApplicationsFilter(user))
       .order('submitted_at', { ascending: true })
       .limit(1)
       .maybeSingle()
