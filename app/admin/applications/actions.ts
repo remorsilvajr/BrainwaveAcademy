@@ -99,7 +99,7 @@ export async function requestCorrections(
 }
 
 // The actual point where a student record gets created — only reachable
-// once the parent account exists (from Enroll A Student) AND every document
+// once the parent account exists (from Enrollment Requests) AND every document
 // is marked valid. Every step's error is checked and surfaced; a previous
 // version of this insert-chain (when it lived in enroll-a-student/actions.ts)
 // did not check the parent_student insert for errors, which could fail
@@ -119,7 +119,7 @@ export async function approveAndCreateStudentRecord(applicationId: string) {
 
   if (!application.created_parent_id) {
     throw new Error(
-      'This application has no parent account yet — approve it via Enroll A Student first.'
+      'This application has no parent account yet — approve it via Enrollment Requests first.'
     )
   }
 

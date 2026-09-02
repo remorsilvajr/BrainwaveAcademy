@@ -31,7 +31,7 @@ type Tab = 'all' | 'pending' | 'corrections' | 'completed'
 
 // Document-verification progress, not `applications.status` — every row
 // here already has status 'approved' (that's the enrollment *request*
-// outcome, decided back in Enroll A Student), so it's constant within this
+// outcome, decided back in Enrollment Requests), so it's constant within this
 // page and doesn't distinguish anything. What actually varies here is
 // whether documents still need review, need correction, or are all in and
 // the student record has been created.

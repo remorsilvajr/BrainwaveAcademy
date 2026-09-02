@@ -15,3 +15,18 @@ export function isValidName(value: string) {
 }
 
 export const NAME_VALIDATION_MESSAGE = `Names must be at least ${MIN_NAME_LENGTH} characters, and may only contain letters, spaces, hyphens, and apostrophes.`
+
+// Capitalizes the first letter of each word/hyphen/apostrophe-separated
+// segment (e.g. "mary-jane o'brien" -> "Mary-Jane O'Brien"). Only `/enroll`
+// and `/parent/enroll-a-student` applied this (each with its own private
+// copy of this exact function) — every admin-side name mutation
+// (Create New Account, Students, User Management, Teachers) saved names
+// exactly as typed, so an admin typing a lowercase name saved it lowercase.
+// Centralized here alongside isValidName for the same reason that function
+// was centralized: so a new name-accepting form gets both by importing one
+// module instead of risking only picking up one of the two.
+export function toTitleCase(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/(^|[\s'-])([a-zà-öø-ÿ])/g, (_match, sep, char) => sep + char.toUpperCase())
+}

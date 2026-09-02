@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
-import { isValidName, NAME_VALIDATION_MESSAGE } from '@/lib/name'
+import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
 import { isValidDob, dobRangeMessage, MIN_STUDENT_AGE, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
 import { logActivity } from '@/lib/activity-log'
 
@@ -37,12 +37,6 @@ const nameFields = [
   'parent_middle_name',
   'parent_last_name',
 ]
-
-function toTitleCase(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/(^|[\s'-])([a-zà-öø-ÿ])/g, (_match, sep, char) => sep + char.toUpperCase())
-}
 
 export async function submitApplication(
   _prevState: SubmitApplicationState,

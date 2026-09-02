@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
-import { isValidName, NAME_VALIDATION_MESSAGE } from '@/lib/name'
+import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
 import { logActivity } from '@/lib/activity-log'
 
 // A parent account that isn't active (inactive or blocked) shouldn't leave
@@ -143,9 +143,9 @@ export async function updateUserProfile(
   const { error } = await supabase
     .from('profiles')
     .update({
-      first_name: firstName,
-      middle_name: middleName || null,
-      last_name: lastName,
+      first_name: toTitleCase(firstName),
+      middle_name: middleName ? toTitleCase(middleName) : null,
+      last_name: toTitleCase(lastName),
       role: updates.role,
       phone_number: phone ? normalizePhilippineMobile(phone) : null,
       relationship_to_student: updates.role === 'parent' ? updates.relationship_to_student || null : null,

@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { isValidName, NAME_VALIDATION_MESSAGE } from '@/lib/name'
+import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
 import { isValidDob, dobRangeMessage, MIN_STUDENT_AGE, MAX_AGE } from '@/lib/dob'
 import { logActivity } from '@/lib/activity-log'
 
@@ -21,12 +21,6 @@ const requiredFields: Record<string, string> = {
 
 const allFieldKeys = [...Object.keys(requiredFields), 'student_middle_name']
 const nameFields = ['student_first_name', 'student_middle_name', 'student_last_name']
-
-function toTitleCase(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/(^|[\s'-])([a-zà-öø-ÿ])/g, (_match, sep, char) => sep + char.toUpperCase())
-}
 
 export async function submitStudent(
   _prevState: SubmitStudentState,

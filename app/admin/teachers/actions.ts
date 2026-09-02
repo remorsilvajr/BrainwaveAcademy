@@ -3,14 +3,14 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
-import { isValidName, NAME_VALIDATION_MESSAGE } from '@/lib/name'
+import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
 import { isValidDob, dobRangeMessage, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
 import { logActivity } from '@/lib/activity-log'
 
 // Deliberately doesn't touch role or account_status — those stay the
 // exclusive job of User Management (role changes, block/unblock) so this
 // page and that one don't end up as two different places that can each
-// half-manage the same account, the way Enroll A Student and Applications
+// half-manage the same account, the way Enrollment Requests and Applications
 // are kept as two separate steps rather than merged. This is just the
 // teacher-specific directory + the same personal-details fields a teacher
 // can already edit about themselves from their own My Profile.
@@ -51,9 +51,9 @@ export async function updateTeacherRecord(
   const { error } = await supabase
     .from('profiles')
     .update({
-      first_name: firstName,
-      middle_name: middleName || null,
-      last_name: lastName,
+      first_name: toTitleCase(firstName),
+      middle_name: middleName ? toTitleCase(middleName) : null,
+      last_name: toTitleCase(lastName),
       phone_number: phone ? normalizePhilippineMobile(phone) : null,
       date_of_birth: dob || null,
       gender: updates.gender || null,

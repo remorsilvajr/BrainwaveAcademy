@@ -6,7 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email'
 import { generateTempPassword } from '@/lib/password'
 import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
-import { isValidName, NAME_VALIDATION_MESSAGE } from '@/lib/name'
+import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
 import { logActivity } from '@/lib/activity-log'
 import { getSiteUrl } from '@/lib/site-url'
 
@@ -120,9 +120,9 @@ export async function createSystemUser(
   const { error: profileError } = await admin.from('profiles').insert({
     id: userId,
     role: values.role,
-    first_name: values.first_name,
-    middle_name: values.middle_name || null,
-    last_name: values.last_name,
+    first_name: toTitleCase(values.first_name),
+    middle_name: values.middle_name ? toTitleCase(values.middle_name) : null,
+    last_name: toTitleCase(values.last_name),
     email: values.email,
     phone_number: values.phone_number ? normalizePhilippineMobile(values.phone_number) : null,
     relationship_to_student: values.role === 'parent' ? values.relationship_to_student || null : null,

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import { isValidName, NAME_VALIDATION_MESSAGE } from '@/lib/name'
+import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
 import { isValidDob, dobRangeMessage, MIN_STUDENT_AGE, MAX_AGE } from '@/lib/dob'
 import { logActivity } from '@/lib/activity-log'
 
@@ -35,9 +35,9 @@ export async function updateStudentRecord(
   const { error } = await supabase
     .from('students')
     .update({
-      first_name: firstName,
-      middle_name: middleName || null,
-      last_name: lastName,
+      first_name: toTitleCase(firstName),
+      middle_name: middleName ? toTitleCase(middleName) : null,
+      last_name: toTitleCase(lastName),
       date_of_birth: updates.date_of_birth,
       gender: updates.gender,
     })

@@ -25,7 +25,7 @@ export default async function AdminDashboardPage() {
   ])
 
   // "Pending Applications" spans both stages of the pipeline: enrollment
-  // requests that haven't been approved yet (Enroll A Student's queue) and
+  // requests that haven't been approved yet (Enrollment Requests' queue) and
   // approved requests whose documents aren't fully verified yet, i.e. no
   // student record created (Applications' queue) — see CLAUDE.md's note on
   // why these are two separate, easily-confused features.

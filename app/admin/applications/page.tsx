@@ -4,9 +4,9 @@ import { ApplicationsTable } from '@/components/admin/applications-table'
 export default async function ApplicationsPage() {
   const supabase = await createClient()
 
-  // Only applications already approved via Enroll A Student belong here —
+  // Only applications already approved via Enrollment Requests belong here —
   // this page is the document-verification step that comes after that, not
-  // a second place to see raw enrollment requests (that's Enroll A Student's
+  // a second place to see raw enrollment requests (that's Enrollment Requests'
   // job). A pending/rejected enrollment request has no parent account yet,
   // so there's nothing for this page to review.
   const [{ data: applications }, { data: documents }] = await Promise.all([

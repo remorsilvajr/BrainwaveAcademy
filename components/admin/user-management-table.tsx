@@ -210,23 +210,24 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
                       </span>
                     </td>
                     <td className="p-4">
-                      <select
-                        value={u.account_status}
-                        disabled={u.account_status === 'blocked' || isPending}
-                        onChange={(e) => handleStatusChange(u, e.target.value)}
-                        className={`rounded-lg border px-2 py-1 text-sm capitalize disabled:opacity-60 focus:outline-none ${u.account_status === 'active'
-                            ? 'border-green-200 dark:border-green-800 bg-white dark:bg-gray-800 text-green-700 dark:text-green-400'
-                            : u.account_status === 'blocked'
-                              ? 'border-red-200 dark:border-red-800 bg-white dark:bg-gray-800 text-red-700 dark:text-red-400'
+                      {u.account_status === 'blocked' ? (
+                        <span className="inline-block rounded-lg border border-red-200 dark:border-red-800 bg-white dark:bg-gray-800 px-2 py-1 text-sm capitalize text-red-700 dark:text-red-400">
+                          Blocked
+                        </span>
+                      ) : (
+                        <select
+                          value={u.account_status}
+                          disabled={isPending}
+                          onChange={(e) => handleStatusChange(u, e.target.value)}
+                          className={`rounded-lg border px-2 py-1 text-sm capitalize disabled:opacity-60 focus:outline-none ${u.account_status === 'active'
+                              ? 'border-green-200 dark:border-green-800 bg-white dark:bg-gray-800 text-green-700 dark:text-green-400'
                               : 'border-amber-200 dark:border-amber-800 bg-white dark:bg-gray-800 text-amber-700 dark:text-amber-300'
-                          }`}
-                      >
-                        {u.account_status === 'blocked' && (
-                          <option value="blocked" className={optionClasses}>Blocked</option>
-                        )}
-                        <option value="active" className={optionClasses}>Active</option>
-                        <option value="inactive" className={optionClasses}>Inactive</option>
-                      </select>
+                            }`}
+                        >
+                          <option value="active" className={optionClasses}>Active</option>
+                          <option value="inactive" className={optionClasses}>Inactive</option>
+                        </select>
+                      )}
                     </td>
                     <td className="p-4 text-gray-500 dark:text-gray-400">{formatDateShort(u.created_at)}</td>
                     <td className="p-4">
