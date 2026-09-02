@@ -1,7 +1,8 @@
 import Link from 'next/link'
-import { CheckCircle2, Circle, FileWarning } from 'lucide-react'
+import { CheckCircle2, Circle, FileWarning, ClipboardList } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { formatDateLong } from '@/lib/format'
+import { EmptyState } from '@/components/ui/empty-state'
 
 type Stage = 'submitted' | 'approved' | 'documents' | 'enrolled' | 'rejected'
 
@@ -60,13 +61,12 @@ export default async function EnrollmentStatusPage({
           <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Enrollment Status</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Track your child&apos;s enrollment progress.</p>
         </div>
-        <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-8 text-center text-sm text-gray-500 dark:text-gray-400">
-          No enrollment application on file yet.{' '}
-          <Link href="/parent/enroll-a-student" className="font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline">
-            Enroll a student
-          </Link>{' '}
-          to get started.
-        </div>
+        <EmptyState
+          icon={ClipboardList}
+          title="No Enrollment Application Yet"
+          description="Once you've started an application for your child, its progress through submission, approval, document review, and enrollment will be tracked here step by step."
+          action={{ href: '/parent/enroll-a-student', label: 'Enroll A Student' }}
+        />
       </div>
     )
   }

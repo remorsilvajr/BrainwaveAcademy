@@ -1,6 +1,7 @@
-import Link from 'next/link'
+import { ClipboardList, Clock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { StudentDashboardContent } from '@/components/teacher/student-dashboard-content'
+import { EmptyState } from '@/components/ui/empty-state'
 
 export default async function ParentStudentDashboardPage({
   searchParams,
@@ -35,13 +36,12 @@ export default async function ParentStudentDashboardPage({
             Attendance, assessments, and development milestones for your child.
           </p>
         </div>
-        <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-8 text-center text-sm text-gray-500 dark:text-gray-400">
-          No students on file yet.{' '}
-          <Link href="/parent/enroll-a-student" className="font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline">
-            Enroll a student
-          </Link>{' '}
-          to get started.
-        </div>
+        <EmptyState
+          icon={ClipboardList}
+          title="No Enrollment Application Yet"
+          description="Attendance, assessments, and development milestones will appear here once your child is enrolled. Start an application to get things moving."
+          action={{ href: '/parent/enroll-a-student', label: 'Enroll A Student' }}
+        />
       </div>
     )
   }
@@ -58,13 +58,13 @@ export default async function ParentStudentDashboardPage({
             Attendance, assessments, and development milestones for your child.
           </p>
         </div>
-        <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-8 text-center text-sm text-gray-500 dark:text-gray-400">
-          {application.student_first_name} {application.student_last_name} isn&apos;t enrolled yet — attendance
-          and milestone tracking begin once enrollment is complete.{' '}
-          <Link href="/parent/enrollment-status" className="font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline">
-            Check Enrollment Status
-          </Link>
-        </div>
+        <EmptyState
+          icon={Clock}
+          tone="warning"
+          title="Not Enrolled Yet"
+          description={`${application.student_first_name} ${application.student_last_name}'s enrollment is still in progress — attendance and milestone tracking begin once it's complete.`}
+          action={{ href: '/parent/enrollment-status', label: 'Check Enrollment Status' }}
+        />
       </div>
     )
   }

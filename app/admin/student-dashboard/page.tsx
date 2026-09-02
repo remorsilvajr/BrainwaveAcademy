@@ -1,8 +1,9 @@
-import Link from 'next/link'
+import { Users } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { StudentDashboardContent } from '@/components/teacher/student-dashboard-content'
 import { StudentSelector } from '@/components/teacher/student-selector'
 import { updateStudentAvatar, removeStudentAvatar } from '@/app/admin/students/actions'
+import { EmptyState } from '@/components/ui/empty-state'
 
 export default async function AdminStudentDashboardPage({
   searchParams,
@@ -81,12 +82,12 @@ export default async function AdminStudentDashboardPage({
           <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Student Dashboard</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Attendance, assessments, and milestones per student.</p>
         </div>
-        <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-8 text-center text-sm text-gray-500 dark:text-gray-400">
-          No students on file yet.{' '}
-          <Link href="/admin/students" className="font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline">
-            View Students
-          </Link>
-        </div>
+        <EmptyState
+          icon={Users}
+          title="No Students on File Yet"
+          description="Once students are enrolled, you'll be able to pick one here to mark attendance, record milestone assessments, and manage their profile photo."
+          action={{ href: '/admin/students', label: 'View Students' }}
+        />
       </div>
     )
   }

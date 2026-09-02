@@ -1,9 +1,10 @@
 import Link from 'next/link'
-import { GraduationCap } from 'lucide-react'
+import { GraduationCap, ClipboardList } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { calculateAge, formatDateLong } from '@/lib/format'
 import { documentOrder, documentShortLabels } from '@/lib/documents'
 import { StudentAvatarEditor } from '@/components/parent/student-avatar-editor'
+import { EmptyState } from '@/components/ui/empty-state'
 
 export default async function StudentProfilePage({
   searchParams,
@@ -40,13 +41,12 @@ export default async function StudentProfilePage({
           <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Enrollment Profile</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">View your child&apos;s enrollment record.</p>
         </div>
-        <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-8 text-center text-sm text-gray-500 dark:text-gray-400">
-          No applicants or students on file yet.{' '}
-          <Link href="/parent/enroll-a-student" className="font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline">
-            Enroll a student
-          </Link>{' '}
-          to get started.
-        </div>
+        <EmptyState
+          icon={ClipboardList}
+          title="No Applicants or Students Yet"
+          description="Once you've started an enrollment application for your child, their enrollment record — personal details, guardian info, and document requirements — will appear here."
+          action={{ href: '/parent/enroll-a-student', label: 'Enroll A Student' }}
+        />
       </div>
     )
   }
