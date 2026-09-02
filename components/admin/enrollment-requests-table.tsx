@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Mail, Phone } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { EnrollmentRequestSlideover } from '@/components/admin/enrollment-request-slideover'
+import { EnrollmentRequestModal } from '@/components/admin/enrollment-request-modal'
 import { calculateAge, formatStatus } from '@/lib/format'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
@@ -215,7 +215,7 @@ export function EnrollmentRequestsTable({ applications }: { applications: Applic
       </div>
 
       {selected && (
-        <EnrollmentRequestSlideover application={selected} onClose={() => setSelectedId(null)} />
+        <EnrollmentRequestModal application={selected} onClose={() => setSelectedId(null)} />
       )}
     </>
   )

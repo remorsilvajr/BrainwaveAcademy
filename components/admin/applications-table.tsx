@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ApplicationReviewSlideover } from '@/components/admin/application-review-slideover'
+import { ApplicationReviewModal } from '@/components/admin/application-review-modal'
 import { documentOrder } from '@/lib/documents'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
@@ -178,7 +178,7 @@ export function ApplicationsTable({ applications }: { applications: Application[
       </div>
 
       {selected && (
-        <ApplicationReviewSlideover application={selected} onClose={() => setSelectedId(null)} />
+        <ApplicationReviewModal application={selected} onClose={() => setSelectedId(null)} />
       )}
     </>
   )

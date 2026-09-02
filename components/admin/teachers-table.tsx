@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { User as UserIcon } from 'lucide-react'
-import { TeacherRecordSlideover } from '@/components/admin/teacher-record-slideover'
+import { TeacherRecordModal } from '@/components/admin/teacher-record-modal'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
 
@@ -32,7 +32,7 @@ export function TeachersTable({ teachers }: { teachers: Teacher[] }) {
   // Holds an id, not the row itself — same reasoning as StudentsTable: after
   // an edit, router.refresh() re-fetches this page's server data and passes
   // down a brand-new `teachers` array, so deriving `selected` from it on
-  // every render keeps an open slideover showing the latest data.
+  // every render keeps an open modal showing the latest data.
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const selected = selectedId ? (teachers.find((t) => t.id === selectedId) ?? null) : null
 
@@ -157,7 +157,7 @@ export function TeachersTable({ teachers }: { teachers: Teacher[] }) {
       </div>
 
       {selected && (
-        <TeacherRecordSlideover teacher={selected} onClose={() => setSelectedId(null)} />
+        <TeacherRecordModal teacher={selected} onClose={() => setSelectedId(null)} />
       )}
     </>
   )

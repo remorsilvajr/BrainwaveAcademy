@@ -47,7 +47,7 @@ function InfoField({ label, value }: { label: string; value: string }) {
   )
 }
 
-export function StudentRecordSlideover({ student, onClose }: { student: Student; onClose: () => void }) {
+export function StudentRecordModal({ student, onClose }: { student: Student; onClose: () => void }) {
   const router = useRouter()
   const [tab, setTab] = useState<Tab>('personal')
   const [errorMessage, setErrorMessage] = useState('')

@@ -39,7 +39,7 @@ function InfoField({ label, value }: { label: string; value: string }) {
   )
 }
 
-export function TeacherRecordSlideover({ teacher, onClose }: { teacher: Teacher; onClose: () => void }) {
+export function TeacherRecordModal({ teacher, onClose }: { teacher: Teacher; onClose: () => void }) {
   const router = useRouter()
 
   const [avatarUrl, setAvatarUrl] = useState(teacher.avatar_url)

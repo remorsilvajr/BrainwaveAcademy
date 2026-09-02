@@ -44,7 +44,7 @@ function InfoField({ label, value }: { label: string; value: string }) {
   )
 }
 
-export function ApplicationReviewSlideover({
+export function ApplicationReviewModal({
   application,
   onClose,
 }: {

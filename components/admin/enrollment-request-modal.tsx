@@ -36,7 +36,7 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   )
 }
 
-export function EnrollmentRequestSlideover({
+export function EnrollmentRequestModal({
   application,
   onClose,
 }: {

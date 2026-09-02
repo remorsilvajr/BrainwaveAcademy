@@ -41,8 +41,8 @@ function parseIsoDate(value?: string): { day: string; month: string; year: strin
 //   Action keeps working unchanged (see components/enroll/enrollment-form.tsx).
 // - `onChange` used without relying on `name`: fires the combined ISO string
 //   on every change, for call sites that hold `dob` in local state and pass
-//   it directly into a bound Server Action call (the admin slideovers, both
-//   roles' My Profile forms) — swap `onChange={setDob}` in for the old
+//   it directly into a bound Server Action call (the admin record modals,
+//   both roles' My Profile forms) — swap `onChange={setDob}` in for the old
 //   `onChange={(e) => setDob(e.target.value)}`.
 //
 // `defaultValue` seeds the three selects once on mount, deliberately not

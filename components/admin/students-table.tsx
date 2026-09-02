@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { User as UserIcon } from 'lucide-react'
-import { StudentRecordSlideover } from '@/components/admin/student-record-slideover'
+import { StudentRecordModal } from '@/components/admin/student-record-modal'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
 
@@ -30,7 +30,7 @@ export function StudentsTable({ students }: { students: Student[] }) {
   // student, or a status cascade from User Management) re-fetches this
   // page's server data and passes down a brand-new `students` array each
   // time, so deriving `selected` from it on every render (below) means the
-  // open slideover always reflects the latest data instead of going stale
+  // open modal always reflects the latest data instead of going stale
   // until closed and reopened.
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const selected = selectedId ? (students.find((s) => s.id === selectedId) ?? null) : null
@@ -175,7 +175,7 @@ export function StudentsTable({ students }: { students: Student[] }) {
       </div>
 
       {selected && (
-        <StudentRecordSlideover student={selected} onClose={() => setSelectedId(null)} />
+        <StudentRecordModal student={selected} onClose={() => setSelectedId(null)} />
       )}
     </>
   )
