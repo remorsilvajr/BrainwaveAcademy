@@ -17,6 +17,7 @@ type Profile = {
   phone_number: string | null
   date_of_birth: string | null
   relationship_to_student: string | null
+  gender: string | null
   account_id: string | null
   is_verified: boolean
   avatar_url: string | null
@@ -30,6 +31,7 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
   const [phone, setPhone] = useState(profile.phone_number ?? '')
   const [dob, setDob] = useState(profile.date_of_birth ?? '')
   const [relationship, setRelationship] = useState(profile.relationship_to_student ?? '')
+  const [gender, setGender] = useState(profile.gender ?? '')
 
   // Photo changes are staged locally (preview only) until Save Profile
   // Changes is actually clicked — it was previously uploading and
@@ -48,6 +50,7 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
     phone !== (profile.phone_number ?? '') ||
     dob !== (profile.date_of_birth ?? '') ||
     relationship !== (profile.relationship_to_student ?? '') ||
+    gender !== (profile.gender ?? '') ||
     pendingPhoto !== null ||
     removePending
 
@@ -55,6 +58,7 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
     setPhone(profile.phone_number ?? '')
     setDob(profile.date_of_birth ?? '')
     setRelationship(profile.relationship_to_student ?? '')
+    setGender(profile.gender ?? '')
     if (photoPreview) URL.revokeObjectURL(photoPreview)
     setPendingPhoto(null)
     setPhotoPreview(null)
@@ -85,10 +89,16 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
       } else if (removePending) {
         await removeMyAvatar()
       }
-      const saved = await updateMyProfile({ phone_number: phone, date_of_birth: dob, relationship_to_student: relationship })
+      const saved = await updateMyProfile({
+        phone_number: phone,
+        date_of_birth: dob,
+        relationship_to_student: relationship,
+        gender,
+      })
       setPhone(saved.phone_number ?? '')
       setDob(saved.date_of_birth ?? '')
       setRelationship(saved.relationship_to_student ?? '')
+      setGender(saved.gender ?? '')
       if (photoPreview) URL.revokeObjectURL(photoPreview)
       setPendingPhoto(null)
       setPhotoPreview(null)
@@ -215,6 +225,23 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
                 <option value="Guardian">Guardian</option>
               </select>
             </div>
+            {relationship === 'Guardian' && (
+              <div>
+                <label htmlFor="gender" className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
+                  Gender
+                </label>
+                <select
+                  id="gender"
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value)}
+                  className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+                >
+                  <option value="">Not set</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
+              </div>
+            )}
           </div>
         </div>
       </div>

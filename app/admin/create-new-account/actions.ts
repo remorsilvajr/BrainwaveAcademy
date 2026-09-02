@@ -131,7 +131,7 @@ export async function createSystemUser(
       values.role === 'teacher'
         ? values.gender || null
         : values.role === 'parent'
-          ? genderFromParentRelationship(values.relationship_to_student)
+          ? genderFromParentRelationship(values.relationship_to_student, values.gender)
           : null,
     avatar_url: avatarUrl,
     is_verified: true,

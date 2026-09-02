@@ -236,7 +236,7 @@ export function CreateAccountForm() {
               </div>
             )}
 
-            {role === 'teacher' && (
+            {(role === 'teacher' || (role === 'parent' && relationship === 'Guardian')) && (
               <div className="mt-4">
                 <label htmlFor="gender" className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
                   Gender

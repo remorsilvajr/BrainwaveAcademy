@@ -10,6 +10,7 @@ export async function updateMyProfile(updates: {
   phone_number: string
   date_of_birth: string
   relationship_to_student: string
+  gender: string
 }) {
   const supabase = await createClient()
   const {
@@ -57,7 +58,7 @@ export async function updateMyProfile(updates: {
     phone_number: phone ? normalizePhilippineMobile(phone) : null,
     date_of_birth: dob || null,
     relationship_to_student: relationship,
-    gender: genderFromParentRelationship(relationship),
+    gender: genderFromParentRelationship(relationship, updates.gender),
   }
 
   const { error } = await supabase.from('profiles').update(normalized).eq('id', user.id)

@@ -169,7 +169,7 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
               />
             </div>
           </div>
-          {role === 'teacher' ? (
+          {role === 'teacher' || (role === 'parent' && relationship === 'Guardian') ? (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_6.5rem]">
               <DobSelect
                 label="Date of Birth"

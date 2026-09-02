@@ -163,7 +163,7 @@ export async function updateUserProfile(
         updates.role === 'teacher'
           ? updates.gender || null
           : updates.role === 'parent'
-            ? genderFromParentRelationship(updates.relationship_to_student)
+            ? genderFromParentRelationship(updates.relationship_to_student, updates.gender)
             : null,
     })
     .eq('id', userId)
