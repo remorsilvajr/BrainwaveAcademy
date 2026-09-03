@@ -200,8 +200,12 @@ export default async function TermsOfServicePage() {
           <P>Questions about these Terms can be directed to the School office:</P>
           <Ul>
             <li>Brainwave Preschool Academy, Tagum City, Davao del Norte, Philippines</li>
-            <li>Email: <a href="mailto:privacy@brainwaveacademy.edu.ph" className="text-[#0b1b62] underline hover:no-underline dark:text-indigo-300">privacy@brainwaveacademy.edu.ph</a></li>
+            <li>Email: <a href="mailto:rsilva1@addu.edu.ph" className="text-[#0b1b62] underline hover:no-underline dark:text-indigo-300">rsilva1@addu.edu.ph</a></li>
           </Ul>
+          <p className="mt-2 text-xs italic text-[#454650] dark:text-slate-400">
+            Note: this is a temporary contact address, used until the School has its own official
+            email set up. Requests sent here are still monitored.
+          </p>
         </div>
       </main>
       <SiteFooter />
