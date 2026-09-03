@@ -21,7 +21,6 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { LogoutButton } from './logout-button'
-import { ThemeToggle } from './theme-toggle'
 
 // Icons are resolved here, inside the Client Component, from a plain
 // string name — NOT passed in as actual component references from a
@@ -253,11 +252,14 @@ export function Sidebar({
         >
           <Menu className="h-5 w-5" />
         </button>
-        <div className="leading-tight">
-          <p className="text-sm font-bold text-white">{schoolName}</p>
-          {portalLabel && <p className="text-[11px] text-[#8f9bd6]">{portalLabel}</p>}
-        </div>
-        <ThemeToggle className="ml-auto text-white hover:bg-white/10" />
+        <Link href="/" onClick={(e) => handleLinkClick('/', e)} className="flex items-center gap-2 leading-tight hover:opacity-80" title="Back to homepage">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/landing/logo.svg" alt="" className="h-8 w-auto shrink-0" />
+          <div>
+            <p className="text-sm font-bold text-white">{schoolName}</p>
+            {portalLabel && <p className="text-[11px] text-[#8f9bd6]">{portalLabel}</p>}
+          </div>
+        </Link>
       </div>
 
       {isMobileOpen && (
@@ -269,10 +271,22 @@ export function Sidebar({
           />
           <aside className="relative flex h-full w-64 max-w-[80vw] flex-col overflow-y-auto bg-[#0b1b62] p-4 shadow-xl">
             <div className="mb-6 flex items-center justify-between px-2">
-              <div>
-                <p className="text-lg font-bold text-white">{schoolName}</p>
-                {portalLabel && <p className="text-xs text-[#8f9bd6]">{portalLabel}</p>}
-              </div>
+              <Link
+                href="/"
+                className="flex flex-col items-center gap-1.5 hover:opacity-80"
+                title="Back to homepage"
+                onClick={(e) => {
+                  handleLinkClick('/', e)
+                  setIsMobileOpen(false)
+                }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/images/landing/logo.svg" alt="" className="h-9 w-auto shrink-0" />
+                <div className="text-center">
+                  <p className="text-lg font-bold text-white">{schoolName}</p>
+                  {portalLabel && <p className="text-xs text-[#8f9bd6]">{portalLabel}</p>}
+                </div>
+              </Link>
               <button
                 type="button"
                 onClick={() => setIsMobileOpen(false)}
@@ -296,12 +310,15 @@ export function Sidebar({
       )}
 
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 shrink-0 flex-col overflow-y-auto bg-[#0b1b62] p-4 lg:flex">
-        <div className="mb-6 flex items-center justify-between gap-2 px-2">
-          <div>
-            <p className="text-lg font-bold text-white">{schoolName}</p>
-            {portalLabel && <p className="text-xs text-[#8f9bd6]">{portalLabel}</p>}
-          </div>
-          <ThemeToggle className="text-white hover:bg-white/10" />
+        <div className="mb-6 px-2">
+          <Link href="/" onClick={(e) => handleLinkClick('/', e)} className="flex flex-col items-center gap-1.5 hover:opacity-80" title="Back to homepage">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/images/landing/logo.svg" alt="" className="h-9 w-auto shrink-0" />
+            <div className="text-center">
+              <p className="text-lg font-bold text-white">{schoolName}</p>
+              {portalLabel && <p className="text-xs text-[#8f9bd6]">{portalLabel}</p>}
+            </div>
+          </Link>
         </div>
 
         <nav className="flex-1 space-y-6">

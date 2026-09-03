@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { hideRejectedApplication } from '@/app/parent/enrollment-status/actions'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 // Deliberately no redirect() inside the server action itself — this button
 // calls it directly (not via a <form action>/useActionState), and per this
@@ -12,7 +13,21 @@ import { hideRejectedApplication } from '@/app/parent/enrollment-status/actions'
 // wrapped in try/catch on the client — it would just land in the catch
 // block below as a fake error. Navigation happens client-side instead,
 // after the action resolves successfully.
-export function RemoveApplicationButton({ applicationId }: { applicationId: string }) {
+export function RemoveApplicationButton({
+  applicationId,
+  studentName,
+  applicationRef,
+  redirectTo = '/parent/enrollment-status',
+}: {
+  applicationId: string
+  // Optional, but pass these when available — the confirmation should name
+  // the specific record it's about to hide, same as every other
+  // consequential confirmation in this app (see the "confirmations need
+  // proper design" convention in CLAUDE.md).
+  studentName?: string
+  applicationRef?: string
+  redirectTo?: string
+}) {
   const router = useRouter()
   const [confirming, setConfirming] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -23,7 +38,7 @@ export function RemoveApplicationButton({ applicationId }: { applicationId: stri
     startTransition(async () => {
       try {
         await hideRejectedApplication(applicationId)
-        router.push('/parent/enrollment-status')
+        router.push(redirectTo)
         router.refresh()
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
@@ -32,40 +47,31 @@ export function RemoveApplicationButton({ applicationId }: { applicationId: stri
     })
   }
 
-  if (confirming) {
-    return (
-      <div className="flex flex-wrap items-center gap-2 text-xs">
-        <span className="text-gray-600 dark:text-gray-400">
-          Remove this application from your portal? It stays on file with the school.
-        </span>
-        <button
-          type="button"
-          onClick={() => setConfirming(false)}
-          disabled={isPending}
-          className="font-semibold text-gray-500 dark:text-gray-400 underline disabled:opacity-60"
-        >
-          Cancel
-        </button>
-        <button
-          type="button"
-          onClick={handleRemove}
-          disabled={isPending}
-          className="font-semibold text-red-700 dark:text-red-400 underline disabled:opacity-60"
-        >
-          {isPending ? 'Removing…' : 'Yes, Remove It'}
-        </button>
-        {error && <p className="w-full text-red-600 dark:text-red-400">{error}</p>}
-      </div>
-    )
-  }
+  const who = studentName && applicationRef ? `${studentName}'s application (${applicationRef})` : 'This application'
 
   return (
-    <button
-      type="button"
-      onClick={() => setConfirming(true)}
-      className="text-xs font-semibold text-red-700 dark:text-red-400 hover:underline"
-    >
-      Remove This Application
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={() => setConfirming(true)}
+        className="rounded-full border border-red-300 dark:border-red-800 px-3 py-1.5 text-xs font-semibold text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"
+      >
+        Remove This Application
+      </button>
+
+      {error && <p className="mt-2 text-xs text-red-600 dark:text-red-400">{error}</p>}
+
+      {confirming && (
+        <ConfirmDialog
+          title="Remove this application?"
+          description={`${who} will be hidden from your portal.`}
+          confirmLabel="Yes, Remove It"
+          tone="danger"
+          isPending={isPending}
+          onConfirm={handleRemove}
+          onCancel={() => setConfirming(false)}
+        />
+      )}
+    </>
   )
 }

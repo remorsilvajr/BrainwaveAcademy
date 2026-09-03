@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { ChevronDown, User as UserIcon } from 'lucide-react'
 import type { NavSection } from '@/components/sidebar'
 import { ProfileMenu } from '@/components/ui/profile-menu'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 type Student = { id: string; first_name: string; last_name: string }
 type Parent = { first_name: string; last_name: string; avatar_url: string | null }
@@ -91,6 +92,8 @@ export function ParentTopBar({
               )}
             </div>
           )}
+
+          <ThemeToggle className="text-[#0b1b62] hover:bg-black/5 dark:text-slate-200 dark:hover:bg-white/10" />
 
           <ProfileMenu
             myProfileHref="/parent/my-profile"

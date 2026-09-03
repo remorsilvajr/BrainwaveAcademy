@@ -6,6 +6,7 @@ import { documentOrder, documentShortLabels } from '@/lib/documents'
 import { StudentAvatarEditor } from '@/components/parent/student-avatar-editor'
 import { EmptyState } from '@/components/ui/empty-state'
 import { parentApplicationsFilter } from '@/lib/parent-applications'
+import { RemoveApplicationButton } from '@/components/parent/remove-application-button'
 
 export default async function StudentProfilePage({
   searchParams,
@@ -106,6 +107,17 @@ export default async function StudentProfilePage({
           >
             {statusLabel}
           </span>
+
+          {application.status === 'rejected' && (
+            <div className="mt-3">
+              <RemoveApplicationButton
+                applicationId={application.id}
+                studentName={fullName}
+                applicationRef={application.application_ref}
+                redirectTo="/parent/students"
+              />
+            </div>
+          )}
 
           <div className="mt-6 space-y-2 border-t border-gray-100 dark:border-gray-800 pt-4 text-left text-sm">
             <div className="flex justify-between">

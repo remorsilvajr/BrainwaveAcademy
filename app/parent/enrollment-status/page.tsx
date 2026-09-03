@@ -111,7 +111,11 @@ export default async function EnrollmentStatusPage({
                 <p className="mt-1 text-sm text-red-700 dark:text-red-400">{application.review_notes}</p>
               )}
               <div className="mt-3">
-                <RemoveApplicationButton applicationId={application.id} />
+                <RemoveApplicationButton
+                  applicationId={application.id}
+                  studentName={`${application.student_first_name} ${application.student_last_name}`}
+                  applicationRef={application.application_ref}
+                />
               </div>
             </div>
           </div>

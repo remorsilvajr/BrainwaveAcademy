@@ -1,4 +1,5 @@
 import { Sidebar, type NavSection } from '@/components/sidebar'
+import { AdminTopBar } from '@/components/admin/admin-topbar'
 import { createClient } from '@/lib/supabase/server'
 
 const baseSections: NavSection[] = [
@@ -57,7 +58,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   } = await supabase.auth.getUser()
   const { data: profile } = await supabase
     .from('profiles')
-    .select('is_super_admin')
+    .select('is_super_admin, first_name, last_name, avatar_url')
     .eq('id', user?.id ?? '')
     .maybeSingle()
 
@@ -78,7 +79,17 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="flex">
       <Sidebar sections={sections} schoolName="Brainwave Academy" portalLabel="Admin Portal" />
-      <main className="min-w-0 flex-1 bg-[#faf9fc] dark:bg-gray-950 px-4 pb-8 pt-20 lg:ml-64 lg:px-8 lg:pt-8">{children}</main>
+      <div className="min-w-0 flex-1 pt-14 lg:ml-64 lg:pt-0">
+        <AdminTopBar
+          sections={sections}
+          admin={{
+            first_name: profile?.first_name ?? '',
+            last_name: profile?.last_name ?? '',
+            avatar_url: profile?.avatar_url ?? null,
+          }}
+        />
+        <main className="bg-[#faf9fc] dark:bg-gray-950 p-4 sm:p-8">{children}</main>
+      </div>
     </div>
   )
 }
