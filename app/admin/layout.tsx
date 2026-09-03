@@ -31,6 +31,7 @@ const baseSections: NavSection[] = [
     title: 'Admin',
     items: [
       { label: 'Activity Log', href: '/admin/logs', icon: 'checklist' },
+      { label: 'Feedback', href: '/admin/feedback', icon: 'bug' },
       { label: 'Settings', href: '/admin/settings', icon: 'settings' },
       { label: 'Log Out', isLogout: true, icon: 'logout' },
     ],

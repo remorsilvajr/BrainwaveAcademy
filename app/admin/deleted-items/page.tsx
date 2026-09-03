@@ -43,7 +43,7 @@ export default async function DeletedItemsPage() {
     supabase
       .from('applications')
       .select(
-        'id, application_ref, status, reviewed_at, student_first_name, student_middle_name, student_last_name, student_dob, student_gender, parent_first_name, parent_middle_name, parent_last_name, parent_dob, parent_relationship, parent_gender, parent_contact_number, parent_email, deleted_at'
+        'id, application_ref, status, reviewed_at, student_first_name, student_middle_name, student_last_name, student_dob, student_gender, parent_first_name, parent_middle_name, parent_last_name, parent_dob, parent_relationship, parent_gender, parent_contact_number, parent_email, review_notes, deleted_at'
       )
       .not('deleted_at', 'is', null)
       .order('deleted_at', { ascending: false }),

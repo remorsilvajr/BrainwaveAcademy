@@ -24,6 +24,7 @@ type Application = {
   parent_gender: string | null
   parent_contact_number: string
   parent_email: string
+  review_notes: string | null
 }
 
 type PendingAction = 'approve' | 'dismiss' | null
@@ -51,6 +52,7 @@ export function EnrollmentRequestModal({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [result, setResult] = useState<'approved' | 'dismissed' | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
+  const [rejectReason, setRejectReason] = useState('')
 
   const studentName = `${application.student_first_name} ${application.student_last_name}`
   const alreadyDecided = application.status !== 'pending_review'
@@ -74,7 +76,7 @@ export function EnrollmentRequestModal({
     setIsSubmitting(true)
     setErrorMessage('')
     try {
-      await dismissApplication(application.id)
+      await dismissApplication(application.id, rejectReason)
       setResult('dismissed')
       router.refresh()
     } catch (err) {
@@ -118,6 +120,11 @@ export function EnrollmentRequestModal({
                 >
                   This request was {formatStatus(application.status).toLowerCase()}
                   {application.reviewed_at ? ` on ${formatDateLong(application.reviewed_at)}` : ''}.
+                  {application.status === 'rejected' && application.review_notes && (
+                    <p className="mt-1 font-normal text-red-800 dark:text-red-300">
+                      Reason: {application.review_notes}
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -190,6 +197,23 @@ export function EnrollmentRequestModal({
                       ? `Are you sure you want to approve this request? This will create a parent account and email ${application.parent_email} immediately.`
                       : 'Are you sure you want to reject this request? This cannot be undone from here.'}
                   </p>
+                  {pendingAction === 'dismiss' && (
+                    <div className="mt-3">
+                      <label className="mb-1 block text-xs font-semibold text-amber-900 dark:text-amber-200">
+                        Reason for rejection <span className="text-red-600">*</span>
+                      </label>
+                      <textarea
+                        value={rejectReason}
+                        onChange={(e) => setRejectReason(e.target.value)}
+                        rows={3}
+                        placeholder="e.g. Student's age doesn't meet our enrollment requirement..."
+                        className="w-full rounded-lg border border-amber-300 dark:border-amber-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+                      />
+                      <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                        Shown to {application.parent_first_name} in their Enrollment Status page.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -218,7 +242,10 @@ export function EnrollmentRequestModal({
           ) : pendingAction === 'dismiss' ? (
             <>
               <button
-                onClick={() => setPendingAction(null)}
+                onClick={() => {
+                  setPendingAction(null)
+                  setRejectReason('')
+                }}
                 disabled={isSubmitting}
                 className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-60"
               >
@@ -226,8 +253,9 @@ export function EnrollmentRequestModal({
               </button>
               <button
                 onClick={handleConfirmedDismiss}
-                disabled={isSubmitting}
-                className="flex-1 rounded-lg bg-gray-900 py-3 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-60"
+                disabled={isSubmitting || !rejectReason.trim()}
+                title={!rejectReason.trim() ? 'Add a reason for rejection first' : undefined}
+                className="flex-1 rounded-lg bg-gray-900 py-3 text-sm font-semibold text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {isSubmitting ? 'Working…' : 'Yes, Reject Request'}
               </button>

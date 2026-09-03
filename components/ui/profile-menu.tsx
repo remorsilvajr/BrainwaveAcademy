@@ -3,7 +3,9 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { Bug } from 'lucide-react'
 import { LogoutButton } from '@/components/logout-button'
+import { BugReportModal } from '@/components/feedback/bug-report-modal'
 
 // w-full + text-left matter here, not just block — an <a> (My Profile/
 // Settings) is a plain block-level box that fills its container width with
@@ -33,6 +35,7 @@ export function ProfileMenu({
   children: React.ReactNode
 }) {
   const [open, setOpen] = useState(false)
+  const [showBugReport, setShowBugReport] = useState(false)
   const pathname = usePathname()
   const [lastPathname, setLastPathname] = useState(pathname)
 
@@ -69,11 +72,24 @@ export function ProfileMenu({
             <Link href={settingsHref} onClick={() => setOpen(false)} className={ITEM_CLASSNAME}>
               Settings
             </Link>
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false)
+                setShowBugReport(true)
+              }}
+              className={`${ITEM_CLASSNAME} flex items-center gap-2`}
+            >
+              <Bug className="h-4 w-4" />
+              Report a Bug
+            </button>
             <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
             <LogoutButton className={ITEM_CLASSNAME} />
           </div>
         </>
       )}
+
+      {showBugReport && <BugReportModal onClose={() => setShowBugReport(false)} />}
     </div>
   )
 }

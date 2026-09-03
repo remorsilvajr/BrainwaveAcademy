@@ -131,7 +131,12 @@ export async function approveApplication(applicationId: string) {
   revalidatePath('/admin/applications')
 }
 
-export async function dismissApplication(applicationId: string) {
+export async function dismissApplication(applicationId: string, reason: string) {
+  const trimmedReason = reason.trim()
+  if (!trimmedReason) {
+    throw new Error('Please explain why this request is being rejected.')
+  }
+
   const supabase = await createClient()
 
   const { error } = await supabase
@@ -139,6 +144,7 @@ export async function dismissApplication(applicationId: string) {
     .update({
       status: 'rejected',
       reviewed_at: new Date().toISOString(),
+      review_notes: trimmedReason,
     })
     .eq('id', applicationId)
 

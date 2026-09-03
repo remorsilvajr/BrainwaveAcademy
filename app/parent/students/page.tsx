@@ -110,6 +110,12 @@ export default async function StudentProfilePage({
 
           {application.status === 'rejected' && (
             <div className="mt-3">
+              {application.review_notes && (
+                <p className="mb-3 rounded-lg bg-red-50 dark:bg-red-950/30 px-3 py-2 text-left text-xs text-red-700 dark:text-red-400">
+                  <span className="font-semibold">Reason: </span>
+                  {application.review_notes}
+                </p>
+              )}
               <RemoveApplicationButton
                 applicationId={application.id}
                 studentName={fullName}

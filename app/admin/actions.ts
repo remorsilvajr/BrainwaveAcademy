@@ -23,4 +23,27 @@ export async function resolveFeedback(id: string) {
   })
 
   revalidatePath('/admin')
+  revalidatePath('/admin/feedback')
+}
+
+export async function reopenFeedback(id: string) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const { error } = await supabase.from('feedback').update({ resolved: false }).eq('id', id)
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  await logActivity(supabase, {
+    actorId: user?.id ?? null,
+    action: 'Reopened feedback',
+    targetTable: 'feedback',
+    targetId: id,
+  })
+
+  revalidatePath('/admin')
+  revalidatePath('/admin/feedback')
 }

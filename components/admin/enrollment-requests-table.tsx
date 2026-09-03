@@ -31,6 +31,7 @@ type Application = {
   parent_gender: string | null
   parent_contact_number: string
   parent_email: string
+  review_notes: string | null
 }
 
 // 'archived' is orthogonal to status, not a fifth status value — an

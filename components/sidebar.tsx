@@ -18,6 +18,7 @@ import {
   Menu,
   X,
   Trash2,
+  Bug,
   type LucideIcon,
 } from 'lucide-react'
 import { LogoutButton } from './logout-button'
@@ -39,6 +40,7 @@ export const iconMap = {
   settings: SettingsIcon,
   logout: LogOut,
   trash: Trash2,
+  bug: Bug,
 } satisfies Record<string, LucideIcon>
 
 export type IconName = keyof typeof iconMap

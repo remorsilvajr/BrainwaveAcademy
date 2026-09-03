@@ -26,6 +26,7 @@ type DeletedApplication = {
   parent_gender: string | null
   parent_contact_number: string
   parent_email: string
+  review_notes: string | null
   deleted_at: string
 }
 

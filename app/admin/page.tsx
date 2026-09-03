@@ -12,17 +12,22 @@ type FeedbackRow = {
 export default async function AdminDashboardPage() {
   const supabase = await createClient()
 
-  const [{ data: applications }, { data: students }, { data: feedbackRows }] = await Promise.all([
-    supabase.from('applications').select('status, created_student_id'),
-    supabase.from('students').select('enrollment_status'),
-    supabase
-      .from('feedback')
-      .select('id, subject, message, created_at, profiles(first_name, last_name)')
-      .eq('resolved', false)
-      .order('created_at', { ascending: false })
-      .limit(5)
-      .returns<FeedbackRow[]>(),
-  ])
+  const [{ data: applications }, { data: students }, { data: feedbackRows }, { count: unresolvedFeedbackCount }] =
+    await Promise.all([
+      supabase.from('applications').select('status, created_student_id'),
+      supabase.from('students').select('enrollment_status'),
+      supabase
+        .from('feedback')
+        .select('id, subject, message, created_at, profiles(first_name, last_name)')
+        .eq('resolved', false)
+        .order('created_at', { ascending: false })
+        .limit(5)
+        .returns<FeedbackRow[]>(),
+      // Separate exact-count query — the list above is capped at 5 for the
+      // dashboard widget, so feedbackRows.length would silently undercount
+      // this stat once there are more than 5 unresolved reports.
+      supabase.from('feedback').select('id', { count: 'exact', head: true }).eq('resolved', false),
+    ])
 
   // "Pending Applications" spans both stages of the pipeline: enrollment
   // requests that haven't been approved yet (Enrollment Requests' queue) and
@@ -68,8 +73,8 @@ export default async function AdminDashboardPage() {
         </div>
         <div className="rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-red-400 dark:border-l-red-600 bg-white dark:bg-gray-900 p-4 shadow-sm">
           <p className="text-sm text-gray-500 dark:text-gray-400">Unresolved Feedback</p>
-          <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">{feedbackItems.length}</p>
-          <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Parent inquiries needing response</p>
+          <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">{unresolvedFeedbackCount ?? 0}</p>
+          <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Bug reports &amp; feedback needing response</p>
         </div>
         {/* No `payments` table/UI exists yet — shown as an honest empty
             state rather than fabricated numbers. See the matching note on
@@ -109,7 +114,7 @@ export default async function AdminDashboardPage() {
           </div>
         </div>
 
-        <PriorityFeedbackLog items={feedbackItems} />
+        <PriorityFeedbackLog items={feedbackItems} viewAllHref="/admin/feedback" />
       </div>
     </div>
   )
