@@ -40,9 +40,11 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 export function EnrollmentRequestModal({
   application,
   onClose,
+  readOnly = false,
 }: {
   application: Application
   onClose: () => void
+  readOnly?: boolean
 }) {
   const router = useRouter()
   const [pendingAction, setPendingAction] = useState<PendingAction>(null)
@@ -152,7 +154,7 @@ export function EnrollmentRequestModal({
                 <InfoRow label="Contact Email" value={application.parent_email} />
               </div>
 
-              {!alreadyDecided && pendingAction === null && (
+              {!readOnly && !alreadyDecided && pendingAction === null && (
                 <div className="mt-6 rounded-xl border border-sky-100 bg-sky-50 dark:bg-sky-950/30 p-4">
                   <div className="mb-2 flex items-center gap-2">
                     <ShieldCheck className="h-4 w-4 text-sky-600 dark:text-sky-400" />
@@ -206,7 +208,7 @@ export function EnrollmentRequestModal({
             >
               Close
             </button>
-          ) : alreadyDecided ? (
+          ) : readOnly || alreadyDecided ? (
             <button
               onClick={onClose}
               className="w-full rounded-lg border border-gray-300 dark:border-gray-600 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"

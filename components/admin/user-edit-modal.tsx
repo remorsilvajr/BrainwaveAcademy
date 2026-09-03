@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
-import { X } from 'lucide-react'
+import { User as UserIcon, X } from 'lucide-react'
 import { updateUserProfile, updateUserAvatar, removeUserAvatar } from '@/app/admin/user-management/actions'
 import { dobInputMin, dobInputMax, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
 import { AvatarEditor } from '@/components/ui/avatar-editor'
@@ -32,7 +32,15 @@ type Profile = {
   applicants?: Applicant[]
 }
 
-export function UserEditModal({ user, onClose }: { user: Profile; onClose: () => void }) {
+export function UserEditModal({
+  user,
+  onClose,
+  readOnly = false,
+}: {
+  user: Profile
+  onClose: () => void
+  readOnly?: boolean
+}) {
   const [avatarUrl, setAvatarUrl] = useState(user.avatar_url)
   const [isSavingAvatar, setIsSavingAvatar] = useState(false)
   const [avatarError, setAvatarError] = useState('')
@@ -110,7 +118,9 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
     <Modal onClose={onClose} maxWidth="md">
       <div className="overflow-y-auto p-6">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Edit User</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            {readOnly ? 'Account Details' : 'Edit User'}
+          </h2>
           <button
             onClick={onClose}
             aria-label="Close"
@@ -121,13 +131,26 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
         </div>
 
         <div className="mb-4">
-          <AvatarEditor
-            imageUrl={avatarUrl}
-            onFileSelected={handleAvatarSelected}
-            onRemove={avatarUrl ? handleAvatarRemove : undefined}
-            disabled={isSavingAvatar}
-            sizeClassName="h-20 w-20"
-          />
+          {readOnly ? (
+            <div className="mx-auto w-max">
+              {avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={avatarUrl} alt="" className="h-20 w-20 rounded-full object-cover" />
+              ) : (
+                <span className="flex h-20 w-20 items-center justify-center rounded-full bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300">
+                  <UserIcon className="h-10 w-10" />
+                </span>
+              )}
+            </div>
+          ) : (
+            <AvatarEditor
+              imageUrl={avatarUrl}
+              onFileSelected={handleAvatarSelected}
+              onRemove={avatarUrl ? handleAvatarRemove : undefined}
+              disabled={isSavingAvatar}
+              sizeClassName="h-20 w-20"
+            />
+          )}
           {avatarError && <p className="mt-2 text-center text-xs text-red-600 dark:text-red-400">{avatarError}</p>}
         </div>
 
@@ -147,6 +170,7 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 required
+                disabled={readOnly}
                 className={inputClasses}
               />
             </div>
@@ -156,6 +180,7 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
                 value={middleName}
                 onChange={(e) => setMiddleName(e.target.value)}
                 placeholder="Optional"
+                disabled={readOnly}
                 className={inputClasses}
               />
             </div>
@@ -165,6 +190,7 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 required
+                disabled={readOnly}
                 className={inputClasses}
               />
             </div>
@@ -185,6 +211,7 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
                 <select
                   value={gender}
                   onChange={(e) => setGender(e.target.value)}
+                  disabled={readOnly}
                   className={inputClasses}
                 >
                   <option value="" className={optionClasses}>Not set</option>
@@ -208,6 +235,7 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="0917 123 4567 or +63 917 123 4567"
+              disabled={readOnly}
               className={inputClasses}
             />
             <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
@@ -219,6 +247,7 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
+              disabled={readOnly}
               className={inputClasses}
             >
               <option value="parent" className={optionClasses}>Parent</option>
@@ -235,6 +264,7 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
               <select
                 value={relationship}
                 onChange={(e) => setRelationship(e.target.value)}
+                disabled={readOnly}
                 className={inputClasses}
               >
                 <option value="" className={optionClasses}>Not set</option>
@@ -287,20 +317,32 @@ export function UserEditModal({ user, onClose }: { user: Profile; onClose: () =>
           )}
 
           <div className="flex gap-2 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex-1 rounded-lg bg-[#0b1b62] dark:bg-indigo-600 py-2.5 text-sm font-semibold text-white hover:bg-[#08154d] dark:hover:bg-indigo-500 disabled:opacity-60"
-            >
-              {isSubmitting ? 'Saving…' : 'Save Changes'}
-            </button>
+            {readOnly ? (
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+              >
+                Close
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex-1 rounded-lg bg-[#0b1b62] dark:bg-indigo-600 py-2.5 text-sm font-semibold text-white hover:bg-[#08154d] dark:hover:bg-indigo-500 disabled:opacity-60"
+                >
+                  {isSubmitting ? 'Saving…' : 'Save Changes'}
+                </button>
+              </>
+            )}
           </div>
         </form>
       </div>

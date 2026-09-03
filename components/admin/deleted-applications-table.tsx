@@ -6,16 +6,26 @@ import { restoreApplications } from '@/app/admin/enroll-a-student/actions'
 import { formatDateShort, formatStatus } from '@/lib/format'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
+import { EnrollmentRequestModal } from '@/components/admin/enrollment-request-modal'
 
 type DeletedApplication = {
   id: string
   application_ref: string
-  student_first_name: string
-  student_last_name: string
-  parent_first_name: string
-  parent_last_name: string
-  parent_email: string
   status: string
+  reviewed_at: string | null
+  student_first_name: string
+  student_middle_name: string | null
+  student_last_name: string
+  student_dob: string
+  student_gender: string
+  parent_first_name: string
+  parent_middle_name: string | null
+  parent_last_name: string
+  parent_dob: string
+  parent_relationship: string
+  parent_gender: string | null
+  parent_contact_number: string
+  parent_email: string
   deleted_at: string
 }
 
@@ -23,6 +33,7 @@ export function DeletedApplicationsTable({ applications }: { applications: Delet
   const router = useRouter()
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [viewingId, setViewingId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState('')
 
@@ -38,6 +49,8 @@ export function DeletedApplicationsTable({ applications }: { applications: Delet
   })
 
   const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(filtered, search)
+
+  const viewing = applications.find((app) => app.id === viewingId) ?? null
 
   function toggle(id: string) {
     setSelected((prev) => {
@@ -76,8 +89,7 @@ export function DeletedApplicationsTable({ applications }: { applications: Delet
       )}
 
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-        <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 p-4">
-          <p className="text-xs text-gray-500 dark:text-gray-400">{selected.size} selected</p>
+        <div className="flex items-center gap-3 border-b border-gray-100 dark:border-gray-800 p-4">
           <button
             onClick={handleRestore}
             disabled={selected.size === 0 || isPending}
@@ -85,9 +97,10 @@ export function DeletedApplicationsTable({ applications }: { applications: Delet
           >
             {isPending ? 'Restoring…' : 'Restore Selected'}
           </button>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{selected.size} selected</p>
         </div>
         <div className="min-h-[200px] overflow-x-auto">
-          <table className="w-full min-w-[720px] text-sm">
+          <table className="w-full min-w-[800px] text-sm">
             <thead className="bg-gray-50 dark:bg-gray-800/60 text-left text-gray-500 dark:text-gray-400">
               <tr>
                 <th className="w-10 p-4"></th>
@@ -96,13 +109,18 @@ export function DeletedApplicationsTable({ applications }: { applications: Delet
                 <th className="p-4 font-medium">Parent / Guardian</th>
                 <th className="p-4 font-medium">Status</th>
                 <th className="p-4 font-medium">Deleted</th>
+                <th className="p-4"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
               {pageItems.length > 0 ? (
                 pageItems.map((app) => (
-                  <tr key={app.id}>
-                    <td className="p-4">
+                  <tr
+                    key={app.id}
+                    onDoubleClick={() => setViewingId(app.id)}
+                    className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/60"
+                  >
+                    <td className="p-4" onClick={(e) => e.stopPropagation()} onDoubleClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
                         checked={selected.has(app.id)}
@@ -119,11 +137,22 @@ export function DeletedApplicationsTable({ applications }: { applications: Delet
                     </td>
                     <td className="p-4 text-gray-600 dark:text-gray-400">{formatStatus(app.status)}</td>
                     <td className="p-4 text-gray-500 dark:text-gray-400">{formatDateShort(app.deleted_at)}</td>
+                    <td className="p-4 text-right">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setViewingId(app.id)
+                        }}
+                        className="rounded-full border border-[#0b1b62] dark:border-indigo-300 px-3 py-1.5 text-xs font-semibold text-[#0b1b62] dark:text-indigo-300 hover:bg-[#0b1b62] hover:text-white"
+                      >
+                        View Full Details
+                      </button>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-gray-400 dark:text-gray-500">
+                  <td colSpan={7} className="p-8 text-center text-gray-400 dark:text-gray-500">
                     No deleted enrollment requests.
                   </td>
                 </tr>
@@ -133,6 +162,8 @@ export function DeletedApplicationsTable({ applications }: { applications: Delet
         </div>
         <Pagination page={page} totalPages={totalPages} totalItems={totalItems} pageSize={pageSize} onPageChange={setPage} />
       </div>
+
+      {viewing && <EnrollmentRequestModal application={viewing} onClose={() => setViewingId(null)} readOnly />}
     </div>
   )
 }
