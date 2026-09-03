@@ -8,11 +8,20 @@ import { generateTempPassword } from '@/lib/password'
 import { logActivity } from '@/lib/activity-log'
 import { getSiteUrl } from '@/lib/site-url'
 import { genderFromParentRelationship } from '@/lib/gender'
+import { requireAdmin } from '@/lib/require-admin'
 
 // Creates ONLY the parent account. The student record is intentionally NOT
 // created here — it's created later, in app/admin/applications/actions.ts,
 // only after the parent has uploaded documents and admin has validated them.
 export async function approveApplication(applicationId: string) {
+  // This creates a real auth.users account via the service-role client
+  // below, which bypasses RLS — without this check, any authenticated
+  // caller could invoke this action directly (see lib/require-admin.ts)
+  // and trigger account creation for an arbitrary application's parent,
+  // even though the applications/profiles RLS policies would separately
+  // block the rest of the approval from completing for a non-admin.
+  await requireAdmin()
+
   const supabase = await createClient()
   const admin = createAdminClient()
 

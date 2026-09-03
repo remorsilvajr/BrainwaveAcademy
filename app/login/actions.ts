@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
+import { SECURE_COOKIES } from '@/lib/supabase/secure-cookie'
 
 export async function login(formData: FormData) {
   const email = formData.get('email') as string
@@ -16,6 +17,7 @@ export async function login(formData: FormData) {
   const cookieStore = await cookies()
   cookieStore.set('remember_me', rememberMe ? 'true' : 'false', {
     httpOnly: true,
+    secure: SECURE_COOKIES,
     sameSite: 'lax',
     path: '/',
     ...(rememberMe ? { maxAge: 60 * 60 * 24 * 30 } : {}),
@@ -51,6 +53,7 @@ export async function login(formData: FormData) {
   // for the rest of the session.
   cookieStore.set('user_role', role, {
     httpOnly: true,
+    secure: SECURE_COOKIES,
     sameSite: 'lax',
     path: '/',
     maxAge: 60 * 60,
@@ -70,12 +73,14 @@ export async function login(formData: FormData) {
   // to sort out.
   cookieStore.set('account_status', profile?.account_status ?? 'active', {
     httpOnly: true,
+    secure: SECURE_COOKIES,
     sameSite: 'lax',
     path: '/',
     maxAge: 60 * 5, // matches middleware.ts's own account_status TTL
   })
   cookieStore.set('presence_ping', '1', {
     httpOnly: true,
+    secure: SECURE_COOKIES,
     sameSite: 'lax',
     path: '/',
     maxAge: 60,

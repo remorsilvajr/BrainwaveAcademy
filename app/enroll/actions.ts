@@ -43,6 +43,14 @@ export async function submitApplication(
   _prevState: SubmitApplicationState,
   formData: FormData
 ): Promise<SubmitApplicationState> {
+  // Honeypot (see the "website" field in enrollment-form.tsx) — invisible
+  // to a real visitor, but a generic bot commonly fills every field it
+  // finds. Redirect as if it succeeded rather than surfacing an error, so
+  // a bot gets no signal to adapt to; nothing is actually written.
+  if (((formData.get('website') as string) ?? '').trim() !== '') {
+    redirect('/enroll?submitted=true')
+  }
+
   const values: Record<string, string> = {}
   for (const key of allFieldKeys) {
     values[key] = ((formData.get(key) as string) ?? '').trim()

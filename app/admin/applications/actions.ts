@@ -7,6 +7,7 @@ import { sendEmail } from '@/lib/email'
 import { documentShortLabels } from '@/lib/documents'
 import { logActivity } from '@/lib/activity-log'
 import { getSiteUrl } from '@/lib/site-url'
+import { requireAdmin } from '@/lib/require-admin'
 
 type DocumentStatuses = Record<string, 'valid' | 'needs_correction' | 'pending'>
 
@@ -182,6 +183,13 @@ export async function approveAndCreateStudentRecord(applicationId: string) {
 }
 
 export async function getSignedDocumentUrl(path: string) {
+  // Generates a signed URL to a *private* document (birth certificate, ID,
+  // proof of address...) via the service-role client below, which bypasses
+  // RLS entirely and has no other check of its own — without this, any
+  // caller who could guess or obtain a storage path (see
+  // lib/require-admin.ts) could read any family's private documents.
+  await requireAdmin()
+
   const admin = createAdminClient()
   const { data, error } = await admin.storage.from('documents').createSignedUrl(path, 60 * 5)
 

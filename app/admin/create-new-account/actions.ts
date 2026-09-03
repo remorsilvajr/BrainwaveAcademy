@@ -10,6 +10,7 @@ import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
 import { genderFromParentRelationship } from '@/lib/gender'
 import { logActivity } from '@/lib/activity-log'
 import { getSiteUrl } from '@/lib/site-url'
+import { requireAdmin } from '@/lib/require-admin'
 
 export type CreateSystemUserState = {
   error?: string
@@ -23,6 +24,12 @@ export async function createSystemUser(
   _prevState: CreateSystemUserState,
   formData: FormData
 ): Promise<CreateSystemUserState> {
+  // This uses createAdminClient() below, which bypasses RLS entirely — the
+  // page being under /admin isn't real protection for a direct call to
+  // this Server Action (see lib/require-admin.ts), so without this check
+  // any authenticated caller could create themselves an admin account.
+  await requireAdmin()
+
   const values: Record<string, string> = {
     first_name: ((formData.get('first_name') as string) ?? '').trim(),
     middle_name: ((formData.get('middle_name') as string) ?? '').trim(),

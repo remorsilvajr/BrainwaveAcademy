@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextFetchEvent, type NextRequest } from 'next/server'
 import { applyRememberMe } from '@/lib/supabase/remember-me'
+import { SECURE_COOKIES } from '@/lib/supabase/secure-cookie'
 
 export async function middleware(request: NextRequest, event: NextFetchEvent) {
   let supabaseResponse = NextResponse.next({ request })
@@ -22,7 +23,10 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           supabaseResponse = NextResponse.next({ request })
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, applyRememberMe(name, value, options, rememberMe))
+            supabaseResponse.cookies.set(name, value, {
+              ...applyRememberMe(name, value, options, rememberMe),
+              secure: SECURE_COOKIES,
+            })
           )
         },
       },
@@ -116,6 +120,7 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
       if (accountStatus) {
         supabaseResponse.cookies.set('account_status', accountStatus, {
           httpOnly: true,
+          secure: SECURE_COOKIES,
           sameSite: 'lax',
           path: '/',
           maxAge: 60 * 5,
@@ -145,6 +150,7 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
     if (!request.cookies.get('presence_ping')?.value) {
       supabaseResponse.cookies.set('presence_ping', '1', {
         httpOnly: true,
+        secure: SECURE_COOKIES,
         sameSite: 'lax',
         path: '/',
         maxAge: 60,
@@ -185,6 +191,7 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
       if (role) {
         supabaseResponse.cookies.set('user_role', role, {
           httpOnly: true,
+          secure: SECURE_COOKIES,
           sameSite: 'lax',
           path: '/',
           maxAge: 60 * 60,

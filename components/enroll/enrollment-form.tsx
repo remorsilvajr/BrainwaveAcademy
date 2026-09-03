@@ -106,6 +106,18 @@ export function EnrollmentForm() {
 
   return (
     <form action={formAction} className="space-y-8 rounded-xl border border-[#c6c5d2] dark:border-slate-700 bg-white dark:bg-gray-900 p-8 shadow-sm">
+      {/* Honeypot — invisible to a real visitor (off-screen, not display:none
+          or a hidden input, which some bots specifically skip), but a
+          generic form-filling bot commonly fills every field it finds
+          including this one. submitApplication silently no-ops if it's
+          non-empty, rather than surfacing an error, so a bot gets no signal
+          to adapt to. Not a real visitor-facing field, so it's outside the
+          normal Field/fieldErrors machinery on purpose. */}
+      <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', top: 0, width: 1, height: 1, overflow: 'hidden' }}>
+        <label htmlFor="website">Website</label>
+        <input type="text" id="website" name="website" tabIndex={-1} autoComplete="off" />
+      </div>
+
       {bannerError && (
         <p className="rounded-lg bg-red-50 dark:bg-red-950/30 px-3 py-2 text-sm text-red-600 dark:text-red-400">{bannerError}</p>
       )}

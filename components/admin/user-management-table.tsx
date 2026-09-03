@@ -275,12 +275,14 @@ export function UserManagementTable({
                     <td className="p-4 text-gray-500 dark:text-gray-400">{formatDateShort(u.created_at)}</td>
                     <td className="p-4">
                       <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setEditingUserId(u.id)}
-                          className="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                        >
-                          Edit
-                        </button>
+                        {canModerateAccount(currentUser, u) && (
+                          <button
+                            onClick={() => setEditingUserId(u.id)}
+                            className="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                          >
+                            Edit
+                          </button>
+                        )}
                         {u.account_status !== 'blocked' && (
                           <button
                             onClick={() => handleForceLogout(u)}

@@ -152,6 +152,25 @@ export async function updateUserProfile(
 ) {
   const supabase = await createClient()
 
+  // This can change a target's role — without checking canModerateAccount
+  // (same rule toggleBlockUser/deleteUserAccount already enforce), a
+  // regular admin could use this to edit another admin's details, or even
+  // demote a protected/super-admin account, entirely bypassing that
+  // protection. RLS separately requires the caller to be *an* admin, but
+  // doesn't know about this app's own admin-vs-admin protection rules.
+  const {
+    data: { user: actingUser },
+  } = await supabase.auth.getUser()
+
+  const [{ data: actorProfile }, { data: targetProfile }] = await Promise.all([
+    supabase.from('profiles').select('role, is_super_admin').eq('id', actingUser?.id ?? '').single(),
+    supabase.from('profiles').select('role, is_super_admin').eq('id', userId).single(),
+  ])
+
+  if (!actorProfile || !targetProfile || !canModerateAccount(actorProfile, targetProfile)) {
+    throw new Error('You do not have permission to edit this account.')
+  }
+
   const firstName = updates.first_name.trim()
   const lastName = updates.last_name.trim()
   const middleName = updates.middle_name.trim()
