@@ -228,7 +228,11 @@ export function UserManagementTable({
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
               {pageItems.length > 0 ? (
                 pageItems.map((u) => (
-                  <tr key={u.id}>
+                  <tr
+                    key={u.id}
+                    onDoubleClick={() => canModerateAccount(currentUser, u) && setEditingUserId(u.id)}
+                    className={canModerateAccount(currentUser, u) ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/60' : undefined}
+                  >
                     <td className="p-4">
                       <div className="flex items-center gap-1.5">
                         <span

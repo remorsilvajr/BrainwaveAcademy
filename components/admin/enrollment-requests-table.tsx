@@ -206,7 +206,11 @@ export function EnrollmentRequestsTable({ applications }: { applications: Applic
           <tbody className="divide-y divide-gray-100">
             {pageItems.length > 0 ? (
               pageItems.map((app) => (
-                <tr key={app.id} className="align-top">
+                <tr
+                  key={app.id}
+                  onDoubleClick={() => setSelectedId(app.id)}
+                  className="align-top cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/60"
+                >
                   <td className="p-4">
                     <p className="font-medium text-gray-900 dark:text-gray-100">
                       {new Date(app.submitted_at).toLocaleDateString('en-US', {

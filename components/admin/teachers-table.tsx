@@ -95,7 +95,11 @@ export function TeachersTable({ teachers }: { teachers: Teacher[] }) {
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
               {pageItems.length > 0 ? (
                 pageItems.map((t) => (
-                  <tr key={t.id}>
+                  <tr
+                    key={t.id}
+                    onDoubleClick={() => setSelectedId(t.id)}
+                    className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/60"
+                  >
                     <td className="p-4">
                       <div className="flex items-center gap-3">
                         {t.avatar_url ? (

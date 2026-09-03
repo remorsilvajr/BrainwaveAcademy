@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { User as UserIcon } from 'lucide-react'
 import { calculateAge, formatDateLong } from '@/lib/format'
 import { Pagination } from '@/components/ui/pagination'
@@ -19,6 +20,7 @@ type Student = {
 }
 
 export function TeacherStudentsTable({ students }: { students: Student[] }) {
+  const router = useRouter()
   const [search, setSearch] = useState('')
 
   const filtered = students.filter((s) => {
@@ -55,7 +57,11 @@ export function TeacherStudentsTable({ students }: { students: Student[] }) {
           </thead>
           <tbody>
             {pageItems.map((s) => (
-              <tr key={s.id} className="border-t border-gray-100 dark:border-gray-800">
+              <tr
+                key={s.id}
+                onDoubleClick={() => router.push(`/teacher/student-dashboard?student=${s.id}`)}
+                className="cursor-pointer border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/60"
+              >
                 <td className="p-4">
                   <div className="flex items-center gap-3">
                     {s.avatar_url ? (

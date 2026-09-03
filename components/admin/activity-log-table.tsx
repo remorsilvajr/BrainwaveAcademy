@@ -137,7 +137,11 @@ export function ActivityLogTable({ logs }: { logs: LogRow[] }) {
           <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
             {pageItems.length > 0 ? (
               pageItems.map((log) => (
-                <tr key={log.id}>
+                <tr
+                  key={log.id}
+                  onDoubleClick={() => setDetailLog(log)}
+                  className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/60"
+                >
                   <td className="whitespace-nowrap p-4 align-top text-gray-500 dark:text-gray-400">
                     {formatRelativeTime(log.created_at)}
                   </td>

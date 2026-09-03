@@ -130,7 +130,11 @@ export function ApplicationsTable({ applications }: { applications: Application[
           <tbody className="divide-y divide-gray-100">
             {pageItems.length > 0 ? (
               pageItems.map((app) => (
-                <tr key={app.id}>
+                <tr
+                  key={app.id}
+                  onDoubleClick={() => setSelectedId(app.id)}
+                  className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/60"
+                >
                   <td className="p-4 font-medium text-[#0b1b62] dark:text-indigo-300">{app.application_ref}</td>
                   <td className="p-4 text-gray-900 dark:text-gray-100">
                     {app.student_first_name} {app.student_last_name}

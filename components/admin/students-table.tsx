@@ -104,7 +104,11 @@ export function StudentsTable({ students }: { students: Student[] }) {
               pageItems.map((s) => {
                 const guardian = s.guardians[0]
                 return (
-                  <tr key={s.id}>
+                  <tr
+                    key={s.id}
+                    onDoubleClick={() => setSelectedId(s.id)}
+                    className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/60"
+                  >
                     <td className="p-4">
                       <div className="flex items-center gap-3">
                         {s.avatar_url ? (
