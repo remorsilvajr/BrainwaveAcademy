@@ -246,7 +246,7 @@ export function EnrollmentRequestModal({
                 disabled={isSubmitting}
                 className="flex-1 rounded-lg bg-[#e6007e] py-3 text-sm font-semibold text-white hover:bg-[#c9006e] disabled:opacity-60"
               >
-                {isSubmitting ? 'Working…' : 'Yes, Approve & Send Email'}
+                {isSubmitting ? 'Working…' : 'Send Email'}
               </button>
             </>
           ) : (
@@ -261,7 +261,7 @@ export function EnrollmentRequestModal({
                 onClick={() => setPendingAction('approve')}
                 className="flex-1 rounded-lg bg-[#e6007e] py-3 text-sm font-semibold text-white hover:bg-[#c9006e]"
               >
-                Confirm Approval &amp; Dispatch Email
+                Confirm Approval
               </button>
             </>
           )}
