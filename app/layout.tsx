@@ -4,6 +4,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import './globals.css'
 import { CrossTabAuthSync } from '@/components/cross-tab-auth-sync'
+import { CookieConsentBanner } from '@/components/legal/cookie-consent-banner'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -47,6 +48,7 @@ export default function RootLayout({
       <body className={`${inter.className} bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100`}>
         <CrossTabAuthSync />
         {children}
+        <CookieConsentBanner />
         <Analytics />
         <SpeedInsights />
       </body>

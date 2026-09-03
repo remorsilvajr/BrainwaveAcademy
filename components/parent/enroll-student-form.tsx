@@ -146,6 +146,14 @@ export function EnrollStudentForm({ parentName }: { parentName: string }) {
         </div>
       </div>
 
+      <p className="text-xs text-[#454650] dark:text-slate-400">
+        By submitting, you consent to the processing of this student&apos;s information as
+        described in our{' '}
+        <a href="/privacy-policy" target="_blank" rel="noreferrer" className="text-[#0b1b62] underline hover:no-underline dark:text-indigo-300">
+          Privacy Policy
+        </a>.
+      </p>
+
       <div className="flex items-center justify-between">
         <Link href="/parent" className="text-sm font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline">
           Cancel

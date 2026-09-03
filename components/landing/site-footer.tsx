@@ -62,10 +62,19 @@ export function SiteFooter() {
           </nav>
         </div>
 
-        <div className="w-full border-t border-[#ffffff1a] pt-6 text-center">
+        <div className="flex w-full flex-col items-center gap-3 border-t border-[#ffffff1a] pt-6 text-center">
           <p className="text-xs font-medium tracking-[0.24px] text-[#bac3ff]">
             © 2024 Brainwave Preschool Academy. All rights reserved.
           </p>
+          <nav aria-label="Legal" className="flex items-center gap-4">
+            <a href="/privacy-policy" className="text-xs font-medium text-[#bac3ff] no-underline hover:text-white hover:underline">
+              Privacy Policy
+            </a>
+            <span aria-hidden className="text-[#ffffff33]">·</span>
+            <a href="/terms-of-service" className="text-xs font-medium text-[#bac3ff] no-underline hover:text-white hover:underline">
+              Terms of Service
+            </a>
+          </nav>
         </div>
       </div>
     </footer>

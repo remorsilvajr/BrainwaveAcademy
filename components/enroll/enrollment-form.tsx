@@ -320,12 +320,39 @@ export function EnrollmentForm() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3">
         <label className="flex items-start gap-2 text-sm text-[#454650] dark:text-slate-300">
           <input type="checkbox" required className="mt-1 h-4 w-4 rounded border-slate-200 dark:border-slate-700" />
           I confirm that all information provided is accurate and true to the best of my
           knowledge.
         </label>
+        <label className="flex items-start gap-2 text-sm text-[#454650] dark:text-slate-300">
+          <input
+            type="checkbox"
+            name="agreed_to_policies"
+            required
+            className={`mt-1 h-4 w-4 rounded ${
+              liveErrors.agreed_to_policies ? 'border-red-400' : 'border-slate-200 dark:border-slate-700'
+            }`}
+            onChange={() => clearError('agreed_to_policies')}
+          />
+          I have read and agree to Brainwave Preschool Academy&apos;s{' '}
+          <a href="/privacy-policy" target="_blank" rel="noreferrer" className="text-[#0b1b62] underline hover:no-underline dark:text-indigo-300">
+            Privacy Policy
+          </a>{' '}
+          and{' '}
+          <a href="/terms-of-service" target="_blank" rel="noreferrer" className="text-[#0b1b62] underline hover:no-underline dark:text-indigo-300">
+            Terms of Service
+          </a>
+          , and I consent to the processing of the information above (including my child&apos;s)
+          as described there.
+        </label>
+        {liveErrors.agreed_to_policies && (
+          <p className="text-xs text-red-600 dark:text-red-400">{liveErrors.agreed_to_policies}</p>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-end">
         <button
           type="submit"
           disabled={isPending}
