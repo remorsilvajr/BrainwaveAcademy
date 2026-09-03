@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { ChevronDown, User as UserIcon } from 'lucide-react'
 import type { NavSection } from '@/components/sidebar'
+import { ProfileMenu } from '@/components/ui/profile-menu'
 
 type Student = { id: string; first_name: string; last_name: string }
 type Parent = { first_name: string; last_name: string; avatar_url: string | null }
@@ -91,7 +92,11 @@ export function ParentTopBar({
             </div>
           )}
 
-          <div className="flex items-center gap-2 sm:gap-2.5">
+          <ProfileMenu
+            myProfileHref="/parent/my-profile"
+            settingsHref="/parent/settings"
+            triggerClassName="flex items-center gap-2 rounded-lg px-1.5 py-1 hover:bg-gray-50 dark:hover:bg-gray-800 sm:gap-2.5"
+          >
             {parent.avatar_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -104,13 +109,14 @@ export function ParentTopBar({
                 <UserIcon className="h-5 w-5" />
               </span>
             )}
-            <div className="leading-tight">
+            <div className="leading-tight text-left">
               <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                 {parent.last_name}, {parent.first_name.charAt(0)}.
               </p>
               <p className="hidden text-xs text-gray-500 dark:text-gray-400 sm:block">Parent / Guardian</p>
             </div>
-          </div>
+            <ChevronDown className="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500" />
+          </ProfileMenu>
         </div>
       </div>
     </header>
