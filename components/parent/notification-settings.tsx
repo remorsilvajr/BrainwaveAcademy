@@ -42,7 +42,7 @@ export function NotificationSettings({
   }
 
   return (
-    <div className="divide-y divide-gray-100">
+    <div className="divide-y divide-gray-100 dark:divide-gray-800">
       <div className="flex items-center justify-between gap-4 py-4">
         <div>
           <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Email Notifications</p>

@@ -203,7 +203,7 @@ export function EnrollmentRequestsTable({ applications }: { applications: Applic
               <th className="p-4 font-medium">Action</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
             {pageItems.length > 0 ? (
               pageItems.map((app) => (
                 <tr

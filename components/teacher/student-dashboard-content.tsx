@@ -310,7 +310,7 @@ export function StudentDashboardContent({
         {attendance.length === 0 ? (
           <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">No records yet.</p>
         ) : (
-          <div className="mt-3 divide-y divide-gray-100">
+          <div className="mt-3 divide-y divide-gray-100 dark:divide-gray-800">
             {attendance.map((a) => (
               <div key={a.id} className="flex items-center justify-between py-2 text-sm">
                 <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">

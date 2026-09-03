@@ -99,7 +99,7 @@ export function StudentsTable({ students }: { students: Student[] }) {
               <th className="p-4 font-medium">Action</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
             {pageItems.length > 0 ? (
               pageItems.map((s) => {
                 const guardian = s.guardians[0]

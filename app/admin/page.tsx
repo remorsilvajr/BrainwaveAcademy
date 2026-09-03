@@ -98,7 +98,7 @@ export default async function AdminDashboardPage() {
                 <th className="pb-2 font-medium">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
               <tr>
                 <td colSpan={5} className="py-8 text-center text-gray-400 dark:text-gray-500">
                   No transactions recorded yet.

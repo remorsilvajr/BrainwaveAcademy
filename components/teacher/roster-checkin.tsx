@@ -71,12 +71,12 @@ export function RosterCheckin({
   const isToday = date === todayIso()
 
   return (
-    <div id="roster" className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
+    <div id="roster" className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+        <h2 className="text-base font-bold text-gray-900 dark:text-gray-100">
           {isToday ? "Today's Roster Check-In" : 'Roster Attendance'}
         </h2>
-        <span className="text-sm text-gray-500 dark:text-gray-400">{formatDateLong(date)}</span>
+        <span className="text-xs text-gray-500 dark:text-gray-400">{formatDateLong(date)}</span>
       </div>
       {readOnly && (
         <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
@@ -86,45 +86,40 @@ export function RosterCheckin({
 
       {errorMessage && <p className="mt-3 text-sm text-red-600 dark:text-red-400">{errorMessage}</p>}
 
-      <div className="mt-4">
+      <div className="mt-3">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search students…"
-          className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+          className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
         />
       </div>
 
-      <div className="mt-2 min-h-[360px] divide-y divide-gray-100">
+      <div className="mt-2 min-h-[320px] divide-y divide-gray-100 dark:divide-gray-800">
         {pageItems.map((s) => {
           const status = statusByStudent[s.id]
           return (
-            <div key={s.id} className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+            <div key={s.id} className="flex flex-col gap-2 py-2 sm:flex-row sm:items-center sm:gap-6">
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100 sm:w-44 sm:shrink-0">
                 {s.first_name} {s.last_name}
               </p>
               {readOnly ? (
                 <span
-                  className={`w-fit rounded-full px-3 py-1 text-xs font-semibold capitalize ${
+                  className={`w-fit rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${
                     status ? statusMeta[status] : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'
                   }`}
                 >
                   {status ?? 'Not marked'}
                 </span>
               ) : (
-                <div className="flex flex-wrap items-center gap-2">
-                  {savedId === s.id && (
-                    <span className="flex items-center gap-1 text-xs font-medium text-green-600 dark:text-green-400">
-                      <Check className="h-3.5 w-3.5" /> Saved
-                    </span>
-                  )}
+                <div className="flex flex-wrap items-center gap-1.5">
                   {['present', 'late', 'absent'].map((option) => (
                     <button
                       key={option}
                       type="button"
                       disabled={markingId === s.id}
                       onClick={() => handleMark(s.id, option)}
-                      className={`rounded-full border px-3 py-1 text-xs font-semibold capitalize disabled:opacity-60 ${
+                      className={`rounded-full border px-2.5 py-1 text-xs font-semibold capitalize disabled:opacity-60 ${
                         status === option
                           ? statusMeta[option]
                           : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
@@ -133,6 +128,11 @@ export function RosterCheckin({
                       {option}
                     </button>
                   ))}
+                  {savedId === s.id && (
+                    <span className="flex items-center gap-1 text-xs font-medium text-green-600 dark:text-green-400">
+                      <Check className="h-3.5 w-3.5" /> Saved
+                    </span>
+                  )}
                 </div>
               )}
             </div>
@@ -145,7 +145,7 @@ export function RosterCheckin({
         )}
       </div>
 
-      <div className="-mx-6 -mb-6 mt-2">
+      <div className="-mx-4 -mb-4 mt-2">
         <Pagination
           page={page}
           totalPages={totalPages}

@@ -113,7 +113,7 @@ export default async function TeacherDashboardPage() {
 
       <div id="assessments" className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
         <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Pending Student Assessments (6 Domains of Learning)</h2>
-        <div className="mt-4 divide-y divide-gray-100">
+        <div className="mt-4 divide-y divide-gray-100 dark:divide-gray-800">
           {roster.map((s) => {
             const domains = domainsByStudent.get(s.id)?.size ?? 0
             return (
