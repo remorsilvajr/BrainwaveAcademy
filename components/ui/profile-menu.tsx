@@ -5,8 +5,15 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LogoutButton } from '@/components/logout-button'
 
+// w-full + text-left matter here, not just block — an <a> (My Profile/
+// Settings) is a plain block-level box that fills its container width with
+// nothing more than `block`, but a <button> (Log Out) is a form control:
+// browsers can still shrink it to fit its text content even under
+// `display: block`, leaving the rest of the row visually part of the item
+// but not actually clickable. Reported live as "can only click half" on
+// the Log Out row specifically, never My Profile/Settings — exactly this.
 const ITEM_CLASSNAME =
-  'block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+  'block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
 
 // Shared account dropdown used both by the landing page's header (once
 // logged in) and the parent/teacher portal top bars — trigger content is
