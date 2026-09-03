@@ -96,6 +96,16 @@ export async function submitApplication(
     }
   }
 
+  // Client-side `required` alone isn't sufficient — this project's own
+  // pen-testing convention (see CLAUDE.md) is that anything reaching the
+  // database gets validated server-side too, and this checkbox is what
+  // actually records that the applicant consented to the Privacy
+  // Policy/Terms before we process their (and their child's) personal
+  // information.
+  if (formData.get('agreed_to_policies') !== 'on') {
+    fieldErrors.agreed_to_policies = 'Please review and agree to the Privacy Policy and Terms of Service to continue.'
+  }
+
   if (Object.keys(fieldErrors).length > 0) {
     return {
       error: 'Please fix the highlighted fields below.',
