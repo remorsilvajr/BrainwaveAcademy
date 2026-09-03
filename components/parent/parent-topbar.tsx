@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { ChevronDown, User as UserIcon } from 'lucide-react'
+import { Backpack, ChevronDown, User as UserIcon } from 'lucide-react'
 import type { NavSection } from '@/components/sidebar'
 import { ProfileMenu } from '@/components/ui/profile-menu'
 import { ThemeToggle } from '@/components/theme-toggle'
@@ -65,7 +65,7 @@ export function ParentTopBar({
                 onClick={() => setStudentMenuOpen((v) => !v)}
                 className="flex items-center gap-1.5 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
               >
-                <span aria-hidden="true">🎒</span>
+                <Backpack className="h-4 w-4 shrink-0 text-gray-500 dark:text-gray-400" aria-hidden="true" />
                 <span className="hidden sm:inline">Child: </span>
                 {selected ? `${selected.first_name} ${selected.last_name}` : 'Select'}
                 <ChevronDown className="h-4 w-4 text-gray-400 dark:text-gray-500" />

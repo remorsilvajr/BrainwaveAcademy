@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Lock } from 'lucide-react'
 import { updateMyProfile, uploadMyAvatar, removeMyAvatar } from '@/app/parent/my-profile/actions'
 import { formatDateShort } from '@/lib/format'
 import { isValidPhilippineMobile } from '@/lib/phone'
@@ -171,7 +172,7 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
             <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Parent Full Name</label>
             <div className="flex items-center justify-between rounded-lg border border-slate-200 dark:border-slate-700 bg-gray-100 dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-600 dark:text-gray-400">
               {fullName}
-              <span className="text-xs text-gray-400 dark:text-gray-500">🔒</span>
+              <Lock className="h-3.5 w-3.5 shrink-0 text-gray-400 dark:text-gray-500" aria-hidden="true" />
             </div>
             <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">To change your legal name, please contact the school office.</p>
           </div>
