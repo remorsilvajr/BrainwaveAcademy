@@ -53,7 +53,7 @@ export function LogoutButton({ icon, className }: { icon?: IconName; className?:
                 <button
                   onClick={() => setConfirming(false)}
                   disabled={isLoggingOut}
-                  className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 disabled:opacity-60"
+                  className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-60"
                 >
                   Cancel
                 </button>

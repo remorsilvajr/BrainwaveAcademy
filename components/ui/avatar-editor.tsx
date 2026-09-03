@@ -52,7 +52,7 @@ export function AvatarEditor({
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={disabled}
-          className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 shadow ring-1 ring-gray-200 hover:bg-gray-50 disabled:opacity-60"
+          className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 shadow ring-1 ring-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-60"
           aria-label="Change photo"
         >
           <Camera className="h-4 w-4" />

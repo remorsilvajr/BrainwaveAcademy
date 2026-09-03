@@ -58,7 +58,7 @@ export function StudentSelector({
         type="button"
         aria-labelledby="student-selector-label"
         onClick={() => (isOpen ? setIsOpen(false) : open())}
-        className="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+        className="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
       >
         <span className="text-gray-500 dark:text-gray-400">Student:</span>
         <span className="font-medium text-gray-900 dark:text-gray-100">
@@ -92,7 +92,7 @@ export function StudentSelector({
                     key={s.id}
                     type="button"
                     onClick={() => selectStudent(s.id)}
-                    className={`block w-full px-3 py-2 text-left text-sm hover:bg-gray-50 ${
+                    className={`block w-full px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-800 ${
                       s.id === selectedId ? 'font-semibold text-[#0b1b62] dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300'
                     }`}
                   >

@@ -201,7 +201,7 @@ export function StudentDashboardContent({
                   className={`flex-1 rounded-lg border px-3 py-2 text-sm font-semibold capitalize disabled:opacity-60 ${
                     todayRecord?.status === status
                       ? 'border-[#0b1b62] dark:border-indigo-300 bg-[#0b1b62] text-white'
-                      : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50'
+                      : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
                   }`}
                 >
                   {status}
@@ -267,7 +267,7 @@ export function StudentDashboardContent({
                         type="button"
                         onClick={() => setAssessingCategory(null)}
                         disabled={isSubmittingAssessment}
-                        className="flex-1 rounded-lg border border-gray-200 dark:border-gray-700 py-1.5 text-xs font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-50 disabled:opacity-60"
+                        className="flex-1 rounded-lg border border-gray-200 dark:border-gray-700 py-1.5 text-xs font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-60"
                       >
                         Cancel
                       </button>

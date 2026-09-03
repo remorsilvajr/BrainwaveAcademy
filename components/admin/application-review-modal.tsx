@@ -313,7 +313,7 @@ export function ApplicationReviewModal({
               onClick={() => setConfirmingCorrections(true)}
               disabled={isSubmitting || !hasUploadedDocs || needsCorrectionTypes.length === 0}
               title={needsCorrectionTypes.length === 0 ? 'Mark at least one document as Needs Correction first' : undefined}
-              className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
               Request Corrections
             </button>

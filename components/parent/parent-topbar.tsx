@@ -63,7 +63,7 @@ export function ParentTopBar({
               <button
                 type="button"
                 onClick={() => setStudentMenuOpen((v) => !v)}
-                className="flex items-center gap-1.5 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
+                className="flex items-center gap-1.5 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 sm:gap-2 sm:px-4 sm:py-2 sm:text-sm"
               >
                 <Backpack className="h-4 w-4 shrink-0 text-gray-500 dark:text-gray-400" aria-hidden="true" />
                 <span className="hidden sm:inline">Child: </span>
@@ -80,7 +80,7 @@ export function ParentTopBar({
                         key={s.id}
                         type="button"
                         onClick={() => selectStudent(s.id)}
-                        className={`block w-full px-4 py-2 text-left text-sm hover:bg-gray-50 ${
+                        className={`block w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-800 ${
                           s.id === selectedId ? 'font-semibold text-[#0b1b62] dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300'
                         }`}
                       >

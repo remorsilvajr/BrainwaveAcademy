@@ -127,7 +127,7 @@ export function RosterCheckin({
                       className={`rounded-full border px-3 py-1 text-xs font-semibold capitalize disabled:opacity-60 ${
                         status === option
                           ? statusMeta[option]
-                          : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50'
+                          : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
                       }`}
                     >
                       {option}

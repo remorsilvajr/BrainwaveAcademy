@@ -44,7 +44,7 @@ export function RequestPasswordReset() {
               type="button"
               onClick={() => setConfirming(false)}
               disabled={isSubmitting}
-              className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 py-2 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 disabled:opacity-60"
+              className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 py-2 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-60"
             >
               Cancel
             </button>
@@ -62,7 +62,7 @@ export function RequestPasswordReset() {
         <button
           type="button"
           onClick={() => setConfirming(true)}
-          className="mt-3 flex items-center gap-2 rounded-lg border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-semibold text-[#0b1b62] dark:text-indigo-300 hover:bg-gray-50"
+          className="mt-3 flex items-center gap-2 rounded-lg border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-semibold text-[#0b1b62] dark:text-indigo-300 hover:bg-gray-50 dark:hover:bg-gray-800"
         >
           <Mail className="h-4 w-4" />
           Email Me a New Password

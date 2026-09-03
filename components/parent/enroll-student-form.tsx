@@ -127,7 +127,7 @@ export function EnrollStudentForm({ parentName }: { parentName: string }) {
               <label
                 key={g}
                 className={`cursor-pointer px-6 py-2 text-sm font-medium capitalize ${
-                  gender === g ? 'bg-[#0b1b62] text-white' : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-50'
+                  gender === g ? 'bg-[#0b1b62] text-white' : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
                 }`}
               >
                 <input

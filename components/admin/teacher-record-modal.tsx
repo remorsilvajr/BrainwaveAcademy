@@ -260,7 +260,7 @@ export function TeacherRecordModal({ teacher, onClose }: { teacher: Teacher; onC
                 <button
                   onClick={handleCancelEdit}
                   disabled={isSaving}
-                  className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 disabled:opacity-60"
+                  className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-60"
                 >
                   Cancel
                 </button>
@@ -279,7 +279,7 @@ export function TeacherRecordModal({ teacher, onClose }: { teacher: Teacher; onC
         <div className="border-t border-gray-100 dark:border-gray-800 p-6">
           <button
             onClick={onClose}
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50"
+            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
           >
             Close Record
           </button>

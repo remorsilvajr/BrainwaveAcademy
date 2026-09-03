@@ -104,7 +104,7 @@ export function CreateAccountForm() {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex w-full flex-col items-center gap-2 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/60 py-10 hover:bg-gray-100"
+            className="flex w-full flex-col items-center gap-2 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/60 py-10 hover:bg-gray-100 dark:hover:bg-gray-800"
           >
             {photoPreview ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -308,7 +308,7 @@ export function CreateAccountForm() {
       <div className="mt-8 flex gap-2 border-t border-gray-100 dark:border-gray-800 pt-6">
         <Link
           href="/admin/user-management"
-          className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50"
+          className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 py-3 text-center text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
         >
           Cancel
         </Link>

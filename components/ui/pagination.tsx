@@ -76,7 +76,7 @@ export function Pagination({
           onClick={() => onPageChange(page - 1)}
           disabled={page === 1}
           aria-label="Previous page"
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
@@ -92,7 +92,7 @@ export function Pagination({
               onClick={() => onPageChange(n)}
               aria-current={n === page ? 'page' : undefined}
               className={`flex h-8 w-8 items-center justify-center rounded-lg text-sm font-medium ${
-                n === page ? 'bg-[#0b1b62] text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50'
+                n === page ? 'bg-[#0b1b62] text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
               }`}
             >
               {n}
@@ -104,7 +104,7 @@ export function Pagination({
           onClick={() => onPageChange(page + 1)}
           disabled={page === totalPages}
           aria-label="Next page"
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
         >
           <ChevronRight className="h-4 w-4" />
         </button>
