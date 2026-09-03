@@ -1,8 +1,9 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { User as UserIcon } from 'lucide-react'
+import { ChevronDown, User as UserIcon } from 'lucide-react'
 import type { NavSection } from '@/components/sidebar'
+import { ProfileMenu } from '@/components/ui/profile-menu'
 
 type Teacher = { first_name: string; last_name: string; avatar_url: string | null }
 
@@ -19,7 +20,11 @@ export function TeacherTopBar({ sections, teacher }: { sections: NavSection[]; t
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
         <h1 className="text-lg font-bold text-[#0b1b62] dark:text-indigo-300 sm:text-xl">{title}</h1>
 
-        <div className="flex items-center gap-2.5">
+        <ProfileMenu
+          myProfileHref="/teacher/my-profile"
+          settingsHref="/teacher/settings"
+          triggerClassName="flex items-center gap-2.5 rounded-lg px-1.5 py-1 hover:bg-gray-50 dark:hover:bg-gray-800"
+        >
           {teacher.avatar_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={teacher.avatar_url} alt="" className="h-9 w-9 rounded-full object-cover" />
@@ -28,13 +33,14 @@ export function TeacherTopBar({ sections, teacher }: { sections: NavSection[]; t
               <UserIcon className="h-5 w-5" />
             </span>
           )}
-          <div className="leading-tight">
+          <div className="leading-tight text-left">
             <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
               {teacher.last_name}, {teacher.first_name.charAt(0)}.
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-400">Teacher</p>
           </div>
-        </div>
+          <ChevronDown className="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500" />
+        </ProfileMenu>
       </div>
     </header>
   )

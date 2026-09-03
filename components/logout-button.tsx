@@ -6,7 +6,10 @@ import { useRouter } from 'next/navigation'
 import { logout } from '@/app/login/actions'
 import { iconMap, type IconName } from './sidebar'
 
-export function LogoutButton({ icon }: { icon?: IconName }) {
+const DEFAULT_CLASSNAME =
+  'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium text-[#c7cff0] hover:bg-white/10 hover:text-white'
+
+export function LogoutButton({ icon, className }: { icon?: IconName; className?: string }) {
   const router = useRouter()
   const Icon = icon ? iconMap[icon] : undefined
   const [confirming, setConfirming] = useState(false)
@@ -29,10 +32,7 @@ export function LogoutButton({ icon }: { icon?: IconName }) {
 
   return (
     <>
-      <button
-        onClick={() => setConfirming(true)}
-        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium text-[#c7cff0] hover:bg-white/10 hover:text-white"
-      >
+      <button onClick={() => setConfirming(true)} className={className ?? DEFAULT_CLASSNAME}>
         {Icon && <Icon className="h-4 w-4 shrink-0" />}
         Log Out
       </button>

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { SiteHeader } from '@/components/landing/site-header'
 import { SiteFooter } from '@/components/landing/site-footer'
+import { getPortalAuth } from '@/lib/get-portal-auth'
 
 export const metadata: Metadata = {
   title: 'Privacy Policy | Brainwave Preschool Academy',
@@ -33,10 +34,12 @@ function Ul({ children }: { children: React.ReactNode }) {
   )
 }
 
-export default function PrivacyPolicyPage() {
+export default async function PrivacyPolicyPage() {
+  const auth = await getPortalAuth()
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-gradient-to-b from-white to-slate-50 dark:from-gray-950 dark:to-gray-900">
-      <SiteHeader />
+      <SiteHeader auth={auth} />
       <main className="flex-1">
         <div className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
           <p className="text-xs font-semibold uppercase tracking-wide text-[#e6007e]">Legal</p>

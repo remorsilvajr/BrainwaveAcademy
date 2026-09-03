@@ -60,14 +60,18 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
     return supabaseResponse
   }
 
-  // Logged-in users have no reason to see the public marketing/auth pages —
-  // e.g. hitting /login or the landing page while already signed in should
-  // land them back on their own dashboard, not show the public page.
+  // Logged-in users have no reason to see /login, /enroll, or
+  // /forgot-password while already signed in — those are genuinely
+  // "signed-out only" flows, so hitting one bounces back to the user's own
+  // dashboard. The landing page itself ('/') is deliberately NOT in this
+  // list (removed 2026-09-03, requested explicitly): a logged-in visitor
+  // can browse back to it and see a role-aware header (Portal/profile menu
+  // instead of Log In — see SiteHeader) rather than being redirected away.
   // /reset-password and /auth/confirm are deliberately excluded: the
   // password-reset flow creates a real session via those routes, and
   // redirecting away from them would break resetting your password while
   // already logged in (or mid-reset).
-  const publicOnlyPaths = ['/', '/login', '/enroll', '/forgot-password']
+  const publicOnlyPaths = ['/login', '/enroll', '/forgot-password']
   const isPublicOnly = publicOnlyPaths.includes(path)
 
   // Not logged in, trying to reach a protected section -> send to login
