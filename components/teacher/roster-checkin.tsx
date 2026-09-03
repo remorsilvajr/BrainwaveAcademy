@@ -4,9 +4,10 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Check } from 'lucide-react'
 import { recordAttendance } from '@/app/teacher/student-dashboard/actions'
-import { formatDateLong, todayIso } from '@/lib/format'
+import { todayIso } from '@/lib/format'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
+import { DateSelector } from '@/components/teacher/date-selector'
 
 type Student = { id: string; first_name: string; last_name: string }
 
@@ -20,11 +21,13 @@ export function RosterCheckin({
   students,
   statusByStudent,
   date,
+  basePath,
   readOnly = false,
 }: {
   students: Student[]
   statusByStudent: Record<string, string>
   date: string
+  basePath: string
   readOnly?: boolean
 }) {
   const router = useRouter()
@@ -72,11 +75,11 @@ export function RosterCheckin({
 
   return (
     <div id="roster" className="mx-auto max-w-lg rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-base font-bold text-gray-900 dark:text-gray-100">
           {isToday ? "Today's Roster Check-In" : 'Roster Attendance'}
         </h2>
-        <span className="text-xs text-gray-500 dark:text-gray-400">{formatDateLong(date)}</span>
+        <DateSelector date={date} basePath={basePath} />
       </div>
       {readOnly && (
         <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">

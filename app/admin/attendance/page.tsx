@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import { RosterCheckin } from '@/components/teacher/roster-checkin'
-import { DateSelector } from '@/components/teacher/date-selector'
 import { todayIso } from '@/lib/format'
 
 export default async function AdminAttendancePage({
@@ -23,17 +22,20 @@ export default async function AdminAttendancePage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Attendance</h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            View or correct attendance for any date — admin can edit past records, unlike teachers.
-          </p>
-        </div>
-        <DateSelector date={selectedDate} basePath="/admin/attendance" />
+      <div>
+        <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Attendance</h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          View or correct attendance for any date — admin can edit past records, unlike teachers.
+        </p>
       </div>
 
-      <RosterCheckin students={students ?? []} statusByStudent={statusByStudent} date={selectedDate} readOnly={false} />
+      <RosterCheckin
+        students={students ?? []}
+        statusByStudent={statusByStudent}
+        date={selectedDate}
+        basePath="/admin/attendance"
+        readOnly={false}
+      />
     </div>
   )
 }
