@@ -1,5 +1,11 @@
+import type { Metadata } from 'next'
 import { SiteHeader } from '@/components/landing/site-header'
 import { LoginForm } from '@/components/auth/login-form'
+
+export const metadata: Metadata = {
+  title: 'Log In | Brainwave Preschool Academy',
+  description: 'Log in to your Brainwave Preschool Academy parent, teacher, or admin portal account.',
+}
 
 export default async function LoginPage({
   searchParams,

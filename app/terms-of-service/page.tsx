@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { SiteHeader } from '@/components/landing/site-header'
 import { SiteFooter } from '@/components/landing/site-footer'
+import { Breadcrumbs } from '@/components/ui/breadcrumbs'
 import { getPortalAuth } from '@/lib/get-portal-auth'
 
 export const metadata: Metadata = {
@@ -42,7 +43,8 @@ export default async function TermsOfServicePage() {
       <SiteHeader auth={auth} />
       <main className="flex-1">
         <div className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#e6007e]">Legal</p>
+          <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'Terms of Service' }]} />
+          <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-[#e6007e]">Legal</p>
           <h1 className="mt-2 text-3xl font-extrabold text-[#0b1b62] dark:text-indigo-300 sm:text-4xl">
             Terms of Service
           </h1>
@@ -206,6 +208,9 @@ export default async function TermsOfServicePage() {
             Note: this is a temporary contact address, used until the School has its own official
             email set up. Requests sent here are still monitored.
           </p>
+          <P>
+            See also our <a href="/privacy-policy" className="text-[#0b1b62] underline hover:no-underline dark:text-indigo-300">Privacy Policy</a>.
+          </P>
         </div>
       </main>
       <SiteFooter />

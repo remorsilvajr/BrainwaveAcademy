@@ -5,12 +5,32 @@ import { SpeedInsights } from '@vercel/speed-insights/next'
 import './globals.css'
 import { CrossTabAuthSync } from '@/components/cross-tab-auth-sync'
 import { CookieConsentBanner } from '@/components/legal/cookie-consent-banner'
+import { getSiteUrl } from '@/lib/site-url'
 
 const inter = Inter({ subsets: ['latin'] })
 
+const title = 'Brainwave Preschool Academy'
+const description = 'Nurturing Young Learners in Their Most Formative Years.'
+
 export const metadata: Metadata = {
-  title: 'Brainwave Preschool Academy',
-  description: 'Nurturing Young Learners in Their Most Formative Years.',
+  // Resolves relative URLs in child pages' metadata (og:image, canonical,
+  // etc.) against the real deployed origin instead of whatever host
+  // actually served the request — required for opengraph-image.tsx's
+  // generated image to resolve to an absolute, shareable URL.
+  metadataBase: new URL(getSiteUrl()),
+  title,
+  description,
+  openGraph: {
+    title,
+    description,
+    siteName: title,
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title,
+    description,
+  },
 }
 
 // Both schemes are genuinely supported now that every surface has a real
