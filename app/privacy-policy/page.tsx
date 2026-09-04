@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { SiteHeader } from '@/components/landing/site-header'
 import { SiteFooter } from '@/components/landing/site-footer'
+import { Breadcrumbs } from '@/components/ui/breadcrumbs'
 import { getPortalAuth } from '@/lib/get-portal-auth'
 
 export const metadata: Metadata = {
@@ -42,7 +43,8 @@ export default async function PrivacyPolicyPage() {
       <SiteHeader auth={auth} />
       <main className="flex-1">
         <div className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#e6007e]">Legal</p>
+          <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'Privacy Policy' }]} />
+          <p className="mt-6 text-xs font-semibold uppercase tracking-wide text-[#e6007e]">Legal</p>
           <h1 className="mt-2 text-3xl font-extrabold text-[#0b1b62] dark:text-indigo-300 sm:text-4xl">
             Privacy Policy
           </h1>

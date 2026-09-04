@@ -48,7 +48,7 @@ export async function submitApplication(
   // finds. Redirect as if it succeeded rather than surfacing an error, so
   // a bot gets no signal to adapt to; nothing is actually written.
   if (((formData.get('website') as string) ?? '').trim() !== '') {
-    redirect('/enroll?submitted=true')
+    redirect('/enroll/thank-you')
   }
 
   const values: Record<string, string> = {}
@@ -184,5 +184,5 @@ export async function submitApplication(
     targetTable: 'applications',
   })
 
-  redirect('/enroll?submitted=true')
+  redirect('/enroll/thank-you')
 }

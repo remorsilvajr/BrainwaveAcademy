@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 
 // Missing program photos (see the two entries below with no matching file
 // in public/images/landing/ — those are the user's own real photos to add,
@@ -183,10 +184,19 @@ export function AcademyOverview() {
           className="flex flex-wrap items-center justify-center gap-4 pt-2"
           aria-label="Academy overview links"
         >
+          {/* Primary, above-the-fold conversion CTA — distinct from the
+              scroll-to-section buttons below it, which just navigate within
+              this same page. */}
+          <Link
+            href="/enroll"
+            className="rounded-full bg-[#e6007e] px-8 py-4 text-sm font-semibold tracking-[0.14px] text-white shadow-[0px_1px_2px_#0000000d] transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e6007e]"
+          >
+            Enroll Now
+          </Link>
           <button
             type="button"
             onClick={scrollToPrograms}
-            className="rounded-full bg-[#e6007e] px-8 py-4 text-sm font-semibold tracking-[0.14px] text-white shadow-[0px_1px_2px_#0000000d] transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e6007e]"
+            className="rounded-full border-2 border-[#0b1b62] px-8 py-4 text-sm font-semibold tracking-[0.14px] text-[#0b1b62] dark:border-indigo-300 dark:text-indigo-300 transition-colors hover:bg-[#0b1b620d] dark:hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b1b62]"
           >
             Explore Programs
           </button>

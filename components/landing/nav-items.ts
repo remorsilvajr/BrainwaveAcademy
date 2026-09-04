@@ -10,4 +10,5 @@ export const navigationItems = [
   { label: 'About Us', href: '/#about-us' },
   { label: 'Programs', href: '/#programs' },
   { label: '6 Domains', href: '/#domains' },
+  { label: 'FAQs', href: '/faq' },
 ]
