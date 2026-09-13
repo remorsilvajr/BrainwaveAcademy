@@ -83,7 +83,7 @@ export function RosterCheckin({
       </div>
       {readOnly && (
         <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
-          Viewing a past date — attendance can only be changed by an admin.
+          Viewing a past date. Attendance can only be changed by an admin.
         </p>
       )}
 

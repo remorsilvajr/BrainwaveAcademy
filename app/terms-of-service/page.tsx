@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     'The terms that govern use of the Brainwave Preschool Academy website, enrollment form, and portal.',
 }
 
-const LAST_UPDATED = 'September 3, 2026'
+const LAST_UPDATED = 'September 13, 2026'
 
 function H2({ id, children }: { id: string; children: React.ReactNode }) {
   return (
@@ -126,11 +126,15 @@ export default async function TermsOfServicePage() {
 
           <H2 id="fees">6. Fees and payments</H2>
           <P>
-            As of the &quot;Last updated&quot; date above, the Service does not process online
-            tuition or fee payments — any tuition, fees, or other charges associated with
-            enrollment are handled directly with the School office, outside of this Service. If
-            online payment is introduced in the future, these Terms will be updated to describe the
-            applicable payment terms before that feature becomes available.
+            The Service displays your child&apos;s tuition and other fees and lets you settle an
+            outstanding fee using an in-app wallet balance the School provides. This wallet is a
+            bookkeeping feature only: it is not connected to any bank account, card processor, or
+            other real financial institution, and no real money moves through the Service itself.
+            A cash or check payment made directly with the School office is recorded in the
+            Service by School staff and is separate from the wallet. If a real online payment
+            method (for example, a card or bank-linked payment processor) is introduced in the
+            future, these Terms will be updated to describe the applicable payment terms before
+            that feature becomes available.
           </P>
 
           <H2 id="ip">7. Intellectual property</H2>

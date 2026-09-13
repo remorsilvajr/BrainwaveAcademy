@@ -114,7 +114,7 @@ export function TeachersTable({ teachers }: { teachers: Teacher[] }) {
                           <p className="font-medium text-[#0b1b62] dark:text-indigo-300">
                             {t.first_name} {t.last_name}
                           </p>
-                          <p className="text-xs text-gray-400 dark:text-gray-500">{t.account_id ?? '—'}</p>
+                          <p className="text-xs text-gray-400 dark:text-gray-500">{t.account_id ?? '-'}</p>
                         </div>
                       </div>
                     </td>

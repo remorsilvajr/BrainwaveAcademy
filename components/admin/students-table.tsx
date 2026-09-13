@@ -19,11 +19,15 @@ type Student = {
   gender: string
   enrollment_status: string
   avatar_url: string | null
+  classroom_id: string | null
+  classroomName: string | null
   guardians: Guardian[]
   documents: DocRow[]
 }
 
-export function StudentsTable({ students }: { students: Student[] }) {
+type Classroom = { id: string; name: string; min_age_years: number | null; max_age_years: number | null }
+
+export function StudentsTable({ students, classrooms }: { students: Student[]; classrooms: Classroom[] }) {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   // Holds an id, not the row itself — router.refresh() (after editing a
@@ -95,6 +99,7 @@ export function StudentsTable({ students }: { students: Student[] }) {
             <tr>
               <th className="p-4 font-medium">Student</th>
               <th className="p-4 font-medium">Guardian Contact</th>
+              <th className="p-4 font-medium">Classroom</th>
               <th className="p-4 font-medium">Status</th>
               <th className="p-4 font-medium">Action</th>
             </tr>
@@ -123,7 +128,7 @@ export function StudentsTable({ students }: { students: Student[] }) {
                           <p className="font-medium text-[#0b1b62] dark:text-indigo-300">
                             {s.first_name} {s.last_name}
                           </p>
-                          <p className="text-xs text-gray-400 dark:text-gray-500">{s.student_id ?? '—'}</p>
+                          <p className="text-xs text-gray-400 dark:text-gray-500">{s.student_id ?? '-'}</p>
                         </div>
                       </div>
                     </td>
@@ -134,8 +139,11 @@ export function StudentsTable({ students }: { students: Student[] }) {
                           <p className="text-xs text-gray-500 dark:text-gray-400">{guardian.phone}</p>
                         </>
                       ) : (
-                        <span className="text-gray-400 dark:text-gray-500">—</span>
+                        <span className="text-gray-400 dark:text-gray-500">-</span>
                       )}
+                    </td>
+                    <td className="p-4 text-gray-700 dark:text-gray-300">
+                      {s.classroomName ?? <span className="text-gray-400 dark:text-gray-500">Unassigned</span>}
                     </td>
                     <td className="p-4">
                       <span
@@ -161,7 +169,7 @@ export function StudentsTable({ students }: { students: Student[] }) {
               })
             ) : (
               <tr>
-                <td colSpan={4} className="p-8 text-center text-gray-400 dark:text-gray-500">
+                <td colSpan={5} className="p-8 text-center text-gray-400 dark:text-gray-500">
                   No students match your search.
                 </td>
               </tr>
@@ -179,7 +187,7 @@ export function StudentsTable({ students }: { students: Student[] }) {
       </div>
 
       {selected && (
-        <StudentRecordModal student={selected} onClose={() => setSelectedId(null)} />
+        <StudentRecordModal student={selected} classrooms={classrooms} onClose={() => setSelectedId(null)} />
       )}
     </>
   )

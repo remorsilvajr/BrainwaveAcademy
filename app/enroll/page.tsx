@@ -6,7 +6,7 @@ import { Breadcrumbs } from '@/components/ui/breadcrumbs'
 export const metadata: Metadata = {
   title: 'Enroll a Student | Brainwave Preschool Academy',
   description:
-    'Apply for admission to Brainwave Preschool Academy. Submit your child and parent/guardian details online — our admissions team will review your application and email portal login details once approved.',
+    'Apply for admission to Brainwave Preschool Academy. Submit your child and parent/guardian details online, and our admissions team will review your application and email portal login details once approved.',
 }
 
 export default function EnrollPage() {

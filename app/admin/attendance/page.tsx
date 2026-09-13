@@ -25,7 +25,7 @@ export default async function AdminAttendancePage({
       <div>
         <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Attendance</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          View or correct attendance for any date — admin can edit past records, unlike teachers.
+          View or correct attendance for any date. Admin can edit past records, unlike teachers.
         </p>
       </div>
 

@@ -59,7 +59,7 @@ function LogDetailModal({ log, onClose }: { log: LogRow; onClose: () => void }) 
               <p className="font-medium text-gray-900 dark:text-gray-100">{log.targetLabel}</p>
             ) : (
               <p className="text-gray-500 dark:text-gray-400">
-                {log.target_table ? 'No name on file for this target — shown as raw table + ID below.' : 'None'}
+                {log.target_table ? 'No name on file for this target, shown as raw table + ID below.' : 'None'}
               </p>
             )}
             {log.target_table && (
@@ -173,7 +173,7 @@ export function ActivityLogTable({ logs }: { logs: LogRow[] }) {
                         {log.target_id && <span className="ml-1">· {log.target_id.slice(0, 8)}</span>}
                       </span>
                     ) : (
-                      <span className="text-gray-400 dark:text-gray-500">—</span>
+                      <span className="text-gray-400 dark:text-gray-500">-</span>
                     )}
                   </td>
                   <td className="p-4 align-top">

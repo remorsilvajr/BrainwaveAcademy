@@ -70,7 +70,7 @@ export function CookieConsentBanner() {
     >
       <div className="mx-auto flex w-full max-w-screen-xl flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
         <p className="text-sm leading-6 text-[#454650] dark:text-slate-300">
-          We use cookies that are strictly necessary to run this site — keeping you logged in,
+          We use cookies that are strictly necessary to run this site, keeping you logged in,
           remembering your preferences, and routing you to the right portal. We don&apos;t use
           cookies for advertising. See our{' '}
           <a href="/privacy-policy#cookies" className="text-[#0b1b62] underline hover:no-underline dark:text-indigo-300">

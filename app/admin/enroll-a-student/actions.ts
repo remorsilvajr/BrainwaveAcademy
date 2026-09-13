@@ -77,6 +77,15 @@ export async function approveApplication(applicationId: string) {
     if (profileError) {
       throw new Error(profileError.message)
     }
+
+    // Every parent account starts with a ₱2,500 wallet balance — see the
+    // Payments & wallet note in CLAUDE.md. Best-effort: a failed insert here
+    // shouldn't fail the whole approval (the account itself already
+    // committed above), the same reasoning as the welcome-email send below.
+    const { error: walletError } = await supabase.from('wallets').insert({ parent_id: parentId })
+    if (walletError) {
+      console.error('Failed to create wallet for new parent account:', walletError.message)
+    }
   }
 
   const { error: updateError } = await supabase

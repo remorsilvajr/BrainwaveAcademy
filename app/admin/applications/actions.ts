@@ -120,7 +120,7 @@ export async function approveAndCreateStudentRecord(applicationId: string) {
 
   if (!application.created_parent_id) {
     throw new Error(
-      'This application has no parent account yet — approve it via Enrollment Requests first.'
+      'This application has no parent account yet. Approve it via Enrollment Requests first.'
     )
   }
 

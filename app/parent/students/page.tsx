@@ -47,7 +47,7 @@ export default async function StudentProfilePage({
         <EmptyState
           icon={ClipboardList}
           title="No Applicants or Students Yet"
-          description="Once you've started an enrollment application for your child, their enrollment record — personal details, guardian info, and document requirements — will appear here."
+          description="Once you've started an enrollment application for your child, their enrollment record (personal details, guardian info, and document requirements) will appear here."
           action={{ href: '/parent/enroll-a-student', label: 'Enroll A Student' }}
         />
       </div>

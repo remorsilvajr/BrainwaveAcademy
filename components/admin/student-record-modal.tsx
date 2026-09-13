@@ -5,9 +5,15 @@ import { useRouter } from 'next/navigation'
 import { X } from 'lucide-react'
 import { calculateAge, formatDateLong } from '@/lib/format'
 import { dobInputMin, dobInputMax, MIN_STUDENT_AGE, MAX_AGE } from '@/lib/dob'
+import { isAgeEligibleForClassroom, classroomAgeRangeLabel } from '@/lib/classrooms'
 import { documentLabels, documentOrder } from '@/lib/documents'
 import { getSignedDocumentUrl } from '@/app/admin/applications/actions'
-import { updateStudentRecord, updateStudentAvatar, removeStudentAvatar } from '@/app/admin/students/actions'
+import {
+  updateStudentRecord,
+  updateStudentAvatar,
+  removeStudentAvatar,
+  assignStudentClassroom,
+} from '@/app/admin/students/actions'
 import { AvatarEditor } from '@/components/ui/avatar-editor'
 import { DocumentPreviewModal } from '@/components/ui/document-preview-modal'
 import { DobSelect } from '@/components/ui/dob-select'
@@ -32,9 +38,13 @@ type Student = {
   gender: string
   enrollment_status: string
   avatar_url: string | null
+  classroom_id: string | null
+  classroomName: string | null
   guardians: Guardian[]
   documents: DocRow[]
 }
+
+type Classroom = { id: string; name: string; min_age_years: number | null; max_age_years: number | null }
 
 type Tab = 'personal' | 'guardian' | 'documents'
 
@@ -47,10 +57,35 @@ function InfoField({ label, value }: { label: string; value: string }) {
   )
 }
 
-export function StudentRecordModal({ student, onClose }: { student: Student; onClose: () => void }) {
+export function StudentRecordModal({
+  student,
+  classrooms,
+  onClose,
+}: {
+  student: Student
+  classrooms: Classroom[]
+  onClose: () => void
+}) {
   const router = useRouter()
   const [tab, setTab] = useState<Tab>('personal')
   const [errorMessage, setErrorMessage] = useState('')
+
+  const [classroomPick, setClassroomPick] = useState(student.classroom_id ?? '')
+  const [isSavingClassroom, setIsSavingClassroom] = useState(false)
+  const [classroomError, setClassroomError] = useState('')
+
+  async function handleAssignClassroom() {
+    setClassroomError('')
+    setIsSavingClassroom(true)
+    try {
+      await assignStudentClassroom(student.id, classroomPick || null)
+      router.refresh()
+    } catch (err) {
+      setClassroomError(err instanceof Error ? err.message : 'Something went wrong.')
+    } finally {
+      setIsSavingClassroom(false)
+    }
+  }
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [previewTitle, setPreviewTitle] = useState('')
 
@@ -172,7 +207,7 @@ export function StudentRecordModal({ student, onClose }: { student: Student; onC
                   {student.enrollment_status}
                 </span>
               </div>
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Student ID: {student.student_id ?? '—'}</p>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Student ID: {student.student_id ?? '-'}</p>
               </div>
             </div>
             <button onClick={onClose} aria-label="Close" className="text-gray-400 dark:text-gray-500 hover:text-gray-600">
@@ -212,6 +247,38 @@ export function StudentRecordModal({ student, onClose }: { student: Student; onC
               >
                 Edit Personal Details
               </button>
+
+              <div className="mt-6 border-t border-gray-100 dark:border-gray-800 pt-4">
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Classroom</h3>
+                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                  Currently: <span className="font-medium text-gray-900 dark:text-gray-100">{student.classroomName ?? 'Unassigned'}</span>
+                </p>
+                <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                  <select
+                    value={classroomPick}
+                    onChange={(e) => setClassroomPick(e.target.value)}
+                    className="flex-1 rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+                  >
+                    <option value="">Unassigned</option>
+                    {classrooms.map((c) => {
+                      const eligible = isAgeEligibleForClassroom(student.date_of_birth, c)
+                      return (
+                        <option key={c.id} value={c.id} disabled={!eligible}>
+                          {c.name} ({classroomAgeRangeLabel(c)}){!eligible ? ', age not eligible' : ''}
+                        </option>
+                      )
+                    })}
+                  </select>
+                  <button
+                    onClick={handleAssignClassroom}
+                    disabled={isSavingClassroom || classroomPick === (student.classroom_id ?? '')}
+                    className="rounded-lg bg-[#0b1b62] px-4 py-2 text-sm font-semibold text-white hover:bg-[#08154d] disabled:opacity-60"
+                  >
+                    {isSavingClassroom ? 'Saving…' : 'Save'}
+                  </button>
+                </div>
+                {classroomError && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{classroomError}</p>}
+              </div>
             </div>
           )}
 
@@ -262,7 +329,7 @@ export function StudentRecordModal({ student, onClose }: { student: Student; onC
                   <select
                     value={gender}
                     onChange={(e) => setGender(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+                    className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
                   >
                     <option value="male">Male</option>
                     <option value="female">Female</option>

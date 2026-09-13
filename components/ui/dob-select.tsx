@@ -289,7 +289,7 @@ export function DobSelect({
             value={day}
             options={dayOptions}
             placeholder="Day"
-            ariaLabel={`${label} — Day`}
+            ariaLabel={`${label}, Day`}
             hasError={!!error}
             onChange={handleDayChange}
           />
@@ -300,7 +300,7 @@ export function DobSelect({
             value={month}
             options={monthOptions}
             placeholder="Month"
-            ariaLabel={`${label} — Month`}
+            ariaLabel={`${label}, Month`}
             hasError={!!error}
             onChange={handleMonthChange}
           />
@@ -311,7 +311,7 @@ export function DobSelect({
             value={year}
             options={yearOptions}
             placeholder="Year"
-            ariaLabel={`${label} — Year`}
+            ariaLabel={`${label}, Year`}
             hasError={!!error}
             onChange={handleYearChange}
           />

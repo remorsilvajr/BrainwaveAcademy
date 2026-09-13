@@ -33,7 +33,7 @@ export async function hideRejectedApplication(applicationId: string) {
     throw new Error(error.message)
   }
   if (!data) {
-    throw new Error('This application could not be removed — it may no longer be rejected, or may not belong to your account.')
+    throw new Error('This application could not be removed; it may no longer be rejected, or may not belong to your account.')
   }
 
   await logActivity(supabase, {

@@ -239,7 +239,7 @@ export function UserEditModal({
               className={inputClasses}
             />
             <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
-              Any valid PH mobile format works — it&apos;ll be saved consistently as +63 9XX XXX XXXX.
+              Any valid PH mobile format works; it&apos;ll be saved consistently as +63 9XX XXX XXXX.
             </p>
           </div>
           <div>

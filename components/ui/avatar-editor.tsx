@@ -77,7 +77,7 @@ export function AvatarEditor({
             const file = e.target.files?.[0]
             if (file) {
               if (file.size > MAX_FILE_BYTES) {
-                setSizeError('That photo is too large — please choose one under 2MB.')
+                setSizeError('That photo is too large. Please choose one under 2MB.')
               } else {
                 setSizeError('')
                 onFileSelected(file)

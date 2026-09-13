@@ -30,7 +30,7 @@ export function RequestPasswordReset() {
     <div className="max-w-sm border-t border-gray-100 dark:border-gray-800 pt-4">
       <p className="text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Forgot your current password?</p>
       <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-        We&apos;ll generate a new password and email it to you — your current password stops
+        We&apos;ll generate a new password and email it to you. Your current password stops
         working as soon as you request this.
       </p>
 

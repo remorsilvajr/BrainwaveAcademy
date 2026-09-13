@@ -25,6 +25,13 @@ const baseSections: NavSection[] = [
     title: 'Teacher',
     items: [
       { label: 'Teachers', href: '/admin/teachers', icon: 'teacher' },
+      { label: 'Classrooms', href: '/admin/classrooms', icon: 'classroom' },
+    ],
+  },
+  {
+    title: 'Payments',
+    items: [
+      { label: 'Payments', href: '/admin/payments', icon: 'wallet' },
     ],
   },
   {
