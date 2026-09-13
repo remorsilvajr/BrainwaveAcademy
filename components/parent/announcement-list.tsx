@@ -12,6 +12,7 @@ type Announcement = {
   body: string
   created_at: string
   posted_by_name: string
+  classroomName: string | null
 }
 
 export function AnnouncementList({ announcements }: { announcements: Announcement[] }) {
@@ -60,7 +61,14 @@ export function AnnouncementList({ announcements }: { announcements: Announcemen
               <Megaphone className="h-4 w-4" />
             </span>
             <div>
-              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{a.title}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{a.title}</p>
+                {a.classroomName && (
+                  <span className="rounded-full bg-sky-50 dark:bg-sky-950/30 px-2 py-0.5 text-xs font-medium text-sky-700 dark:text-sky-300">
+                    {a.classroomName}
+                  </span>
+                )}
+              </div>
               <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{a.body}</p>
               <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
                 Posted {formatRelativeTime(a.created_at)} by {a.posted_by_name}

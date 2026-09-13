@@ -17,7 +17,7 @@ export default async function TeacherDashboardPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const [{ data: profile }, { data: students }, { data: todayAttendance }, { data: milestones }, { data: announcementRows }] =
+  const [{ data: profile }, { data: students }, { data: todayAttendance }, { data: milestones }, { data: announcementRows }, { data: classrooms }] =
     await Promise.all([
       supabase.from('profiles').select('first_name, last_name').eq('id', user?.id ?? '').single(),
       supabase.from('students').select('id, first_name, last_name'),
@@ -25,14 +25,24 @@ export default async function TeacherDashboardPage() {
       supabase.from('milestones').select('student_id, category'),
       supabase
         .from('announcements')
-        .select('id, title, body, created_at, profiles(first_name, last_name)')
+        .select('id, title, body, created_at, classroom_id, profiles(first_name, last_name)')
         .eq('target_role', 'parent')
         .order('created_at', { ascending: false })
         .limit(5)
         .returns<
-          { id: string; title: string; body: string; created_at: string; profiles: { first_name: string; last_name: string } | null }[]
+          {
+            id: string
+            title: string
+            body: string
+            created_at: string
+            classroom_id: string | null
+            profiles: { first_name: string; last_name: string } | null
+          }[]
         >(),
+      supabase.from('classrooms').select('id, name').order('created_at', { ascending: true }),
     ])
+
+  const classroomNameById = new Map((classrooms ?? []).map((c) => [c.id, c.name]))
 
   const roster = students ?? []
   const todayStatusByStudent: Record<string, string> = {}
@@ -56,6 +66,7 @@ export default async function TeacherDashboardPage() {
     body: a.body,
     created_at: a.created_at,
     posted_by_name: a.profiles ? `${a.profiles.first_name} ${a.profiles.last_name}` : 'Staff',
+    classroomName: a.classroom_id ? (classroomNameById.get(a.classroom_id) ?? null) : null,
   }))
 
   return (
@@ -109,7 +120,7 @@ export default async function TeacherDashboardPage() {
         </div>
       </div>
 
-      <ClassroomAnnouncements announcements={announcements} viewAllHref="/teacher/announcement" />
+      <ClassroomAnnouncements announcements={announcements} classrooms={classrooms ?? []} viewAllHref="/teacher/announcement" />
 
       <div id="assessments" className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
         <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Pending Student Assessments (6 Domains of Learning)</h2>

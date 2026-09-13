@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { logActivity } from '@/lib/activity-log'
 
-export async function postAnnouncement(input: { title: string; body: string }) {
+export async function postAnnouncement(input: { title: string; body: string; classroomId?: string | null }) {
   const supabase = await createClient()
   const {
     data: { user },
@@ -24,6 +24,10 @@ export async function postAnnouncement(input: { title: string; body: string }) {
     // Classroom announcements posted from the teacher dashboard are for
     // parents specifically — admin has its own broader announcement tool.
     target_role: 'parent',
+    // Null means unscoped — visible to every parent, same as before this
+    // existed. A set classroom_id only reaches a parent with a child
+    // actually in that classroom (see lib/parent-classrooms.ts).
+    classroom_id: input.classroomId || null,
   })
 
   if (error) {

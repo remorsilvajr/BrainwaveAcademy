@@ -15,19 +15,25 @@ type Announcement = {
   body: string
   created_at: string
   posted_by_name: string
+  classroomName: string | null
 }
+
+type Classroom = { id: string; name: string }
 
 export function ClassroomAnnouncements({
   announcements,
+  classrooms,
   viewAllHref,
 }: {
   announcements: Announcement[]
+  classrooms: Classroom[]
   viewAllHref?: string
 }) {
   const router = useRouter()
   const [isPosting, setIsPosting] = useState(false)
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
+  const [classroomId, setClassroomId] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [search, setSearch] = useState('')
@@ -57,9 +63,10 @@ export function ClassroomAnnouncements({
     setIsSubmitting(true)
     setErrorMessage('')
     try {
-      await postAnnouncement({ title, body })
+      await postAnnouncement({ title, body, classroomId: classroomId || null })
       setTitle('')
       setBody('')
+      setClassroomId('')
       setIsPosting(false)
       router.refresh()
     } catch (err) {
@@ -97,6 +104,21 @@ export function ClassroomAnnouncements({
             rows={3}
             className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
           />
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Classroom</label>
+            <select
+              value={classroomId}
+              onChange={(e) => setClassroomId(e.target.value)}
+              className="w-full rounded-lg border border-gray-200 bg-white text-slate-900 dark:border-gray-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+            >
+              <option value="">All Classrooms</option>
+              {classrooms.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
           {errorMessage && <p className="text-sm text-red-600 dark:text-red-400">{errorMessage}</p>}
           <button
             type="button"
@@ -128,7 +150,12 @@ export function ClassroomAnnouncements({
               <Megaphone className="h-4 w-4" />
             </span>
             <div>
-              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{a.title}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{a.title}</p>
+                <span className="rounded-full bg-sky-50 dark:bg-sky-950/30 px-2 py-0.5 text-xs font-medium text-sky-700 dark:text-sky-300">
+                  {a.classroomName ?? 'All Classrooms'}
+                </span>
+              </div>
               <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{a.body}</p>
               <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
                 Posted {formatRelativeTime(a.created_at)} by {a.posted_by_name}

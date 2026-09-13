@@ -8,26 +8,30 @@ type AnnouncementRow = {
   title: string
   body: string
   created_at: string
+  classroom_id: string | null
   profiles: { first_name: string; last_name: string } | null
 }
 
 export default async function TeacherAnnouncementPage() {
   const supabase = await createClient()
 
-  const [{ data: classroomRows }, { data: schoolRows }] = await Promise.all([
+  const [{ data: classroomRows }, { data: schoolRows }, { data: classrooms }] = await Promise.all([
     supabase
       .from('announcements')
-      .select('id, title, body, created_at, profiles(first_name, last_name)')
+      .select('id, title, body, created_at, classroom_id, profiles(first_name, last_name)')
       .eq('target_role', 'parent')
       .order('created_at', { ascending: false })
       .returns<AnnouncementRow[]>(),
     supabase
       .from('announcements')
-      .select('id, title, body, created_at, profiles(first_name, last_name)')
+      .select('id, title, body, created_at, classroom_id, profiles(first_name, last_name)')
       .in('target_role', ['teacher', 'all'])
       .order('created_at', { ascending: false })
       .returns<AnnouncementRow[]>(),
+    supabase.from('classrooms').select('id, name').order('created_at', { ascending: true }),
   ])
+
+  const classroomNameById = new Map((classrooms ?? []).map((c) => [c.id, c.name]))
 
   const classroomAnnouncements = (classroomRows ?? []).map((a) => ({
     id: a.id,
@@ -35,6 +39,7 @@ export default async function TeacherAnnouncementPage() {
     body: a.body,
     created_at: a.created_at,
     posted_by_name: a.profiles ? `${a.profiles.first_name} ${a.profiles.last_name}` : 'Staff',
+    classroomName: a.classroom_id ? (classroomNameById.get(a.classroom_id) ?? null) : null,
   }))
 
   return (
@@ -44,7 +49,7 @@ export default async function TeacherAnnouncementPage() {
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Post updates for parents and see what the school has shared.</p>
       </div>
 
-      <ClassroomAnnouncements announcements={classroomAnnouncements} />
+      <ClassroomAnnouncements announcements={classroomAnnouncements} classrooms={classrooms ?? []} />
 
       <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
         <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">School Announcements</h2>

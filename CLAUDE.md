@@ -133,12 +133,14 @@ Sidebar: Dashboard, Announcement, User Management, Create New Account, Enrollmen
 
 ### Search + pagination
 
-Every list-shaped page (User Management, Students, Applications, Enrollment Requests, Activity Log, Announcements, Attendance roster) shares one pattern via `components/ui/pagination.tsx` + `lib/use-pagination.ts`:
+Every list-shaped page (User Management, Students, Teachers, Applications, Enrollment Requests, Activity Log, Announcements, Attendance roster, Parent Wallets, Wallet Fund Requests) shares one pattern via `components/ui/pagination.tsx` + `lib/use-pagination.ts` — **10 items per page by default, always**, not a scrollable div with no page limit:
 
 - `usePagination(items, resetKey, pageSize = 10)` — takes the already-filtered array, slices to `pageItems`. `resetKey` should be every search/filter input concatenated, so a new search snaps back to page 1 instead of landing on a stale page number. The reset happens inline during render (React's "adjusting state when a prop changes" pattern), not in a `useEffect`.
-- `<Pagination page totalPages totalItems pageSize onPageChange />` — Prev/Next, collapsed page numbers, a "Go to page" input. Renders nothing at ≤1 page.
+- `<Pagination page totalPages totalItems pageSize onPageChange />` — Prev/Next, collapsed page numbers, a "Go to page" input. Renders nothing at ≤1 page (so a short list, e.g. Wallet Fund Requests before it has 10+ rows, correctly shows no pager at all rather than an empty one).
 
 **Every paginated list's results container needs a reserved `min-h` (`420px`, or `360px` for card-style lists).** Without one, typing into the search box on every keystroke (no debounce) visibly collapses the whole page and snaps scroll position upward as the result count shrinks. Two dashboard-embedded widgets (capped, no search box) are deliberately exempt.
+
+**Any new admin/parent list-shaped page needs this pattern applied from the start, not an ad hoc scrollable `<div>` with no page limit** — the Parent Wallets and Wallet Fund Requests panels (Payments & wallet system feature) originally shipped with a plain `max-h-72 overflow-y-auto` container instead, found and flagged live only after the fact. Reach for `usePagination`/`Pagination` by default for any list that can realistically grow, the same way every other list in this app already does, rather than treating pagination as an afterthought to add if a list gets long.
 
 ### Sidebar navigation feedback
 
@@ -185,6 +187,10 @@ Every route is a fully server-rendered page that runs its own Supabase queries b
 ### Announcements
 
 `announcements.target_role` is free-text (`parent`/`teacher`/`all` by convention, not DB-enforced or RLS-filtered — each page's own query restricts what it shows). Teacher can only INSERT, always `target_role: 'parent'`. Admin (`ALL`) can post to any target and delete any announcement. Parent has no INSERT policy — read-only. Byline names work for every role via a dedicated `view_announcement_posters` policy on `profiles` (without it, a parent viewing a teacher's/admin's byline would see "by Staff", since `profiles`' ordinary read policies don't cover cross-role reads).
+
+- **An announcement can optionally be scoped to one classroom** (`announcements.classroom_id`, nullable FK to `classrooms`) — teacher's Classroom Announcements panel and admin's announcement tool both gained a Classroom picker (defaults to "All Classrooms" = unscoped, matching every announcement's behavior before this existed). Like `target_role`, this is an app-query-level filter, not an RLS-level one, matching the existing convention this section already documents — no new policy needed for the column itself.
+- **Classroom scoping only ever restricts *parent* visibility, never teacher/admin's.** A parent only sees a classroom-targeted announcement if one of their own linked children is actually in that classroom (`lib/parent-classrooms.ts`'s `getParentClassroomIds` + `classroomVisibilityFilter`, applied on top of the existing `target_role` filter on every parent-facing announcements query — the full `/parent/announcement` list and the parent dashboard's preview widget both need it, not just one). Teacher and admin views are intentionally unfiltered by classroom regardless of what's set, since staff already have unscoped access to every student in this app.
+- Every announcement display resolves `classroom_id` to a name for its badge, but only teacher's Classroom Announcements panel shows an explicit "All Classrooms" badge for the unscoped case (every row there is parent-facing, so its scope is always worth stating plainly) — admin's feed and parent's list/dashboard widget both render nothing at all when `classroom_id` is null, to avoid cluttering the common case with a redundant badge next to the role badge (admin) or when it's simply the default (parent).
 
 ### Profile photos
 

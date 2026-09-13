@@ -4,12 +4,14 @@ import { createClient } from '@/lib/supabase/server'
 import { documentOrder } from '@/lib/documents'
 import { formatCurrency, formatRelativeTime } from '@/lib/format'
 import { parentApplicationsFilter } from '@/lib/parent-applications'
+import { classroomVisibilityFilter } from '@/lib/parent-classrooms'
 
 type AnnouncementRow = {
   id: string
   title: string
   body: string
   created_at: string
+  classroom_id: string | null
   profiles: { first_name: string; last_name: string } | null
 }
 
@@ -24,33 +26,47 @@ export default async function ParentDashboardPage({
     data: { user },
   } = await supabase.auth.getUser()
 
-  // See app/parent/layout.tsx for why this matches on parent_email too, not
-  // just created_parent_id.
-  const [{ data: profile }, { data: applications }, { data: announcementRows }] = await Promise.all([
-    supabase.from('profiles').select('first_name').eq('id', user?.id ?? '').single(),
-    supabase
-      .from('applications')
-      .select('id, status, student_first_name, student_last_name, created_student_id')
-      .eq('hidden_from_parent', false)
-      .or(parentApplicationsFilter(user))
-      .order('submitted_at', { ascending: true }),
-    supabase
-      .from('announcements')
-      .select('id, title, body, created_at, profiles(first_name, last_name)')
-      .in('target_role', ['parent', 'all'])
-      .order('created_at', { ascending: false })
-      .limit(3)
-      .returns<AnnouncementRow[]>(),
-  ])
-
-  const announcements = announcementRows ?? []
-
+  // Fetched up front (not inside the main Promise.all below) since both
+  // the Due Balance card and the announcements query need the same
+  // linked-children/classroom info — one round trip covers both instead of
+  // each re-deriving it separately.
   const { data: linkedStudentIds } = await supabase.from('parent_student').select('student_id').eq('parent_id', user?.id ?? '')
   const studentIds = (linkedStudentIds ?? []).map((row) => row.student_id)
-  const { data: pendingFees } =
-    studentIds.length > 0
-      ? await supabase.from('payments').select('amount').in('student_id', studentIds).eq('status', 'pending')
-      : { data: [] }
+  const { data: linkedStudents } =
+    studentIds.length > 0 ? await supabase.from('students').select('classroom_id').in('id', studentIds) : { data: [] }
+  const classroomIds = Array.from(new Set((linkedStudents ?? []).map((s) => s.classroom_id).filter((id): id is string => !!id)))
+
+  // See app/parent/layout.tsx for why this matches on parent_email too, not
+  // just created_parent_id.
+  const [{ data: profile }, { data: applications }, { data: announcementRows }, { data: pendingFees }, { data: classrooms }] =
+    await Promise.all([
+      supabase.from('profiles').select('first_name').eq('id', user?.id ?? '').single(),
+      supabase
+        .from('applications')
+        .select('id, status, student_first_name, student_last_name, created_student_id')
+        .eq('hidden_from_parent', false)
+        .or(parentApplicationsFilter(user))
+        .order('submitted_at', { ascending: true }),
+      supabase
+        .from('announcements')
+        .select('id, title, body, created_at, classroom_id, profiles(first_name, last_name)')
+        .in('target_role', ['parent', 'all'])
+        .or(classroomVisibilityFilter(classroomIds))
+        .order('created_at', { ascending: false })
+        .limit(3)
+        .returns<AnnouncementRow[]>(),
+      studentIds.length > 0
+        ? supabase.from('payments').select('amount').in('student_id', studentIds).eq('status', 'pending')
+        : Promise.resolve({ data: [] }),
+      supabase.from('classrooms').select('id, name'),
+    ])
+
+  const classroomNameById = new Map((classrooms ?? []).map((c) => [c.id, c.name]))
+  const announcements = (announcementRows ?? []).map((a) => ({
+    ...a,
+    classroomName: a.classroom_id ? (classroomNameById.get(a.classroom_id) ?? null) : null,
+  }))
+
   const dueBalance = (pendingFees ?? []).reduce((sum, p) => sum + p.amount, 0)
 
   const selectedApplication =
@@ -156,7 +172,14 @@ export default async function ParentDashboardPage({
                   <Megaphone className="h-4 w-4" />
                 </span>
                 <div>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{a.title}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{a.title}</p>
+                    {a.classroomName && (
+                      <span className="rounded-full bg-sky-50 dark:bg-sky-950/30 px-2 py-0.5 text-xs font-medium text-sky-700 dark:text-sky-300">
+                        {a.classroomName}
+                      </span>
+                    )}
+                  </div>
                   <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{a.body}</p>
                   <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
                     Posted {formatRelativeTime(a.created_at)} by{' '}

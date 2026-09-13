@@ -6,7 +6,12 @@ import { logActivity } from '@/lib/activity-log'
 
 const TARGET_ROLES = ['parent', 'teacher', 'all'] as const
 
-export async function postAnnouncement(input: { title: string; body: string; target_role: string }) {
+export async function postAnnouncement(input: {
+  title: string
+  body: string
+  target_role: string
+  classroomId?: string | null
+}) {
   const supabase = await createClient()
   const {
     data: { user },
@@ -27,6 +32,10 @@ export async function postAnnouncement(input: { title: string; body: string; tar
     body: input.body.trim(),
     posted_by: user.id,
     target_role: input.target_role,
+    // Only meaningful for a parent-visible announcement — see
+    // lib/parent-classrooms.ts. Harmless to set on a teacher-only one, it
+    // just has no effect since classroom scoping only restricts parents.
+    classroom_id: input.classroomId || null,
   })
 
   if (error) {

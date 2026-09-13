@@ -15,7 +15,10 @@ type Announcement = {
   target_role: string
   created_at: string
   posted_by_name: string
+  classroomName: string | null
 }
+
+type Classroom = { id: string; name: string }
 
 const targetLabels: Record<string, string> = {
   parent: 'Parents',
@@ -29,12 +32,19 @@ const targetBadgeClasses: Record<string, string> = {
   all: 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300',
 }
 
-export function AnnouncementFeed({ announcements }: { announcements: Announcement[] }) {
+export function AnnouncementFeed({
+  announcements,
+  classrooms,
+}: {
+  announcements: Announcement[]
+  classrooms: Classroom[]
+}) {
   const router = useRouter()
   const [isPosting, setIsPosting] = useState(false)
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
   const [targetRole, setTargetRole] = useState('all')
+  const [classroomId, setClassroomId] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -56,10 +66,11 @@ export function AnnouncementFeed({ announcements }: { announcements: Announcemen
     setIsSubmitting(true)
     setErrorMessage('')
     try {
-      await postAnnouncement({ title, body, target_role: targetRole })
+      await postAnnouncement({ title, body, target_role: targetRole, classroomId: classroomId || null })
       setTitle('')
       setBody('')
       setTargetRole('all')
+      setClassroomId('')
       setIsPosting(false)
       router.refresh()
     } catch (err) {
@@ -121,6 +132,25 @@ export function AnnouncementFeed({ announcements }: { announcements: Announcemen
               <option value="teacher">Teachers Only</option>
             </select>
           </div>
+          {targetRole !== 'teacher' && (
+            <div>
+              <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">
+                Classroom (only restricts which parents see it)
+              </label>
+              <select
+                value={classroomId}
+                onChange={(e) => setClassroomId(e.target.value)}
+                className="w-full rounded-lg border border-gray-200 bg-white text-slate-900 dark:border-gray-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+              >
+                <option value="">All Classrooms</option>
+                {classrooms.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           {errorMessage && <p className="text-sm text-red-600 dark:text-red-400">{errorMessage}</p>}
           <button
             type="button"
@@ -156,6 +186,11 @@ export function AnnouncementFeed({ announcements }: { announcements: Announcemen
                   <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${targetBadgeClasses[a.target_role] ?? 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'}`}>
                     {targetLabels[a.target_role] ?? a.target_role}
                   </span>
+                  {a.target_role !== 'teacher' && a.classroomName && (
+                    <span className="rounded-full bg-sky-50 dark:bg-sky-950/30 px-2 py-0.5 text-xs font-medium text-sky-700 dark:text-sky-300">
+                      {a.classroomName}
+                    </span>
+                  )}
                 </div>
                 <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{a.body}</p>
                 <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
