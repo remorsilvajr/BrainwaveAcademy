@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { CalendarClock, Megaphone } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { documentOrder } from '@/lib/documents'
-import { formatRelativeTime } from '@/lib/format'
+import { formatCurrency, formatRelativeTime } from '@/lib/format'
 import { parentApplicationsFilter } from '@/lib/parent-applications'
 
 type AnnouncementRow = {
@@ -44,6 +44,14 @@ export default async function ParentDashboardPage({
   ])
 
   const announcements = announcementRows ?? []
+
+  const { data: linkedStudentIds } = await supabase.from('parent_student').select('student_id').eq('parent_id', user?.id ?? '')
+  const studentIds = (linkedStudentIds ?? []).map((row) => row.student_id)
+  const { data: pendingFees } =
+    studentIds.length > 0
+      ? await supabase.from('payments').select('amount').in('student_id', studentIds).eq('status', 'pending')
+      : { data: [] }
+  const dueBalance = (pendingFees ?? []).reduce((sum, p) => sum + p.amount, 0)
 
   const selectedApplication =
     (applications ?? []).find((a) => a.id === studentParam) ?? applications?.[0] ?? null
@@ -120,11 +128,17 @@ export default async function ParentDashboardPage({
 
         <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Due Balance</h2>
-          <p className="mt-4 text-3xl font-bold text-[#0b1b62] dark:text-indigo-300">₱0.00</p>
+          <p className="mt-4 text-3xl font-bold text-[#0b1b62] dark:text-indigo-300">{formatCurrency(dueBalance)}</p>
           <p className="mt-2 flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
             <CalendarClock className="h-4 w-4" />
-            No payments due at this time.
+            {dueBalance > 0 ? 'Outstanding across all your children.' : 'No payments due at this time.'}
           </p>
+          <Link
+            href="/parent/payments"
+            className="mt-3 inline-block text-sm font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline"
+          >
+            View Payments →
+          </Link>
         </div>
       </div>
 

@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { formatCurrency, formatDateShort, isToday, nowMs } from '@/lib/format'
 import { PriorityFeedbackLog } from '@/components/admin/priority-feedback-log'
 
 type FeedbackRow = {
@@ -12,7 +13,7 @@ type FeedbackRow = {
 export default async function AdminDashboardPage() {
   const supabase = await createClient()
 
-  const [{ data: applications }, { data: students }, { data: feedbackRows }, { count: unresolvedFeedbackCount }] =
+  const [{ data: applications }, { data: students }, { data: feedbackRows }, { count: unresolvedFeedbackCount }, { data: recentPayments }] =
     await Promise.all([
       supabase.from('applications').select('status, created_student_id'),
       supabase.from('students').select('enrollment_status'),
@@ -27,7 +28,23 @@ export default async function AdminDashboardPage() {
       // dashboard widget, so feedbackRows.length would silently undercount
       // this stat once there are more than 5 unresolved reports.
       supabase.from('feedback').select('id', { count: 'exact', head: true }).eq('resolved', false),
+      supabase
+        .from('payments')
+        .select('id, student_id, amount, payment_method, transaction_date, receipt_ref')
+        .eq('status', 'paid')
+        .order('transaction_date', { ascending: false })
+        .limit(8),
     ])
+
+  // Uncapped, separate from the 8-row display list above for the same
+  // reason the Unresolved Feedback stat needed its own exact-count query —
+  // deriving "today's total" from a capped list would silently undercount
+  // once more than 8 payments land in a single day.
+  const { data: paidTodayAmounts } = await supabase
+    .from('payments')
+    .select('amount, transaction_date')
+    .eq('status', 'paid')
+    .gte('transaction_date', new Date(nowMs() - 24 * 60 * 60 * 1000).toISOString())
 
   // "Pending Applications" spans both stages of the pipeline: enrollment
   // requests that haven't been approved yet (Enrollment Requests' queue) and
@@ -41,6 +58,17 @@ export default async function AdminDashboardPage() {
   const pendingApplicationsCount = pendingReviewCount + pendingDocumentsCount
 
   const activeEnrollmentCount = (students ?? []).filter((s) => s.enrollment_status === 'active').length
+
+  const paymentStudentIds = (recentPayments ?? []).map((p) => p.student_id)
+  const { data: paymentStudents } =
+    paymentStudentIds.length > 0
+      ? await supabase.from('students').select('id, first_name, last_name').in('id', paymentStudentIds)
+      : { data: [] }
+  const paymentStudentById = new Map((paymentStudents ?? []).map((s) => [s.id, `${s.first_name} ${s.last_name}`]))
+
+  const totalCollectedToday = (paidTodayAmounts ?? [])
+    .filter((p) => p.transaction_date && isToday(p.transaction_date))
+    .reduce((sum, p) => sum + p.amount, 0)
 
   const feedbackItems = (feedbackRows ?? []).map((f) => ({
     id: f.id,
@@ -76,20 +104,16 @@ export default async function AdminDashboardPage() {
           <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">{unresolvedFeedbackCount ?? 0}</p>
           <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Bug reports &amp; feedback needing response</p>
         </div>
-        {/* No `payments` table/UI exists yet — shown as an honest empty
-            state rather than fabricated numbers. See the matching note on
-            the Recent Financial Transactions card below. */}
         <div className="rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-sky-400 bg-white dark:bg-gray-900 p-4 shadow-sm">
           <p className="text-sm text-gray-500 dark:text-gray-400">Total Collections Today</p>
-          <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">₱0.00</p>
-          <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">No transactions yet</p>
+          <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">{formatCurrency(totalCollectedToday)}</p>
+          <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+            {totalCollectedToday > 0 ? 'Paid today, wallet + cash/check' : 'No transactions yet'}
+          </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Payments aren't wired up yet — no `payments` table exists, so
-            this stays an empty shell (matching every other list's own
-            empty state) rather than fabricated rows. */}
         <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 shadow-sm">
           <h2 className="mb-3 font-semibold text-[#0b1b62] dark:text-indigo-300">Recent Financial Transactions</h2>
           <div className="overflow-x-auto">
@@ -100,15 +124,33 @@ export default async function AdminDashboardPage() {
                 <th className="pb-2 font-medium">Payer / Student</th>
                 <th className="pb-2 font-medium">Method</th>
                 <th className="pb-2 font-medium">Amount</th>
-                <th className="pb-2 font-medium">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-              <tr>
-                <td colSpan={5} className="py-8 text-center text-gray-400 dark:text-gray-500">
-                  No transactions recorded yet.
-                </td>
-              </tr>
+              {(recentPayments ?? []).length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="py-8 text-center text-gray-400 dark:text-gray-500">
+                    No transactions recorded yet.
+                  </td>
+                </tr>
+              ) : (
+                (recentPayments ?? []).map((p) => (
+                  <tr key={p.id}>
+                    <td className="py-2 text-gray-700 dark:text-gray-300">
+                      {p.receipt_ref ?? '—'}
+                      <br />
+                      <span className="text-xs text-gray-400 dark:text-gray-500">
+                        {p.transaction_date ? formatDateShort(p.transaction_date) : '—'}
+                      </span>
+                    </td>
+                    <td className="py-2 text-gray-700 dark:text-gray-300">
+                      {paymentStudentById.get(p.student_id) ?? 'Unknown student'}
+                    </td>
+                    <td className="py-2 capitalize text-gray-700 dark:text-gray-300">{p.payment_method ?? '—'}</td>
+                    <td className="py-2 font-medium text-gray-900 dark:text-gray-100">{formatCurrency(p.amount)}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
           </div>

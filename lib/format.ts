@@ -94,6 +94,10 @@ export function formatStatus(status: string) {
   return statusLabels[status] ?? status
 }
 
+export function formatCurrency(amount: number) {
+  return `₱${amount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
 export function formatRelativeTime(iso: string) {
   const diffMs = Date.now() - new Date(iso).getTime()
   const hours = Math.floor(diffMs / (1000 * 60 * 60))

@@ -152,6 +152,16 @@ export async function createSystemUser(
     return { error: profileError.message, values }
   }
 
+  // Every parent account starts with a ₱2,500 wallet balance — see the
+  // Payments & wallet note in CLAUDE.md. Uses the service-role client (this
+  // whole action already does), best-effort like the avatar upload above.
+  if (values.role === 'parent') {
+    const { error: walletError } = await admin.from('wallets').insert({ parent_id: userId })
+    if (walletError) {
+      console.error('Failed to create wallet for new parent account:', walletError.message)
+    }
+  }
+
   const supabase = await createClient()
   const {
     data: { user: actingAdmin },

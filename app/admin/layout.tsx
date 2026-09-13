@@ -28,6 +28,18 @@ const baseSections: NavSection[] = [
     ],
   },
   {
+    title: 'Classroom',
+    items: [
+      { label: 'Classrooms', href: '/admin/classrooms', icon: 'classroom' },
+    ],
+  },
+  {
+    title: 'Payments',
+    items: [
+      { label: 'Payments', href: '/admin/payments', icon: 'wallet' },
+    ],
+  },
+  {
     title: 'Admin',
     items: [
       { label: 'Activity Log', href: '/admin/logs', icon: 'checklist' },

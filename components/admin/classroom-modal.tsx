@@ -1,0 +1,352 @@
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { X, User as UserIcon } from 'lucide-react'
+import { calculateAge } from '@/lib/format'
+import { classroomAgeRangeLabel } from '@/lib/classrooms'
+import { Modal } from '@/components/ui/modal'
+import { SearchableSelect, type SearchableOption } from '@/components/ui/searchable-select'
+import {
+  assignLeadTeacher,
+  removeLeadTeacher,
+  addAssistantTeacher,
+  removeAssistantTeacher,
+  updateFeeSchedule,
+} from '@/app/admin/classrooms/actions'
+import type { ClassroomRow } from '@/components/admin/classrooms-grid'
+
+type Tab = 'roster' | 'teachers' | 'fees'
+
+export function ClassroomModal({
+  classroom,
+  teacherOptions,
+  onClose,
+}: {
+  classroom: ClassroomRow
+  teacherOptions: SearchableOption[]
+  onClose: () => void
+}) {
+  const router = useRouter()
+  const [tab, setTab] = useState<Tab>('roster')
+
+  const [leadPick, setLeadPick] = useState<string | null>(null)
+  const [assistantPick, setAssistantPick] = useState<string | null>(null)
+  const [teacherError, setTeacherError] = useState('')
+  const [isSavingTeacher, setIsSavingTeacher] = useState(false)
+
+  const [tuitionFee, setTuitionFee] = useState(String(classroom.tuition_fee))
+  const [activityFee, setActivityFee] = useState(String(classroom.activity_fee))
+  const [tuitionDue, setTuitionDue] = useState(classroom.tuition_due_date ?? '')
+  const [activityDue, setActivityDue] = useState(classroom.activity_due_date ?? '')
+  const [feeError, setFeeError] = useState('')
+  const [isSavingFees, setIsSavingFees] = useState(false)
+  const [feeSaved, setFeeSaved] = useState(false)
+
+  const assignedTeacherIds = new Set([
+    ...(classroom.lead_teacher_id ? [classroom.lead_teacher_id] : []),
+    ...classroom.assistants.map((a) => a.id),
+  ])
+  const availableForLead = teacherOptions.filter((t) => t.value !== classroom.lead_teacher_id)
+  const availableForAssistant = teacherOptions.filter((t) => !assignedTeacherIds.has(t.value))
+
+  async function handleAssignLead() {
+    if (!leadPick) return
+    setTeacherError('')
+    setIsSavingTeacher(true)
+    try {
+      await assignLeadTeacher(classroom.id, leadPick)
+      setLeadPick(null)
+      router.refresh()
+    } catch (err) {
+      setTeacherError(err instanceof Error ? err.message : 'Something went wrong.')
+    } finally {
+      setIsSavingTeacher(false)
+    }
+  }
+
+  async function handleRemoveLead() {
+    setTeacherError('')
+    setIsSavingTeacher(true)
+    try {
+      await removeLeadTeacher(classroom.id)
+      router.refresh()
+    } catch (err) {
+      setTeacherError(err instanceof Error ? err.message : 'Something went wrong.')
+    } finally {
+      setIsSavingTeacher(false)
+    }
+  }
+
+  async function handleAddAssistant() {
+    if (!assistantPick) return
+    setTeacherError('')
+    setIsSavingTeacher(true)
+    try {
+      await addAssistantTeacher(classroom.id, assistantPick)
+      setAssistantPick(null)
+      router.refresh()
+    } catch (err) {
+      setTeacherError(err instanceof Error ? err.message : 'Something went wrong.')
+    } finally {
+      setIsSavingTeacher(false)
+    }
+  }
+
+  async function handleRemoveAssistant(teacherId: string) {
+    setTeacherError('')
+    setIsSavingTeacher(true)
+    try {
+      await removeAssistantTeacher(classroom.id, teacherId)
+      router.refresh()
+    } catch (err) {
+      setTeacherError(err instanceof Error ? err.message : 'Something went wrong.')
+    } finally {
+      setIsSavingTeacher(false)
+    }
+  }
+
+  async function handleSaveFees() {
+    setFeeError('')
+    setFeeSaved(false)
+    setIsSavingFees(true)
+    try {
+      await updateFeeSchedule(classroom.id, {
+        tuition_fee: Number(tuitionFee) || 0,
+        activity_fee: Number(activityFee) || 0,
+        tuition_due_date: tuitionDue || null,
+        activity_due_date: activityDue || null,
+      })
+      setFeeSaved(true)
+      router.refresh()
+    } catch (err) {
+      setFeeError(err instanceof Error ? err.message : 'Something went wrong.')
+    } finally {
+      setIsSavingFees(false)
+    }
+  }
+
+  const tabs: { key: Tab; label: string }[] = [
+    { key: 'roster', label: `Roster (${classroom.roster.length})` },
+    { key: 'teachers', label: 'Teachers' },
+    { key: 'fees', label: 'Fee Schedule' },
+  ]
+
+  return (
+    <Modal onClose={onClose} maxWidth="lg">
+      <div className="border-b border-gray-100 dark:border-gray-800 p-6">
+        <div className="flex items-start justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{classroom.name}</h2>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{classroomAgeRangeLabel(classroom)}</p>
+          </div>
+          <button onClick={onClose} aria-label="Close" className="text-gray-400 dark:text-gray-500 hover:text-gray-600">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="mt-4 flex gap-4 border-b border-gray-100 dark:border-gray-800">
+          {tabs.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`border-b-2 px-1 pb-3 text-sm font-medium ${
+                tab === t.key ? 'border-[#e6007e] text-[#e6007e]' : 'border-transparent text-gray-500 dark:text-gray-400'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-6">
+        {tab === 'roster' && (
+          <div className="space-y-2">
+            {classroom.roster.length === 0 ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                No students assigned yet. Assign a student to this classroom from their record in Students.
+              </p>
+            ) : (
+              classroom.roster.map((s) => (
+                <div key={s.id} className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+                  {s.avatar_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={s.avatar_url} alt="" className="h-9 w-9 rounded-full object-cover" />
+                  ) : (
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300">
+                      <UserIcon className="h-4 w-4" />
+                    </span>
+                  )}
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                      {s.first_name} {s.last_name}
+                    </p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500">
+                      {s.student_id ?? '—'} · {calculateAge(s.date_of_birth)}y
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {tab === 'teachers' && (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Lead Teacher</h3>
+              {classroom.leadTeacherName ? (
+                <div className="mt-2 flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{classroom.leadTeacherName}</span>
+                  <button
+                    onClick={handleRemoveLead}
+                    disabled={isSavingTeacher}
+                    className="rounded-full border border-red-300 dark:border-red-800 px-3 py-1.5 text-xs font-semibold text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 disabled:opacity-60"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                  <div className="flex-1">
+                    <SearchableSelect
+                      options={availableForLead}
+                      value={leadPick}
+                      onChange={setLeadPick}
+                      placeholder="Select a teacher…"
+                    />
+                  </div>
+                  <button
+                    onClick={handleAssignLead}
+                    disabled={!leadPick || isSavingTeacher}
+                    className="rounded-lg bg-[#0b1b62] px-4 py-2 text-sm font-semibold text-white hover:bg-[#08154d] disabled:opacity-60"
+                  >
+                    Assign
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
+                Assistant Teachers
+              </h3>
+              <div className="mt-2 space-y-2">
+                {classroom.assistants.map((a) => (
+                  <div key={a.id} className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{a.name}</span>
+                    <button
+                      onClick={() => handleRemoveAssistant(a.id)}
+                      disabled={isSavingTeacher}
+                      className="rounded-full border border-red-300 dark:border-red-800 px-3 py-1.5 text-xs font-semibold text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 disabled:opacity-60"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                <div className="flex-1">
+                  <SearchableSelect
+                    options={availableForAssistant}
+                    value={assistantPick}
+                    onChange={setAssistantPick}
+                    placeholder="Select a teacher to add…"
+                  />
+                </div>
+                <button
+                  onClick={handleAddAssistant}
+                  disabled={!assistantPick || isSavingTeacher}
+                  className="rounded-lg border border-[#0b1b62] dark:border-indigo-300 px-4 py-2 text-sm font-semibold text-[#0b1b62] dark:text-indigo-300 hover:bg-[#0b1b62]/5 disabled:opacity-60"
+                >
+                  Add Assistant
+                </button>
+              </div>
+            </div>
+
+            {teacherError && (
+              <p className="rounded-lg bg-red-50 dark:bg-red-950/30 px-3 py-2 text-sm text-red-600 dark:text-red-400">{teacherError}</p>
+            )}
+          </div>
+        )}
+
+        {tab === 'fees' && (
+          <div className="space-y-4">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Changes here only apply to students assigned to this classroom from now on — fees already generated for
+              currently-assigned students are not retroactively changed.
+            </p>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Tuition Fee (₱)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={tuitionFee}
+                  onChange={(e) => setTuitionFee(e.target.value)}
+                  className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Tuition Due Date</label>
+                <input
+                  type="date"
+                  value={tuitionDue}
+                  onChange={(e) => setTuitionDue(e.target.value)}
+                  className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Activity Fee (₱)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={activityFee}
+                  onChange={(e) => setActivityFee(e.target.value)}
+                  className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Activity Fee Due Date</label>
+                <input
+                  type="date"
+                  value={activityDue}
+                  onChange={(e) => setActivityDue(e.target.value)}
+                  className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {feeError && (
+              <p className="rounded-lg bg-red-50 dark:bg-red-950/30 px-3 py-2 text-sm text-red-600 dark:text-red-400">{feeError}</p>
+            )}
+            {feeSaved && !feeError && (
+              <p className="rounded-lg bg-green-50 dark:bg-green-950/30 px-3 py-2 text-sm text-green-700 dark:text-green-400">
+                Fee schedule saved.
+              </p>
+            )}
+
+            <button
+              onClick={handleSaveFees}
+              disabled={isSavingFees}
+              className="w-full rounded-lg bg-[#0b1b62] py-2.5 text-sm font-semibold text-white hover:bg-[#08154d] disabled:opacity-60"
+            >
+              {isSavingFees ? 'Saving…' : 'Save Fee Schedule'}
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="border-t border-gray-100 dark:border-gray-800 p-6">
+        <button
+          onClick={onClose}
+          className="w-full rounded-lg border border-gray-300 dark:border-gray-600 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+        >
+          Close
+        </button>
+      </div>
+    </Modal>
+  )
+}
