@@ -2,6 +2,7 @@ import { Megaphone } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { ClassroomAnnouncements } from '@/components/teacher/classroom-announcements'
 import { formatRelativeTime } from '@/lib/format'
+import { getTeacherAssignedClassrooms } from '@/lib/teacher-classrooms'
 
 type AnnouncementRow = {
   id: string
@@ -14,8 +15,11 @@ type AnnouncementRow = {
 
 export default async function TeacherAnnouncementPage() {
   const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  const [{ data: classroomRows }, { data: schoolRows }, { data: classrooms }] = await Promise.all([
+  const [{ data: classroomRows }, { data: schoolRows }, { data: classrooms }, assignableClassrooms] = await Promise.all([
     supabase
       .from('announcements')
       .select('id, title, body, created_at, classroom_id, profiles(first_name, last_name)')
@@ -29,6 +33,7 @@ export default async function TeacherAnnouncementPage() {
       .order('created_at', { ascending: false })
       .returns<AnnouncementRow[]>(),
     supabase.from('classrooms').select('id, name').order('created_at', { ascending: true }),
+    getTeacherAssignedClassrooms(supabase, user?.id ?? ''),
   ])
 
   const classroomNameById = new Map((classrooms ?? []).map((c) => [c.id, c.name]))
@@ -49,7 +54,7 @@ export default async function TeacherAnnouncementPage() {
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Post updates for parents and see what the school has shared.</p>
       </div>
 
-      <ClassroomAnnouncements announcements={classroomAnnouncements} classrooms={classrooms ?? []} />
+      <ClassroomAnnouncements announcements={classroomAnnouncements} assignableClassrooms={assignableClassrooms} />
 
       <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
         <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">School Announcements</h2>

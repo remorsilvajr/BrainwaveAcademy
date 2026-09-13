@@ -22,11 +22,14 @@ type Classroom = { id: string; name: string }
 
 export function ClassroomAnnouncements({
   announcements,
-  classrooms,
+  assignableClassrooms,
   viewAllHref,
 }: {
   announcements: Announcement[]
-  classrooms: Classroom[]
+  // Only the classrooms this teacher is lead or assistant of — never the
+  // full list. postAnnouncement (app/teacher/actions.ts) re-checks this
+  // server-side regardless, this is just what narrows the dropdown to match.
+  assignableClassrooms: Classroom[]
   viewAllHref?: string
 }) {
   const router = useRouter()
@@ -105,14 +108,17 @@ export function ClassroomAnnouncements({
             className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
           />
           <div>
-            <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Classroom</label>
+            <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">
+              Classroom
+              {assignableClassrooms.length === 0 && " (you aren't assigned to any classroom yet)"}
+            </label>
             <select
               value={classroomId}
               onChange={(e) => setClassroomId(e.target.value)}
               className="w-full rounded-lg border border-gray-200 bg-white text-slate-900 dark:border-gray-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
             >
               <option value="">All Classrooms</option>
-              {classrooms.map((c) => (
+              {assignableClassrooms.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
                 </option>

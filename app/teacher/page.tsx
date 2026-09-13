@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { ClassroomAnnouncements } from '@/components/teacher/classroom-announcements'
 import { milestoneCategoryOrder } from '@/lib/milestones'
 import { todayIso, manilaHour } from '@/lib/format'
+import { getTeacherAssignedClassrooms } from '@/lib/teacher-classrooms'
 
 function greeting() {
   const hour = manilaHour()
@@ -43,6 +44,7 @@ export default async function TeacherDashboardPage() {
     ])
 
   const classroomNameById = new Map((classrooms ?? []).map((c) => [c.id, c.name]))
+  const assignableClassrooms = await getTeacherAssignedClassrooms(supabase, user?.id ?? '')
 
   const roster = students ?? []
   const todayStatusByStudent: Record<string, string> = {}
@@ -120,7 +122,7 @@ export default async function TeacherDashboardPage() {
         </div>
       </div>
 
-      <ClassroomAnnouncements announcements={announcements} classrooms={classrooms ?? []} viewAllHref="/teacher/announcement" />
+      <ClassroomAnnouncements announcements={announcements} assignableClassrooms={assignableClassrooms} viewAllHref="/teacher/announcement" />
 
       <div id="assessments" className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
         <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Pending Student Assessments (6 Domains of Learning)</h2>

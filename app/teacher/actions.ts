@@ -17,6 +17,30 @@ export async function postAnnouncement(input: { title: string; body: string; cla
     throw new Error('Add both a title and a message.')
   }
 
+  // A teacher may only target a classroom they're actually lead or
+  // assistant of — the dropdown already only offers those, but this is the
+  // real enforcement, since a Server Action is reachable directly
+  // regardless of what the UI offers (see the Middleware/Server Action
+  // note in CLAUDE.md). Unscoped (no classroomId) is always allowed.
+  if (input.classroomId) {
+    const [{ data: classroom }, { data: assistantLink }] = await Promise.all([
+      supabase.from('classrooms').select('id, lead_teacher_id').eq('id', input.classroomId).maybeSingle(),
+      supabase
+        .from('classroom_assistants')
+        .select('classroom_id')
+        .eq('classroom_id', input.classroomId)
+        .eq('teacher_id', user.id)
+        .maybeSingle(),
+    ])
+    if (!classroom) {
+      throw new Error('Classroom not found.')
+    }
+    const isAssigned = classroom.lead_teacher_id === user.id || !!assistantLink
+    if (!isAssigned) {
+      throw new Error('You can only post to a classroom you are assigned to as a lead or assistant teacher.')
+    }
+  }
+
   const { error } = await supabase.from('announcements').insert({
     title: input.title.trim(),
     body: input.body.trim(),
