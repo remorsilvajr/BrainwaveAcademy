@@ -47,3 +47,37 @@ export async function payFeeWithWallet(paymentId: string) {
 
   return data
 }
+
+// Parents can't credit their own wallet directly (wallets has no parent
+// write policy at all, see the schema note in CLAUDE.md) — this only ever
+// creates a pending request. Admin decides the actual amount credited,
+// which can differ from what's requested here; see approveWalletRequest.
+export async function requestWalletFunds(amount: number, note: string) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    throw new Error('Enter a valid amount greater than zero.')
+  }
+
+  const { error } = await supabase.from('wallet_requests').insert({
+    parent_id: user?.id ?? '',
+    requested_amount: amount,
+    note: note.trim() || null,
+  })
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  await logActivity(supabase, {
+    actorId: user?.id ?? null,
+    action: `Requested ${amount} added to their wallet`,
+    targetTable: 'wallet_requests',
+    targetId: user?.id ?? undefined,
+  })
+
+  revalidatePath('/parent/payments')
+}

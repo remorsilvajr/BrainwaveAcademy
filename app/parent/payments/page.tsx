@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { parentApplicationsFilter } from '@/lib/parent-applications'
 import { EmptyState } from '@/components/ui/empty-state'
 import { FeeBreakdown } from '@/components/parent/fee-breakdown'
+import { WalletPanel } from '@/components/parent/wallet-panel'
 
 export default async function ParentPaymentsPage({
   searchParams,
@@ -17,7 +18,7 @@ export default async function ParentPaymentsPage({
 
   // Same created_parent_id/parent_email + hidden_from_parent filtering as
   // every other parent page — see app/parent/layout.tsx.
-  const [{ data: applications }, { data: wallet }] = await Promise.all([
+  const [{ data: applications }, { data: wallet }, { data: walletRequests }] = await Promise.all([
     supabase
       .from('applications')
       .select('id, student_first_name, student_last_name, created_student_id')
@@ -25,10 +26,22 @@ export default async function ParentPaymentsPage({
       .or(parentApplicationsFilter(user))
       .order('submitted_at', { ascending: true }),
     supabase.from('wallets').select('balance').eq('parent_id', user?.id ?? '').maybeSingle(),
+    supabase
+      .from('wallet_requests')
+      .select('*')
+      .eq('parent_id', user?.id ?? '')
+      .order('created_at', { ascending: false })
+      .limit(5),
   ])
+
+  const walletBalance = wallet?.balance ?? 0
 
   const application = (applications ?? []).find((a) => a.id === studentParam) ?? applications?.[0] ?? null
 
+  // The wallet itself belongs to the parent, not any one child, so it (and
+  // requesting more funds) is shown regardless of whether a child has
+  // gotten as far as being enrolled/classroom-assigned yet — only the
+  // per-child fee breakdown below needs that.
   if (!application) {
     return (
       <div className="space-y-6">
@@ -36,6 +49,7 @@ export default async function ParentPaymentsPage({
           <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Payments</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">View billing history and pay outstanding fees.</p>
         </div>
+        <WalletPanel balance={walletBalance} requests={walletRequests ?? []} />
         <EmptyState
           icon={ClipboardList}
           title="No Enrollment Application Yet"
@@ -55,6 +69,7 @@ export default async function ParentPaymentsPage({
           <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Payments</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">View billing history and pay outstanding fees.</p>
         </div>
+        <WalletPanel balance={walletBalance} requests={walletRequests ?? []} />
         <EmptyState
           icon={GraduationCap}
           title="Not Enrolled Yet"
@@ -85,10 +100,11 @@ export default async function ParentPaymentsPage({
         <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Payments</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">View billing history and pay outstanding fees.</p>
       </div>
+      <WalletPanel balance={walletBalance} requests={walletRequests ?? []} />
       <FeeBreakdown
         studentName={studentName}
         classroomName={classroom?.name ?? null}
-        walletBalance={wallet?.balance ?? 0}
+        walletBalance={walletBalance}
         payments={payments ?? []}
       />
     </div>

@@ -128,7 +128,7 @@ export function StudentsTable({ students, classrooms }: { students: Student[]; c
                           <p className="font-medium text-[#0b1b62] dark:text-indigo-300">
                             {s.first_name} {s.last_name}
                           </p>
-                          <p className="text-xs text-gray-400 dark:text-gray-500">{s.student_id ?? '—'}</p>
+                          <p className="text-xs text-gray-400 dark:text-gray-500">{s.student_id ?? '-'}</p>
                         </div>
                       </div>
                     </td>
@@ -139,7 +139,7 @@ export function StudentsTable({ students, classrooms }: { students: Student[]; c
                           <p className="text-xs text-gray-500 dark:text-gray-400">{guardian.phone}</p>
                         </>
                       ) : (
-                        <span className="text-gray-400 dark:text-gray-500">—</span>
+                        <span className="text-gray-400 dark:text-gray-500">-</span>
                       )}
                     </td>
                     <td className="p-4 text-gray-700 dark:text-gray-300">

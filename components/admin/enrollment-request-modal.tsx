@@ -180,7 +180,7 @@ export function EnrollmentRequestModal({
                     </li>
                   </ul>
                   <p className="mt-2 text-xs text-sky-700 dark:text-sky-300">
-                    The student record isn&apos;t created yet — that happens in Applications, once
+                    The student record isn&apos;t created yet; that happens in Applications, once
                     the parent uploads documents and they&apos;re verified.
                   </p>
                 </div>

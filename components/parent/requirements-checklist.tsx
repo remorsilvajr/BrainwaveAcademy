@@ -81,7 +81,7 @@ export function RequirementsChecklist({
             icon={Clock}
             tone="warning"
             title="Waiting on Admin Approval"
-            description="This enrollment request hasn't been approved yet. Once it is, document upload will open up here automatically — no need to check back constantly."
+            description="This enrollment request hasn't been approved yet. Once it is, document upload will open up here automatically, so there's no need to check back constantly."
             action={{ href: '/parent/enrollment-status', label: 'Check Enrollment Status' }}
             secondaryAction={{
               href: '/parent/enroll-a-student',
@@ -124,7 +124,7 @@ export function RequirementsChecklist({
   function handleFileChange(type: string, file: File | null) {
     if (!file || !applicationId) return
     if (file.size > MAX_DOCUMENT_BYTES) {
-      setErrorMessage('That file is too large — please choose one under 4MB.')
+      setErrorMessage('That file is too large. Please choose one under 4MB.')
       return
     }
     setErrorMessage('')

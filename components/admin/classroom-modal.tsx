@@ -182,7 +182,7 @@ export function ClassroomModal({
                       {s.first_name} {s.last_name}
                     </p>
                     <p className="text-xs text-gray-400 dark:text-gray-500">
-                      {s.student_id ?? '—'} · {calculateAge(s.date_of_birth)}y
+                      {s.student_id ?? '-'} · {calculateAge(s.date_of_birth)}y
                     </p>
                   </div>
                 </div>
@@ -273,7 +273,7 @@ export function ClassroomModal({
         {tab === 'fees' && (
           <div className="space-y-4">
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Changes here only apply to students assigned to this classroom from now on — fees already generated for
+              Changes here only apply to students assigned to this classroom from now on. Fees already generated for
               currently-assigned students are not retroactively changed.
             </p>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

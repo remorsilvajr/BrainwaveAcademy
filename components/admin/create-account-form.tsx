@@ -79,7 +79,7 @@ export function CreateAccountForm() {
 
   function handlePhotoChange(file: File | null) {
     if (file && file.size > MAX_PHOTO_BYTES) {
-      setPhotoError('That photo is too large — please choose one under 2MB.')
+      setPhotoError('That photo is too large. Please choose one under 2MB.')
       if (fileInputRef.current) fileInputRef.current.value = ''
       return
     }
@@ -121,7 +121,7 @@ export function CreateAccountForm() {
             <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
               {photoPreview ? 'Change Profile Photo' : 'Upload Profile Photo'}
             </span>
-            <span className="text-xs text-gray-400 dark:text-gray-500">Optional — JPG, PNG or GIF up to 2MB</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">Optional: JPG, PNG or GIF up to 2MB</span>
             {photoError && <span className="text-xs text-red-600 dark:text-red-400">{photoError}</span>}
           </button>
           <input
@@ -261,7 +261,7 @@ export function CreateAccountForm() {
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   {autoGenerate
                     ? "A temporary password will be emailed to the user's address."
-                    : 'Set a password yourself below — nothing will be emailed automatically.'}
+                    : 'Set a password yourself below; nothing will be emailed automatically.'}
                 </p>
               </div>
               <Toggle checked={autoGenerate} onChange={setAutoGenerate} label="Auto-generate password" />

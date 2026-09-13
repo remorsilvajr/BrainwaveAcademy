@@ -51,12 +51,12 @@ export function ReceiptView({ data, backHref }: { data: ReceiptData; backHref: s
         <div className="mt-4 flex items-center justify-between">
           <div>
             <p className="text-xs text-gray-400 dark:text-gray-500">Receipt No.</p>
-            <p className="font-semibold text-gray-900 dark:text-gray-100">{data.receiptRef ?? '—'}</p>
+            <p className="font-semibold text-gray-900 dark:text-gray-100">{data.receiptRef ?? '-'}</p>
           </div>
           <div className="text-right">
             <p className="text-xs text-gray-400 dark:text-gray-500">Date</p>
             <p className="font-semibold text-gray-900 dark:text-gray-100">
-              {data.transactionDate ? formatDateLong(data.transactionDate) : '—'}
+              {data.transactionDate ? formatDateLong(data.transactionDate) : '-'}
             </p>
           </div>
         </div>
@@ -82,12 +82,12 @@ export function ReceiptView({ data, backHref }: { data: ReceiptData; backHref: s
           )}
           <div className="flex justify-between">
             <span className="text-gray-500 dark:text-gray-400">Description</span>
-            <span className="font-medium text-gray-900 dark:text-gray-100">{data.description ?? '—'}</span>
+            <span className="font-medium text-gray-900 dark:text-gray-100">{data.description ?? '-'}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-500 dark:text-gray-400">Payment Method</span>
             <span className="font-medium text-gray-900 dark:text-gray-100">
-              {data.paymentMethod ? (methodLabels[data.paymentMethod] ?? data.paymentMethod) : '—'}
+              {data.paymentMethod ? (methodLabels[data.paymentMethod] ?? data.paymentMethod) : '-'}
             </span>
           </div>
         </div>

@@ -173,7 +173,7 @@ export function ApplicationReviewModal({
             <div className="mb-4 rounded-lg border border-green-200 bg-green-50 dark:bg-green-950/30 p-4 text-center">
               <p className="font-medium text-green-800">
                 {result === 'saved' && 'Review saved.'}
-                {result === 'corrections' && 'Corrections requested — parent notified by email.'}
+                {result === 'corrections' && 'Corrections requested. Parent notified by email.'}
                 {result === 'enrolled' && `Student record created for ${studentName}!`}
               </p>
             </div>
@@ -181,7 +181,7 @@ export function ApplicationReviewModal({
 
           {!hasParentAccount && (
             <p className="mb-4 rounded-lg bg-amber-50 dark:bg-amber-950/30 px-3 py-2 text-sm text-amber-700 dark:text-amber-300">
-              No parent account exists for this application yet — approve it via Enroll A
+              No parent account exists for this application yet. Approve it via Enroll A
               Student first.
             </p>
           )}
@@ -214,7 +214,7 @@ export function ApplicationReviewModal({
 
           {!hasUploadedDocs && (
             <p className="mb-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 px-3 py-2 text-sm text-amber-700 dark:text-amber-300">
-              This parent hasn&apos;t uploaded any documents yet — nothing to review until they
+              This parent hasn&apos;t uploaded any documents yet, so there&apos;s nothing to review until they
               visit Requirements in their portal.
             </p>
           )}

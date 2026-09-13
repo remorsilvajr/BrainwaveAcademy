@@ -31,7 +31,7 @@ export function MarkPaidControl({ paymentId }: { paymentId: string }) {
       <select
         value={method}
         onChange={(e) => setMethod(e.target.value as 'cash' | 'check')}
-        className="rounded-lg border border-slate-200 dark:border-slate-700 px-2 py-1.5 text-xs focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+        className="rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-2 py-1.5 text-xs focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
       >
         <option value="cash">Cash</option>
         <option value="check">Check</option>

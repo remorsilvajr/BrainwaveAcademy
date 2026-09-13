@@ -84,7 +84,7 @@ export async function requestPasswordResetEmail() {
       ${isAdmin ? `<p><strong>For account:</strong> ${accountLabel} (${user.email})</p>` : ''}
       <p><strong>New Password:</strong> ${newPassword}</p>
       <p>Use this to log in, then change it to something memorable from Settings &gt; Password &amp; Security.</p>
-      <p>If you didn't request this, contact the school office — your password has already changed.</p>
+      <p>If you didn't request this, contact the school office right away; your password has already changed.</p>
       <p><a href="${siteUrl}/login">Log in</a></p>
     `,
   })

@@ -3,7 +3,6 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Wallet } from 'lucide-react'
 import { formatCurrency, formatDateLong } from '@/lib/format'
 import { payFeeWithWallet } from '@/app/parent/payments/actions'
 
@@ -89,29 +88,20 @@ export function FeeBreakdown({
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
-          <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
-            <Wallet className="h-4 w-4" />
-            <span className="text-sm font-medium">Wallet Balance</span>
-          </div>
-          <p className="mt-2 text-3xl font-bold text-[#0b1b62] dark:text-indigo-300">{formatCurrency(walletBalance)}</p>
-        </div>
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Outstanding</p>
-          <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">{formatCurrency(totalDue)}</p>
-          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            {studentName}
-            {classroomName ? ` · ${classroomName}` : ''}
-          </p>
-        </div>
+      <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
+        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Outstanding</p>
+        <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">{formatCurrency(totalDue)}</p>
+        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+          {studentName}
+          {classroomName ? ` · ${classroomName}` : ''}
+        </p>
       </div>
 
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Outstanding Fees</h2>
         <div className="mt-4 space-y-3">
           {outstanding.length === 0 ? (
-            <p className="text-sm text-gray-500 dark:text-gray-400">No outstanding fees — you&apos;re all caught up.</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">No outstanding fees. You&apos;re all caught up.</p>
           ) : (
             outstanding.map((p) => <PayRow key={p.id} payment={p} walletBalance={walletBalance} />)
           )}
@@ -132,7 +122,7 @@ export function FeeBreakdown({
                 <div>
                   <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{p.description ?? p.fee_type}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {p.transaction_date ? formatDateLong(p.transaction_date) : '—'} · {p.payment_method ?? '—'}
+                    {p.transaction_date ? formatDateLong(p.transaction_date) : '-'} · {p.payment_method ?? '-'}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">

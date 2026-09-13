@@ -80,7 +80,7 @@ export default async function DeletedItemsPage() {
       <div>
         <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Deleted Items</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Nothing here is erased from the database — deleting an account or enrollment request just
+          Nothing here is erased from the database. Deleting an account or enrollment request just
           hides it everywhere else. Select items below and restore them whenever you need to.
         </p>
       </div>

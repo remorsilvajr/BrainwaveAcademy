@@ -76,12 +76,12 @@ export function BugReportModal({ onClose }: { onClose: () => void }) {
       <div className="p-6">
         {sent ? (
           <div className="rounded-lg border border-green-200 bg-green-50 dark:bg-green-950/30 p-4 text-center">
-            <p className="font-medium text-green-800">Thanks — your report was sent to the admin team.</p>
+            <p className="font-medium text-green-800">Thanks, your report was sent to the admin team.</p>
           </div>
         ) : (
           <>
             <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
-              Ran into something broken or confusing? Let us know what happened and where — the
+              Ran into something broken or confusing? Let us know what happened and where. The
               more specific, the faster we can fix it.
             </p>
             <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">

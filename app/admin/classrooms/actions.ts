@@ -52,7 +52,7 @@ export async function assignLeadTeacher(classroomId: string, teacherId: string) 
     .maybeSingle()
   if (alreadyAssistant) {
     throw new Error(
-      `${teacher.first_name} ${teacher.last_name} is already an assistant teacher in this classroom — remove them as an assistant first.`
+      `${teacher.first_name} ${teacher.last_name} is already an assistant teacher in this classroom. Remove them as an assistant first.`
     )
   }
 

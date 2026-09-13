@@ -207,7 +207,7 @@ export function StudentRecordModal({
                   {student.enrollment_status}
                 </span>
               </div>
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Student ID: {student.student_id ?? '—'}</p>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Student ID: {student.student_id ?? '-'}</p>
               </div>
             </div>
             <button onClick={onClose} aria-label="Close" className="text-gray-400 dark:text-gray-500 hover:text-gray-600">
@@ -257,14 +257,14 @@ export function StudentRecordModal({
                   <select
                     value={classroomPick}
                     onChange={(e) => setClassroomPick(e.target.value)}
-                    className="flex-1 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+                    className="flex-1 rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
                   >
                     <option value="">Unassigned</option>
                     {classrooms.map((c) => {
                       const eligible = isAgeEligibleForClassroom(student.date_of_birth, c)
                       return (
                         <option key={c.id} value={c.id} disabled={!eligible}>
-                          {c.name} ({classroomAgeRangeLabel(c)}){!eligible ? ' — age not eligible' : ''}
+                          {c.name} ({classroomAgeRangeLabel(c)}){!eligible ? ', age not eligible' : ''}
                         </option>
                       )
                     })}
@@ -329,7 +329,7 @@ export function StudentRecordModal({
                   <select
                     value={gender}
                     onChange={(e) => setGender(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+                    className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
                   >
                     <option value="male">Male</option>
                     <option value="female">Female</option>

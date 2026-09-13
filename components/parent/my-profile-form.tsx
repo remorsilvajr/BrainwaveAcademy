@@ -148,7 +148,7 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
           <div className="mt-6 space-y-2 border-t border-gray-100 dark:border-gray-800 pt-4 text-left text-sm">
             <div className="flex justify-between">
               <span className="text-gray-500 dark:text-gray-400">Account ID</span>
-              <span className="font-semibold text-gray-900 dark:text-gray-100">{profile.account_id ?? '—'}</span>
+              <span className="font-semibold text-gray-900 dark:text-gray-100">{profile.account_id ?? '-'}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-500 dark:text-gray-400">Status</span>

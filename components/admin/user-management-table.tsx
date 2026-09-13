@@ -291,7 +291,7 @@ export function UserManagementTable({
                           <button
                             onClick={() => handleForceLogout(u)}
                             disabled={loggingOutId === u.id}
-                            title="Ends their current session — they can log back in right away"
+                            title="Ends their current session; they can log back in right away"
                             className="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-60"
                           >
                             {loggingOutId === u.id ? 'Logging Out…' : loggedOutId === u.id ? 'Logged Out ✓' : 'Log Out'}

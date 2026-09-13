@@ -137,16 +137,16 @@ export default async function AdminDashboardPage() {
                 (recentPayments ?? []).map((p) => (
                   <tr key={p.id}>
                     <td className="py-2 text-gray-700 dark:text-gray-300">
-                      {p.receipt_ref ?? '—'}
+                      {p.receipt_ref ?? '-'}
                       <br />
                       <span className="text-xs text-gray-400 dark:text-gray-500">
-                        {p.transaction_date ? formatDateShort(p.transaction_date) : '—'}
+                        {p.transaction_date ? formatDateShort(p.transaction_date) : '-'}
                       </span>
                     </td>
                     <td className="py-2 text-gray-700 dark:text-gray-300">
                       {paymentStudentById.get(p.student_id) ?? 'Unknown student'}
                     </td>
-                    <td className="py-2 capitalize text-gray-700 dark:text-gray-300">{p.payment_method ?? '—'}</td>
+                    <td className="py-2 capitalize text-gray-700 dark:text-gray-300">{p.payment_method ?? '-'}</td>
                     <td className="py-2 font-medium text-gray-900 dark:text-gray-100">{formatCurrency(p.amount)}</td>
                   </tr>
                 ))

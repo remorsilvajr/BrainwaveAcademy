@@ -64,7 +64,7 @@ export default async function ParentStudentDashboardPage({
           icon={Clock}
           tone="warning"
           title="Not Enrolled Yet"
-          description={`${application.student_first_name} ${application.student_last_name}'s enrollment is still in progress — attendance and milestone tracking begin once it's complete.`}
+          description={`${application.student_first_name} ${application.student_last_name}'s enrollment is still in progress. Attendance and milestone tracking begin once it's complete.`}
           action={{ href: '/parent/enrollment-status', label: 'Check Enrollment Status' }}
         />
       </div>

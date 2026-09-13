@@ -45,8 +45,8 @@ export function ForgotPasswordForm() {
 
       {submitted ? (
         <p className="mt-6 rounded-lg bg-green-50 dark:bg-green-950/30 px-4 py-3 text-center text-sm text-green-700">
-          If an account exists for {email}, a reset link is on its way —
-          check the inbox.
+          If an account exists for {email}, a reset link is on its way.
+          Check the inbox.
         </p>
       ) : (
         <form action={handleSubmit} className="mt-6 flex flex-col gap-4">

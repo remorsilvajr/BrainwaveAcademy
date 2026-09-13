@@ -79,7 +79,7 @@ export function PaymentsTable({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Student name, ID, description, or receipt #"
-              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+              className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 placeholder-slate-400 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 dark:placeholder-slate-500 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
             />
           </div>
           <div>
@@ -87,7 +87,7 @@ export function PaymentsTable({
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+              className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
             >
               <option value="all">All</option>
               <option value="pending">Pending</option>
@@ -127,7 +127,7 @@ export function PaymentsTable({
                     <tr key={p.id}>
                       <td className="p-4">
                         <p className="font-medium text-[#0b1b62] dark:text-indigo-300">{p.studentName}</p>
-                        <p className="text-xs text-gray-400 dark:text-gray-500">{p.studentAccountId ?? '—'}</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500">{p.studentAccountId ?? '-'}</p>
                       </td>
                       <td className="p-4 text-gray-700 dark:text-gray-300">
                         <p>{p.description ?? p.fee_type}</p>
@@ -137,7 +137,7 @@ export function PaymentsTable({
                       </td>
                       <td className="p-4 font-medium text-gray-900 dark:text-gray-100">{formatCurrency(p.amount)}</td>
                       <td className="p-4 text-gray-700 dark:text-gray-300">
-                        {p.due_date ? formatDateShort(p.due_date) : '—'}
+                        {p.due_date ? formatDateShort(p.due_date) : '-'}
                       </td>
                       <td className="p-4">
                         <span

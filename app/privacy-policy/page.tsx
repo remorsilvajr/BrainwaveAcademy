@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     'How Brainwave Preschool Academy collects, uses, stores, and protects personal information submitted through this site and portal.',
 }
 
-const LAST_UPDATED = 'September 3, 2026'
+const LAST_UPDATED = 'September 13, 2026'
 
 function H2({ id, children }: { id: string; children: React.ReactNode }) {
   return (
@@ -104,7 +104,7 @@ export default async function PrivacyPolicyPage() {
             Philippines. For the purposes of the Data Privacy Act, the School is the{' '}
             <strong>personal information controller</strong> for the data described in this
             Policy. This Service is a school capstone/administrative project built for the
-            School&apos;s enrollment and day-to-day student-records administration — it is not a
+            School&apos;s enrollment and day-to-day student-records administration. It is not a
             public commercial platform, and access to student and family records is restricted to
             authorized School personnel only.
           </P>
@@ -121,12 +121,19 @@ export default async function PrivacyPolicyPage() {
               <strong>Parent/guardian information:</strong> first, middle, and last name; date of
               birth; relationship to the student; contact number; email address; profile photo;
               and, once an account exists, login credentials (your password is never stored in
-              readable form — see Section 6).
+              readable form; see Section 6).
             </li>
             <li>
               <strong>Enrollment documents:</strong> when uploading enrollment requirements, we
               collect scans/photos of a birth certificate, a 2x2 ID photo, proof of address, and a
               guardian&apos;s valid government ID.
+            </li>
+            <li>
+              <strong>Fee and payment records:</strong> tuition and other fee amounts and due
+              dates, an in-app wallet balance, and a history of which fees were paid, when, and by
+              what method. This wallet is a bookkeeping feature only; we do not collect or store
+              any bank account, card, or other real payment-instrument information (see Section 6
+              of our Terms of Service).
             </li>
             <li>
               <strong>Staff information:</strong> for teacher and admin accounts, first/middle/last
@@ -145,10 +152,11 @@ export default async function PrivacyPolicyPage() {
             <li>To process and review enrollment applications and admission decisions.</li>
             <li>To create and manage parent, teacher, and admin portal accounts.</li>
             <li>To record attendance and track developmental milestones for enrolled students.</li>
-            <li>To communicate with parents/guardians — admission decisions, account credentials, requests to correct or resubmit a document, password resets, and school announcements.</li>
+            <li>To track tuition and other fees owed, and to record payments made via the in-app wallet or received directly by School staff.</li>
+            <li>To communicate with parents/guardians about admission decisions, account credentials, requests to correct or resubmit a document, password resets, and school announcements.</li>
             <li>To verify identity and eligibility documents submitted as part of enrollment.</li>
             <li>To maintain an internal audit trail of who changed what record and when, for accountability and security.</li>
-            <li>To keep the Service secure — detecting misuse, enforcing account status (e.g. blocking a compromised or misused account), and troubleshooting technical issues.</li>
+            <li>To keep the Service secure: detecting misuse, enforcing account status (e.g. blocking a compromised or misused account), and troubleshooting technical issues.</li>
           </Ul>
           <P>
             We do not sell personal information, and we do not use student or family data for
@@ -177,13 +185,13 @@ export default async function PrivacyPolicyPage() {
               enrolled students but cannot access admin account-management functions).
             </li>
             <li>
-              <strong>Service providers we rely on to operate the Service</strong> — each acting as
+              <strong>Service providers we rely on to operate the Service</strong>, each acting as
               a personal information processor on our behalf, under the same confidentiality
               expectations as this Policy:
               <ul className="mt-2 list-[circle] space-y-1 pl-5">
-                <li><strong>Supabase</strong> — hosts our database, authentication, and private file storage.</li>
-                <li><strong>Vercel</strong> — hosts the website/portal application itself, and provides privacy-respecting, cookie-free traffic analytics and performance monitoring.</li>
-                <li><strong>Brevo</strong> and <strong>Postmark</strong> — send transactional emails on our behalf (account credentials, password resets, correction requests, announcements). We do not use either to send marketing email.</li>
+                <li><strong>Supabase</strong>: hosts our database, authentication, and private file storage.</li>
+                <li><strong>Vercel</strong>: hosts the website/portal application itself, and provides privacy-respecting, cookie-free traffic analytics and performance monitoring.</li>
+                <li><strong>Brevo</strong> and <strong>Postmark</strong>: send transactional emails on our behalf (account credentials, password resets, correction requests, announcements). We do not use either to send marketing email.</li>
               </ul>
             </li>
             <li>
@@ -196,7 +204,7 @@ export default async function PrivacyPolicyPage() {
           <Ul>
             <li>All data is stored with Supabase, encrypted in transit (HTTPS/TLS) and at rest.</li>
             <li>
-              Database access is governed by Row Level Security (RLS) — database-enforced rules
+              Database access is governed by Row Level Security (RLS), database-enforced rules
               that restrict each account to only the rows it is actually authorized to read or
               write (e.g. a parent account can only see their own linked children, never another
               family&apos;s records).
@@ -219,7 +227,7 @@ export default async function PrivacyPolicyPage() {
             the duration of a student&apos;s enrollment and for a reasonable period afterward for
             legitimate record-keeping and legal purposes. A rejected or withdrawn application can
             be hidden from a parent&apos;s own portal view at their request, and a record can be
-            removed from an admin&apos;s active views by an administrator — in both cases the
+            removed from an admin&apos;s active views by an administrator; in both cases the
             underlying record is retained, not permanently erased, so that the School maintains an
             accurate enrollment history. You may request deletion of your personal information
             subject to Section 10 below and our legitimate record-keeping obligations.
@@ -240,19 +248,19 @@ export default async function PrivacyPolicyPage() {
           <H2 id="cookies">9. Cookies and similar technologies</H2>
           <P>
             We use a small number of cookies, all of which are <strong>strictly necessary</strong>{' '}
-            to operate the Service — none are used for advertising, and none are shared with
+            to operate the Service; none are used for advertising, and none are shared with
             advertising networks:
           </P>
           <Ul>
-            <li><strong>Authentication cookies</strong> — keep you securely logged in to your portal session.</li>
-            <li><strong>Preference cookies</strong> (<code>remember_me</code>, <code>theme</code>) — remember whether you asked to stay logged in, and your light/dark mode choice.</li>
-            <li><strong>Security/role cookies</strong> (<code>user_role</code>, <code>account_status</code>, <code>presence_ping</code>) — short-lived, server-set cookies used to route you to the correct portal and to enforce account status (e.g. a blocked account) without a database check on every click.</li>
-            <li><strong>Consent cookie</strong> (<code>cookie_consent</code>) — remembers that you have seen and dismissed our cookie notice.</li>
+            <li><strong>Authentication cookies</strong>: keep you securely logged in to your portal session.</li>
+            <li><strong>Preference cookies</strong> (<code>remember_me</code>, <code>theme</code>): remember whether you asked to stay logged in, and your light/dark mode choice.</li>
+            <li><strong>Security/role cookies</strong> (<code>user_role</code>, <code>account_status</code>, <code>presence_ping</code>): short-lived, server-set cookies used to route you to the correct portal and to enforce account status (e.g. a blocked account) without a database check on every click.</li>
+            <li><strong>Consent cookie</strong> (<code>cookie_consent</code>): remembers that you have seen and dismissed our cookie notice.</li>
           </Ul>
           <P>
             Because these cookies are all strictly necessary for the Service to function (you
             cannot stay logged in without them), we do not offer an option to disable them
-            individually — declining them means the Service will not work. We separately use
+            individually; declining them means the Service will not work. We separately use
             Vercel Analytics and Speed Insights, which are designed to be cookie-free and do not
             track you individually across sites. See our cookie notice, shown on your first visit,
             for a short summary of this same information.
@@ -261,12 +269,12 @@ export default async function PrivacyPolicyPage() {
           <H2 id="your-rights">10. Your rights under the Data Privacy Act</H2>
           <P>As a data subject under RA 10173, you have the right to:</P>
           <Ul>
-            <li><strong>Be informed</strong> that your personal information will be, is being, or has been processed — which this Policy is intended to satisfy.</li>
+            <li><strong>Be informed</strong> that your personal information will be, is being, or has been processed, which this Policy is intended to satisfy.</li>
             <li><strong>Access</strong> your own personal information held by us, or that of a child you are the parent/guardian of.</li>
             <li><strong>Object</strong> to the processing of your personal information, including for any new purpose not covered here.</li>
-            <li><strong>Correct or rectify</strong> inaccurate or outdated personal information — most of your own account details can be updated directly from your Profile page; other corrections can be requested from the School office.</li>
+            <li><strong>Correct or rectify</strong> inaccurate or outdated personal information: most of your own account details can be updated directly from your Profile page; other corrections can be requested from the School office.</li>
             <li><strong>Erasure or blocking</strong> of your personal information, subject to our legitimate retention needs described in Section 7.</li>
-            <li><strong>Data portability</strong> — request a copy of your data in an electronic format.</li>
+            <li><strong>Data portability</strong>: request a copy of your data in an electronic format.</li>
             <li><strong>Be indemnified</strong> for damages sustained due to inaccurate, incomplete, outdated, false, unlawfully obtained, or unauthorized use of your personal information.</li>
             <li><strong>Lodge a complaint</strong> with the National Privacy Commission (<a href="https://privacy.gov.ph" target="_blank" rel="noreferrer" className="text-[#0b1b62] underline hover:no-underline dark:text-indigo-300">privacy.gov.ph</a>) if you believe your rights under the Data Privacy Act have been violated.</li>
           </Ul>

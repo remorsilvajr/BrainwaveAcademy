@@ -57,7 +57,7 @@ export function RecordPaymentModal({
           </button>
         </div>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          For a cash or check payment received outside the app — this does not touch the parent&apos;s wallet.
+          For a cash or check payment received outside the app. This does not touch the parent&apos;s wallet.
         </p>
       </div>
 
@@ -83,7 +83,7 @@ export function RecordPaymentModal({
                 <select
                   value={feeType}
                   onChange={(e) => setFeeType(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+                  className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
                 >
                   <option value="tuition">Tuition</option>
                   <option value="activity">Activity Fee</option>
@@ -95,7 +95,7 @@ export function RecordPaymentModal({
                 <select
                   value={method}
                   onChange={(e) => setMethod(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+                  className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
                 >
                   <option value="cash">Cash</option>
                   <option value="check">Check</option>
@@ -108,7 +108,7 @@ export function RecordPaymentModal({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="e.g. Field trip fee, September tuition"
-                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+                className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
               />
             </div>
             <div>
@@ -119,7 +119,7 @@ export function RecordPaymentModal({
                 step="0.01"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+                className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
               />
             </div>
 

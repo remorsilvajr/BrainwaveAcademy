@@ -146,7 +146,7 @@ export function TeacherRecordModal({ teacher, onClose }: { teacher: Teacher; onC
                     {teacher.account_status}
                   </span>
                 </div>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Account ID: {teacher.account_id ?? '—'}</p>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Account ID: {teacher.account_id ?? '-'}</p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">{teacher.email}</p>
               </div>
             </div>

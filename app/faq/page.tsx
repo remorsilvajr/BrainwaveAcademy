@@ -8,7 +8,7 @@ import { getPortalAuth } from '@/lib/get-portal-auth'
 export const metadata: Metadata = {
   title: 'Frequently Asked Questions | Brainwave Preschool Academy',
   description:
-    'Answers to common questions about enrolling at Brainwave Preschool Academy — the application process, required documents, our programs, and what happens after you apply.',
+    'Answers to common questions about enrolling at Brainwave Preschool Academy, including the application process, required documents, our programs, and what happens after you apply.',
 }
 
 // Answers only cover our own, already-built process (what the enrollment
@@ -18,7 +18,7 @@ const faqs = [
   {
     question: 'How do I enroll my child at Brainwave Preschool Academy?',
     answer:
-      "Start with our online enrollment form. You'll provide your child's basic information along with your own contact details as parent or guardian. Once submitted, our admissions team reviews the application — you'll receive an email with your parent portal login once it's approved, where you can then upload the required documents to complete enrollment.",
+      "Start with our online enrollment form. You'll provide your child's basic information along with your own contact details as parent or guardian. Once submitted, our admissions team reviews the application. You'll receive an email with your parent portal login once it's approved, where you can then upload the required documents to complete enrollment.",
   },
   {
     question: 'What documents will I need to submit?',
@@ -28,17 +28,17 @@ const faqs = [
   {
     question: 'What age groups and programs do you offer?',
     answer:
-      "We offer four programs across early childhood: Little Explorers (ages 2-3), Advanced Toddler (ages 3-4), Smart Explorers (Nursery), and Curious Adventurers (Kindergarten). Every program is built around our 6 Domains of Development — see the Programs and 6 Domains sections on our home page for more detail.",
+      "We offer four programs across early childhood: Little Explorers (ages 2-3), Advanced Toddler (ages 3-4), Smart Explorers (Nursery), and Curious Adventurers (Kindergarten). Every program is built around our 6 Domains of Development; see the Programs and 6 Domains sections on our home page for more detail.",
   },
   {
     question: 'Can I enroll more than one child?',
     answer:
-      'Yes. Once you have a parent portal account, you can submit additional enrollment applications for other children directly from the "Enroll A Student" page in your portal — you won\'t need to fill out your own contact details again.',
+      'Yes. Once you have a parent portal account, you can submit additional enrollment applications for other children directly from the "Enroll A Student" page in your portal, and you won\'t need to fill out your own contact details again.',
   },
   {
     question: 'How will I know if my application was approved?',
     answer:
-      "You'll receive an email once admin has reviewed your application — approved applicants get their parent portal login details by email, while any concerns are shared through the same channel. You can always check where things stand from the Enrollment Status page in your portal after logging in.",
+      "You'll receive an email once admin has reviewed your application. Approved applicants get their parent portal login details by email, while any concerns are shared through the same channel. You can always check where things stand from the Enrollment Status page in your portal after logging in.",
   },
 ]
 
