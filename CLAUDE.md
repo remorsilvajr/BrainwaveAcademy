@@ -104,7 +104,7 @@ A `classrooms` concept now exists (see the Classrooms, teacher assignment & prog
 
 ### Admin portal (`/admin`)
 
-Sidebar: Dashboard, Announcement, User Management, Create New Account, Enrollment Requests, Applications, Students, Attendance, Student Dashboard, Teachers, Classrooms, Payments, Activity Log, Feedback, (Deleted Items — super admin only), Settings, Log Out. Admin has no self-service My Profile — User Management already covers editing any account.
+Sidebar (grouped, `app/admin/layout.tsx`'s `baseSections`): Dashboard/Announcement (ungrouped), **Accounts & Enrollment** (User Management, Create New Account, Enrollment Requests, Applications, Payments — everything about who has an account plus the admissions/billing pipeline around them), Student (Students, Attendance, Student Dashboard), Teacher (Teachers, Classrooms), Admin (Activity Log, Feedback, (Deleted Items — super admin only), Settings, Log Out). Admin has no self-service My Profile — User Management already covers editing any account.
 
 **"Enrollment Requests" (`/admin/enroll-a-student`) and "Applications" (`/admin/applications`) are two separate, easily-confused steps — do not merge them:**
 
@@ -145,6 +145,8 @@ Every list-shaped page (User Management, Students, Teachers, Applications, Enrol
 **Every paginated list's results container needs a reserved `min-h` (`420px`, or `360px` for card-style lists).** Without one, typing into the search box on every keystroke (no debounce) visibly collapses the whole page and snaps scroll position upward as the result count shrinks. Two dashboard-embedded widgets (capped, no search box) are deliberately exempt.
 
 **Any new admin/parent list-shaped page needs this pattern applied from the start, not an ad hoc scrollable `<div>` with no page limit** — the Parent Wallets and Wallet Fund Requests panels (Payments & wallet system feature) originally shipped with a plain `max-h-72 overflow-y-auto` container instead, found and flagged live only after the fact. Reach for `usePagination`/`Pagination` by default for any list that can realistically grow, the same way every other list in this app already does, rather than treating pagination as an afterthought to add if a list gets long.
+
+**Every one of those same tables also gets a "Sort By" control**, via `lib/use-sort.ts`'s `useSort(items, options)` + `components/ui/sort-select.tsx`'s `SortSelect` — same "one hook, reused everywhere" shape as pagination, and deliberately composed with it rather than folded in: `useSort` runs on the filtered array, its `sorted` output feeds into `usePagination`, and `sortKey` gets included in `usePagination`'s `resetKey` (a re-sort should also snap back to page 1). `SortSelect` is a plain native `<select>` — matching the sibling Status/Role filter selects already in these same toolbars, not `PlainSelect`, since the native-`<select>` copy-into-clipboard risk that motivated `PlainSelect` (see the DOB/enroll-page note above) is a public-form concern, not one that applies to an internal admin toolbar. Each table defines its own 2-5 `SortOption`s (name A-Z/Z-A, a relevant date newest/oldest, amount high/low, etc.) suited to its actual columns — there's no single universal option list, reuse `compareStrings`/`compareDates` from `lib/use-sort.ts` rather than re-deriving a locale-aware string/date compare per table.
 
 ### Sidebar navigation feedback
 

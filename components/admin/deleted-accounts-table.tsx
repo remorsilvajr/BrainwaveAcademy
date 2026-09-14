@@ -1,11 +1,13 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { restoreUserAccounts } from '@/app/admin/user-management/actions'
 import { formatDateShort } from '@/lib/format'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
+import { SortSelect } from '@/components/ui/sort-select'
+import { useSort, compareStrings, compareDates, type SortOption } from '@/lib/use-sort'
 import { UserEditModal } from '@/components/admin/user-edit-modal'
 
 type LinkedStudent = { id: string; first_name: string; middle_name: string | null; last_name: string }
@@ -53,7 +55,17 @@ export function DeletedAccountsTable({ accounts }: { accounts: DeletedAccount[] 
     return `${a.first_name} ${a.last_name}`.toLowerCase().includes(term) || a.email.toLowerCase().includes(term)
   })
 
-  const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(filtered, search)
+  const sortOptions: SortOption<DeletedAccount>[] = useMemo(
+    () => [
+      { value: 'deleted_desc', label: 'Deleted (Newest First)', compare: (a, b) => compareDates(b.deleted_at, a.deleted_at) },
+      { value: 'deleted_asc', label: 'Deleted (Oldest First)', compare: (a, b) => compareDates(a.deleted_at, b.deleted_at) },
+      { value: 'name_asc', label: 'Name (A-Z)', compare: (a, b) => compareStrings(`${a.first_name} ${a.last_name}`, `${b.first_name} ${b.last_name}`) },
+    ],
+    []
+  )
+  const { sorted, sortKey, setSortKey } = useSort(filtered, sortOptions)
+
+  const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(sorted, `${search}|${sortKey}`)
 
   const viewing = accounts.find((a) => a.id === viewingId) ?? null
 
@@ -82,12 +94,15 @@ export function DeletedAccountsTable({ accounts }: { accounts: DeletedAccount[] 
 
   return (
     <div className="mt-3 space-y-3">
-      <input
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Name or email"
-        className="w-full max-w-sm rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
-      />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_220px] sm:max-w-2xl">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Name or email"
+          className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+        />
+        <SortSelect value={sortKey} onChange={setSortKey} options={sortOptions} />
+      </div>
 
       {error && (
         <p className="rounded-lg bg-red-50 dark:bg-red-950/30 px-3 py-2 text-sm text-red-600 dark:text-red-400">{error}</p>

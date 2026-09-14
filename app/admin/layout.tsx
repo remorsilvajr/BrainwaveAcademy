@@ -7,10 +7,20 @@ const baseSections: NavSection[] = [
     items: [
       { label: 'Dashboard', href: '/admin', icon: 'dashboard' },
       { label: 'Announcement', href: '/admin/announcement', icon: 'announcement' },
+    ],
+  },
+  {
+    // Everything that manages who has an account and the money/admissions
+    // pipeline around them — distinct from the "Admin" section below, which
+    // is system-level (audit log, bug reports, this admin's own settings)
+    // rather than about accounts or applicants.
+    title: 'Accounts & Enrollment',
+    items: [
       { label: 'User Management', href: '/admin/user-management', icon: 'users' },
       { label: 'Create New Account', href: '/admin/create-new-account', icon: 'checklist' },
       { label: 'Enrollment Requests', href: '/admin/enroll-a-student', icon: 'userPlus' },
       { label: 'Applications', href: '/admin/applications', icon: 'file' },
+      { label: 'Payments', href: '/admin/payments', icon: 'wallet' },
     ],
   },
   {
@@ -26,12 +36,6 @@ const baseSections: NavSection[] = [
     items: [
       { label: 'Teachers', href: '/admin/teachers', icon: 'teacher' },
       { label: 'Classrooms', href: '/admin/classrooms', icon: 'classroom' },
-    ],
-  },
-  {
-    title: 'Payments',
-    items: [
-      { label: 'Payments', href: '/admin/payments', icon: 'wallet' },
     ],
   },
   {

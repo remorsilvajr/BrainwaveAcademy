@@ -1,11 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatCurrency, formatDateLong } from '@/lib/format'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
+import { SortSelect } from '@/components/ui/sort-select'
+import { useSort, compareStrings, compareDates, type SortOption } from '@/lib/use-sort'
 import { approveWalletRequest, denyWalletRequest } from '@/app/admin/payments/actions'
 
 type WalletRequest = {
@@ -109,20 +111,37 @@ export function WalletRequestsPanel({ requests }: { requests: WalletRequest[] })
   const [showAll, setShowAll] = useState(false)
   const pending = requests.filter((r) => r.status === 'pending')
   const visible = showAll ? requests : pending
-  const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(visible, String(showAll))
+
+  const sortOptions: SortOption<WalletRequest>[] = useMemo(
+    () => [
+      { value: 'date_desc', label: 'Date (Newest First)', compare: (a, b) => compareDates(b.created_at, a.created_at) },
+      { value: 'date_asc', label: 'Date (Oldest First)', compare: (a, b) => compareDates(a.created_at, b.created_at) },
+      { value: 'name_asc', label: 'Parent (A-Z)', compare: (a, b) => compareStrings(a.parentName, b.parentName) },
+      { value: 'amount_desc', label: 'Requested Amount (High to Low)', compare: (a, b) => b.requested_amount - a.requested_amount },
+    ],
+    []
+  )
+  const { sorted, sortKey, setSortKey } = useSort(visible, sortOptions)
+
+  const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(sorted, `${showAll}|${sortKey}`)
 
   return (
     <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-semibold text-[#0b1b62] dark:text-indigo-300">
           Wallet Fund Requests {pending.length > 0 && `(${pending.length} pending)`}
         </h2>
-        <button
-          onClick={() => setShowAll((v) => !v)}
-          className="text-xs font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline"
-        >
-          {showAll ? 'Show pending only' : 'Show all'}
-        </button>
+        <div className="flex items-center gap-3">
+          <div className="w-48">
+            <SortSelect value={sortKey} onChange={setSortKey} options={sortOptions} hideLabel />
+          </div>
+          <button
+            onClick={() => setShowAll((v) => !v)}
+            className="text-xs font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline"
+          >
+            {showAll ? 'Show pending only' : 'Show all'}
+          </button>
+        </div>
       </div>
       <div className="mt-3 min-h-[180px] space-y-2">
         {pageItems.length === 0 ? (

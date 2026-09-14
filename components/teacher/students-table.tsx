@@ -1,12 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { User as UserIcon } from 'lucide-react'
 import { calculateAge, formatDateLong } from '@/lib/format'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
+import { SortSelect } from '@/components/ui/sort-select'
+import { useSort, compareStrings, compareDates, type SortOption } from '@/lib/use-sort'
 
 type Student = {
   id: string
@@ -29,18 +31,34 @@ export function TeacherStudentsTable({ students }: { students: Student[] }) {
     return `${s.first_name} ${s.middle_name ?? ''} ${s.last_name}`.toLowerCase().includes(term)
   })
 
-  const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(filtered, search)
+  const sortOptions: SortOption<Student>[] = useMemo(
+    () => [
+      { value: 'name_asc', label: 'Name (A-Z)', compare: (a, b) => compareStrings(`${a.first_name} ${a.last_name}`, `${b.first_name} ${b.last_name}`) },
+      { value: 'name_desc', label: 'Name (Z-A)', compare: (a, b) => compareStrings(`${b.first_name} ${b.last_name}`, `${a.first_name} ${a.last_name}`) },
+      { value: 'dob_desc', label: 'Date of Birth (Youngest First)', compare: (a, b) => compareDates(b.date_of_birth, a.date_of_birth) },
+      { value: 'dob_asc', label: 'Date of Birth (Oldest First)', compare: (a, b) => compareDates(a.date_of_birth, b.date_of_birth) },
+    ],
+    []
+  )
+  const { sorted, sortKey, setSortKey } = useSort(filtered, sortOptions)
+
+  const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(sorted, `${search}|${sortKey}`)
 
   return (
     <>
       <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
-        <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Search Students</label>
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Student name"
-          className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
-        />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_240px]">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Search Students</label>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Student name"
+              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+            />
+          </div>
+          <SortSelect value={sortKey} onChange={setSortKey} options={sortOptions} />
+        </div>
       </div>
 
       <div className="mt-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">

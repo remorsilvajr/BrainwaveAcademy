@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Mail, Phone } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -9,6 +9,8 @@ import { archiveApplication, unarchiveApplication, deleteApplication } from '@/a
 import { calculateAge, formatStatus } from '@/lib/format'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
+import { SortSelect } from '@/components/ui/sort-select'
+import { useSort, compareStrings, compareDates, type SortOption } from '@/lib/use-sort'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 type Application = {
@@ -87,9 +89,20 @@ export function EnrollmentRequestsTable({ applications }: { applications: Applic
     )
   })
 
+  const sortOptions: SortOption<Application>[] = useMemo(
+    () => [
+      { value: 'submitted_desc', label: 'Date Submitted (Newest First)', compare: (a, b) => compareDates(b.submitted_at, a.submitted_at) },
+      { value: 'submitted_asc', label: 'Date Submitted (Oldest First)', compare: (a, b) => compareDates(a.submitted_at, b.submitted_at) },
+      { value: 'student_asc', label: 'Student Name (A-Z)', compare: (a, b) => compareStrings(`${a.student_first_name} ${a.student_last_name}`, `${b.student_first_name} ${b.student_last_name}`) },
+      { value: 'student_desc', label: 'Student Name (Z-A)', compare: (a, b) => compareStrings(`${b.student_first_name} ${b.student_last_name}`, `${a.student_first_name} ${a.student_last_name}`) },
+    ],
+    []
+  )
+  const { sorted, sortKey, setSortKey } = useSort(filtered, sortOptions)
+
   const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(
-    filtered,
-    `${tab}|${search}`
+    sorted,
+    `${tab}|${search}|${sortKey}`
   )
 
   const tabs: { key: Tab; label: string; count: number }[] = [
@@ -182,13 +195,18 @@ export function EnrollmentRequestsTable({ applications }: { applications: Applic
       )}
 
       <div className="mt-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
-        <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Search</label>
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Student name, parent name, email, or reference #"
-          className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
-        />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_240px]">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Search</label>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Student name, parent name, email, or reference #"
+              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+            />
+          </div>
+          <SortSelect value={sortKey} onChange={setSortKey} options={sortOptions} />
+        </div>
       </div>
 
       <div className="mt-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">

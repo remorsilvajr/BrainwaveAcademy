@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { formatCurrency, formatDateShort } from '@/lib/format'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
+import { SortSelect } from '@/components/ui/sort-select'
+import { useSort, compareStrings, compareDates, type SortOption } from '@/lib/use-sort'
 import { RecordPaymentModal } from '@/components/admin/record-payment-modal'
 import { MarkPaidControl } from '@/components/admin/mark-paid-control'
 import type { SearchableOption } from '@/components/ui/searchable-select'
@@ -64,15 +66,27 @@ export function PaymentsTable({
     )
   })
 
+  const sortOptions: SortOption<PaymentRow>[] = useMemo(
+    () => [
+      { value: 'student_asc', label: 'Student Name (A-Z)', compare: (a, b) => compareStrings(a.studentName, b.studentName) },
+      { value: 'student_desc', label: 'Student Name (Z-A)', compare: (a, b) => compareStrings(b.studentName, a.studentName) },
+      { value: 'amount_desc', label: 'Amount (High to Low)', compare: (a, b) => b.amount - a.amount },
+      { value: 'amount_asc', label: 'Amount (Low to High)', compare: (a, b) => a.amount - b.amount },
+      { value: 'due_date_asc', label: 'Due Date (Soonest First)', compare: (a, b) => compareDates(a.due_date, b.due_date) },
+    ],
+    []
+  )
+  const { sorted, sortKey, setSortKey } = useSort(filtered, sortOptions)
+
   const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(
-    filtered,
-    `${search}|${statusFilter}`
+    sorted,
+    `${search}|${statusFilter}|${sortKey}`
   )
 
   return (
     <>
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_180px_auto]">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_180px_220px_auto]">
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Search Payments</label>
             <input
@@ -95,6 +109,7 @@ export function PaymentsTable({
               <option value="paid">Paid</option>
             </select>
           </div>
+          <SortSelect value={sortKey} onChange={setSortKey} options={sortOptions} />
           <div className="flex items-end">
             <button
               onClick={() => setShowRecordModal(true)}

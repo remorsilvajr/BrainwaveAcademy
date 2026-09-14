@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { User as UserIcon } from 'lucide-react'
 import { TeacherRecordModal } from '@/components/admin/teacher-record-modal'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
+import { SortSelect } from '@/components/ui/sort-select'
+import { useSort, compareStrings, type SortOption } from '@/lib/use-sort'
 
 type Teacher = {
   id: string
@@ -47,15 +49,25 @@ export function TeachersTable({ teachers }: { teachers: Teacher[] }) {
     )
   })
 
+  const sortOptions: SortOption<Teacher>[] = useMemo(
+    () => [
+      { value: 'name_asc', label: 'Name (A-Z)', compare: (a, b) => compareStrings(`${a.first_name} ${a.last_name}`, `${b.first_name} ${b.last_name}`) },
+      { value: 'name_desc', label: 'Name (Z-A)', compare: (a, b) => compareStrings(`${b.first_name} ${b.last_name}`, `${a.first_name} ${a.last_name}`) },
+      { value: 'email_asc', label: 'Email (A-Z)', compare: (a, b) => compareStrings(a.email, b.email) },
+    ],
+    []
+  )
+  const { sorted, sortKey, setSortKey } = useSort(filtered, sortOptions)
+
   const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(
-    filtered,
-    `${search}|${statusFilter}`
+    sorted,
+    `${search}|${statusFilter}|${sortKey}`
   )
 
   return (
     <>
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_200px]">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_160px_200px]">
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Search Teachers</label>
             <input
@@ -78,6 +90,7 @@ export function TeachersTable({ teachers }: { teachers: Teacher[] }) {
               <option value="blocked">Blocked</option>
             </select>
           </div>
+          <SortSelect value={sortKey} onChange={setSortKey} options={sortOptions} />
         </div>
       </div>
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Mail, ImageIcon } from 'lucide-react'
 import { resolveFeedback, reopenFeedback } from '@/app/admin/actions'
@@ -8,6 +8,8 @@ import { getFeedbackImageUrl } from '@/app/admin/feedback/actions'
 import { formatDateLong, formatRelativeTime } from '@/lib/format'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
+import { SortSelect } from '@/components/ui/sort-select'
+import { useSort, compareStrings, compareDates, type SortOption } from '@/lib/use-sort'
 import { DocumentPreviewModal } from '@/components/ui/document-preview-modal'
 
 type FeedbackItem = {
@@ -62,7 +64,18 @@ export function FeedbackTable({ items }: { items: FeedbackItem[] }) {
     )
   })
 
-  const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(filtered, `${tab}|${search}`)
+  const sortOptions: SortOption<FeedbackItem>[] = useMemo(
+    () => [
+      { value: 'date_desc', label: 'Date (Newest First)', compare: (a, b) => compareDates(b.created_at, a.created_at) },
+      { value: 'date_asc', label: 'Date (Oldest First)', compare: (a, b) => compareDates(a.created_at, b.created_at) },
+      { value: 'submitter_asc', label: 'Submitter (A-Z)', compare: (a, b) => compareStrings(a.submitter_name, b.submitter_name) },
+      { value: 'subject_asc', label: 'Subject (A-Z)', compare: (a, b) => compareStrings(a.subject, b.subject) },
+    ],
+    []
+  )
+  const { sorted, sortKey, setSortKey } = useSort(filtered, sortOptions)
+
+  const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(sorted, `${tab}|${search}|${sortKey}`)
 
   const tabs: { key: Tab; label: string; count: number }[] = [
     { key: 'unresolved', label: 'Unresolved', count: counts.unresolved },
@@ -126,13 +139,18 @@ export function FeedbackTable({ items }: { items: FeedbackItem[] }) {
       )}
 
       <div className="mt-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
-        <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Search</label>
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Subject, message, name, or email"
-          className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
-        />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_240px]">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Search</label>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Subject, message, name, or email"
+              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+            />
+          </div>
+          <SortSelect value={sortKey} onChange={setSortKey} options={sortOptions} />
+        </div>
       </div>
 
       <div className="mt-4 min-h-[420px] space-y-3">
