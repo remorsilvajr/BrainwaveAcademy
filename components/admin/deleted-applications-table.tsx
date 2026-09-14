@@ -53,8 +53,8 @@ export function DeletedApplicationsTable({ applications }: { applications: Delet
 
   const sortOptions: SortOption<DeletedApplication>[] = useMemo(
     () => [
-      { value: 'deleted_desc', label: 'Deleted (Newest First)', compare: (a, b) => compareDates(b.deleted_at, a.deleted_at) },
-      { value: 'deleted_asc', label: 'Deleted (Oldest First)', compare: (a, b) => compareDates(a.deleted_at, b.deleted_at) },
+      { value: 'deleted_desc', label: 'Deleted (Newest)', compare: (a, b) => compareDates(b.deleted_at, a.deleted_at) },
+      { value: 'deleted_asc', label: 'Deleted (Oldest)', compare: (a, b) => compareDates(a.deleted_at, b.deleted_at) },
       { value: 'student_asc', label: 'Student Name (A-Z)', compare: (a, b) => compareStrings(`${a.student_first_name} ${a.student_last_name}`, `${b.student_first_name} ${b.student_last_name}`) },
     ],
     []
@@ -90,7 +90,7 @@ export function DeletedApplicationsTable({ applications }: { applications: Delet
 
   return (
     <div className="mt-3 space-y-3">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_240px] sm:max-w-2xl">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_260px] sm:max-w-2xl">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}

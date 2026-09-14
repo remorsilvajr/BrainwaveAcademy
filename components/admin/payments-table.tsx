@@ -70,9 +70,9 @@ export function PaymentsTable({
     () => [
       { value: 'student_asc', label: 'Student Name (A-Z)', compare: (a, b) => compareStrings(a.studentName, b.studentName) },
       { value: 'student_desc', label: 'Student Name (Z-A)', compare: (a, b) => compareStrings(b.studentName, a.studentName) },
-      { value: 'amount_desc', label: 'Amount (High to Low)', compare: (a, b) => b.amount - a.amount },
-      { value: 'amount_asc', label: 'Amount (Low to High)', compare: (a, b) => a.amount - b.amount },
-      { value: 'due_date_asc', label: 'Due Date (Soonest First)', compare: (a, b) => compareDates(a.due_date, b.due_date) },
+      { value: 'amount_desc', label: 'Amount (High-Low)', compare: (a, b) => b.amount - a.amount },
+      { value: 'amount_asc', label: 'Amount (Low-High)', compare: (a, b) => a.amount - b.amount },
+      { value: 'due_date_asc', label: 'Due Date (Soonest)', compare: (a, b) => compareDates(a.due_date, b.due_date) },
     ],
     []
   )
@@ -86,7 +86,7 @@ export function PaymentsTable({
   return (
     <>
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_180px_220px_auto]">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_180px_260px_auto]">
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Search Payments</label>
             <input

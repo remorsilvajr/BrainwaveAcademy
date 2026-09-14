@@ -35,8 +35,8 @@ export function TeacherStudentsTable({ students }: { students: Student[] }) {
     () => [
       { value: 'name_asc', label: 'Name (A-Z)', compare: (a, b) => compareStrings(`${a.first_name} ${a.last_name}`, `${b.first_name} ${b.last_name}`) },
       { value: 'name_desc', label: 'Name (Z-A)', compare: (a, b) => compareStrings(`${b.first_name} ${b.last_name}`, `${a.first_name} ${a.last_name}`) },
-      { value: 'dob_desc', label: 'Date of Birth (Youngest First)', compare: (a, b) => compareDates(b.date_of_birth, a.date_of_birth) },
-      { value: 'dob_asc', label: 'Date of Birth (Oldest First)', compare: (a, b) => compareDates(a.date_of_birth, b.date_of_birth) },
+      { value: 'dob_desc', label: 'Date of Birth (Youngest)', compare: (a, b) => compareDates(b.date_of_birth, a.date_of_birth) },
+      { value: 'dob_asc', label: 'Date of Birth (Oldest)', compare: (a, b) => compareDates(a.date_of_birth, b.date_of_birth) },
     ],
     []
   )
@@ -47,7 +47,7 @@ export function TeacherStudentsTable({ students }: { students: Student[] }) {
   return (
     <>
       <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_240px]">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_260px]">
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Search Students</label>
             <input

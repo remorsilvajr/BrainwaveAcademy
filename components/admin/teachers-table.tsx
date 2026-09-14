@@ -67,7 +67,7 @@ export function TeachersTable({ teachers }: { teachers: Teacher[] }) {
   return (
     <>
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_160px_200px]">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_160px_260px]">
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Search Teachers</label>
             <input

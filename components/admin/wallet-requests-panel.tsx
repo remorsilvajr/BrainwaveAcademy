@@ -114,10 +114,10 @@ export function WalletRequestsPanel({ requests }: { requests: WalletRequest[] })
 
   const sortOptions: SortOption<WalletRequest>[] = useMemo(
     () => [
-      { value: 'date_desc', label: 'Date (Newest First)', compare: (a, b) => compareDates(b.created_at, a.created_at) },
-      { value: 'date_asc', label: 'Date (Oldest First)', compare: (a, b) => compareDates(a.created_at, b.created_at) },
+      { value: 'date_desc', label: 'Date (Newest)', compare: (a, b) => compareDates(b.created_at, a.created_at) },
+      { value: 'date_asc', label: 'Date (Oldest)', compare: (a, b) => compareDates(a.created_at, b.created_at) },
       { value: 'name_asc', label: 'Parent (A-Z)', compare: (a, b) => compareStrings(a.parentName, b.parentName) },
-      { value: 'amount_desc', label: 'Requested Amount (High to Low)', compare: (a, b) => b.requested_amount - a.requested_amount },
+      { value: 'amount_desc', label: 'Amount (High-Low)', compare: (a, b) => b.requested_amount - a.requested_amount },
     ],
     []
   )
@@ -132,7 +132,7 @@ export function WalletRequestsPanel({ requests }: { requests: WalletRequest[] })
           Wallet Fund Requests {pending.length > 0 && `(${pending.length} pending)`}
         </h2>
         <div className="flex items-center gap-3">
-          <div className="w-48">
+          <div className="w-64">
             <SortSelect value={sortKey} onChange={setSortKey} options={sortOptions} hideLabel />
           </div>
           <button

@@ -112,8 +112,8 @@ export function ActivityLogTable({ logs }: { logs: LogRow[] }) {
 
   const sortOptions: SortOption<LogRow>[] = useMemo(
     () => [
-      { value: 'date_desc', label: 'Date (Newest First)', compare: (a, b) => compareDates(b.created_at, a.created_at) },
-      { value: 'date_asc', label: 'Date (Oldest First)', compare: (a, b) => compareDates(a.created_at, b.created_at) },
+      { value: 'date_desc', label: 'Date (Newest)', compare: (a, b) => compareDates(b.created_at, a.created_at) },
+      { value: 'date_asc', label: 'Date (Oldest)', compare: (a, b) => compareDates(a.created_at, b.created_at) },
       {
         value: 'actor_asc',
         label: 'Actor (A-Z)',
@@ -133,7 +133,7 @@ export function ActivityLogTable({ logs }: { logs: LogRow[] }) {
   return (
     <>
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_240px]">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_260px]">
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Search</label>
             <input

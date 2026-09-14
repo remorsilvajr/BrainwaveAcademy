@@ -24,8 +24,8 @@ export function ParentWalletsTable({ parents }: { parents: ParentWallet[] }) {
     () => [
       { value: 'name_asc', label: 'Name (A-Z)', compare: (a, b) => compareStrings(a.name, b.name) },
       { value: 'name_desc', label: 'Name (Z-A)', compare: (a, b) => compareStrings(b.name, a.name) },
-      { value: 'balance_desc', label: 'Balance (High to Low)', compare: (a, b) => b.balance - a.balance },
-      { value: 'balance_asc', label: 'Balance (Low to High)', compare: (a, b) => a.balance - b.balance },
+      { value: 'balance_desc', label: 'Balance (High-Low)', compare: (a, b) => b.balance - a.balance },
+      { value: 'balance_asc', label: 'Balance (Low-High)', compare: (a, b) => a.balance - b.balance },
     ],
     []
   )
@@ -38,7 +38,7 @@ export function ParentWalletsTable({ parents }: { parents: ParentWallet[] }) {
       <div className="flex items-center justify-between">
         <h2 className="font-semibold text-[#0b1b62] dark:text-indigo-300">Parent Wallets</h2>
       </div>
-      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_220px]">
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_260px]">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}

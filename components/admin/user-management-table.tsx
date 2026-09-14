@@ -106,8 +106,8 @@ export function UserManagementTable({
     () => [
       { value: 'name_asc', label: 'Name (A-Z)', compare: (a, b) => compareStrings(`${a.first_name} ${a.last_name}`, `${b.first_name} ${b.last_name}`) },
       { value: 'name_desc', label: 'Name (Z-A)', compare: (a, b) => compareStrings(`${b.first_name} ${b.last_name}`, `${a.first_name} ${a.last_name}`) },
-      { value: 'joined_desc', label: 'Joined (Newest First)', compare: (a, b) => compareDates(b.created_at, a.created_at) },
-      { value: 'joined_asc', label: 'Joined (Oldest First)', compare: (a, b) => compareDates(a.created_at, b.created_at) },
+      { value: 'joined_desc', label: 'Joined (Newest)', compare: (a, b) => compareDates(b.created_at, a.created_at) },
+      { value: 'joined_asc', label: 'Joined (Oldest)', compare: (a, b) => compareDates(a.created_at, b.created_at) },
     ],
     []
   )
@@ -185,7 +185,7 @@ export function UserManagementTable({
             {isRefreshing ? 'Refreshing…' : 'Refresh Now'}
           </button>
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_160px_160px_200px]">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_160px_160px_260px]">
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Search</label>
             <input
