@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { CalendarClock, Megaphone } from 'lucide-react'
+import { CalendarClock, Megaphone, Wallet } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { documentOrder } from '@/lib/documents'
 import { formatCurrency, formatRelativeTime } from '@/lib/format'
@@ -38,28 +38,42 @@ export default async function ParentDashboardPage({
 
   // See app/parent/layout.tsx for why this matches on parent_email too, not
   // just created_parent_id.
-  const [{ data: profile }, { data: applications }, { data: announcementRows }, { data: pendingFees }, { data: classrooms }] =
-    await Promise.all([
-      supabase.from('profiles').select('first_name').eq('id', user?.id ?? '').single(),
-      supabase
-        .from('applications')
-        .select('id, status, student_first_name, student_last_name, created_student_id')
-        .eq('hidden_from_parent', false)
-        .or(parentApplicationsFilter(user))
-        .order('submitted_at', { ascending: true }),
-      supabase
-        .from('announcements')
-        .select('id, title, body, created_at, classroom_id, profiles(first_name, last_name)')
-        .in('target_role', ['parent', 'all'])
-        .or(classroomVisibilityFilter(classroomIds))
-        .order('created_at', { ascending: false })
-        .limit(3)
-        .returns<AnnouncementRow[]>(),
-      studentIds.length > 0
-        ? supabase.from('payments').select('amount').in('student_id', studentIds).eq('status', 'pending')
-        : Promise.resolve({ data: [] }),
-      supabase.from('classrooms').select('id, name'),
-    ])
+  const [
+    { data: profile },
+    { data: applications },
+    { data: announcementRows },
+    { data: pendingFees },
+    { data: classrooms },
+    { data: wallet },
+    { data: pendingWalletRequest },
+  ] = await Promise.all([
+    supabase.from('profiles').select('first_name').eq('id', user?.id ?? '').single(),
+    supabase
+      .from('applications')
+      .select('id, status, student_first_name, student_last_name, created_student_id')
+      .eq('hidden_from_parent', false)
+      .or(parentApplicationsFilter(user))
+      .order('submitted_at', { ascending: true }),
+    supabase
+      .from('announcements')
+      .select('id, title, body, created_at, classroom_id, profiles(first_name, last_name)')
+      .in('target_role', ['parent', 'all'])
+      .or(classroomVisibilityFilter(classroomIds))
+      .order('created_at', { ascending: false })
+      .limit(3)
+      .returns<AnnouncementRow[]>(),
+    studentIds.length > 0
+      ? supabase.from('payments').select('amount').in('student_id', studentIds).eq('status', 'pending')
+      : Promise.resolve({ data: [] }),
+    supabase.from('classrooms').select('id, name'),
+    supabase.from('wallets').select('balance').eq('parent_id', user?.id ?? '').maybeSingle(),
+    supabase
+      .from('wallet_requests')
+      .select('requested_amount')
+      .eq('parent_id', user?.id ?? '')
+      .eq('status', 'pending')
+      .maybeSingle(),
+  ])
 
   const classroomNameById = new Map((classrooms ?? []).map((c) => [c.id, c.name]))
   const announcements = (announcementRows ?? []).map((a) => ({
@@ -97,7 +111,7 @@ export default async function ParentDashboardPage({
         Welcome back{profile?.first_name ? `, ${profile.first_name}` : ''}
       </h1>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Enrollment Progress</h2>
@@ -154,6 +168,23 @@ export default async function ParentDashboardPage({
             className="mt-3 inline-block text-sm font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline"
           >
             View Payments →
+          </Link>
+        </div>
+
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Wallet Balance</h2>
+          <p className="mt-4 text-3xl font-bold text-[#0b1b62] dark:text-indigo-300">{formatCurrency(wallet?.balance ?? 0)}</p>
+          <p className="mt-2 flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
+            <Wallet className="h-4 w-4" />
+            {pendingWalletRequest
+              ? `Top-up request of ${formatCurrency(pendingWalletRequest.requested_amount)} pending review.`
+              : 'Available to pay outstanding fees.'}
+          </p>
+          <Link
+            href="/parent/payments"
+            className="mt-3 inline-block text-sm font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline"
+          >
+            {pendingWalletRequest ? 'View Payments →' : 'Request Funds →'}
           </Link>
         </div>
       </div>

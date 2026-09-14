@@ -36,12 +36,12 @@ export function SiteHeader({ auth = null }: { auth?: PortalAuth }) {
           />
         </Link>
 
-        <ul className="hidden list-none items-center justify-center gap-6 p-0 m-0 lg:flex lg:gap-8">
+        <ul className="hidden list-none items-center justify-center gap-1 p-0 m-0 lg:flex lg:gap-2">
           {navigationItems.map((item) => (
             <li key={item.label}>
               <a
                 href={item.href}
-                className="text-sm font-semibold tracking-[0.14px] text-[#454650] hover:text-[#0b1b62] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b1b62] dark:text-slate-300 dark:hover:text-white"
+                className="block rounded-lg px-3 py-2 text-sm font-semibold tracking-[0.14px] text-[#454650] hover:bg-black/5 hover:text-[#0b1b62] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b1b62] dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
               >
                 {item.label}
               </a>
