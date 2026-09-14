@@ -38,7 +38,7 @@ function Field({
   pattern?: string
   title?: string
   defaultValue?: string
-  onChange?: () => void
+  onChange?: (value: string) => void
   min?: string
   max?: string
   minLength?: number
@@ -64,7 +64,7 @@ function Field({
         pattern={pattern}
         title={title}
         defaultValue={defaultValue}
-        onChange={onChange}
+        onChange={(e) => onChange?.(e.target.value)}
         min={min}
         max={max}
         minLength={minLength}
@@ -82,16 +82,22 @@ function StepTab({
   activeStep,
   label,
   hasError,
+  isDone,
   onClick,
 }: {
   step: number
   activeStep: number
   label: string
   hasError: boolean
+  // Whether this step's own required fields are actually filled in — NOT
+  // just "the visitor has clicked past this step," which used to be how
+  // this was computed (`step < activeStep`). That gave a false "done"
+  // checkmark on Student Information the moment someone clicked the
+  // Parent / Guardian tab, even with every student field still blank.
+  isDone: boolean
   onClick: () => void
 }) {
   const isActive = step === activeStep
-  const isDone = step < activeStep
   return (
     <button
       type="button"
@@ -150,6 +156,21 @@ export function EnrollmentForm() {
   const [relationshipValue, setRelationshipValue] = useState('')
   const [parentGenderValue, setParentGenderValue] = useState('')
 
+  // Plain text/DOB fields stay uncontrolled (defaultValue, not value) so
+  // typing doesn't fight React over cursor position — but the step tabs'
+  // "done" checkmark still needs to know whether each required field is
+  // actually filled, not just parsed from a defaultValue that never
+  // updates after mount. These mirror the DOM value on every change purely
+  // for that completeness check, they don't drive the inputs themselves.
+  const [studentFirstName, setStudentFirstName] = useState('')
+  const [studentLastName, setStudentLastName] = useState('')
+  const [studentDob, setStudentDob] = useState('')
+  const [parentFirstName, setParentFirstName] = useState('')
+  const [parentLastName, setParentLastName] = useState('')
+  const [parentDob, setParentDob] = useState('')
+  const [parentContactNumber, setParentContactNumber] = useState('')
+  const [parentEmail, setParentEmail] = useState('')
+
   // Sync local state from the action result as it changes — the "adjusting
   // state when a prop changes" pattern (done inline during render, not in a
   // useEffect: a plain effect here would setState synchronously on every
@@ -166,6 +187,14 @@ export function EnrollmentForm() {
     setGenderValue(state.values?.student_gender ?? '')
     setRelationshipValue(state.values?.parent_relationship ?? '')
     setParentGenderValue(state.values?.parent_gender ?? '')
+    setStudentFirstName(state.values?.student_first_name ?? '')
+    setStudentLastName(state.values?.student_last_name ?? '')
+    setStudentDob(state.values?.student_dob ?? '')
+    setParentFirstName(state.values?.parent_first_name ?? '')
+    setParentLastName(state.values?.parent_last_name ?? '')
+    setParentDob(state.values?.parent_dob ?? '')
+    setParentContactNumber(state.values?.parent_contact_number ?? '')
+    setParentEmail(state.values?.parent_email ?? '')
 
     // After a failed submission, jump to whichever step actually has the
     // error(s) rather than leaving the visitor stuck looking at Parent /
@@ -196,6 +225,21 @@ export function EnrollmentForm() {
   const studentStepHasError = Object.keys(liveErrors).some((k) => STUDENT_FIELD_KEYS.includes(k))
   const parentStepHasError = Object.keys(liveErrors).some((k) => !STUDENT_FIELD_KEYS.includes(k))
 
+  // "Done" means this step's required fields are actually filled, not
+  // merely that the visitor has clicked past it — deliberately doesn't
+  // also re-check name pattern/minLength/phone-format validity, since
+  // liveErrors (folded in via `!studentStepHasError`) already covers that
+  // once a submission attempt has run.
+  const studentDone = !!studentFirstName && !!studentLastName && !!studentDob && !!genderValue && !studentStepHasError
+  const parentDone =
+    !!parentFirstName &&
+    !!parentLastName &&
+    !!parentDob &&
+    !!relationshipValue &&
+    !!parentContactNumber &&
+    !!parentEmail &&
+    !parentStepHasError
+
   return (
     <form action={formAction} className="space-y-6 rounded-xl border border-[#c6c5d2] dark:border-slate-700 bg-white dark:bg-gray-900 p-8 shadow-sm">
       {/* Honeypot — invisible to a real visitor (off-screen, not display:none
@@ -215,8 +259,8 @@ export function EnrollmentForm() {
       )}
 
       <div className="flex flex-col gap-2 sm:flex-row">
-        <StepTab step={1} activeStep={step} label="Student Information" hasError={studentStepHasError} onClick={() => setStep(1)} />
-        <StepTab step={2} activeStep={step} label="Parent / Guardian Information" hasError={parentStepHasError} onClick={() => setStep(2)} />
+        <StepTab step={1} activeStep={step} label="Student Information" hasError={studentStepHasError} isDone={studentDone} onClick={() => setStep(1)} />
+        <StepTab step={2} activeStep={step} label="Parent / Guardian Information" hasError={parentStepHasError} isDone={parentDone} onClick={() => setStep(2)} />
       </div>
 
       <div className={step === 1 ? 'space-y-8' : 'hidden'}>
@@ -243,7 +287,10 @@ export function EnrollmentForm() {
               minLength={2}
               defaultValue={values.student_first_name}
               error={liveErrors.student_first_name}
-              onChange={() => clearError('student_first_name')}
+              onChange={(v) => {
+                setStudentFirstName(v)
+                clearError('student_first_name')
+              }}
             />
             <Field
               label="Middle Name"
@@ -266,7 +313,10 @@ export function EnrollmentForm() {
               minLength={2}
               defaultValue={values.student_last_name}
               error={liveErrors.student_last_name}
-              onChange={() => clearError('student_last_name')}
+              onChange={(v) => {
+                setStudentLastName(v)
+                clearError('student_last_name')
+              }}
             />
           </div>
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -278,7 +328,10 @@ export function EnrollmentForm() {
               error={liveErrors.student_dob}
               min={dobInputMin(MAX_AGE)}
               max={dobInputMax(MIN_STUDENT_AGE)}
-              onChange={() => clearError('student_dob')}
+              onChange={(v) => {
+                setStudentDob(v)
+                clearError('student_dob')
+              }}
             />
             <PlainSelect
               label="Gender"
@@ -332,7 +385,10 @@ export function EnrollmentForm() {
               minLength={2}
               defaultValue={values.parent_first_name}
               error={liveErrors.parent_first_name}
-              onChange={() => clearError('parent_first_name')}
+              onChange={(v) => {
+                setParentFirstName(v)
+                clearError('parent_first_name')
+              }}
             />
             <Field
               label="Middle Name"
@@ -355,7 +411,10 @@ export function EnrollmentForm() {
               minLength={2}
               defaultValue={values.parent_last_name}
               error={liveErrors.parent_last_name}
-              onChange={() => clearError('parent_last_name')}
+              onChange={(v) => {
+                setParentLastName(v)
+                clearError('parent_last_name')
+              }}
             />
           </div>
           <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -367,7 +426,10 @@ export function EnrollmentForm() {
               error={liveErrors.parent_dob}
               min={dobInputMin(MAX_AGE)}
               max={dobInputMax(MIN_ADULT_AGE)}
-              onChange={() => clearError('parent_dob')}
+              onChange={(v) => {
+                setParentDob(v)
+                clearError('parent_dob')
+              }}
             />
             <PlainSelect
               label="Relationship"
@@ -393,11 +455,14 @@ export function EnrollmentForm() {
               label="Contact Number"
               name="parent_contact_number"
               type="tel"
-              placeholder="+63 9XX XXX XXXX"
+              placeholder="09XX XXX XXXX or +63 9XX XXX XXXX"
               required={step === 2}
               defaultValue={values.parent_contact_number}
               error={liveErrors.parent_contact_number}
-              onChange={() => clearError('parent_contact_number')}
+              onChange={(v) => {
+                setParentContactNumber(v)
+                clearError('parent_contact_number')
+              }}
             />
             {relationshipValue === 'Guardian' && (
               <PlainSelect
@@ -424,7 +489,10 @@ export function EnrollmentForm() {
             required={step === 2}
             defaultValue={values.parent_email}
             error={liveErrors.parent_email}
-            onChange={() => clearError('parent_email')}
+            onChange={(v) => {
+              setParentEmail(v)
+              clearError('parent_email')
+            }}
           />
           <p className="mt-1 text-xs text-[#454650] dark:text-slate-300">
             Your login credentials and admission confirmation will be sent here.
