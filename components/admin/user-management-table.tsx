@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   toggleBlockUser,
@@ -12,6 +12,8 @@ import { formatDateShort } from '@/lib/format'
 import { UserEditModal } from '@/components/admin/user-edit-modal'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
+import { SortSelect } from '@/components/ui/sort-select'
+import { useSort, compareStrings, compareDates, type SortOption } from '@/lib/use-sort'
 import { canModerateAccount, type AccountForModeration } from '@/lib/permissions'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
@@ -100,9 +102,20 @@ export function UserManagementTable({
     )
   })
 
+  const sortOptions: SortOption<Profile>[] = useMemo(
+    () => [
+      { value: 'name_asc', label: 'Name (A-Z)', compare: (a, b) => compareStrings(`${a.first_name} ${a.last_name}`, `${b.first_name} ${b.last_name}`) },
+      { value: 'name_desc', label: 'Name (Z-A)', compare: (a, b) => compareStrings(`${b.first_name} ${b.last_name}`, `${a.first_name} ${a.last_name}`) },
+      { value: 'joined_desc', label: 'Joined (Newest First)', compare: (a, b) => compareDates(b.created_at, a.created_at) },
+      { value: 'joined_asc', label: 'Joined (Oldest First)', compare: (a, b) => compareDates(a.created_at, b.created_at) },
+    ],
+    []
+  )
+  const { sorted, sortKey, setSortKey } = useSort(filtered, sortOptions)
+
   const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(
-    filtered,
-    `${search}|${roleFilter}|${statusFilter}`
+    sorted,
+    `${search}|${roleFilter}|${statusFilter}|${sortKey}`
   )
 
   function handleToggleBlock(user: Profile) {
@@ -172,7 +185,7 @@ export function UserManagementTable({
             {isRefreshing ? 'Refreshing…' : 'Refresh Now'}
           </button>
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_160px_160px]">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_160px_160px_200px]">
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Search</label>
             <input
@@ -210,6 +223,7 @@ export function UserManagementTable({
               <option value="blocked" className={optionClasses}>Blocked</option>
             </select>
           </div>
+          <SortSelect value={sortKey} onChange={setSortKey} options={sortOptions} />
         </div>
       </div>
 

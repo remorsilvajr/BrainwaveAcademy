@@ -5,6 +5,8 @@ import { User as UserIcon } from 'lucide-react'
 import { StudentRecordModal } from '@/components/admin/student-record-modal'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
+import { SortSelect } from '@/components/ui/sort-select'
+import { useSort, compareStrings, compareDates, type SortOption } from '@/lib/use-sort'
 
 type Guardian = { name: string; relationship: string | null; phone: string | null; email: string | null }
 type DocRow = { document_type: string; file_url: string; verification_status: string }
@@ -56,15 +58,26 @@ export function StudentsTable({ students, classrooms }: { students: Student[]; c
     )
   })
 
+  const sortOptions: SortOption<Student>[] = useMemo(
+    () => [
+      { value: 'name_asc', label: 'Name (A-Z)', compare: (a, b) => compareStrings(`${a.first_name} ${a.last_name}`, `${b.first_name} ${b.last_name}`) },
+      { value: 'name_desc', label: 'Name (Z-A)', compare: (a, b) => compareStrings(`${b.first_name} ${b.last_name}`, `${a.first_name} ${a.last_name}`) },
+      { value: 'dob_desc', label: 'Date of Birth (Youngest First)', compare: (a, b) => compareDates(b.date_of_birth, a.date_of_birth) },
+      { value: 'dob_asc', label: 'Date of Birth (Oldest First)', compare: (a, b) => compareDates(a.date_of_birth, b.date_of_birth) },
+    ],
+    []
+  )
+  const { sorted, sortKey, setSortKey } = useSort(filtered, sortOptions)
+
   const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(
-    filtered,
-    `${search}|${statusFilter}`
+    sorted,
+    `${search}|${statusFilter}|${sortKey}`
   )
 
   return (
     <>
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_200px]">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_200px_220px]">
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Search Students</label>
             <input
@@ -89,6 +102,7 @@ export function StudentsTable({ students, classrooms }: { students: Student[]; c
               ))}
             </select>
           </div>
+          <SortSelect value={sortKey} onChange={setSortKey} options={sortOptions} />
         </div>
       </div>
 

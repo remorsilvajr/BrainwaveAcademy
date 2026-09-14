@@ -1,11 +1,13 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { restoreApplications } from '@/app/admin/enroll-a-student/actions'
 import { formatDateShort, formatStatus } from '@/lib/format'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
+import { SortSelect } from '@/components/ui/sort-select'
+import { useSort, compareStrings, compareDates, type SortOption } from '@/lib/use-sort'
 import { EnrollmentRequestModal } from '@/components/admin/enrollment-request-modal'
 
 type DeletedApplication = {
@@ -49,7 +51,17 @@ export function DeletedApplicationsTable({ applications }: { applications: Delet
     )
   })
 
-  const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(filtered, search)
+  const sortOptions: SortOption<DeletedApplication>[] = useMemo(
+    () => [
+      { value: 'deleted_desc', label: 'Deleted (Newest First)', compare: (a, b) => compareDates(b.deleted_at, a.deleted_at) },
+      { value: 'deleted_asc', label: 'Deleted (Oldest First)', compare: (a, b) => compareDates(a.deleted_at, b.deleted_at) },
+      { value: 'student_asc', label: 'Student Name (A-Z)', compare: (a, b) => compareStrings(`${a.student_first_name} ${a.student_last_name}`, `${b.student_first_name} ${b.student_last_name}`) },
+    ],
+    []
+  )
+  const { sorted, sortKey, setSortKey } = useSort(filtered, sortOptions)
+
+  const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(sorted, `${search}|${sortKey}`)
 
   const viewing = applications.find((app) => app.id === viewingId) ?? null
 
@@ -78,12 +90,15 @@ export function DeletedApplicationsTable({ applications }: { applications: Delet
 
   return (
     <div className="mt-3 space-y-3">
-      <input
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Student name, parent name, email, or reference #"
-        className="w-full max-w-sm rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
-      />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_240px] sm:max-w-2xl">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Student name, parent name, email, or reference #"
+          className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+        />
+        <SortSelect value={sortKey} onChange={setSortKey} options={sortOptions} />
+      </div>
 
       {error && (
         <p className="rounded-lg bg-red-50 dark:bg-red-950/30 px-3 py-2 text-sm text-red-600 dark:text-red-400">{error}</p>

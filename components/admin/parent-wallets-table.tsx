@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { formatCurrency } from '@/lib/format'
 import { AdjustWalletModal } from '@/components/admin/adjust-wallet-modal'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
+import { SortSelect } from '@/components/ui/sort-select'
+import { useSort, compareStrings, type SortOption } from '@/lib/use-sort'
 
 type ParentWallet = { id: string; name: string; email: string; balance: number }
 
@@ -18,20 +20,32 @@ export function ParentWalletsTable({ parents }: { parents: ParentWallet[] }) {
     return p.name.toLowerCase().includes(term) || p.email.toLowerCase().includes(term)
   })
 
-  const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(filtered, search)
+  const sortOptions: SortOption<ParentWallet>[] = useMemo(
+    () => [
+      { value: 'name_asc', label: 'Name (A-Z)', compare: (a, b) => compareStrings(a.name, b.name) },
+      { value: 'name_desc', label: 'Name (Z-A)', compare: (a, b) => compareStrings(b.name, a.name) },
+      { value: 'balance_desc', label: 'Balance (High to Low)', compare: (a, b) => b.balance - a.balance },
+      { value: 'balance_asc', label: 'Balance (Low to High)', compare: (a, b) => a.balance - b.balance },
+    ],
+    []
+  )
+  const { sorted, sortKey, setSortKey } = useSort(filtered, sortOptions)
+
+  const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(sorted, `${search}|${sortKey}`)
 
   return (
     <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
       <div className="flex items-center justify-between">
         <h2 className="font-semibold text-[#0b1b62] dark:text-indigo-300">Parent Wallets</h2>
       </div>
-      <div className="mt-3">
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_220px]">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search parents by name or email"
           className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 placeholder-slate-400 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 dark:placeholder-slate-500 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
         />
+        <SortSelect value={sortKey} onChange={setSortKey} options={sortOptions} label="Sort By" />
       </div>
       <div className="mt-3 min-h-[360px] space-y-2">
         {pageItems.length === 0 ? (
