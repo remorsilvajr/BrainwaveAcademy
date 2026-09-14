@@ -1,3 +1,5 @@
+import Link from 'next/link'
+import { Wallet } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { formatCurrency, formatDateShort, isToday, nowMs } from '@/lib/format'
 import { PriorityFeedbackLog } from '@/components/admin/priority-feedback-log'
@@ -13,28 +15,38 @@ type FeedbackRow = {
 export default async function AdminDashboardPage() {
   const supabase = await createClient()
 
-  const [{ data: applications }, { data: students }, { data: feedbackRows }, { count: unresolvedFeedbackCount }, { data: recentPayments }] =
-    await Promise.all([
-      supabase.from('applications').select('status, created_student_id'),
-      supabase.from('students').select('enrollment_status'),
-      supabase
-        .from('feedback')
-        .select('id, subject, message, created_at, profiles(first_name, last_name)')
-        .eq('resolved', false)
-        .order('created_at', { ascending: false })
-        .limit(5)
-        .returns<FeedbackRow[]>(),
-      // Separate exact-count query — the list above is capped at 5 for the
-      // dashboard widget, so feedbackRows.length would silently undercount
-      // this stat once there are more than 5 unresolved reports.
-      supabase.from('feedback').select('id', { count: 'exact', head: true }).eq('resolved', false),
-      supabase
-        .from('payments')
-        .select('id, student_id, amount, payment_method, transaction_date, receipt_ref')
-        .eq('status', 'paid')
-        .order('transaction_date', { ascending: false })
-        .limit(8),
-    ])
+  const [
+    { data: applications },
+    { data: students },
+    { data: feedbackRows },
+    { count: unresolvedFeedbackCount },
+    { data: recentPayments },
+    { data: pendingWalletRequests },
+  ] = await Promise.all([
+    supabase.from('applications').select('status, created_student_id'),
+    supabase.from('students').select('enrollment_status'),
+    supabase
+      .from('feedback')
+      .select('id, subject, message, created_at, profiles(first_name, last_name)')
+      .eq('resolved', false)
+      .order('created_at', { ascending: false })
+      .limit(5)
+      .returns<FeedbackRow[]>(),
+    // Separate exact-count query — the list above is capped at 5 for the
+    // dashboard widget, so feedbackRows.length would silently undercount
+    // this stat once there are more than 5 unresolved reports.
+    supabase.from('feedback').select('id', { count: 'exact', head: true }).eq('resolved', false),
+    supabase
+      .from('payments')
+      .select('id, student_id, amount, payment_method, transaction_date, receipt_ref')
+      .eq('status', 'paid')
+      .order('transaction_date', { ascending: false })
+      .limit(8),
+    // Uncapped by design, same reasoning as the feedback/collections stats
+    // above — this feeds both a count and a sum, so it can't be derived from
+    // a display-capped list.
+    supabase.from('wallet_requests').select('requested_amount').eq('status', 'pending'),
+  ])
 
   // Uncapped, separate from the 8-row display list above for the same
   // reason the Unresolved Feedback stat needed its own exact-count query —
@@ -70,6 +82,9 @@ export default async function AdminDashboardPage() {
     .filter((p) => p.transaction_date && isToday(p.transaction_date))
     .reduce((sum, p) => sum + p.amount, 0)
 
+  const pendingWalletRequestCount = pendingWalletRequests?.length ?? 0
+  const pendingWalletRequestTotal = (pendingWalletRequests ?? []).reduce((sum, r) => sum + r.requested_amount, 0)
+
   const feedbackItems = (feedbackRows ?? []).map((f) => ({
     id: f.id,
     subject: f.subject,
@@ -88,7 +103,7 @@ export default async function AdminDashboardPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <div className="rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-amber-400 dark:border-l-amber-600 bg-white dark:bg-gray-900 p-4 shadow-sm">
           <p className="text-sm text-gray-500 dark:text-gray-400">Pending Applications</p>
           <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">{pendingApplicationsCount}</p>
@@ -111,6 +126,21 @@ export default async function AdminDashboardPage() {
             {totalCollectedToday > 0 ? 'Paid today, wallet + cash/check' : 'No transactions yet'}
           </p>
         </div>
+        <Link
+          href="/admin/payments"
+          className="rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-purple-400 dark:border-l-purple-600 bg-white dark:bg-gray-900 p-4 shadow-sm transition hover:border-purple-300 dark:hover:border-purple-500"
+        >
+          <p className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
+            <Wallet className="h-4 w-4" />
+            Pending Fund Requests
+          </p>
+          <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">{pendingWalletRequestCount}</p>
+          <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+            {pendingWalletRequestCount > 0
+              ? `${formatCurrency(pendingWalletRequestTotal)} requested, review in Payments →`
+              : 'No wallet top-up requests waiting'}
+          </p>
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
