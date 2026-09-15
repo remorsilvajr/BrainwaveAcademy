@@ -1,6 +1,6 @@
 # Brainwave Preschool Academy
 
-A school admin / enrollment portal for Brainwave Preschool Academy, built with Next.js and Supabase. Public marketing site plus a public enrollment form live outside auth; everything else is gated behind one of three roles — **admin**, **teacher**, **parent** — each with its own dashboard, sidebar, and set of pages.
+A school admin / enrollment portal for Brainwave Preschool Academy, built with Next.js and Supabase. Public marketing site plus a public enrollment form live outside auth; everything else is gated behind one of three roles — **admin**, **teacher**, **parent** — each with its own dashboard, sidebar, and set of pages. A super-admin tier also exists on top of `admin` (a `profiles.is_super_admin` flag, not a fourth role) for a small set of irreversible protections — see `CLAUDE.md` for how it works and why it's deliberately not exposed anywhere in the UI.
 
 **Live**: https://brainwave-academy-phi.vercel.app/
 
