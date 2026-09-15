@@ -6,32 +6,32 @@ import { parentApplicationsFilter } from '@/lib/parent-applications'
 const sections: NavSection[] = [
   {
     items: [
-      { label: 'Dashboard', href: '/parent' },
-      { label: 'Announcement', href: '/parent/announcement' },
+      { label: 'Dashboard', href: '/parent', icon: 'dashboard' },
+      { label: 'Announcement', href: '/parent/announcement', icon: 'announcement' },
     ],
   },
   {
     title: 'Enrollment',
     items: [
-      { label: 'Enroll A Student', href: '/parent/enroll-a-student' },
-      { label: 'Requirements', href: '/parent/requirements' },
-      { label: 'Payments', href: '/parent/payments' },
-      { label: 'Enrollment Status', href: '/parent/enrollment-status' },
+      { label: 'Enroll A Student', href: '/parent/enroll-a-student', icon: 'userPlus' },
+      { label: 'Requirements', href: '/parent/requirements', icon: 'checklist' },
+      { label: 'Payments', href: '/parent/payments', icon: 'wallet' },
+      { label: 'Enrollment Status', href: '/parent/enrollment-status', icon: 'file' },
     ],
   },
   {
     title: 'Student',
     items: [
-      { label: 'Enrollment Profile', href: '/parent/students' },
-      { label: 'Student Dashboard', href: '/parent/student-dashboard' },
+      { label: 'Enrollment Profile', href: '/parent/students', icon: 'user' },
+      { label: 'Student Dashboard', href: '/parent/student-dashboard', icon: 'graduationCap' },
     ],
   },
   {
     title: 'Account',
     items: [
-      { label: 'My Profile', href: '/parent/my-profile' },
-      { label: 'Settings', href: '/parent/settings' },
-      { label: 'Log Out', isLogout: true },
+      { label: 'My Profile', href: '/parent/my-profile', icon: 'user' },
+      { label: 'Settings', href: '/parent/settings', icon: 'settings' },
+      { label: 'Log Out', isLogout: true, icon: 'logout' },
     ],
   },
 ]
