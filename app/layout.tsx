@@ -65,7 +65,12 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body className={`${inter.className} bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100`}>
+      {/* Also scoped to just this element (not propagated to children) — some
+          browser extensions (Grammarly is the common one) inject their own
+          attributes like data-gr-ext-installed onto <body> before React
+          hydrates, which is a real but harmless mismatch: nothing this app
+          renders actually differs between server and client here. */}
+      <body suppressHydrationWarning className={`${inter.className} bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100`}>
         <CrossTabAuthSync />
         {children}
         <CookieConsentBanner />
