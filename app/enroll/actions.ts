@@ -7,6 +7,7 @@ import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
 import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
 import { isValidDob, dobRangeMessage, MIN_STUDENT_AGE, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
 import { genderFromParentRelationship } from '@/lib/gender'
+import { isAgeEligibleForClassroom } from '@/lib/classrooms'
 import { logActivity } from '@/lib/activity-log'
 
 export type SubmitApplicationState = {
@@ -26,6 +27,7 @@ const requiredFields: Record<string, string> = {
   parent_relationship: 'Relationship',
   parent_contact_number: 'Contact number',
   parent_email: 'Email address',
+  requested_classroom_id: 'Program selection',
 }
 
 const allFieldKeys = [...Object.keys(requiredFields), 'student_middle_name', 'parent_middle_name', 'parent_gender']
@@ -114,6 +116,25 @@ export async function submitApplication(
     fieldErrors.agreed_to_policies = 'Please review and agree to the Privacy Policy and Terms of Service to continue.'
   }
 
+  // The Program step's disabled cards are UX only — this app's own
+  // pen-testing convention requires the real boundary to be server-side, so
+  // re-check the requested classroom actually exists and is still
+  // age-eligible for the given DOB before trusting it.
+  if (values.requested_classroom_id && values.student_dob && !fieldErrors.student_dob) {
+    const supabaseForClassroomCheck = await createClient()
+    const { data: requestedClassroom } = await supabaseForClassroomCheck
+      .from('classrooms')
+      .select('id, min_age_years, max_age_years')
+      .eq('id', values.requested_classroom_id)
+      .maybeSingle()
+
+    if (!requestedClassroom) {
+      fieldErrors.requested_classroom_id = 'Please select a valid program.'
+    } else if (!isAgeEligibleForClassroom(values.student_dob, requestedClassroom)) {
+      fieldErrors.requested_classroom_id = "The selected program isn't available for this student's age."
+    }
+  }
+
   if (Object.keys(fieldErrors).length > 0) {
     return {
       error: 'Please fix the highlighted fields below.',
@@ -168,6 +189,7 @@ export async function submitApplication(
     parent_gender: genderFromParentRelationship(values.parent_relationship, values.parent_gender),
     parent_contact_number: normalizePhilippineMobile(values.parent_contact_number),
     parent_email: values.parent_email.toLowerCase(),
+    requested_classroom_id: values.requested_classroom_id || null,
   })
 
   if (error) {

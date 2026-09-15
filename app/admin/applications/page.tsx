@@ -9,13 +9,17 @@ export default async function ApplicationsPage() {
   // a second place to see raw enrollment requests (that's Enrollment Requests'
   // job). A pending/rejected enrollment request has no parent account yet,
   // so there's nothing for this page to review.
-  const [{ data: applications }, { data: documents }] = await Promise.all([
+  const [{ data: applications }, { data: documents }, { data: classrooms }] = await Promise.all([
     supabase
       .from('applications')
       .select('*')
       .eq('status', 'approved')
       .order('submitted_at', { ascending: false }),
     supabase.from('application_documents').select('*'),
+    supabase
+      .from('classrooms')
+      .select('id, name, min_age_years, max_age_years, tuition_fee, activity_fee')
+      .order('created_at'),
   ])
 
   const docs = documents ?? []
@@ -27,7 +31,7 @@ export default async function ApplicationsPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Pending Student Applications</h1>
-      <ApplicationsTable applications={appsWithDocs} />
+      <ApplicationsTable applications={appsWithDocs} classrooms={classrooms ?? []} />
     </div>
   )
 }

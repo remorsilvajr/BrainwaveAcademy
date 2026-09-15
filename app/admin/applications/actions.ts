@@ -8,6 +8,7 @@ import { documentShortLabels } from '@/lib/documents'
 import { logActivity } from '@/lib/activity-log'
 import { getSiteUrl } from '@/lib/site-url'
 import { requireAdmin } from '@/lib/require-admin'
+import { applyClassroomToStudent } from '@/lib/classroom-assignment'
 
 type DocumentStatuses = Record<string, 'valid' | 'needs_correction' | 'pending'>
 
@@ -105,7 +106,7 @@ export async function requestCorrections(
 // version of this insert-chain (when it lived in enroll-a-student/actions.ts)
 // did not check the parent_student insert for errors, which could fail
 // silently and leave a parent account with no visible student anywhere.
-export async function approveAndCreateStudentRecord(applicationId: string) {
+export async function approveAndCreateStudentRecord(applicationId: string, classroomId: string | null) {
   const supabase = await createClient()
 
   const { data: application, error: fetchError } = await supabase
@@ -165,6 +166,16 @@ export async function approveAndCreateStudentRecord(applicationId: string) {
     throw new Error(updateError.message)
   }
 
+  if (classroomId) {
+    try {
+      await applyClassroomToStudent(supabase, student.id, student.date_of_birth, classroomId)
+    } catch (err) {
+      throw new Error(
+        `Student record created, but the classroom couldn't be assigned: ${err instanceof Error ? err.message : 'unknown error'}. You can assign it later from the Student Record.`
+      )
+    }
+  }
+
   const {
     data: { user: actingAdmin },
   } = await supabase.auth.getUser()
@@ -178,6 +189,8 @@ export async function approveAndCreateStudentRecord(applicationId: string) {
   revalidatePath('/admin/applications')
   revalidatePath('/admin/students')
   revalidatePath('/admin/enroll-a-student')
+  revalidatePath('/admin/classrooms')
+  revalidatePath('/admin/payments')
 
   return student
 }

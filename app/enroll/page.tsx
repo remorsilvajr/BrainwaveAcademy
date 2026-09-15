@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { createClient } from '@/lib/supabase/server'
 import { SiteHeader } from '@/components/landing/site-header'
 import { EnrollmentForm } from '@/components/enroll/enrollment-form'
 import { Breadcrumbs } from '@/components/ui/breadcrumbs'
@@ -9,7 +10,13 @@ export const metadata: Metadata = {
     'Apply for admission to Brainwave Preschool Academy. Submit your child and parent/guardian details online, and our admissions team will review your application and email portal login details once approved.',
 }
 
-export default function EnrollPage() {
+export default async function EnrollPage() {
+  const supabase = await createClient()
+  const { data: classrooms } = await supabase
+    .from('classrooms')
+    .select('id, name, min_age_years, max_age_years, tuition_fee, activity_fee')
+    .order('created_at')
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-gradient-to-b from-white to-slate-50 dark:from-gray-950 dark:to-gray-900">
       <SiteHeader />
@@ -26,7 +33,7 @@ export default function EnrollPage() {
             </p>
           </div>
 
-          <EnrollmentForm />
+          <EnrollmentForm classrooms={classrooms ?? []} />
         </div>
       </main>
     </div>

@@ -11,11 +11,21 @@ import {
 } from '@/app/admin/applications/actions'
 import { calculateAge, formatDateLong } from '@/lib/format'
 import { documentLabels, documentShortLabels, documentOrder } from '@/lib/documents'
+import { isAgeEligibleForClassroom, classroomAgeRangeLabel } from '@/lib/classrooms'
 import { DocumentPreviewModal } from '@/components/ui/document-preview-modal'
 import { Modal } from '@/components/ui/modal'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 type DocRow = { document_type: string; file_url: string; verification_status: string }
+
+type Classroom = {
+  id: string
+  name: string
+  min_age_years: number | null
+  max_age_years: number | null
+  tuition_fee: number
+  activity_fee: number
+}
 
 type Application = {
   id: string
@@ -31,6 +41,7 @@ type Application = {
   parent_relationship: string
   parent_contact_number: string
   parent_email: string
+  requested_classroom_id: string | null
   documents: DocRow[]
 }
 
@@ -47,9 +58,11 @@ function InfoField({ label, value }: { label: string; value: string }) {
 
 export function ApplicationReviewModal({
   application,
+  classrooms,
   onClose,
 }: {
   application: Application
+  classrooms: Classroom[]
   onClose: () => void
 }) {
   const router = useRouter()
@@ -64,6 +77,7 @@ export function ApplicationReviewModal({
     return initial
   })
   const [notes, setNotes] = useState(application.review_notes ?? '')
+  const [classroomPick, setClassroomPick] = useState(application.requested_classroom_id ?? '')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [result, setResult] = useState<'saved' | 'corrections' | 'enrolled' | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
@@ -143,7 +157,7 @@ export function ApplicationReviewModal({
     setErrorMessage('')
     try {
       await saveDocumentReview(application.id, statuses, notes)
-      await approveAndCreateStudentRecord(application.id)
+      await approveAndCreateStudentRecord(application.id, classroomPick || null)
       showResult('enrolled')
       router.refresh()
     } catch (err) {
@@ -206,6 +220,33 @@ export function ApplicationReviewModal({
             />
             <InfoField label="Email" value={application.parent_email} />
             <InfoField label="Phone" value={application.parent_contact_number} />
+          </div>
+
+          <p className="mb-2 mt-6 text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
+            Program
+          </p>
+          <div className="rounded-xl bg-gray-50 dark:bg-gray-800/60 p-4">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {application.requested_classroom_id
+                ? 'Requested by the parent at enrollment. Change it below if needed before approving.'
+                : 'No program was requested at enrollment. You can assign one now, or leave unassigned and assign it later from the Student Record.'}
+            </p>
+            <select
+              value={classroomPick}
+              onChange={(e) => setClassroomPick(e.target.value)}
+              disabled={alreadyHasStudent}
+              className="mt-2 w-full rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none disabled:opacity-60"
+            >
+              <option value="">Unassigned</option>
+              {classrooms.map((c) => {
+                const eligible = isAgeEligibleForClassroom(application.student_dob, c)
+                return (
+                  <option key={c.id} value={c.id} disabled={!eligible}>
+                    {c.name} ({classroomAgeRangeLabel(c)}){!eligible ? ', age not eligible' : ''}
+                  </option>
+                )
+              })}
+            </select>
           </div>
 
           <p className="mb-2 mt-6 text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">

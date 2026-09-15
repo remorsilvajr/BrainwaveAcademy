@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
 import { isValidDob, dobRangeMessage, MIN_STUDENT_AGE, MAX_AGE } from '@/lib/dob'
-import { isAgeEligibleForClassroom } from '@/lib/classrooms'
+import { applyClassroomToStudent } from '@/lib/classroom-assignment'
 import { logActivity } from '@/lib/activity-log'
 
 export async function updateStudentRecord(
@@ -84,59 +84,7 @@ export async function assignStudentClassroom(studentId: string, classroomId: str
     const { error } = await supabase.from('students').update({ classroom_id: null }).eq('id', studentId)
     if (error) throw new Error(error.message)
   } else {
-    const { data: classroom } = await supabase
-      .from('classrooms')
-      .select('id, name, min_age_years, max_age_years, tuition_fee, activity_fee, tuition_due_date, activity_due_date')
-      .eq('id', classroomId)
-      .single()
-    if (!classroom) {
-      throw new Error('Classroom not found.')
-    }
-
-    if (!isAgeEligibleForClassroom(student.date_of_birth, classroom)) {
-      throw new Error(
-        `This student's age doesn't fall within ${classroom.name}'s allowed range (${classroom.min_age_years}-${classroom.max_age_years} years old).`
-      )
-    }
-
-    const { error: assignError } = await supabase.from('students').update({ classroom_id: classroomId }).eq('id', studentId)
-    if (assignError) throw new Error(assignError.message)
-
-    const { data: existingFees } = await supabase
-      .from('payments')
-      .select('id')
-      .eq('student_id', studentId)
-      .eq('classroom_id', classroomId)
-
-    if (!existingFees || existingFees.length === 0) {
-      const feeRows = []
-      if (classroom.tuition_fee > 0) {
-        feeRows.push({
-          student_id: studentId,
-          classroom_id: classroomId,
-          fee_type: 'tuition',
-          description: `${classroom.name}: Tuition`,
-          amount: classroom.tuition_fee,
-          due_date: classroom.tuition_due_date,
-          status: 'pending',
-        })
-      }
-      if (classroom.activity_fee > 0) {
-        feeRows.push({
-          student_id: studentId,
-          classroom_id: classroomId,
-          fee_type: 'activity',
-          description: `${classroom.name}: Activity Fee`,
-          amount: classroom.activity_fee,
-          due_date: classroom.activity_due_date,
-          status: 'pending',
-        })
-      }
-      if (feeRows.length > 0) {
-        const { error: feeError } = await supabase.from('payments').insert(feeRows)
-        if (feeError) throw new Error(feeError.message)
-      }
-    }
+    await applyClassroomToStudent(supabase, studentId, student.date_of_birth, classroomId)
   }
 
   const {

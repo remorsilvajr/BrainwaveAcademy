@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
 import { isValidDob, dobRangeMessage, MIN_STUDENT_AGE, MAX_AGE } from '@/lib/dob'
+import { isAgeEligibleForClassroom } from '@/lib/classrooms'
 import { logActivity } from '@/lib/activity-log'
 
 export type SubmitStudentState = {
@@ -17,6 +18,7 @@ const requiredFields: Record<string, string> = {
   student_last_name: 'Student last name',
   student_dob: "Student's date of birth",
   student_gender: 'Student gender',
+  requested_classroom_id: 'Program selection',
 }
 
 const allFieldKeys = [...Object.keys(requiredFields), 'student_middle_name']
@@ -81,6 +83,23 @@ export async function submitStudent(
     }
   }
 
+  // The Program step's disabled cards are UX only — re-check server-side
+  // that the requested classroom actually exists and is still age-eligible,
+  // same boundary as the public enroll form.
+  if (values.requested_classroom_id && values.student_dob && !fieldErrors.student_dob) {
+    const { data: requestedClassroom } = await supabase
+      .from('classrooms')
+      .select('id, min_age_years, max_age_years')
+      .eq('id', values.requested_classroom_id)
+      .maybeSingle()
+
+    if (!requestedClassroom) {
+      fieldErrors.requested_classroom_id = 'Please select a valid program.'
+    } else if (!isAgeEligibleForClassroom(values.student_dob, requestedClassroom)) {
+      fieldErrors.requested_classroom_id = "The selected program isn't available for this student's age."
+    }
+  }
+
   if (Object.keys(fieldErrors).length > 0) {
     return { error: 'Please fix the highlighted fields below.', fieldErrors, values }
   }
@@ -104,6 +123,7 @@ export async function submitStudent(
     parent_relationship: profile.relationship_to_student,
     parent_contact_number: profile.phone_number,
     parent_email: profile.email,
+    requested_classroom_id: values.requested_classroom_id || null,
   })
 
   if (error) {

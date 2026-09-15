@@ -12,11 +12,13 @@ export default async function EnrollAStudentPage({
     data: { user },
   } = await supabase.auth.getUser()
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('first_name, last_name')
-    .eq('id', user?.id ?? '')
-    .single()
+  const [{ data: profile }, { data: classrooms }] = await Promise.all([
+    supabase.from('profiles').select('first_name, last_name').eq('id', user?.id ?? '').single(),
+    supabase
+      .from('classrooms')
+      .select('id, name, min_age_years, max_age_years, tuition_fee, activity_fee')
+      .order('created_at'),
+  ])
 
   const parentName = profile ? `${profile.first_name} ${profile.last_name}` : 'your account'
 
@@ -37,7 +39,7 @@ export default async function EnrollAStudentPage({
           </p>
         </div>
       ) : (
-        <EnrollStudentForm parentName={parentName} />
+        <EnrollStudentForm parentName={parentName} classrooms={classrooms ?? []} />
       )}
     </div>
   )

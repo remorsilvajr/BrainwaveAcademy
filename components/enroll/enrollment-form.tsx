@@ -1,152 +1,37 @@
 'use client'
 
 import { useActionState, useState } from 'react'
-import { Check } from 'lucide-react'
 import { submitApplication, type SubmitApplicationState } from '@/app/enroll/actions'
 import { dobInputMin, dobInputMax, MIN_STUDENT_AGE, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
 import { DobSelect } from '@/components/ui/dob-select'
 import { PlainSelect } from '@/components/ui/plain-select'
+import { Field } from '@/components/enroll/enroll-field'
+import { StepTab } from '@/components/enroll/step-tab'
+import { ProgramSelector, type SelectableClassroom } from '@/components/enroll/program-selector'
 
 const initialState: SubmitApplicationState = {}
 const NAME_PATTERN = "[A-Za-zÀ-ÖØ-öø-ÿ' -]+"
 const NAME_TITLE = 'Only letters, spaces, hyphens, and apostrophes are allowed.'
 
 const STUDENT_FIELD_KEYS = ['student_first_name', 'student_middle_name', 'student_last_name', 'student_dob', 'student_gender']
+const PROGRAM_FIELD_KEYS = ['requested_classroom_id']
 
-function Field({
-  label,
-  name,
-  type = 'text',
-  placeholder,
-  required,
-  error,
-  pattern,
-  title,
-  defaultValue,
-  onChange,
-  min,
-  max,
-  minLength,
-  extraLabelRow,
-}: {
-  label: string
-  name: string
-  type?: string
-  placeholder?: string
-  required?: boolean
-  error?: string
-  pattern?: string
-  title?: string
-  defaultValue?: string
-  onChange?: (value: string) => void
-  min?: string
-  max?: string
-  minLength?: number
-  // Matches DobSelect's "Day/Month/Year" mini-label row so this field's box
-  // lines up with a DobSelect sitting beside it in the same grid row,
-  // instead of sitting a row higher (DobSelect has two label rows above its
-  // inputs where a plain field only has one).
-  extraLabelRow?: boolean
-}) {
-  return (
-    <div>
-      <label htmlFor={name} className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
-        {label}
-        {required && <span className="text-red-500"> *</span>}
-      </label>
-      {extraLabelRow && <span aria-hidden className="mb-1 block text-xs font-medium invisible">{label}</span>}
-      <input
-        id={name}
-        name={name}
-        type={type}
-        placeholder={placeholder}
-        required={required}
-        pattern={pattern}
-        title={title}
-        defaultValue={defaultValue}
-        onChange={(e) => onChange?.(e.target.value)}
-        min={min}
-        max={max}
-        minLength={minLength}
-        className={`w-full rounded-lg border px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 placeholder:text-gray-400 focus:outline-none ${
-          error ? 'border-red-400 focus:border-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-[#0b1b62] dark:focus:border-indigo-400'
-        }`}
-      />
-      {error && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{error}</p>}
-    </div>
-  )
-}
-
-function StepTab({
-  step,
-  activeStep,
-  label,
-  hasError,
-  isDone,
-  onClick,
-}: {
-  step: number
-  activeStep: number
-  label: string
-  hasError: boolean
-  // Whether this step's own required fields are actually filled in — NOT
-  // just "the visitor has clicked past this step," which used to be how
-  // this was computed (`step < activeStep`). That gave a false "done"
-  // checkmark on Student Information the moment someone clicked the
-  // Parent / Guardian tab, even with every student field still blank.
-  isDone: boolean
-  onClick: () => void
-}) {
-  const isActive = step === activeStep
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex flex-1 items-center gap-2 rounded-lg border px-3 py-2.5 text-left transition ${
-        isActive
-          ? 'border-[#0b1b62] bg-[#0b1b62]/5 dark:border-indigo-400 dark:bg-indigo-400/10'
-          : 'border-slate-200 dark:border-slate-700 hover:border-[#0b1b62]/40 dark:hover:border-indigo-400/40'
-      }`}
-    >
-      <span
-        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
-          hasError
-            ? 'bg-red-100 text-red-600 dark:bg-red-950/50 dark:text-red-400'
-            : isDone
-              ? 'bg-green-100 text-green-700 dark:bg-green-950/50 dark:text-green-400'
-              : isActive
-                ? 'bg-[#0b1b62] text-white dark:bg-indigo-400 dark:text-indigo-950'
-                : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
-        }`}
-      >
-        {isDone && !hasError ? <Check className="h-3.5 w-3.5" /> : step}
-      </span>
-      <span
-        className={`text-sm font-semibold ${
-          isActive ? 'text-[#0b1b62] dark:text-indigo-300' : 'text-gray-500 dark:text-gray-400'
-        }`}
-      >
-        {label}
-      </span>
-    </button>
-  )
-}
-
-export function EnrollmentForm() {
+export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom[] }) {
   const [state, formAction, isPending] = useActionState(submitApplication, initialState)
 
   const [liveErrors, setLiveErrors] = useState<Record<string, string>>({})
   const [bannerError, setBannerError] = useState<string | undefined>(undefined)
 
-  // Two "pages" (Student, then Parent/Guardian) sharing one <form> and one
-  // submission — not two separate routes. A real second route would need
-  // the in-progress values carried across a full navigation (query params or
-  // sessionStorage) just to come back to the same submitApplication call;
-  // toggling visibility within one mounted form gets the split UX for free
-  // and answers "does switching back keep what I typed" by construction —
-  // nothing here ever unmounts, so an uncontrolled <input>'s own DOM value
-  // survives switching steps same as a controlled one's React state does.
-  const [step, setStep] = useState<1 | 2>(1)
+  // Three "pages" (Student, Program, then Parent/Guardian) sharing one
+  // <form> and one submission — not separate routes. A real second route
+  // would need the in-progress values carried across a full navigation
+  // (query params or sessionStorage) just to come back to the same
+  // submitApplication call; toggling visibility within one mounted form gets
+  // the split UX for free and answers "does switching back keep what I
+  // typed" by construction — nothing here ever unmounts, so an uncontrolled
+  // <input>'s own DOM value survives switching steps same as a controlled
+  // one's React state does.
+  const [step, setStep] = useState<1 | 2 | 3>(1)
 
   // Selects need real controlled state. Unlike a text <input>, React
   // re-applies a <select>'s defaultValue on every re-render (not just on
@@ -155,6 +40,7 @@ export function EnrollmentForm() {
   const [genderValue, setGenderValue] = useState('')
   const [relationshipValue, setRelationshipValue] = useState('')
   const [parentGenderValue, setParentGenderValue] = useState('')
+  const [selectedClassroomId, setSelectedClassroomId] = useState('')
 
   // Plain text/DOB fields stay uncontrolled (defaultValue, not value) so
   // typing doesn't fight React over cursor position — but the step tabs'
@@ -187,6 +73,7 @@ export function EnrollmentForm() {
     setGenderValue(state.values?.student_gender ?? '')
     setRelationshipValue(state.values?.parent_relationship ?? '')
     setParentGenderValue(state.values?.parent_gender ?? '')
+    setSelectedClassroomId(state.values?.requested_classroom_id ?? '')
     setStudentFirstName(state.values?.student_first_name ?? '')
     setStudentLastName(state.values?.student_last_name ?? '')
     setStudentDob(state.values?.student_dob ?? '')
@@ -198,11 +85,17 @@ export function EnrollmentForm() {
 
     // After a failed submission, jump to whichever step actually has the
     // error(s) rather than leaving the visitor stuck looking at Parent /
-    // Guardian (step 2, where Submit lives) while an unseen Student field
-    // is the one blocking them.
+    // Guardian (the step Submit lives on) while an unseen Student or
+    // Program field is the one blocking them.
     const errorKeys = Object.keys(state.fieldErrors ?? {})
     if (errorKeys.length > 0) {
-      setStep(errorKeys.every((k) => STUDENT_FIELD_KEYS.includes(k)) ? 1 : 2)
+      if (errorKeys.every((k) => STUDENT_FIELD_KEYS.includes(k))) {
+        setStep(1)
+      } else if (errorKeys.every((k) => STUDENT_FIELD_KEYS.includes(k) || PROGRAM_FIELD_KEYS.includes(k))) {
+        setStep(2)
+      } else {
+        setStep(3)
+      }
     }
   }
 
@@ -223,7 +116,10 @@ export function EnrollmentForm() {
 
   const values = state.values ?? {}
   const studentStepHasError = Object.keys(liveErrors).some((k) => STUDENT_FIELD_KEYS.includes(k))
-  const parentStepHasError = Object.keys(liveErrors).some((k) => !STUDENT_FIELD_KEYS.includes(k))
+  const programStepHasError = Object.keys(liveErrors).some((k) => PROGRAM_FIELD_KEYS.includes(k))
+  const parentStepHasError = Object.keys(liveErrors).some(
+    (k) => !STUDENT_FIELD_KEYS.includes(k) && !PROGRAM_FIELD_KEYS.includes(k)
+  )
 
   // "Done" means this step's required fields are actually filled, not
   // merely that the visitor has clicked past it — deliberately doesn't
@@ -231,6 +127,7 @@ export function EnrollmentForm() {
   // liveErrors (folded in via `!studentStepHasError`) already covers that
   // once a submission attempt has run.
   const studentDone = !!studentFirstName && !!studentLastName && !!studentDob && !!genderValue && !studentStepHasError
+  const programDone = !!selectedClassroomId && !programStepHasError
   const parentDone =
     !!parentFirstName &&
     !!parentLastName &&
@@ -260,7 +157,8 @@ export function EnrollmentForm() {
 
       <div className="flex flex-col gap-2 sm:flex-row">
         <StepTab step={1} activeStep={step} label="Student Information" hasError={studentStepHasError} isDone={studentDone} onClick={() => setStep(1)} />
-        <StepTab step={2} activeStep={step} label="Parent / Guardian Information" hasError={parentStepHasError} isDone={parentDone} onClick={() => setStep(2)} />
+        <StepTab step={2} activeStep={step} label="Program" hasError={programStepHasError} isDone={programDone} onClick={() => setStep(2)} />
+        <StepTab step={3} activeStep={step} label="Parent / Guardian Information" hasError={parentStepHasError} isDone={parentDone} onClick={() => setStep(3)} />
       </div>
 
       <div className={step === 1 ? 'space-y-8' : 'hidden'}>
@@ -277,10 +175,11 @@ export function EnrollmentForm() {
               // a plain <input>'s `required` attribute is NOT exempted from
               // HTML5 constraint validation just because a hidden ancestor
               // set display:none (unlike a `type="hidden"` input, which
-              // always is). Left unconditional, submitting from step 2 with
-              // this step's fields still blank got silently blocked by the
-              // browser with no visible error at all, since it can't show a
-              // validation bubble on an element that isn't rendered.
+              // always is). Left unconditional, submitting from a later
+              // step with this step's fields still blank got silently
+              // blocked by the browser with no visible error at all, since
+              // it can't show a validation bubble on an element that isn't
+              // rendered.
               required={step === 1}
               pattern={NAME_PATTERN}
               title={NAME_TITLE}
@@ -359,12 +258,55 @@ export function EnrollmentForm() {
             onClick={() => setStep(2)}
             className="rounded-full bg-[#0b1b62] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#08154d]"
           >
-            Next: Parent / Guardian Information →
+            Next: Program →
           </button>
         </div>
       </div>
 
       <div className={step === 2 ? 'space-y-8' : 'hidden'}>
+        <div>
+          <h2 className="mb-1 border-b border-[#00a3e0] pb-2 text-xl font-semibold text-[#0b1b62] dark:text-indigo-300">
+            Program
+          </h2>
+          <p className="mb-4 mt-2 text-sm text-[#454650] dark:text-slate-300">
+            Choose the program you&apos;d like your child considered for.
+          </p>
+          <ProgramSelector
+            classrooms={classrooms}
+            studentDob={studentDob}
+            value={selectedClassroomId}
+            onChange={(id) => {
+              setSelectedClassroomId(id)
+              clearError('requested_classroom_id')
+            }}
+            error={liveErrors.requested_classroom_id}
+          />
+          {/* Required, but enforced via the server action + this error
+              message rather than a native `required` attribute — there's no
+              single focusable control here a browser could anchor its own
+              validation bubble to (the hidden input backing this isn't a
+              sensible target). */}
+        </div>
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <button
+            type="button"
+            onClick={() => setStep(1)}
+            className="order-2 rounded-full border border-slate-200 dark:border-slate-700 px-6 py-2.5 text-sm font-semibold text-[#0b1b62] dark:text-indigo-300 hover:bg-black/5 dark:hover:bg-white/10 sm:order-1"
+          >
+            ← Back: Student Information
+          </button>
+          <button
+            type="button"
+            onClick={() => setStep(3)}
+            className="order-1 rounded-full bg-[#0b1b62] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#08154d] sm:order-2"
+          >
+            Next: Parent / Guardian Information →
+          </button>
+        </div>
+      </div>
+
+      <div className={step === 3 ? 'space-y-8' : 'hidden'}>
         <div>
           <h2 className="mb-4 border-b border-[#00a3e0] pb-2 text-xl font-semibold text-[#0b1b62] dark:text-indigo-300">
             Parent / Guardian Information
@@ -376,10 +318,10 @@ export function EnrollmentForm() {
               placeholder="e.g. John"
               // See student_first_name's comment above — same reasoning,
               // mirrored: this field must stop being natively `required`
-              // while step 1 is the one visible, or an implicit Enter-key
-              // submit from a step 1 input could silently block on this
-              // hidden, still-blank field.
-              required={step === 2}
+              // while another step is the one visible, or an implicit
+              // Enter-key submit from a different step's input could
+              // silently block on this hidden, still-blank field.
+              required={step === 3}
               pattern={NAME_PATTERN}
               title={NAME_TITLE}
               minLength={2}
@@ -405,7 +347,7 @@ export function EnrollmentForm() {
               label="Last Name"
               name="parent_last_name"
               placeholder="e.g. Smith"
-              required={step === 2}
+              required={step === 3}
               pattern={NAME_PATTERN}
               title={NAME_TITLE}
               minLength={2}
@@ -456,7 +398,7 @@ export function EnrollmentForm() {
               name="parent_contact_number"
               type="tel"
               placeholder="09XX XXX XXXX or +63 9XX XXX XXXX"
-              required={step === 2}
+              required={step === 3}
               defaultValue={values.parent_contact_number}
               error={liveErrors.parent_contact_number}
               onChange={(v) => {
@@ -486,7 +428,7 @@ export function EnrollmentForm() {
             name="parent_email"
             type="email"
             placeholder="email@example.com"
-            required={step === 2}
+            required={step === 3}
             defaultValue={values.parent_email}
             error={liveErrors.parent_email}
             onChange={(v) => {
@@ -548,10 +490,10 @@ export function EnrollmentForm() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <button
             type="button"
-            onClick={() => setStep(1)}
+            onClick={() => setStep(2)}
             className="order-2 rounded-full border border-slate-200 dark:border-slate-700 px-6 py-2.5 text-sm font-semibold text-[#0b1b62] dark:text-indigo-300 hover:bg-black/5 dark:hover:bg-white/10 sm:order-1"
           >
-            ← Back: Student Information
+            ← Back: Program
           </button>
           <button
             type="submit"
