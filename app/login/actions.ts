@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { SECURE_COOKIES } from '@/lib/supabase/secure-cookie'
 
-// Brute-force lockout: 5 failed attempts per email within a 15-minute
+// Brute-force lockout: 5 failed attempts per email within a 5-minute
 // sliding window blocks further attempts (even a correct password) until
 // enough time passes for old failures to fall out of the window — no
 // separate "locked_until" timestamp needed. Tracked in Postgres, not
@@ -14,7 +14,11 @@ import { SECURE_COOKIES } from '@/lib/supabase/secure-cookie'
 // don't share memory across invocations or instances, so an in-memory
 // counter would silently protect nothing in production.
 const LOGIN_ATTEMPT_LIMIT = 5
-const LOGIN_ATTEMPT_WINDOW_MINUTES = 15
+const LOGIN_ATTEMPT_WINDOW_MINUTES = 5
+// Only start warning once the visitor is close to being locked out —
+// showing a countdown from the very first wrong password would just read
+// as noise.
+const LOGIN_ATTEMPT_WARNING_THRESHOLD = 3
 
 export async function login(formData: FormData) {
   // Normalized the same way profiles.email is stored elsewhere in this app
@@ -74,7 +78,16 @@ export async function login(formData: FormData) {
 
   if (error) {
     await admin.from('login_attempts').insert({ email })
-    redirect(`/login?error=${encodeURIComponent('Incorrect email or password.')}`)
+
+    // recentFailures was counted *before* this attempt, so this attempt is
+    // failure number (recentFailures + 1) — the same number the top-of
+    // -function check will compare against LOGIN_ATTEMPT_LIMIT next time.
+    const remaining = LOGIN_ATTEMPT_LIMIT - ((recentFailures ?? 0) + 1)
+    const warning =
+      remaining <= LOGIN_ATTEMPT_WARNING_THRESHOLD
+        ? ` ${remaining} attempt${remaining === 1 ? '' : 's'} remaining before a temporary lockout.`
+        : ''
+    redirect(`/login?error=${encodeURIComponent(`Incorrect email or password.${warning}`)}`)
   }
 
   const { data: profile } = await supabase
