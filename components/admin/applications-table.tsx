@@ -10,6 +10,15 @@ import { useSort, compareStrings, compareDates, type SortOption } from '@/lib/us
 
 type DocRow = { document_type: string; file_url: string; verification_status: string }
 
+type Classroom = {
+  id: string
+  name: string
+  min_age_years: number | null
+  max_age_years: number | null
+  tuition_fee: number
+  activity_fee: number
+}
+
 type Application = {
   id: string
   application_ref: string
@@ -26,6 +35,7 @@ type Application = {
   parent_relationship: string
   parent_contact_number: string
   parent_email: string
+  requested_classroom_id: string | null
   documents: DocRow[]
 }
 
@@ -49,7 +59,13 @@ const progressMeta: Record<'corrections' | 'completed' | 'pending', { label: str
   completed: { label: 'Completed', className: 'bg-green-50 dark:bg-green-950/30 text-green-700' },
 }
 
-export function ApplicationsTable({ applications }: { applications: Application[] }) {
+export function ApplicationsTable({
+  applications,
+  classrooms,
+}: {
+  applications: Application[]
+  classrooms: Classroom[]
+}) {
   const [tab, setTab] = useState<Tab>('all')
   const [search, setSearch] = useState('')
   // See students-table.tsx for why this is derived rather than its own
@@ -200,7 +216,7 @@ export function ApplicationsTable({ applications }: { applications: Application[
       </div>
 
       {selected && (
-        <ApplicationReviewModal application={selected} onClose={() => setSelectedId(null)} />
+        <ApplicationReviewModal application={selected} classrooms={classrooms} onClose={() => setSelectedId(null)} />
       )}
     </>
   )
