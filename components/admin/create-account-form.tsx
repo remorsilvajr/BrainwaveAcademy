@@ -226,7 +226,7 @@ export function CreateAccountForm() {
                   name="relationship_to_student"
                   value={relationship}
                   onChange={(e) => setRelationship(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+                  className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2.5 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
                 >
                   <option value="">Not set</option>
                   <option value="Mother">Mother</option>
@@ -246,7 +246,7 @@ export function CreateAccountForm() {
                   name="gender"
                   value={gender}
                   onChange={(e) => setGender(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+                  className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2.5 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
                 >
                   <option value="">Not set</option>
                   <option value="male">Male</option>
