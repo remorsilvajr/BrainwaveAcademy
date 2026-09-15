@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { CheckCircle2 } from 'lucide-react'
 import { submitStudent, type SubmitStudentState } from '@/app/parent/enroll-a-student/actions'
 import { dobInputMin, dobInputMax, MIN_STUDENT_AGE, MAX_AGE } from '@/lib/dob'
+import { isAgeEligibleForClassroom } from '@/lib/classrooms'
 import { DobSelect } from '@/components/ui/dob-select'
 import { PlainSelect } from '@/components/ui/plain-select'
 import { Field } from '@/components/enroll/enroll-field'
@@ -52,6 +53,21 @@ export function EnrollStudentForm({
     const errorKeys = Object.keys(state.fieldErrors ?? {})
     if (errorKeys.length > 0) {
       setStep(errorKeys.every((k) => STUDENT_FIELD_KEYS.includes(k)) ? 1 : 2)
+    }
+  }
+
+  // See enrollment-form.tsx's identical comment: adjusting this component's
+  // OWN selectedClassroomId during its OWN render, in response to noticing
+  // its OWN studentDob state changed, is the legal version of this pattern
+  // — doing it inside ProgramSelector instead (calling the onChange prop,
+  // which sets state in this different component) is what triggers React's
+  // "Cannot update a component while rendering a different component".
+  const [lastCheckedDob, setLastCheckedDob] = useState(studentDob)
+  if (studentDob !== lastCheckedDob) {
+    setLastCheckedDob(studentDob)
+    const selected = classrooms.find((c) => c.id === selectedClassroomId)
+    if (selected && studentDob && !isAgeEligibleForClassroom(studentDob, selected)) {
+      setSelectedClassroomId('')
     }
   }
 

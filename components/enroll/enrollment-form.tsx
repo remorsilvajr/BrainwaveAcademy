@@ -3,6 +3,7 @@
 import { useActionState, useState } from 'react'
 import { submitApplication, type SubmitApplicationState } from '@/app/enroll/actions'
 import { dobInputMin, dobInputMax, MIN_STUDENT_AGE, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
+import { isAgeEligibleForClassroom } from '@/lib/classrooms'
 import { DobSelect } from '@/components/ui/dob-select'
 import { PlainSelect } from '@/components/ui/plain-select'
 import { Field } from '@/components/enroll/enroll-field'
@@ -96,6 +97,23 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
       } else {
         setStep(3)
       }
+    }
+  }
+
+  // If the student DOB changes (typed directly, or via the syncedState
+  // block above) such that the currently-selected program is no longer
+  // eligible, clear the selection — adjusting this component's OWN state
+  // during its OWN render in response to its OWN state changing, which is
+  // the legal version of this pattern. Doing this inside ProgramSelector
+  // instead (calling the `onChange` prop, which sets *this* component's
+  // state, from *ProgramSelector's* render) is what React's "Cannot update a
+  // component while rendering a different component" warning is about.
+  const [lastCheckedDob, setLastCheckedDob] = useState(studentDob)
+  if (studentDob !== lastCheckedDob) {
+    setLastCheckedDob(studentDob)
+    const selected = classrooms.find((c) => c.id === selectedClassroomId)
+    if (selected && studentDob && !isAgeEligibleForClassroom(studentDob, selected)) {
+      setSelectedClassroomId('')
     }
   }
 

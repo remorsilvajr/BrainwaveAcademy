@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { Check } from 'lucide-react'
 import { isAgeEligibleForClassroom, classroomAgeRangeLabel } from '@/lib/classrooms'
 import { formatCurrency } from '@/lib/format'
@@ -33,19 +32,12 @@ export function ProgramSelector({
   error?: string
 }) {
   // Eligibility can only be judged once a DOB exists — with nothing entered
-  // yet, no card is disabled. If a DOB edit later makes the currently
-  // selected program ineligible, clear the selection (derived-during-render,
-  // the same "adjusting state from a changed prop" pattern this codebase
-  // already uses elsewhere instead of a useEffect).
-  const [lastDob, setLastDob] = useState(studentDob)
-  if (studentDob !== lastDob) {
-    setLastDob(studentDob)
-    const current = classrooms.find((c) => c.id === value)
-    if (current && studentDob && !isAgeEligibleForClassroom(studentDob, current)) {
-      onChange('')
-    }
-  }
-
+  // yet, no card is disabled. Resetting the selection when a DOB edit makes
+  // it ineligible is the caller's job, not this component's: this component
+  // only owns local UI state, and calling the `onChange` prop (which sets
+  // state in a *different* component) during this component's own render is
+  // exactly the "setState while rendering a different component" React
+  // warns about, not the legal "adjust my own state" pattern.
   const selectedClassroom = classrooms.find((c) => c.id === value)
 
   return (
