@@ -3,10 +3,25 @@
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { SECURE_COOKIES } from '@/lib/supabase/secure-cookie'
 
+// Brute-force lockout: 5 failed attempts per email within a 15-minute
+// sliding window blocks further attempts (even a correct password) until
+// enough time passes for old failures to fall out of the window — no
+// separate "locked_until" timestamp needed. Tracked in Postgres, not
+// in-process memory: this runs on Vercel's serverless functions, which
+// don't share memory across invocations or instances, so an in-memory
+// counter would silently protect nothing in production.
+const LOGIN_ATTEMPT_LIMIT = 5
+const LOGIN_ATTEMPT_WINDOW_MINUTES = 15
+
 export async function login(formData: FormData) {
-  const email = formData.get('email') as string
+  // Normalized the same way profiles.email is stored elsewhere in this app
+  // (see e.g. app/enroll/actions.ts) — without this, "User@x.com" and
+  // "user@x.com" would count as different lockout targets and let an
+  // attacker dodge the limit by varying case.
+  const email = ((formData.get('email') as string) ?? '').trim().toLowerCase()
   const password = formData.get('password') as string
   const rememberMe = formData.get('remember-me') === 'on'
 
@@ -23,6 +38,33 @@ export async function login(formData: FormData) {
     ...(rememberMe ? { maxAge: 60 * 60 * 24 * 30 } : {}),
   })
 
+  // login_attempts has RLS enabled with zero policies, same as
+  // ref_counters — it's only ever touched via this service-role client,
+  // never a regular RLS-scoped one, so this doesn't need a requireAdmin()
+  // check the way an admin-only mutation would (see lib/supabase/admin.ts's
+  // own rule): there's no user to be an admin of yet at this point in the
+  // login flow, and this table exposes nothing back to the caller beyond a
+  // plain "too many attempts" message.
+  const admin = createAdminClient()
+  const windowStart = new Date(Date.now() - LOGIN_ATTEMPT_WINDOW_MINUTES * 60 * 1000).toISOString()
+
+  // Drop this email's own stale attempts before counting — keeps the table
+  // from growing unbounded without a scheduled cleanup job, matching this
+  // app's existing "avoid a background job until there's a real shared need
+  // for one" convention (see the Payments & wallet system's "Overdue" note).
+  await admin.from('login_attempts').delete().eq('email', email).lt('attempted_at', windowStart)
+
+  const { count: recentFailures } = await admin
+    .from('login_attempts')
+    .select('id', { count: 'exact', head: true })
+    .eq('email', email)
+
+  if ((recentFailures ?? 0) >= LOGIN_ATTEMPT_LIMIT) {
+    redirect(
+      `/login?error=${encodeURIComponent(`Too many failed login attempts. Please try again in ${LOGIN_ATTEMPT_WINDOW_MINUTES} minutes.`)}`
+    )
+  }
+
   const supabase = await createClient()
 
   const { data, error } = await supabase.auth.signInWithPassword({
@@ -31,6 +73,7 @@ export async function login(formData: FormData) {
   })
 
   if (error) {
+    await admin.from('login_attempts').insert({ email })
     redirect(`/login?error=${encodeURIComponent('Incorrect email or password.')}`)
   }
 
