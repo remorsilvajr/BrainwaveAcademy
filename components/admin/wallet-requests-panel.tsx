@@ -33,11 +33,15 @@ function RequestRow({ request }: { request: WalletRequest }) {
     setError('')
     setIsPending(true)
     try {
-      await approveWalletRequest(request.id, Number(amount))
+      const result = await approveWalletRequest(request.id, Number(amount))
+      if (result?.error) {
+        setError(result.error)
+        return
+      }
       setConfirming(false)
       router.refresh()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.')
+    } catch {
+      setError('Something went wrong.')
     } finally {
       setIsPending(false)
     }
@@ -47,10 +51,14 @@ function RequestRow({ request }: { request: WalletRequest }) {
     setError('')
     setIsPending(true)
     try {
-      await denyWalletRequest(request.id)
+      const result = await denyWalletRequest(request.id)
+      if (result?.error) {
+        setError(result.error)
+        return
+      }
       router.refresh()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.')
+    } catch {
+      setError('Something went wrong.')
     } finally {
       setIsPending(false)
     }

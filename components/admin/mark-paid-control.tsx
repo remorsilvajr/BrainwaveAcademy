@@ -16,11 +16,16 @@ export function MarkPaidControl({ paymentId }: { paymentId: string }) {
     setError('')
     startTransition(async () => {
       try {
-        await markPaymentPaidManually(paymentId, method)
+        const result = await markPaymentPaidManually(paymentId, method)
+        if (result?.error) {
+          setError(result.error)
+          setConfirming(false)
+          return
+        }
         setConfirming(false)
         router.refresh()
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong.')
+      } catch {
+        setError('Something went wrong.')
         setConfirming(false)
       }
     })

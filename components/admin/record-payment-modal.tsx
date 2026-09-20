@@ -32,16 +32,20 @@ export function RecordPaymentModal({
     }
     setIsSaving(true)
     try {
-      await recordManualPayment(studentId, {
+      const result = await recordManualPayment(studentId, {
         feeType,
         description,
         amount: Number(amount),
         method,
       })
+      if (result?.error) {
+        setError(result.error)
+        return
+      }
       setSuccess(true)
       router.refresh()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.')
+    } catch {
+      setError('Something went wrong.')
     } finally {
       setIsSaving(false)
     }

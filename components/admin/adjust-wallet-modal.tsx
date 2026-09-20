@@ -35,11 +35,15 @@ export function AdjustWalletModal({
     }
     setIsSaving(true)
     try {
-      await adjustWalletBalance(parentId, direction === 'add' ? parsed : -parsed, note)
+      const result = await adjustWalletBalance(parentId, direction === 'add' ? parsed : -parsed, note)
+      if (result?.error) {
+        setError(result.error)
+        return
+      }
       setSuccess(true)
       router.refresh()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.')
+    } catch {
+      setError('Something went wrong.')
     } finally {
       setIsSaving(false)
     }

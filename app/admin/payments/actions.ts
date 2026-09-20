@@ -8,6 +8,8 @@ import { formatCurrency, roundToCents } from '@/lib/format'
 const FEE_TYPES = ['tuition', 'activity', 'other'] as const
 const METHODS = ['cash', 'check'] as const
 
+type ActionResult = { error: string } | undefined
+
 function revalidateAll() {
   revalidatePath('/admin/payments')
   revalidatePath('/admin/students')
@@ -15,6 +17,19 @@ function revalidateAll() {
   revalidatePath('/parent/payments')
   revalidatePath('/parent', 'layout')
 }
+
+// These return `{ error }` instead of throwing for any expected/validation
+// failure — per this Next version's own guidance (node_modules/next/dist/
+// docs/01-app/01-getting-started/10-error-handling.md), a thrown Server
+// Function error is treated as an uncaught exception: Next redacts its
+// message in a production build down to a generic "An error occurred in
+// the Server Components render" (surfaced client-side as minified React
+// error #441), not the friendly text passed to `new Error(...)`. That only
+// showed up once this ran against the deployed build, not `next dev`. Every
+// caller here is a plain awaited function call from a Client Component
+// (not a `<form action>`/`useActionState` site), so the fix is a returned
+// value the caller checks, the same shape `useActionState` sites already
+// use elsewhere in this app.
 
 // Admin decides the actual amount credited — approvedAmount can differ from
 // the parent's own requested_amount, per the explicit "admin controls how
@@ -24,11 +39,15 @@ function revalidateAll() {
 // multi-step admin actions use (e.g. Approve & Create Student Record).
 // The `.eq('status', 'pending')` guard on the request update means a
 // concurrent double-approval only ever credits the wallet once.
-export async function approveWalletRequest(requestId: string, approvedAmount: number, reviewNote?: string) {
+export async function approveWalletRequest(
+  requestId: string,
+  approvedAmount: number,
+  reviewNote?: string
+): Promise<ActionResult> {
   const supabase = await createClient()
 
   if (!Number.isFinite(approvedAmount) || approvedAmount <= 0) {
-    throw new Error('Enter a valid amount greater than zero.')
+    return { error: 'Enter a valid amount greater than zero.' }
   }
 
   const { data: request } = await supabase
@@ -37,12 +56,12 @@ export async function approveWalletRequest(requestId: string, approvedAmount: nu
     .eq('id', requestId)
     .single()
   if (!request || request.status !== 'pending') {
-    throw new Error('This request has already been reviewed.')
+    return { error: 'This request has already been reviewed.' }
   }
 
   const { data: wallet } = await supabase.from('wallets').select('balance').eq('parent_id', request.parent_id).single()
   if (!wallet) {
-    throw new Error("This parent doesn't have a wallet on file.")
+    return { error: "This parent doesn't have a wallet on file." }
   }
 
   const {
@@ -54,7 +73,7 @@ export async function approveWalletRequest(requestId: string, approvedAmount: nu
     .update({ balance: roundToCents(wallet.balance + approvedAmount), updated_at: new Date().toISOString() })
     .eq('parent_id', request.parent_id)
   if (walletError) {
-    throw new Error(walletError.message)
+    return { error: walletError.message }
   }
 
   const { data: updated, error: requestError } = await supabase
@@ -71,10 +90,10 @@ export async function approveWalletRequest(requestId: string, approvedAmount: nu
     .select('id')
     .maybeSingle()
   if (requestError) {
-    throw new Error(requestError.message)
+    return { error: requestError.message }
   }
   if (!updated) {
-    throw new Error('This request has already been reviewed.')
+    return { error: 'This request has already been reviewed.' }
   }
 
   await logActivity(supabase, {
@@ -87,7 +106,7 @@ export async function approveWalletRequest(requestId: string, approvedAmount: nu
   revalidateAll()
 }
 
-export async function denyWalletRequest(requestId: string, reviewNote?: string) {
+export async function denyWalletRequest(requestId: string, reviewNote?: string): Promise<ActionResult> {
   const supabase = await createClient()
   const {
     data: { user: actingAdmin },
@@ -106,10 +125,10 @@ export async function denyWalletRequest(requestId: string, reviewNote?: string) 
     .select('id')
     .maybeSingle()
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
   if (!data) {
-    throw new Error('This request has already been reviewed.')
+    return { error: 'This request has already been reviewed.' }
   }
 
   await logActivity(supabase, {
@@ -126,21 +145,23 @@ export async function denyWalletRequest(requestId: string, reviewNote?: string) 
 // request — `amount` can be negative to deduct. Always re-reads the current
 // balance first rather than trusting a client-supplied "current" value, so
 // a deduction can never be validated against stale data.
-export async function adjustWalletBalance(parentId: string, amount: number, note?: string) {
+export async function adjustWalletBalance(parentId: string, amount: number, note?: string): Promise<ActionResult> {
   const supabase = await createClient()
 
   if (!Number.isFinite(amount) || amount === 0) {
-    throw new Error('Enter a non-zero amount.')
+    return { error: 'Enter a non-zero amount.' }
   }
 
   const { data: wallet } = await supabase.from('wallets').select('balance').eq('parent_id', parentId).single()
   if (!wallet) {
-    throw new Error("This parent doesn't have a wallet on file.")
+    return { error: "This parent doesn't have a wallet on file." }
   }
 
   const newBalance = roundToCents(wallet.balance + amount)
   if (newBalance < 0) {
-    throw new Error(`This would take the wallet below zero (current balance: ${formatCurrency(wallet.balance)}).`)
+    return {
+      error: `This parent only has ${formatCurrency(wallet.balance)} in their wallet, so you can't deduct ${formatCurrency(Math.abs(amount))}.`,
+    }
   }
 
   const { error } = await supabase
@@ -148,7 +169,7 @@ export async function adjustWalletBalance(parentId: string, amount: number, note
     .update({ balance: newBalance, updated_at: new Date().toISOString() })
     .eq('parent_id', parentId)
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   const {
@@ -173,26 +194,26 @@ export async function adjustWalletBalance(parentId: string, amount: number, note
 export async function recordManualPayment(
   studentId: string,
   input: { feeType: string; description: string; amount: number; method: string }
-) {
+): Promise<ActionResult> {
   const supabase = await createClient()
 
   if (!FEE_TYPES.includes(input.feeType as (typeof FEE_TYPES)[number])) {
-    throw new Error('Invalid fee type.')
+    return { error: 'Invalid fee type.' }
   }
   if (!METHODS.includes(input.method as (typeof METHODS)[number])) {
-    throw new Error('Payment method must be cash or check.')
+    return { error: 'Payment method must be cash or check.' }
   }
   if (!Number.isFinite(input.amount) || input.amount <= 0) {
-    throw new Error('Enter a valid amount greater than zero.')
+    return { error: 'Enter a valid amount greater than zero.' }
   }
   const description = input.description.trim()
   if (!description) {
-    throw new Error('Enter a short description for this payment.')
+    return { error: 'Enter a short description for this payment.' }
   }
 
   const { data: student } = await supabase.from('students').select('id, classroom_id').eq('id', studentId).single()
   if (!student) {
-    throw new Error('Student not found.')
+    return { error: 'Student not found.' }
   }
 
   const {
@@ -211,7 +232,7 @@ export async function recordManualPayment(
     recorded_by: actingAdmin?.id ?? null,
   })
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   await logActivity(supabase, {
@@ -227,11 +248,11 @@ export async function recordManualPayment(
 // Marks an already-generated pending fee item (e.g. a classroom's tuition
 // fee) as paid via cash/check, without touching the wallet — the
 // counterpart to payFeeWithWallet for a payment made outside the app.
-export async function markPaymentPaidManually(paymentId: string, method: string, notes?: string) {
+export async function markPaymentPaidManually(paymentId: string, method: string, notes?: string): Promise<ActionResult> {
   const supabase = await createClient()
 
   if (!METHODS.includes(method as (typeof METHODS)[number])) {
-    throw new Error('Payment method must be cash or check.')
+    return { error: 'Payment method must be cash or check.' }
   }
 
   const {
@@ -253,10 +274,10 @@ export async function markPaymentPaidManually(paymentId: string, method: string,
     .maybeSingle()
 
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
   if (!data) {
-    throw new Error('This payment could not be updated; it may have already been paid.')
+    return { error: 'This payment could not be updated; it may have already been paid.' }
   }
 
   await logActivity(supabase, {
