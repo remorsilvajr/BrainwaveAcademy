@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LogoutButton } from '@/components/logout-button'
 import { BugReportModal } from '@/components/feedback/bug-report-modal'
+import { MyFeedbackModal } from '@/components/feedback/my-feedback-modal'
 
 // w-full + text-left matter here, not just block — an <a> (My Profile/
 // Settings) is a plain block-level box that fills its container width with
@@ -35,6 +36,8 @@ export function ProfileMenu({
 }) {
   const [open, setOpen] = useState(false)
   const [showBugReport, setShowBugReport] = useState(false)
+  const [showFeedback, setShowFeedback] = useState(false)
+  const [showMyFeedback, setShowMyFeedback] = useState(false)
   const pathname = usePathname()
   const [lastPathname, setLastPathname] = useState(pathname)
 
@@ -81,13 +84,35 @@ export function ProfileMenu({
             >
               Report a Bug
             </button>
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false)
+                setShowFeedback(true)
+              }}
+              className={ITEM_CLASSNAME}
+            >
+              Feedback &amp; Concerns
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false)
+                setShowMyFeedback(true)
+              }}
+              className={ITEM_CLASSNAME}
+            >
+              My Feedback
+            </button>
             <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
             <LogoutButton className={ITEM_CLASSNAME} />
           </div>
         </>
       )}
 
-      {showBugReport && <BugReportModal onClose={() => setShowBugReport(false)} />}
+      {showBugReport && <BugReportModal onClose={() => setShowBugReport(false)} initialCategory="bug" />}
+      {showFeedback && <BugReportModal onClose={() => setShowFeedback(false)} initialCategory="concern" />}
+      {showMyFeedback && <MyFeedbackModal onClose={() => setShowMyFeedback(false)} />}
     </div>
   )
 }

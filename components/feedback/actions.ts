@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { logActivity } from '@/lib/activity-log'
+import { feedbackCategoryOrder } from '@/lib/feedback'
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024 // matches the bug-reports bucket's own file_size_limit
 
@@ -11,11 +12,15 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024 // matches the bug-reports bucket's own 
 // renders on the landing header (once logged in) and every portal top bar,
 // so this isn't colocated with any one route the way most actions.ts files
 // in this app are. `feedback.submitted_by` is RLS-scoped to auth.uid() via
-// the pre-existing `users_manage_own_feedback` policy, so this runs on the
-// regular request-scoped client, not createAdminClient().
+// `users_insert_own_feedback`, so this runs on the regular request-scoped
+// client, not createAdminClient(). That policy's WITH CHECK also locks
+// `resolved`/`admin_response`/`responded_by`/`responded_at` to their
+// defaults at insert time — this action never sets them either, so the two
+// stay in sync by construction rather than by remembering to match a policy.
 export async function submitFeedback(
   subject: string,
   message: string,
+  category: string,
   formData: FormData
 ): Promise<{ error: string } | undefined> {
   const trimmedSubject = subject.trim()
@@ -25,6 +30,9 @@ export async function submitFeedback(
   }
   if (!trimmedMessage) {
     return { error: 'Please describe the issue.' }
+  }
+  if (!feedbackCategoryOrder.includes(category)) {
+    return { error: 'Please choose a valid category.' }
   }
 
   const supabase = await createClient()
@@ -67,7 +75,13 @@ export async function submitFeedback(
 
   const { data, error } = await supabase
     .from('feedback')
-    .insert({ submitted_by: user.id, subject: trimmedSubject, message: trimmedMessage, image_path: imagePath })
+    .insert({
+      submitted_by: user.id,
+      subject: trimmedSubject,
+      message: trimmedMessage,
+      image_path: imagePath,
+      category,
+    })
     .select('id')
     .single()
 
@@ -77,11 +91,46 @@ export async function submitFeedback(
 
   await logActivity(supabase, {
     actorId: user.id,
-    action: 'Submitted a bug report',
+    action: category === 'bug' ? 'Submitted a bug report' : 'Submitted feedback',
     targetTable: 'feedback',
     targetId: data.id,
   })
 
   revalidatePath('/admin')
   revalidatePath('/admin/feedback')
+}
+
+export type MyFeedbackItem = {
+  id: string
+  subject: string
+  message: string
+  category: string
+  resolved: boolean
+  admin_response: string | null
+  responded_at: string | null
+  created_at: string
+}
+
+// Own-history view for the submitter — `users_view_own_feedback` RLS scopes
+// this to the caller's own rows, so no extra ownership filter is needed
+// here beyond auth.uid() already being who the row is scoped to.
+export async function getMyFeedback(): Promise<{ error: string } | { items: MyFeedbackItem[] }> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return { error: 'You must be logged in to view your feedback.' }
+  }
+
+  const { data, error } = await supabase
+    .from('feedback')
+    .select('id, subject, message, category, resolved, admin_response, responded_at, created_at')
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  return { items: data ?? [] }
 }
