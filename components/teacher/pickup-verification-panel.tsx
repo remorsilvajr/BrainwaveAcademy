@@ -5,6 +5,7 @@ import { User as UserIcon, ShieldCheck, ShieldAlert } from 'lucide-react'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
 import { logPickupCheck } from '@/app/teacher/pickup-verification/actions'
+import { PICKUP_RELATIONSHIPS } from '@/lib/pickup-relationships'
 
 type Student = { id: string; first_name: string; last_name: string }
 type Pickup = {
@@ -39,26 +40,26 @@ export function PickupVerificationPanel({ students, pickups }: { students: Stude
   const term = search.trim().toLowerCase()
   const matches = term ? pickups.filter((p) => p.full_name.toLowerCase().includes(term)) : []
 
-  // Distinct relationships actually present in the loaded list, so the filter
-  // never offers an option that would come back empty.
+  // Every relationship a parent can pick is always offered, so staff can see
+  // the full set of choices even when nobody has been registered under one yet.
+  // Any legacy free-text value already on file (from before relationship became
+  // a fixed dropdown) is appended so those rows stay filterable too.
   const relationshipOptions = (() => {
     const byKey = new Map<string, string>()
+    for (const r of PICKUP_RELATIONSHIPS) byKey.set(relationshipKey(r), r)
     for (const p of pickups) {
       const key = relationshipKey(p.relationship)
       if (key !== NO_RELATIONSHIP && !byKey.has(key)) byKey.set(key, p.relationship!.trim())
     }
-    const options = [...byKey.entries()]
-      .map(([value, label]) => ({ value, label }))
-      .sort((a, b) => a.label.localeCompare(b.label))
+    const options = [...byKey.entries()].map(([value, label]) => ({ value, label }))
     if (pickups.some((p) => relationshipKey(p.relationship) === NO_RELATIONSHIP)) {
       options.push({ value: NO_RELATIONSHIP, label: 'Not specified' })
     }
     return options
   })()
 
-  // The selected filter can stop existing after a refresh removes that
-  // relationship's last person; treat that as "all" rather than showing an
-  // empty list under a filter the dropdown can't display.
+  // A legacy value's option disappears once its last row is edited or removed;
+  // treat a filter pointing at it as "all" rather than an unlisted selection.
   const activeFilter = relationshipOptions.some((o) => o.value === relationshipFilter) ? relationshipFilter : 'all'
 
   const listed = activeFilter === 'all' ? pickups : pickups.filter((p) => relationshipKey(p.relationship) === activeFilter)
