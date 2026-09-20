@@ -7,6 +7,20 @@ import { todayIso } from '@/lib/format'
 export type CalendarEvent = { id: string; title: string; event_date: string; event_type: string }
 
 const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const MONTH_NAMES = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+]
 
 function pad(n: number) {
   return String(n).padStart(2, '0')
@@ -75,16 +89,46 @@ export function CalendarGrid({
     router.push(`${basePath}?month=${next.year}-${pad(next.month)}`)
   }
 
-  const monthLabel = new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString('en-US', {
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
-  })
+  function goTo(nextYear: number, nextMonth: number) {
+    router.push(`${basePath}?month=${nextYear}-${pad(nextMonth)}`)
+  }
+
+  // Current year + next year, per the "current and next year" ask — but if
+  // the visible month (e.g. reached via the prev/next arrows, or a linked
+  // URL) falls outside that pair, it's added too so the Year select never
+  // silently shows a value that doesn't match what's actually on screen.
+  const thisYear = Number(today.slice(0, 4))
+  const yearOptions = Array.from(new Set([thisYear, thisYear + 1, year])).sort((a, b) => a - b)
 
   return (
     <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">{monthLabel}</h2>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <select
+            value={month}
+            onChange={(e) => goTo(year, Number(e.target.value))}
+            aria-label="Month"
+            className="rounded-lg border border-gray-200 bg-white text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-slate-100 px-2 py-1.5 text-sm font-semibold focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+          >
+            {MONTH_NAMES.map((name, i) => (
+              <option key={name} value={i + 1}>
+                {name}
+              </option>
+            ))}
+          </select>
+          <select
+            value={year}
+            onChange={(e) => goTo(Number(e.target.value), month)}
+            aria-label="Year"
+            className="rounded-lg border border-gray-200 bg-white text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-slate-100 px-2 py-1.5 text-sm font-semibold focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+          >
+            {yearOptions.map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
+            ))}
+          </select>
+        </div>
         <div className="flex items-center gap-1">
           <button
             type="button"
