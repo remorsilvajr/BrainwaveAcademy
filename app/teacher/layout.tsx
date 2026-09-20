@@ -7,6 +7,7 @@ const sections: NavSection[] = [
     items: [
       { label: 'Dashboard', href: '/teacher', icon: 'dashboard' },
       { label: 'Announcement', href: '/teacher/announcement', icon: 'announcement' },
+      { label: 'Calendar', href: '/teacher/calendar', icon: 'calendar' },
     ],
   },
   {
