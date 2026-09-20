@@ -1,6 +1,11 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createAdminClient } from '@/lib/supabase/admin'
 
+// Pickup Verification is a front-desk page that tends to stay open all day, so
+// photo links live for an hour rather than minutes. PickupAvatar also falls
+// back to the placeholder icon if a link has expired anyway.
+export const PICKUP_PHOTO_URL_TTL_SECONDS = 60 * 60
+
 // Shared by /admin/pickup-verification and /teacher/pickup-verification.
 // The rows are read through the caller's own RLS-scoped client first
 // (staff_view_all_pickups already limits that to teacher/admin) — minting
@@ -18,7 +23,7 @@ export async function loadAllPickupsWithPhotos(supabase: SupabaseClient) {
   const paths = rows.map((p) => p.photo_path).filter((path): path is string => !!path)
   const urlByPath = new Map<string, string>()
   if (paths.length > 0) {
-    const { data: signed } = await createAdminClient().storage.from('pickup-photos').createSignedUrls(paths, 60 * 5)
+    const { data: signed } = await createAdminClient().storage.from('pickup-photos').createSignedUrls(paths, PICKUP_PHOTO_URL_TTL_SECONDS)
     for (const entry of signed ?? []) {
       if (entry.path && entry.signedUrl) urlByPath.set(entry.path, entry.signedUrl)
     }

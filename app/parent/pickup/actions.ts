@@ -110,10 +110,15 @@ export async function addPickupPerson(
   return { id: data.id }
 }
 
+// `removePhoto` clears the stored photo in this same update, after validation,
+// so a failed save can't leave a photo already deleted (a separate remove call
+// committed immediately, before the rest of the form was checked). A newly
+// attached photo wins over `removePhoto`.
 export async function updatePickupPerson(
   pickupId: string,
   input: PickupPersonInput,
-  formData: FormData
+  formData: FormData,
+  removePhoto = false
 ): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
   const {
@@ -142,6 +147,7 @@ export async function updatePickupPerson(
     phone_number: normalizedPhone(input.phoneNumber),
     updated_at: new Date().toISOString(),
   }
+  if (removePhoto) updates.photo_path = null
 
   if (photo && photo.size > 0) {
     if (photo.size > MAX_PHOTO_BYTES) {
@@ -167,30 +173,6 @@ export async function updatePickupPerson(
   await logActivity(supabase, {
     actorId: user?.id ?? null,
     action: `Updated authorized pickup person ${input.fullName.trim()}`,
-    targetTable: 'authorized_pickups',
-    targetId: pickupId,
-  })
-
-  revalidatePath('/parent/pickup')
-}
-
-export async function removePickupPersonPhoto(pickupId: string): Promise<{ error: string } | undefined> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const { error } = await supabase
-    .from('authorized_pickups')
-    .update({ photo_path: null, updated_at: new Date().toISOString() })
-    .eq('id', pickupId)
-  if (error) {
-    return { error: error.message }
-  }
-
-  await logActivity(supabase, {
-    actorId: user?.id ?? null,
-    action: "Removed an authorized pickup person's photo",
     targetTable: 'authorized_pickups',
     targetId: pickupId,
   })

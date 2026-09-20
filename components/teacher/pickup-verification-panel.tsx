@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { User as UserIcon, ShieldCheck, ShieldAlert } from 'lucide-react'
+import { ShieldCheck, ShieldAlert, ShieldQuestion } from 'lucide-react'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
 import { logPickupCheck } from '@/app/teacher/pickup-verification/actions'
+import { PickupAvatar } from '@/components/pickup/pickup-avatar'
 import { PICKUP_RELATIONSHIPS } from '@/lib/pickup-relationships'
 
 type Student = { id: string; first_name: string; last_name: string }
@@ -26,6 +27,18 @@ function relationshipKey(relationship: string | null) {
   return key ? key : NO_RELATIONSHIP
 }
 
+// Lowercased, accent-stripped, punctuation-free words, so "Nuñez" / "Nunez" and
+// "Cruz," / "cruz" compare equal.
+function nameWords(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .split(/\s+/)
+    .filter(Boolean)
+}
+
 // Always school-wide: every registered pickup person is searched and listed at
 // once, each labeled with the child they're authorized for (authorization is
 // per child, not per person, so "is this person on file" alone isn't enough).
@@ -37,8 +50,22 @@ export function PickupVerificationPanel({ students, pickups }: { students: Stude
 
   const studentNameById = new Map(students.map((s) => [s.id, `${s.first_name} ${s.last_name}`]))
 
-  const term = search.trim().toLowerCase()
-  const matches = term ? pickups.filter((p) => p.full_name.toLowerCase().includes(term)) : []
+  // Green "Authorized" is only for a full-name match: at least two typed words,
+  // each one a whole word of the registered name (a middle name may be left
+  // out). Anything looser, like a fragment "an" inside "Diane", is only a
+  // "similar name" prompt to confirm, never a green go-ahead.
+  const searchWords = nameWords(search)
+  const matches = searchWords.length >= 2
+    ? pickups.filter((p) => {
+        const words = nameWords(p.full_name)
+        return searchWords.every((w) => words.includes(w))
+      })
+    : []
+  const matchIds = new Set(matches.map((p) => p.id))
+  const similar =
+    searchWords.length > 0
+      ? pickups.filter((p) => !matchIds.has(p.id) && nameWords(p.full_name).join(' ').includes(searchWords.join(' ')))
+      : []
 
   // Every relationship a parent can pick is always offered, so staff can see
   // the full set of choices even when nobody has been registered under one yet.
@@ -95,13 +122,13 @@ export function PickupVerificationPanel({ students, pickups }: { students: Stude
 
         {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
 
-        {term && (
+        {searchWords.length > 0 && (
           <div className="mt-3 space-y-2">
             {matches.length === 0 ? (
               <div className="flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-700 dark:text-red-400">
                 <ShieldAlert className="h-4 w-4 shrink-0" />
-                No match on file for &quot;{search.trim()}&quot; for any student. Do not release the child without admin
-                confirmation.
+                No full-name match on file for &quot;{search.trim()}&quot; for any student. Do not release the child without
+                admin confirmation.
               </div>
             ) : (
               matches.map((p) => (
@@ -110,14 +137,12 @@ export function PickupVerificationPanel({ students, pickups }: { students: Stude
                   className="flex items-center justify-between gap-3 rounded-lg bg-green-50 dark:bg-green-950/30 p-3"
                 >
                   <div className="flex items-center gap-3">
-                    {p.photoUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element -- a freshly-signed private-bucket URL
-                      <img src={p.photoUrl} alt="" className="h-12 w-12 rounded-full object-cover" />
-                    ) : (
-                      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500">
-                        <UserIcon className="h-5 w-5" />
-                      </span>
-                    )}
+                    <PickupAvatar
+                      url={p.photoUrl}
+                      sizeClassName="h-12 w-12"
+                      iconClassName="h-5 w-5"
+                      fallbackClassName="bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500"
+                    />
                     <div>
                       <p className="flex items-center gap-1.5 font-medium text-green-800 dark:text-green-300">
                         <ShieldCheck className="h-4 w-4" />
@@ -141,6 +166,21 @@ export function PickupVerificationPanel({ students, pickups }: { students: Stude
                   </button>
                 </div>
               ))
+            )}
+            {similar.length > 0 && (
+              <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 p-3">
+                <p className="flex items-center gap-1.5 text-sm font-medium text-amber-800 dark:text-amber-300">
+                  <ShieldQuestion className="h-4 w-4 shrink-0" />
+                  Similar names on file. Ask for the person&apos;s full name before treating this as a match.
+                </p>
+                <ul className="mt-2 space-y-1 text-xs text-amber-800 dark:text-amber-300">
+                  {similar.map((p) => (
+                    <li key={p.id}>
+                      {p.full_name} (for {studentNameById.get(p.student_id) ?? 'an unknown student'})
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
           </div>
         )}
@@ -177,14 +217,12 @@ export function PickupVerificationPanel({ students, pickups }: { students: Stude
             <div className="mt-2 min-h-[360px] divide-y divide-gray-100 dark:divide-gray-800">
               {pageItems.map((p) => (
                 <div key={p.id} className="flex items-center gap-3 py-2">
-                  {p.photoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element -- a freshly-signed private-bucket URL
-                    <img src={p.photoUrl} alt="" className="h-9 w-9 rounded-full object-cover" />
-                  ) : (
-                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300">
-                      <UserIcon className="h-4 w-4" />
-                    </span>
-                  )}
+                  <PickupAvatar
+                    url={p.photoUrl}
+                    sizeClassName="h-9 w-9"
+                    iconClassName="h-4 w-4"
+                    fallbackClassName="bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300"
+                  />
                   <div>
                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{p.full_name}</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">

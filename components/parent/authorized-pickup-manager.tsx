@@ -2,18 +2,18 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { User as UserIcon, Plus, X, ImagePlus, Loader2 } from 'lucide-react'
+import { Plus, X, ImagePlus, Loader2 } from 'lucide-react'
 import {
   addPickupPerson,
   updatePickupPerson,
   removePickupPerson,
-  removePickupPersonPhoto,
   type PickupPersonInput,
 } from '@/app/parent/pickup/actions'
 import { Modal } from '@/components/ui/modal'
 import { isValidPhoneInput, PHONE_VALIDATION_MESSAGE } from '@/lib/phone'
 import { PlainSelect } from '@/components/ui/plain-select'
 import { PICKUP_RELATIONSHIPS, PICKUP_RELATIONSHIP_MESSAGE } from '@/lib/pickup-relationships'
+import { PickupAvatar } from '@/components/pickup/pickup-avatar'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 const MAX_PHOTO_BYTES = 2 * 1024 * 1024
@@ -121,14 +121,7 @@ function PickupFormModal({
       if (photo) formData.set('photo', photo)
 
       if (editing) {
-        if (removingExistingPhoto) {
-          const removeResult = await removePickupPersonPhoto(editing.id)
-          if (removeResult?.error) {
-            setError(removeResult.error)
-            return
-          }
-        }
-        const result = await updatePickupPerson(editing.id, input, formData)
+        const result = await updatePickupPerson(editing.id, input, formData, removingExistingPhoto)
         if (result?.error) {
           setError(result.error)
           return
@@ -329,14 +322,12 @@ export function AuthorizedPickupManager({ students, pickups }: { students: Stude
               <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {studentPickups.map((p) => (
                   <div key={p.id} className="flex items-start gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
-                    {p.photoUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element -- a freshly-signed private-bucket URL, not a Next-optimizable static asset
-                      <img src={p.photoUrl} alt="" className="h-12 w-12 rounded-full object-cover" />
-                    ) : (
-                      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300">
-                        <UserIcon className="h-5 w-5" />
-                      </span>
-                    )}
+                    <PickupAvatar
+                      url={p.photoUrl}
+                      sizeClassName="h-12 w-12"
+                      iconClassName="h-5 w-5"
+                      fallbackClassName="bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300"
+                    />
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-gray-900 dark:text-gray-100">{p.full_name}</p>
                       {p.relationship && <p className="text-xs text-gray-500 dark:text-gray-400">{p.relationship}</p>}
