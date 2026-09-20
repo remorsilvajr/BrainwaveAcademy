@@ -13,6 +13,7 @@ import { Modal } from '@/components/ui/modal'
 import { isValidPhoneInput, PHONE_VALIDATION_MESSAGE } from '@/lib/phone'
 import { PlainSelect } from '@/components/ui/plain-select'
 import { PICKUP_RELATIONSHIPS, PICKUP_RELATIONSHIP_MESSAGE } from '@/lib/pickup-relationships'
+import { pickupDisplayName } from '@/lib/pickup-names'
 import { PickupAvatar } from '@/components/pickup/pickup-avatar'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
@@ -22,13 +23,15 @@ type Student = { id: string; first_name: string; last_name: string }
 type Pickup = {
   id: string
   student_id: string
-  full_name: string
+  first_name: string | null
+  middle_name: string | null
+  last_name: string | null
   relationship: string | null
   phone_number: string | null
   photoUrl: string | null
 }
 
-const emptyInput: PickupPersonInput = { fullName: '', relationship: '', phoneNumber: '' }
+const emptyInput: PickupPersonInput = { firstName: '', middleName: '', lastName: '', relationship: '', phoneNumber: '' }
 
 function PickupFormModal({
   studentId,
@@ -44,7 +47,9 @@ function PickupFormModal({
   const [input, setInput] = useState<PickupPersonInput>(
     editing
       ? {
-          fullName: editing.full_name,
+          firstName: editing.first_name ?? '',
+          middleName: editing.middle_name ?? '',
+          lastName: editing.last_name ?? '',
           relationship: editing.relationship ?? '',
           phoneNumber: editing.phone_number ?? '',
         }
@@ -161,13 +166,37 @@ function PickupFormModal({
       </div>
 
       <div className="space-y-3 p-6">
-        <div>
-          <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Full Name</label>
-          <input
-            value={input.fullName}
-            onChange={(e) => setInput({ ...input, fullName: e.target.value })}
-            className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
-          />
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div>
+            <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
+              First Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              value={input.firstName}
+              onChange={(e) => setInput({ ...input, firstName: e.target.value })}
+              className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
+              Middle Name <span className="font-normal text-gray-400 dark:text-gray-500">(optional)</span>
+            </label>
+            <input
+              value={input.middleName}
+              onChange={(e) => setInput({ ...input, middleName: e.target.value })}
+              className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
+              Last Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              value={input.lastName}
+              onChange={(e) => setInput({ ...input, lastName: e.target.value })}
+              className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+            />
+          </div>
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <PlainSelect
@@ -256,7 +285,7 @@ function PickupFormModal({
         </button>
         <button
           onClick={handleSubmit}
-          disabled={busy || !input.fullName.trim() || !input.relationship}
+          disabled={busy || !input.firstName.trim() || !input.lastName.trim() || !input.relationship}
           className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#0b1b62] py-2.5 text-sm font-semibold text-white hover:bg-[#08154d] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {busy && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -329,7 +358,7 @@ export function AuthorizedPickupManager({ students, pickups }: { students: Stude
                       fallbackClassName="bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300"
                     />
                     <div className="min-w-0 flex-1">
-                      <p className="font-medium text-gray-900 dark:text-gray-100">{p.full_name}</p>
+                      <p className="font-medium text-gray-900 dark:text-gray-100">{pickupDisplayName(p)}</p>
                       {p.relationship && <p className="text-xs text-gray-500 dark:text-gray-400">{p.relationship}</p>}
                       {p.phone_number && <p className="text-xs text-gray-500 dark:text-gray-400">{p.phone_number}</p>}
                       <div className="mt-2 flex gap-3">
@@ -362,7 +391,7 @@ export function AuthorizedPickupManager({ students, pickups }: { students: Stude
       {removing && (
         <ConfirmDialog
           title="Remove this pickup person?"
-          description={`${removing.full_name} will no longer be authorized to pick up this child.`}
+          description={`${pickupDisplayName(removing)} will no longer be authorized to pick up this child.`}
           confirmLabel="Yes, Remove"
           tone="danger"
           isPending={isRemoving}

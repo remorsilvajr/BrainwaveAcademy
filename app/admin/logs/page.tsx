@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { formatDateShort } from '@/lib/format'
+import { pickupDisplayName } from '@/lib/pickup-names'
 import { ActivityLogTable } from '@/components/admin/activity-log-table'
 
 type LogRow = {
@@ -72,8 +73,8 @@ export default async function AdminLogsPage() {
       ? supabase.from('feedback').select('id, subject').in('id', feedbackTargetIds)
       : Promise.resolve({ data: [] as { id: string; subject: string }[] }),
     pickupTargetIds.length > 0
-      ? supabase.from('authorized_pickups').select('id, full_name').in('id', pickupTargetIds)
-      : Promise.resolve({ data: [] as { id: string; full_name: string }[] }),
+      ? supabase.from('authorized_pickups').select('id, first_name, middle_name, last_name').in('id', pickupTargetIds)
+      : Promise.resolve({ data: [] as { id: string; first_name: string | null; middle_name: string | null; last_name: string | null }[] }),
     eventTargetIds.length > 0
       ? supabase.from('events').select('id, title, event_date').in('id', eventTargetIds)
       : Promise.resolve({ data: [] as { id: string; title: string; event_date: string }[] }),
@@ -105,7 +106,7 @@ export default async function AdminLogsPage() {
     }
     if (log.target_table === 'authorized_pickups' && log.target_id) {
       const p = pickupById.get(log.target_id)
-      return p ? p.full_name : null
+      return p ? pickupDisplayName(p) : null
     }
     if (log.target_table === 'events' && log.target_id) {
       const e = eventById.get(log.target_id)

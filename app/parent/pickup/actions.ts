@@ -3,15 +3,18 @@
 import { randomUUID } from 'crypto'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import { isValidName, NAME_VALIDATION_MESSAGE } from '@/lib/name'
+import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
 import { isValidPhoneInput, normalizePhilippineMobile, PHONE_VALIDATION_MESSAGE } from '@/lib/phone'
 import { isPickupRelationship, PICKUP_RELATIONSHIP_MESSAGE } from '@/lib/pickup-relationships'
 import { logActivity } from '@/lib/activity-log'
+import { pickupDisplayName } from '@/lib/pickup-names'
 
 const MAX_PHOTO_BYTES = 2 * 1024 * 1024 // matches the pickup-photos bucket's own file_size_limit
 
 export type PickupPersonInput = {
-  fullName: string
+  firstName: string
+  middleName: string
+  lastName: string
   relationship: string
   phoneNumber: string
 }
@@ -21,9 +24,13 @@ export type PickupPersonInput = {
 // long as it isn't changed, so editing just the phone number doesn't force a
 // relationship re-pick.
 function validateInput(input: PickupPersonInput, currentRelationship?: string | null): string | null {
-  const fullName = input.fullName.trim()
-  if (!fullName) return 'Enter the full name of the authorized person.'
-  if (!isValidName(fullName)) return NAME_VALIDATION_MESSAGE
+  const firstName = input.firstName.trim()
+  const lastName = input.lastName.trim()
+  if (!firstName) return 'Enter the first name of the authorized person.'
+  if (!lastName) return 'Enter the last name of the authorized person.'
+  if (!isValidName(firstName) || !isValidName(lastName)) return NAME_VALIDATION_MESSAGE
+  const middleName = input.middleName.trim()
+  if (middleName && !isValidName(middleName)) return NAME_VALIDATION_MESSAGE
   const relationship = input.relationship.trim()
   if (!isPickupRelationship(relationship) && !(currentRelationship && relationship === currentRelationship)) {
     return PICKUP_RELATIONSHIP_MESSAGE
@@ -31,6 +38,16 @@ function validateInput(input: PickupPersonInput, currentRelationship?: string | 
   const phone = input.phoneNumber.trim()
   if (phone && !isValidPhoneInput(phone)) return PHONE_VALIDATION_MESSAGE
   return null
+}
+
+// Trimmed and title-cased at write time only, same as every other name in the app.
+function nameColumns(input: PickupPersonInput) {
+  const middle = input.middleName.trim()
+  return {
+    first_name: toTitleCase(input.firstName.trim()),
+    middle_name: middle ? toTitleCase(middle) : null,
+    last_name: toTitleCase(input.lastName.trim()),
+  }
 }
 
 function normalizedPhone(raw: string) {
@@ -82,11 +99,12 @@ export async function addPickupPerson(
     }
   }
 
+  const names = nameColumns(input)
   const { data, error } = await supabase
     .from('authorized_pickups')
     .insert({
       student_id: studentId,
-      full_name: input.fullName.trim(),
+      ...names,
       relationship: input.relationship.trim() || null,
       phone_number: normalizedPhone(input.phoneNumber),
       photo_path: photoPath,
@@ -101,7 +119,7 @@ export async function addPickupPerson(
 
   await logActivity(supabase, {
     actorId: user.id,
-    action: `Added ${input.fullName.trim()} as an authorized pickup person`,
+    action: `Added ${pickupDisplayName(names)} as an authorized pickup person`,
     targetTable: 'authorized_pickups',
     targetId: data.id,
   })
@@ -141,8 +159,9 @@ export async function updatePickupPerson(
 
   const photoEntry = formData.get('photo')
   const photo = photoEntry instanceof File ? photoEntry : null
+  const names = nameColumns(input)
   const updates: Record<string, unknown> = {
-    full_name: input.fullName.trim(),
+    ...names,
     relationship: input.relationship.trim() || null,
     phone_number: normalizedPhone(input.phoneNumber),
     updated_at: new Date().toISOString(),
@@ -172,7 +191,7 @@ export async function updatePickupPerson(
 
   await logActivity(supabase, {
     actorId: user?.id ?? null,
-    action: `Updated authorized pickup person ${input.fullName.trim()}`,
+    action: `Updated authorized pickup person ${pickupDisplayName(names)}`,
     targetTable: 'authorized_pickups',
     targetId: pickupId,
   })
@@ -186,7 +205,11 @@ export async function removePickupPerson(pickupId: string): Promise<{ error: str
     data: { user },
   } = await supabase.auth.getUser()
 
-  const { data: existing } = await supabase.from('authorized_pickups').select('full_name').eq('id', pickupId).maybeSingle()
+  const { data: existing } = await supabase
+    .from('authorized_pickups')
+    .select('first_name, middle_name, last_name')
+    .eq('id', pickupId)
+    .maybeSingle()
 
   const { error } = await supabase.from('authorized_pickups').delete().eq('id', pickupId)
   if (error) {
@@ -195,7 +218,7 @@ export async function removePickupPerson(pickupId: string): Promise<{ error: str
 
   await logActivity(supabase, {
     actorId: user?.id ?? null,
-    action: `Removed authorized pickup person ${existing?.full_name ?? ''}`.trim(),
+    action: `Removed authorized pickup person ${existing ? pickupDisplayName(existing) : ''}`.trim(),
     targetTable: 'authorized_pickups',
     targetId: pickupId,
   })

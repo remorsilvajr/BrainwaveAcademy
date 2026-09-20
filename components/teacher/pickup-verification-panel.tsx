@@ -7,12 +7,15 @@ import { usePagination } from '@/lib/use-pagination'
 import { logPickupCheck } from '@/app/teacher/pickup-verification/actions'
 import { PickupAvatar } from '@/components/pickup/pickup-avatar'
 import { PICKUP_RELATIONSHIPS } from '@/lib/pickup-relationships'
+import { pickupDisplayName } from '@/lib/pickup-names'
 
 type Student = { id: string; first_name: string; last_name: string }
 type Pickup = {
   id: string
   student_id: string
-  full_name: string
+  first_name: string | null
+  middle_name: string | null
+  last_name: string | null
   relationship: string | null
   phone_number: string | null
   photoUrl: string | null
@@ -27,45 +30,54 @@ function relationshipKey(relationship: string | null) {
   return key ? key : NO_RELATIONSHIP
 }
 
-// Lowercased, accent-stripped, punctuation-free words, so "Nuñez" / "Nunez" and
-// "Cruz," / "cruz" compare equal.
-function nameWords(value: string) {
-  return value
+// Lowercased, accent-stripped, punctuation-free, single-spaced, so "Nuñez" /
+// "Nunez" and "Cruz," / "cruz" compare equal.
+function nameKey(value: string | null) {
+  return (value ?? '')
     .normalize('NFD')
     .replace(/\p{M}/gu, '')
     .toLowerCase()
     .replace(/[^\p{L}\p{N}\s]/gu, ' ')
     .split(/\s+/)
     .filter(Boolean)
+    .join(' ')
 }
+
+const MAX_SIMILAR_SHOWN = 5
 
 // Always school-wide: every registered pickup person is searched and listed at
 // once, each labeled with the child they're authorized for (authorization is
 // per child, not per person, so "is this person on file" alone isn't enough).
 export function PickupVerificationPanel({ students, pickups }: { students: Student[]; pickups: Pickup[] }) {
-  const [search, setSearch] = useState('')
+  const [firstSearch, setFirstSearch] = useState('')
+  const [lastSearch, setLastSearch] = useState('')
   const [relationshipFilter, setRelationshipFilter] = useState('all')
   const [loggedId, setLoggedId] = useState<string | null>(null)
   const [error, setError] = useState('')
 
   const studentNameById = new Map(students.map((s) => [s.id, `${s.first_name} ${s.last_name}`]))
 
-  // Green "Authorized" is only for a full-name match: at least two typed words,
-  // each one a whole word of the registered name (a middle name may be left
-  // out). Anything looser, like a fragment "an" inside "Diane", is only a
-  // "similar name" prompt to confirm, never a green go-ahead.
-  const searchWords = nameWords(search)
-  const matches = searchWords.length >= 2
-    ? pickups.filter((p) => {
-        const words = nameWords(p.full_name)
-        return searchWords.every((w) => words.includes(w))
-      })
+  // Green "Authorized" needs the typed first AND last name to each equal the
+  // registered ones (middle name is never compared). Anything looser, like a
+  // fragment "an" inside "Diane", is only a "similar name" prompt to confirm,
+  // never a green go-ahead. A registered first name of two words (e.g. "Maria
+  // Cristina") has to be typed in full to go green.
+  const typedFirst = nameKey(firstSearch)
+  const typedLast = nameKey(lastSearch)
+  const hasSearch = typedFirst !== '' || typedLast !== ''
+  const canMatch = typedFirst !== '' && typedLast !== ''
+  const matches = canMatch
+    ? pickups.filter((p) => nameKey(p.first_name) === typedFirst && nameKey(p.last_name) === typedLast)
     : []
   const matchIds = new Set(matches.map((p) => p.id))
-  const similar =
-    searchWords.length > 0
-      ? pickups.filter((p) => !matchIds.has(p.id) && nameWords(p.full_name).join(' ').includes(searchWords.join(' ')))
-      : []
+  const similar = hasSearch
+    ? pickups.filter(
+        (p) =>
+          !matchIds.has(p.id) &&
+          (typedFirst === '' || nameKey(p.first_name).includes(typedFirst)) &&
+          (typedLast === '' || nameKey(p.last_name).includes(typedLast))
+      )
+    : []
 
   // Every relationship a parent can pick is always offered, so staff can see
   // the full set of choices even when nobody has been registered under one yet.
@@ -96,7 +108,7 @@ export function PickupVerificationPanel({ students, pickups }: { students: Stude
   async function handleLog(pickup: Pickup) {
     setError('')
     try {
-      const result = await logPickupCheck(pickup.student_id, pickup.full_name)
+      const result = await logPickupCheck(pickup.student_id, pickupDisplayName(pickup))
       if (result?.error) {
         setError(result.error)
         return
@@ -110,25 +122,39 @@ export function PickupVerificationPanel({ students, pickups }: { students: Stude
   return (
     <div className="space-y-4">
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
-        <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">
-          Type the name of the person picking up
-        </label>
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name…"
-          className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
-        />
+        <p className="mb-2 text-xs font-medium text-gray-500 dark:text-gray-400">
+          Type the first and last name of the person picking up
+        </p>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <input
+            value={firstSearch}
+            onChange={(e) => setFirstSearch(e.target.value)}
+            placeholder="First name"
+            aria-label="First name"
+            className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+          />
+          <input
+            value={lastSearch}
+            onChange={(e) => setLastSearch(e.target.value)}
+            placeholder="Last name"
+            aria-label="Last name"
+            className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+          />
+        </div>
 
         {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
 
-        {searchWords.length > 0 && (
+        {hasSearch && (
           <div className="mt-3 space-y-2">
-            {matches.length === 0 ? (
+            {!canMatch ? (
+              <p className="rounded-lg bg-gray-50 dark:bg-gray-800/60 p-3 text-sm text-gray-600 dark:text-gray-300">
+                Enter both a first and last name to check for an authorized match.
+              </p>
+            ) : matches.length === 0 ? (
               <div className="flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-700 dark:text-red-400">
                 <ShieldAlert className="h-4 w-4 shrink-0" />
-                No full-name match on file for &quot;{search.trim()}&quot; for any student. Do not release the child without
-                admin confirmation.
+                No match on file for &quot;{firstSearch.trim()} {lastSearch.trim()}&quot; for any student. Do not release the
+                child without admin confirmation.
               </div>
             ) : (
               matches.map((p) => (
@@ -146,7 +172,7 @@ export function PickupVerificationPanel({ students, pickups }: { students: Stude
                     <div>
                       <p className="flex items-center gap-1.5 font-medium text-green-800 dark:text-green-300">
                         <ShieldCheck className="h-4 w-4" />
-                        {p.full_name}
+                        {pickupDisplayName(p)}
                       </p>
                       <p className="text-xs text-green-700 dark:text-green-400">
                         {[p.relationship, p.phone_number].filter(Boolean).join(' · ') || 'Authorized on file'}
@@ -171,14 +197,15 @@ export function PickupVerificationPanel({ students, pickups }: { students: Stude
               <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 p-3">
                 <p className="flex items-center gap-1.5 text-sm font-medium text-amber-800 dark:text-amber-300">
                   <ShieldQuestion className="h-4 w-4 shrink-0" />
-                  Similar names on file. Ask for the person&apos;s full name before treating this as a match.
+                  Similar names on file. Ask for the person&apos;s exact first and last name before treating this as a match.
                 </p>
                 <ul className="mt-2 space-y-1 text-xs text-amber-800 dark:text-amber-300">
-                  {similar.map((p) => (
+                  {similar.slice(0, MAX_SIMILAR_SHOWN).map((p) => (
                     <li key={p.id}>
-                      {p.full_name} (for {studentNameById.get(p.student_id) ?? 'an unknown student'})
+                      {pickupDisplayName(p)} (for {studentNameById.get(p.student_id) ?? 'an unknown student'})
                     </li>
                   ))}
+                  {similar.length > MAX_SIMILAR_SHOWN && <li>and {similar.length - MAX_SIMILAR_SHOWN} more</li>}
                 </ul>
               </div>
             )}
@@ -224,7 +251,7 @@ export function PickupVerificationPanel({ students, pickups }: { students: Stude
                     fallbackClassName="bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300"
                   />
                   <div>
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{p.full_name}</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{pickupDisplayName(p)}</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       {[p.relationship, p.phone_number].filter(Boolean).join(' · ') || '-'}
                     </p>

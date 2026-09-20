@@ -16,7 +16,7 @@ export const PICKUP_PHOTO_URL_TTL_SECONDS = 60 * 60
 export async function loadAllPickupsWithPhotos(supabase: SupabaseClient) {
   const { data } = await supabase
     .from('authorized_pickups')
-    .select('id, student_id, full_name, relationship, phone_number, photo_path')
+    .select('id, student_id, first_name, middle_name, last_name, relationship, phone_number, photo_path')
     .order('created_at', { ascending: true })
   const rows = data ?? []
 
