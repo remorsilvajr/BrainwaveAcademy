@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import Link from 'next/link'
 import { User as UserIcon } from 'lucide-react'
 import { StudentRecordModal } from '@/components/admin/student-record-modal'
 import { Pagination } from '@/components/ui/pagination'
@@ -171,12 +172,20 @@ export function StudentsTable({ students, classrooms }: { students: Student[]; c
                       </span>
                     </td>
                     <td className="p-4">
-                      <button
-                        onClick={() => setSelectedId(s.id)}
-                        className="rounded-full border border-[#0b1b62] dark:border-indigo-300 px-4 py-1.5 text-xs font-semibold text-[#0b1b62] dark:text-indigo-300 hover:bg-[#0b1b62] hover:text-white"
-                      >
-                        Open Full Record
-                      </button>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          onClick={() => setSelectedId(s.id)}
+                          className="rounded-full border border-[#0b1b62] dark:border-indigo-300 px-4 py-1.5 text-xs font-semibold text-[#0b1b62] dark:text-indigo-300 hover:bg-[#0b1b62] hover:text-white"
+                        >
+                          Open Full Record
+                        </button>
+                        <Link
+                          href={`/admin/students/${s.id}/report`}
+                          className="rounded-full border border-gray-300 dark:border-gray-600 px-4 py-1.5 text-xs font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                        >
+                          Export Report
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 )

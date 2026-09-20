@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { Users } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { StudentDashboardContent } from '@/components/teacher/student-dashboard-content'
@@ -104,7 +105,15 @@ export default async function AdminStudentDashboardPage({
           <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Student Dashboard</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Attendance, assessments, and milestones per student.</p>
         </div>
-        <StudentSelector students={students ?? []} classrooms={classrooms ?? []} selectedId={selectedId} basePath="/admin/student-dashboard" />
+        <div className="flex items-center gap-2">
+          <StudentSelector students={students ?? []} classrooms={classrooms ?? []} selectedId={selectedId} basePath="/admin/student-dashboard" />
+          <Link
+            href={`/admin/students/${selectedId}/report`}
+            className="rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+          >
+            Export Report
+          </Link>
+        </div>
       </div>
 
       {student && (
