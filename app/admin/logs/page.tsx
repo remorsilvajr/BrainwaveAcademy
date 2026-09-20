@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { formatDateShort } from '@/lib/format'
 import { ActivityLogTable } from '@/components/admin/activity-log-table'
 
 type LogRow = {
@@ -40,8 +41,21 @@ export default async function AdminLogsPage() {
   const profileTargetIds = [...new Set(logRowsData.filter((l) => l.target_table === 'profiles' && l.target_id).map((l) => l.target_id!))]
   const studentTargetIds = [...new Set(logRowsData.filter((l) => l.target_table === 'students' && l.target_id).map((l) => l.target_id!))]
   const applicationTargetIds = [...new Set(logRowsData.filter((l) => l.target_table === 'applications' && l.target_id).map((l) => l.target_id!))]
+  // Added alongside the Reports/Pickup/Feedback/Calendar features — same
+  // "resolve the actively-generated target tables, not every table
+  // logActivity ever touches" reasoning as the three above.
+  const feedbackTargetIds = [...new Set(logRowsData.filter((l) => l.target_table === 'feedback' && l.target_id).map((l) => l.target_id!))]
+  const pickupTargetIds = [...new Set(logRowsData.filter((l) => l.target_table === 'authorized_pickups' && l.target_id).map((l) => l.target_id!))]
+  const eventTargetIds = [...new Set(logRowsData.filter((l) => l.target_table === 'events' && l.target_id).map((l) => l.target_id!))]
 
-  const [{ data: targetProfiles }, { data: targetStudents }, { data: targetApplications }] = await Promise.all([
+  const [
+    { data: targetProfiles },
+    { data: targetStudents },
+    { data: targetApplications },
+    { data: targetFeedback },
+    { data: targetPickups },
+    { data: targetEvents },
+  ] = await Promise.all([
     profileTargetIds.length > 0
       ? supabase.from('profiles').select('id, first_name, last_name, email').in('id', profileTargetIds)
       : Promise.resolve({ data: [] as { id: string; first_name: string; last_name: string; email: string }[] }),
@@ -54,11 +68,23 @@ export default async function AdminLogsPage() {
           .select('id, student_first_name, student_last_name, application_ref')
           .in('id', applicationTargetIds)
       : Promise.resolve({ data: [] as { id: string; student_first_name: string; student_last_name: string; application_ref: string }[] }),
+    feedbackTargetIds.length > 0
+      ? supabase.from('feedback').select('id, subject').in('id', feedbackTargetIds)
+      : Promise.resolve({ data: [] as { id: string; subject: string }[] }),
+    pickupTargetIds.length > 0
+      ? supabase.from('authorized_pickups').select('id, full_name').in('id', pickupTargetIds)
+      : Promise.resolve({ data: [] as { id: string; full_name: string }[] }),
+    eventTargetIds.length > 0
+      ? supabase.from('events').select('id, title, event_date').in('id', eventTargetIds)
+      : Promise.resolve({ data: [] as { id: string; title: string; event_date: string }[] }),
   ])
 
   const profileById = new Map((targetProfiles ?? []).map((p) => [p.id, p]))
   const studentById = new Map((targetStudents ?? []).map((s) => [s.id, s]))
   const applicationById = new Map((targetApplications ?? []).map((a) => [a.id, a]))
+  const feedbackById = new Map((targetFeedback ?? []).map((f) => [f.id, f]))
+  const pickupById = new Map((targetPickups ?? []).map((p) => [p.id, p]))
+  const eventById = new Map((targetEvents ?? []).map((e) => [e.id, e]))
 
   function resolveTargetLabel(log: LogRow): string | null {
     if (log.target_table === 'profiles' && log.target_id) {
@@ -72,6 +98,18 @@ export default async function AdminLogsPage() {
     if (log.target_table === 'applications' && log.target_id) {
       const a = applicationById.get(log.target_id)
       return a ? `${a.student_first_name} ${a.student_last_name} (${a.application_ref})` : null
+    }
+    if (log.target_table === 'feedback' && log.target_id) {
+      const f = feedbackById.get(log.target_id)
+      return f ? f.subject : null
+    }
+    if (log.target_table === 'authorized_pickups' && log.target_id) {
+      const p = pickupById.get(log.target_id)
+      return p ? p.full_name : null
+    }
+    if (log.target_table === 'events' && log.target_id) {
+      const e = eventById.get(log.target_id)
+      return e ? `${e.title} (${formatDateShort(e.event_date)})` : null
     }
     return null
   }

@@ -29,10 +29,14 @@ export async function submitRsvp(eventId: string, status: string): Promise<{ err
     return { error: error.message }
   }
 
+  // target_id is the event being responded to, not a row in event_rsvps
+  // itself (that table has no single-column id — its PK is the
+  // (event_id, parent_id) pair) — targetTable is 'events' so the Activity
+  // Log can resolve it to the event's title.
   await logActivity(supabase, {
     actorId: user.id,
     action: `RSVP'd "${status === 'going' ? 'Going' : 'Not Going'}" to an event`,
-    targetTable: 'event_rsvps',
+    targetTable: 'events',
     targetId: eventId,
   })
 

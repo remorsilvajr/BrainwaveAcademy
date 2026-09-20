@@ -26,10 +26,14 @@ export async function logPickupCheck(studentId: string, personName: string): Pro
     return { error: 'Only teachers and admins can do this.' }
   }
 
+  // target_id here is the student being checked, not a specific
+  // authorized_pickups row (a check can match, or fail to match, any
+  // number of them) — targetTable is 'students' so the Activity Log's
+  // existing student-label resolution picks it up correctly.
   await logActivity(supabase, {
     actorId: user.id,
     action: `Checked pickup authorization for "${personName.trim()}"`,
-    targetTable: 'authorized_pickups',
+    targetTable: 'students',
     targetId: studentId,
   })
 }

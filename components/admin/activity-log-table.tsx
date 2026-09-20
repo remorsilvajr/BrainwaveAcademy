@@ -15,10 +15,12 @@ type LogRow = {
   target_id: string | null
   created_at: string
   profiles: { first_name: string; last_name: string; email: string; role: string } | null
-  // Resolved by app/admin/logs/page.tsx for target_table 'profiles'/
-  // 'students' only — null for every other target_table (attendance,
-  // milestones, announcements, etc.), which still show their raw
-  // table+id in the Details modal, just not resolved to a friendly name.
+  // Resolved by app/admin/logs/page.tsx's resolveTargetLabel() for
+  // target_table 'profiles'/'students'/'applications'/'feedback'/
+  // 'authorized_pickups'/'events' — null for every other target_table
+  // (attendance, milestones, announcements, payments, etc.), which still
+  // show their raw table+id in the Details modal, just not resolved to a
+  // friendly name.
   targetLabel: string | null
 }
 
