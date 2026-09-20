@@ -233,9 +233,14 @@ export function AcademyOverview() {
       </section>
 
       {/* Journey + Founder */}
+      {/* -mt-5 cancels the parent <main>'s gap-5 just for this pair, so this
+          section's background sits flush against the hero instead of
+          leaving a bare strip of the page background between the hero's
+          photo fade and this section's own tinted background — every other
+          section still gets the normal gap-5 spacing. */}
       <section
         id="about-us"
-        className="flex w-full flex-col items-center bg-[#f5f2f9] dark:bg-gray-900 px-0 py-12"
+        className="-mt-5 flex w-full flex-col items-center bg-[#f5f2f9] dark:bg-gray-900 px-0 py-12"
         aria-labelledby="journey-heading"
       >
         <div className="flex w-full max-w-screen-xl flex-col items-center gap-8 px-6">
