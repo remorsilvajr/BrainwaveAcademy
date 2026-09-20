@@ -19,13 +19,20 @@ type Student = {
   gender: string
   enrollment_status: string
   avatar_url: string | null
+  classroom_id: string | null
+  classroomName: string | null
 }
 
-export function TeacherStudentsTable({ students }: { students: Student[] }) {
+type Classroom = { id: string; name: string }
+
+export function TeacherStudentsTable({ students, classrooms }: { students: Student[]; classrooms: Classroom[] }) {
   const router = useRouter()
   const [search, setSearch] = useState('')
+  const [classroomFilter, setClassroomFilter] = useState('all')
 
   const filtered = students.filter((s) => {
+    if (classroomFilter === 'unassigned' && s.classroom_id) return false
+    if (classroomFilter !== 'all' && classroomFilter !== 'unassigned' && s.classroom_id !== classroomFilter) return false
     if (!search.trim()) return true
     const term = search.toLowerCase()
     return `${s.first_name} ${s.middle_name ?? ''} ${s.last_name}`.toLowerCase().includes(term)
@@ -42,12 +49,15 @@ export function TeacherStudentsTable({ students }: { students: Student[] }) {
   )
   const { sorted, sortKey, setSortKey } = useSort(filtered, sortOptions)
 
-  const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(sorted, `${search}|${sortKey}`)
+  const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(
+    sorted,
+    `${search}|${classroomFilter}|${sortKey}`
+  )
 
   return (
     <>
       <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_260px]">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_200px_260px]">
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Search Students</label>
             <input
@@ -56,6 +66,22 @@ export function TeacherStudentsTable({ students }: { students: Student[] }) {
               placeholder="Student name"
               className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
             />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Classroom</label>
+            <select
+              value={classroomFilter}
+              onChange={(e) => setClassroomFilter(e.target.value)}
+              className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+            >
+              <option value="all">All Classrooms</option>
+              {classrooms.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+              <option value="unassigned">Unassigned</option>
+            </select>
           </div>
           <SortSelect value={sortKey} onChange={setSortKey} options={sortOptions} />
         </div>
@@ -69,6 +95,7 @@ export function TeacherStudentsTable({ students }: { students: Student[] }) {
               <th className="p-4 font-medium">Name</th>
               <th className="p-4 font-medium">Date of Birth</th>
               <th className="p-4 font-medium">Gender</th>
+              <th className="p-4 font-medium">Classroom</th>
               <th className="p-4 font-medium">Enrollment Status</th>
               <th className="p-4"></th>
             </tr>
@@ -100,6 +127,9 @@ export function TeacherStudentsTable({ students }: { students: Student[] }) {
                   {formatDateLong(s.date_of_birth)} ({calculateAge(s.date_of_birth)}y)
                 </td>
                 <td className="p-4 capitalize text-gray-600 dark:text-gray-400">{s.gender}</td>
+                <td className="p-4 text-gray-600 dark:text-gray-400">
+                  {s.classroomName ?? <span className="text-gray-400 dark:text-gray-500">Unassigned</span>}
+                </td>
                 <td className="p-4">
                   <span
                     className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${
@@ -123,7 +153,7 @@ export function TeacherStudentsTable({ students }: { students: Student[] }) {
             ))}
             {pageItems.length === 0 && (
               <tr>
-                <td colSpan={5} className="p-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                <td colSpan={6} className="p-8 text-center text-sm text-gray-500 dark:text-gray-400">
                   {students.length === 0 ? 'No students on file yet.' : 'No students match your search.'}
                 </td>
               </tr>

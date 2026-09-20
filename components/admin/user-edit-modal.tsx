@@ -8,7 +8,13 @@ import { AvatarEditor } from '@/components/ui/avatar-editor'
 import { DobSelect } from '@/components/ui/dob-select'
 import { Modal } from '@/components/ui/modal'
 
-type LinkedStudent = { id: string; first_name: string; middle_name: string | null; last_name: string }
+type LinkedStudent = {
+  id: string
+  first_name: string
+  middle_name: string | null
+  last_name: string
+  classroomName?: string | null
+}
 type Applicant = {
   id: string
   student_first_name: string
@@ -295,6 +301,7 @@ export function UserEditModal({
                   {linkedStudents.map((s) => (
                     <li key={s.id}>
                       {s.first_name} {s.middle_name ? `${s.middle_name} ` : ''}{s.last_name}
+                      <span className="text-xs text-gray-400 dark:text-gray-500"> ({s.classroomName ?? 'Unassigned'})</span>
                     </li>
                   ))}
                 </ul>

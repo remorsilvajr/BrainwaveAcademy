@@ -8,10 +8,10 @@ export default async function UserManagementPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  const [{ data }, { data: pendingApplications }] = await Promise.all([
+  const [{ data }, { data: pendingApplications }, { data: classrooms }] = await Promise.all([
     supabase
       .from('profiles')
-      .select('*, parent_student(relationship, students(id, first_name, middle_name, last_name))')
+      .select('*, parent_student(relationship, students(id, first_name, middle_name, last_name, classroom_id))')
       .is('deleted_at', null)
       .order('created_at', { ascending: false }),
     // Children who exist only as an application (no students row yet) —
@@ -23,7 +23,10 @@ export default async function UserManagementPage() {
       .select('id, created_parent_id, student_first_name, student_middle_name, student_last_name')
       .not('created_parent_id', 'is', null)
       .is('created_student_id', null),
+    supabase.from('classrooms').select('id, name'),
   ])
+
+  const classroomById = new Map((classrooms ?? []).map((c) => [c.id, c.name]))
 
   const applicantsByParentId = new Map<string, typeof pendingApplications>()
   for (const application of pendingApplications ?? []) {
@@ -46,6 +49,15 @@ export default async function UserManagementPage() {
   const now = nowMs()
   const users = (data ?? []).map((row) => ({
     ...row,
+    parent_student: (row.parent_student ?? []).map((ps: {
+      relationship: string
+      students: { id: string; first_name: string; middle_name: string | null; last_name: string; classroom_id: string | null } | null
+    }) => ({
+      ...ps,
+      students: ps.students
+        ? { ...ps.students, classroomName: ps.students.classroom_id ? (classroomById.get(ps.students.classroom_id) ?? null) : null }
+        : null,
+    })),
     applicants: applicantsByParentId.get(row.id) ?? [],
     isOnline: !!row.last_seen_at && now - new Date(row.last_seen_at).getTime() < ONLINE_WINDOW_MS,
   }))

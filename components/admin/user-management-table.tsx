@@ -17,7 +17,13 @@ import { useSort, compareStrings, compareDates, type SortOption } from '@/lib/us
 import { canModerateAccount, type AccountForModeration } from '@/lib/permissions'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
-type LinkedStudent = { id: string; first_name: string; middle_name: string | null; last_name: string }
+type LinkedStudent = {
+  id: string
+  first_name: string
+  middle_name: string | null
+  last_name: string
+  classroomName?: string | null
+}
 type Applicant = {
   id: string
   student_first_name: string

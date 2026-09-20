@@ -10,7 +10,13 @@ import { SortSelect } from '@/components/ui/sort-select'
 import { useSort, compareStrings, compareDates, type SortOption } from '@/lib/use-sort'
 import { UserEditModal } from '@/components/admin/user-edit-modal'
 
-type LinkedStudent = { id: string; first_name: string; middle_name: string | null; last_name: string }
+type LinkedStudent = {
+  id: string
+  first_name: string
+  middle_name: string | null
+  last_name: string
+  classroomName?: string | null
+}
 type Applicant = {
   id: string
   student_first_name: string
