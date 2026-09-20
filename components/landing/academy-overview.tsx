@@ -150,7 +150,7 @@ export function AcademyOverview() {
     <main className="relative flex w-full flex-1 flex-col items-center gap-5 overflow-hidden">
       {/* Hero */}
       <section
-        className="relative flex w-full flex-col items-center gap-6 overflow-hidden px-6 pt-12 text-center"
+        className="relative flex w-full flex-col items-center gap-6 overflow-hidden px-6 pt-12 pb-16 text-center"
         aria-labelledby="academy-heading"
       >
         {/* Photo behind the hero copy, faded to the page background at the
