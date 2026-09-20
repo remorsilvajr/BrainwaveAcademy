@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { logActivity } from '@/lib/activity-log'
+import { formatCurrency, roundToCents } from '@/lib/format'
 
 const FEE_TYPES = ['tuition', 'activity', 'other'] as const
 const METHODS = ['cash', 'check'] as const
@@ -50,7 +51,7 @@ export async function approveWalletRequest(requestId: string, approvedAmount: nu
 
   const { error: walletError } = await supabase
     .from('wallets')
-    .update({ balance: wallet.balance + approvedAmount, updated_at: new Date().toISOString() })
+    .update({ balance: roundToCents(wallet.balance + approvedAmount), updated_at: new Date().toISOString() })
     .eq('parent_id', request.parent_id)
   if (walletError) {
     throw new Error(walletError.message)
@@ -137,9 +138,9 @@ export async function adjustWalletBalance(parentId: string, amount: number, note
     throw new Error("This parent doesn't have a wallet on file.")
   }
 
-  const newBalance = wallet.balance + amount
+  const newBalance = roundToCents(wallet.balance + amount)
   if (newBalance < 0) {
-    throw new Error(`This would take the wallet below zero (current balance: ${wallet.balance}).`)
+    throw new Error(`This would take the wallet below zero (current balance: ${formatCurrency(wallet.balance)}).`)
   }
 
   const { error } = await supabase

@@ -98,6 +98,17 @@ export function formatCurrency(amount: number) {
   return `₱${amount.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
+// Money math done in raw JS floats can drift off the cent (e.g. repeated
+// wallet add/deduct cycles) even though every individual amount is a clean
+// 2-decimal value — round every stored balance/total through this rather
+// than writing a raw sum/difference, or a since-drifted balance can render
+// as a clean amount (formatCurrency rounds for display) while the real
+// stored value is a hair off, making a "deduct the full displayed balance"
+// request spuriously fail a `< 0` check by a fraction of a centavo.
+export function roundToCents(amount: number) {
+  return Math.round((amount + Number.EPSILON) * 100) / 100
+}
+
 export function formatRelativeTime(iso: string) {
   const diffMs = Date.now() - new Date(iso).getTime()
   const hours = Math.floor(diffMs / (1000 * 60 * 60))
