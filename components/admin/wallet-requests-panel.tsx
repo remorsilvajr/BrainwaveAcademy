@@ -10,7 +10,7 @@ import { SortSelect } from '@/components/ui/sort-select'
 import { useSort, compareStrings, compareDates, type SortOption } from '@/lib/use-sort'
 import { approveWalletRequest, denyWalletRequest } from '@/app/admin/payments/actions'
 
-type WalletRequest = {
+export type WalletRequest = {
   id: string
   parentName: string
   parentEmail: string | null

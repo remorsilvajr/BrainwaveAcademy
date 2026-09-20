@@ -1,7 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { PaymentsTable } from '@/components/admin/payments-table'
-import { WalletRequestsPanel } from '@/components/admin/wallet-requests-panel'
-import { ParentWalletsTable } from '@/components/admin/parent-wallets-table'
+import { PaymentsTabs } from '@/components/admin/payments-tabs'
 
 export default async function AdminPaymentsPage() {
   const supabase = await createClient()
@@ -61,9 +59,7 @@ export default async function AdminPaymentsPage() {
           Record cash/check payments, review every fee item and payment, and manage parent wallets.
         </p>
       </div>
-      <WalletRequestsPanel requests={walletRequestRows} />
-      <ParentWalletsTable parents={parentWalletRows} />
-      <PaymentsTable payments={rows} studentOptions={studentOptions} />
+      <PaymentsTabs payments={rows} studentOptions={studentOptions} parents={parentWalletRows} requests={walletRequestRows} />
     </div>
   )
 }

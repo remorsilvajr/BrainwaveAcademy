@@ -8,7 +8,7 @@ import { usePagination } from '@/lib/use-pagination'
 import { SortSelect } from '@/components/ui/sort-select'
 import { useSort, compareStrings, type SortOption } from '@/lib/use-sort'
 
-type ParentWallet = { id: string; name: string; email: string; balance: number }
+export type ParentWallet = { id: string; name: string; email: string; balance: number }
 
 export function ParentWalletsTable({ parents }: { parents: ParentWallet[] }) {
   const [search, setSearch] = useState('')
@@ -34,7 +34,7 @@ export function ParentWalletsTable({ parents }: { parents: ParentWallet[] }) {
   const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(sorted, `${search}|${sortKey}`)
 
   return (
-    <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
+    <div className="mx-auto max-w-2xl rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
       <div className="flex items-center justify-between">
         <h2 className="font-semibold text-[#0b1b62] dark:text-indigo-300">Parent Wallets</h2>
       </div>
