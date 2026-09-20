@@ -1,8 +1,9 @@
 import { Users } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
 import { PickupVerificationPanel } from '@/components/teacher/pickup-verification-panel'
 import { EmptyState } from '@/components/ui/empty-state'
+import { ALL_STUDENTS } from '@/lib/pickup-constants'
+import { loadPickupsWithPhotos } from '@/lib/pickup-list'
 
 export default async function TeacherPickupVerificationPage({
   searchParams,
@@ -33,26 +34,11 @@ export default async function TeacherPickupVerificationPage({
     )
   }
 
+  const showAll = selectedId === ALL_STUDENTS
   const selectedStudent = (students ?? []).find((s) => s.id === selectedId)
   const studentName = selectedStudent ? `${selectedStudent.first_name} ${selectedStudent.last_name}` : 'this student'
 
-  const { data: pickups } = await supabase
-    .from('authorized_pickups')
-    .select('id, full_name, relationship, phone_number, photo_path')
-    .eq('student_id', selectedId)
-    .order('created_at', { ascending: true })
-
-  // staff_view_all_pickups RLS already scoped this read to teacher/admin —
-  // minting signed URLs for the photos via the admin client is just the
-  // trusted mechanism for a private bucket, not an extra permission check.
-  const adminClient = createAdminClient()
-  const pickupsWithUrls = await Promise.all(
-    (pickups ?? []).map(async (p) => {
-      if (!p.photo_path) return { ...p, photoUrl: null }
-      const { data: signed } = await adminClient.storage.from('pickup-photos').createSignedUrl(p.photo_path, 60 * 5)
-      return { ...p, photoUrl: signed?.signedUrl ?? null }
-    })
-  )
+  const pickups = await loadPickupsWithPhotos(supabase, selectedId)
 
   return (
     <div className="space-y-6">
@@ -67,8 +53,8 @@ export default async function TeacherPickupVerificationPage({
         students={students ?? []}
         classrooms={classrooms ?? []}
         selectedId={selectedId}
-        studentName={studentName}
-        pickups={pickupsWithUrls}
+        studentName={showAll ? 'All Students' : studentName}
+        pickups={pickups}
         basePath="/teacher/pickup-verification"
       />
     </div>

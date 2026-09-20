@@ -14,7 +14,8 @@ type FeedbackRow = {
   profiles: { first_name: string; last_name: string; email: string; role: string } | null
 }
 
-export default async function AdminFeedbackPage() {
+export default async function AdminFeedbackPage({ searchParams }: { searchParams: Promise<{ open?: string }> }) {
+  const { open } = await searchParams
   const supabase = await createClient()
 
   const { data } = await supabase
@@ -50,7 +51,7 @@ export default async function AdminFeedbackPage() {
         </p>
       </div>
 
-      <FeedbackTable items={items} />
+      <FeedbackTable items={items} initialOpenId={open ?? null} />
     </div>
   )
 }

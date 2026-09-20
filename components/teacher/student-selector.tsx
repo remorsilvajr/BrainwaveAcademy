@@ -17,6 +17,8 @@ export function StudentSelector({
   classrooms = [],
   selectedId,
   basePath = '/teacher/student-dashboard',
+  align = 'auto',
+  allOption,
 }: {
   students: Student[]
   // Optional — omit for a caller that hasn't fetched classrooms, and each
@@ -24,6 +26,14 @@ export function StudentSelector({
   classrooms?: Classroom[]
   selectedId: string
   basePath?: string
+  // 'auto' keeps the panel flush-right on wider screens, which suits a
+  // trigger sitting at the right of a row. A trigger at the far left of the
+  // page (e.g. the pickup verification toolbar) needs 'left', or that same
+  // right-anchoring pushes the panel off the left edge, behind the sidebar.
+  align?: 'auto' | 'left'
+  // Adds a leading "All ..." entry that navigates with ?student=<value>.
+  // Only for callers whose page actually knows how to render that mode.
+  allOption?: { value: string; label: string }
 }) {
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
@@ -32,6 +42,8 @@ export function StudentSelector({
   const classroomById = new Map(classrooms.map((c) => [c.id, c.name]))
 
   const selected = students.find((s) => s.id === selectedId) ?? null
+  const isAllSelected = !!allOption && selectedId === allOption.value
+  const showAllEntry = !!allOption && (!search.trim() || allOption.label.toLowerCase().includes(search.toLowerCase()))
 
   const filtered = students.filter((s) => {
     if (!search.trim()) return true
@@ -68,7 +80,11 @@ export function StudentSelector({
       >
         <span className="text-gray-500 dark:text-gray-400">Student:</span>
         <span className="font-medium text-gray-900 dark:text-gray-100">
-          {selected ? `${selected.first_name} ${selected.last_name}` : 'Select a student'}
+          {isAllSelected && allOption
+            ? allOption.label
+            : selected
+              ? `${selected.first_name} ${selected.last_name}`
+              : 'Select a student'}
         </span>
         <ChevronDown className="h-4 w-4 text-gray-400 dark:text-gray-500" />
       </button>
@@ -76,7 +92,11 @@ export function StudentSelector({
       {isOpen && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-          <div className="absolute left-0 z-20 mt-2 w-72 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg sm:left-auto sm:right-0">
+          <div
+            className={`absolute left-0 z-20 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg ${
+              align === 'left' ? '' : 'sm:left-auto sm:right-0'
+            }`}
+          >
             <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-3 py-2">
               <Search className="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500" />
               <input
@@ -85,13 +105,27 @@ export function StudentSelector({
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Escape') setIsOpen(false)
-                  if (e.key === 'Enter' && filtered.length > 0) selectStudent(filtered[0].id)
+                  if (e.key === 'Enter') {
+                    if (showAllEntry && allOption) selectStudent(allOption.value)
+                    else if (filtered.length > 0) selectStudent(filtered[0].id)
+                  }
                 }}
                 placeholder="Search students…"
                 className="w-full text-sm text-gray-700 dark:text-gray-300 focus:outline-none"
               />
             </div>
             <div className="max-h-64 overflow-y-auto py-1">
+              {showAllEntry && allOption && (
+                <button
+                  type="button"
+                  onClick={() => selectStudent(allOption.value)}
+                  className={`block w-full px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-800 ${
+                    isAllSelected ? 'font-semibold text-[#0b1b62] dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300'
+                  }`}
+                >
+                  {allOption.label}
+                </button>
+              )}
               {filtered.length > 0 ? (
                 filtered.map((s) => (
                   <button
@@ -111,7 +145,9 @@ export function StudentSelector({
                   </button>
                 ))
               ) : (
-                <p className="px-3 py-4 text-center text-sm text-gray-400 dark:text-gray-500">No students found.</p>
+                !showAllEntry && (
+                  <p className="px-3 py-4 text-center text-sm text-gray-400 dark:text-gray-500">No students found.</p>
+                )
               )}
             </div>
           </div>
