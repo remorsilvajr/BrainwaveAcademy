@@ -12,6 +12,8 @@ import {
 } from '@/app/parent/pickup/actions'
 import { Modal } from '@/components/ui/modal'
 import { isValidPhoneInput, PHONE_VALIDATION_MESSAGE } from '@/lib/phone'
+import { PlainSelect } from '@/components/ui/plain-select'
+import { PICKUP_RELATIONSHIPS, PICKUP_RELATIONSHIP_MESSAGE } from '@/lib/pickup-relationships'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 const MAX_PHOTO_BYTES = 2 * 1024 * 1024
@@ -48,6 +50,16 @@ function PickupFormModal({
         }
       : emptyInput
   )
+  // A legacy free-text relationship (saved before this became a fixed list) is
+  // appended as its own option so editing that row still shows what's stored.
+  const legacyRelationship =
+    editing?.relationship && !(PICKUP_RELATIONSHIPS as readonly string[]).includes(editing.relationship)
+      ? editing.relationship
+      : null
+  const relationshipOptions = [...PICKUP_RELATIONSHIPS, ...(legacyRelationship ? [legacyRelationship] : [])].map((r) => ({
+    value: r,
+    label: r,
+  }))
   const [photo, setPhoto] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(editing?.photoUrl ?? null)
   const [removingExistingPhoto, setRemovingExistingPhoto] = useState(false)
@@ -95,6 +107,10 @@ function PickupFormModal({
     setError('')
     // Same check the server action runs; done here first so a typo is flagged
     // instantly instead of after the photo upload round trip.
+    if (!input.relationship) {
+      setError(PICKUP_RELATIONSHIP_MESSAGE)
+      return
+    }
     if (input.phoneNumber.trim() && !isValidPhoneInput(input.phoneNumber.trim())) {
       setError(PHONE_VALIDATION_MESSAGE)
       return
@@ -161,15 +177,14 @@ function PickupFormModal({
           />
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div>
-            <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Relationship to Child</label>
-            <input
-              value={input.relationship}
-              onChange={(e) => setInput({ ...input, relationship: e.target.value })}
-              placeholder="e.g. Grandmother, Uncle, Family Driver"
-              className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
-            />
-          </div>
+          <PlainSelect
+            label="Relationship to Child"
+            required
+            value={input.relationship}
+            onChange={(value) => setInput({ ...input, relationship: value })}
+            options={relationshipOptions}
+            placeholder="Select Relationship"
+          />
           <div>
             <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Contact Number</label>
             <input
@@ -248,7 +263,7 @@ function PickupFormModal({
         </button>
         <button
           onClick={handleSubmit}
-          disabled={busy || !input.fullName.trim()}
+          disabled={busy || !input.fullName.trim() || !input.relationship}
           className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#0b1b62] py-2.5 text-sm font-semibold text-white hover:bg-[#08154d] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {busy && <Loader2 className="h-4 w-4 animate-spin" />}
