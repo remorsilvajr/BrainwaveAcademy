@@ -37,11 +37,16 @@ export function RemoveApplicationButton({
     setError('')
     startTransition(async () => {
       try {
-        await hideRejectedApplication(applicationId)
+        const result = await hideRejectedApplication(applicationId)
+        if (result?.error) {
+          setError(result.error)
+          setConfirming(false)
+          return
+        }
         router.push(redirectTo)
         router.refresh()
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      } catch {
+        setError('Something went wrong. Please try again.')
         setConfirming(false)
       }
     })

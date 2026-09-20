@@ -35,14 +35,14 @@ export async function logPasswordChanged() {
 // now. Once the Postmark account is approved, the same real reset-link
 // flow Supabase Auth already provides becomes viable for everyone and this
 // pre-generated-password approach can be retired in favor of it.
-export async function requestPasswordResetEmail() {
+export async function requestPasswordResetEmail(): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
   if (!user?.email) {
-    throw new Error('Your session has expired. Please log in again.')
+    return { error: 'Your session has expired. Please log in again.' }
   }
 
   const { data: profile } = await supabase
@@ -94,7 +94,7 @@ export async function requestPasswordResetEmail() {
     password: newPassword,
   })
   if (updateError) {
-    throw new Error(updateError.message)
+    return { error: updateError.message }
   }
 
   await logActivity(supabase, {

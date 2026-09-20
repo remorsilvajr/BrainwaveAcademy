@@ -33,10 +33,14 @@ function PayRow({ payment, walletBalance }: { payment: Payment; walletBalance: n
     setError('')
     startTransition(async () => {
       try {
-        await payFeeWithWallet(payment.id)
+        const result = await payFeeWithWallet(payment.id)
+        if (result?.error) {
+          setError(result.error)
+          return
+        }
         router.refresh()
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong.')
+      } catch {
+        setError('Something went wrong.')
       }
     })
   }

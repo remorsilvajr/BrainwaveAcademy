@@ -118,10 +118,14 @@ export function StudentDashboardContent({
     setIsMarking(true)
     setAttendanceError('')
     try {
-      await recordAttendance({ student_id: student.id, date: todayIso(), status })
+      const result = await recordAttendance({ student_id: student.id, date: todayIso(), status })
+      if (result?.error) {
+        setAttendanceError(result.error)
+        return
+      }
       router.refresh()
-    } catch (err) {
-      setAttendanceError(err instanceof Error ? err.message : 'Something went wrong.')
+    } catch {
+      setAttendanceError('Something went wrong.')
     } finally {
       setIsMarking(false)
     }
@@ -137,17 +141,21 @@ export function StudentDashboardContent({
     setIsSubmittingAssessment(true)
     setAssessmentError('')
     try {
-      await submitMilestoneAssessment({
+      const result = await submitMilestoneAssessment({
         student_id: student.id,
         category,
         assessment_date: todayIso(),
         notes,
       })
+      if (result?.error) {
+        setAssessmentError(result.error)
+        return
+      }
       setAssessingCategory(null)
       setNotes('')
       router.refresh()
-    } catch (err) {
-      setAssessmentError(err instanceof Error ? err.message : 'Something went wrong.')
+    } catch {
+      setAssessmentError('Something went wrong.')
     } finally {
       setIsSubmittingAssessment(false)
     }

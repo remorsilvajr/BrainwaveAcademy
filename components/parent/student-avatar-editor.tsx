@@ -16,10 +16,14 @@ export function StudentAvatarEditor({ studentId, avatarUrl }: { studentId: strin
     try {
       const formData = new FormData()
       formData.append('avatar', file)
-      await updateStudentAvatar(studentId, formData)
+      const result = await updateStudentAvatar(studentId, formData)
+      if ('error' in result) {
+        setErrorMessage(result.error)
+        return
+      }
       router.refresh()
-    } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Something went wrong.')
+    } catch {
+      setErrorMessage('Something went wrong.')
     } finally {
       setIsSaving(false)
     }
@@ -29,10 +33,14 @@ export function StudentAvatarEditor({ studentId, avatarUrl }: { studentId: strin
     setIsSaving(true)
     setErrorMessage('')
     try {
-      await removeStudentAvatar(studentId)
+      const result = await removeStudentAvatar(studentId)
+      if (result?.error) {
+        setErrorMessage(result.error)
+        return
+      }
       router.refresh()
-    } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Something went wrong.')
+    } catch {
+      setErrorMessage('Something went wrong.')
     } finally {
       setIsSaving(false)
     }

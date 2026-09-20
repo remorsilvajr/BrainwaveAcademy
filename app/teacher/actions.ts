@@ -4,17 +4,21 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { logActivity } from '@/lib/activity-log'
 
-export async function postAnnouncement(input: { title: string; body: string; classroomId?: string | null }) {
+export async function postAnnouncement(input: {
+  title: string
+  body: string
+  classroomId?: string | null
+}): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
   if (!user) {
-    throw new Error('Your session has expired. Please log in again.')
+    return { error: 'Your session has expired. Please log in again.' }
   }
   if (!input.title.trim() || !input.body.trim()) {
-    throw new Error('Add both a title and a message.')
+    return { error: 'Add both a title and a message.' }
   }
 
   // A teacher may only target a classroom they're actually lead or
@@ -33,11 +37,11 @@ export async function postAnnouncement(input: { title: string; body: string; cla
         .maybeSingle(),
     ])
     if (!classroom) {
-      throw new Error('Classroom not found.')
+      return { error: 'Classroom not found.' }
     }
     const isAssigned = classroom.lead_teacher_id === user.id || !!assistantLink
     if (!isAssigned) {
-      throw new Error('You can only post to a classroom you are assigned to as a lead or assistant teacher.')
+      return { error: 'You can only post to a classroom you are assigned to as a lead or assistant teacher.' }
     }
   }
 
@@ -55,7 +59,7 @@ export async function postAnnouncement(input: { title: string; body: string; cla
   })
 
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   await logActivity(supabase, {

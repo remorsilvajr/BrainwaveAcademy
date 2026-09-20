@@ -86,9 +86,17 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
       if (pendingPhoto) {
         const formData = new FormData()
         formData.append('avatar', pendingPhoto)
-        await uploadMyAvatar(formData)
+        const avatarResult = await uploadMyAvatar(formData)
+        if ('error' in avatarResult) {
+          setMessage({ text: avatarResult.error, isError: true })
+          return
+        }
       } else if (removePending) {
-        await removeMyAvatar()
+        const removeResult = await removeMyAvatar()
+        if (removeResult?.error) {
+          setMessage({ text: removeResult.error, isError: true })
+          return
+        }
       }
       const saved = await updateMyProfile({
         phone_number: phone,
@@ -96,6 +104,10 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
         relationship_to_student: relationship,
         gender,
       })
+      if ('error' in saved) {
+        setMessage({ text: saved.error, isError: true })
+        return
+      }
       setPhone(saved.phone_number ?? '')
       setDob(saved.date_of_birth ?? '')
       setRelationship(saved.relationship_to_student ?? '')
@@ -106,8 +118,8 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
       setRemovePending(false)
       setMessage({ text: 'Profile updated.', isError: false })
       router.refresh()
-    } catch (err) {
-      setMessage({ text: err instanceof Error ? err.message : 'Something went wrong.', isError: true })
+    } catch {
+      setMessage({ text: 'Something went wrong.', isError: true })
     } finally {
       setIsSaving(false)
     }

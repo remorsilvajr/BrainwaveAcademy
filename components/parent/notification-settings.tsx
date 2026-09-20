@@ -26,16 +26,21 @@ export function NotificationSettings({
     setIsSaving(true)
     setErrorMessage('')
     try {
-      await updateNotificationPreferences({
+      const result = await updateNotificationPreferences({
         email_notifications_enabled: nextEmail,
         sms_notifications_enabled: nextSms,
       })
-    } catch (err) {
-      // Revert on failure rather than leaving the toggle showing a state
-      // that didn't actually save.
+      if (result?.error) {
+        // Revert on failure rather than leaving the toggle showing a state
+        // that didn't actually save.
+        if (field === 'email') setEmailEnabled(!value)
+        else setSmsEnabled(!value)
+        setErrorMessage(result.error)
+      }
+    } catch {
       if (field === 'email') setEmailEnabled(!value)
       else setSmsEnabled(!value)
-      setErrorMessage(err instanceof Error ? err.message : 'Something went wrong.')
+      setErrorMessage('Something went wrong.')
     } finally {
       setIsSaving(false)
     }

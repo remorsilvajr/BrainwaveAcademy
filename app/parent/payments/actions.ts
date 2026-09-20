@@ -22,14 +22,14 @@ const ERROR_MESSAGES: Record<string, string> = {
 // identity from auth.uid() internally, not from anything this action
 // passes in, so it can't be used to pay someone else's fee from your own
 // wallet or vice versa.
-export async function payFeeWithWallet(paymentId: string) {
+export async function payFeeWithWallet(paymentId: string): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
 
-  const { data, error } = await supabase.rpc('pay_fee_with_wallet', { p_payment_id: paymentId })
+  const { error } = await supabase.rpc('pay_fee_with_wallet', { p_payment_id: paymentId })
 
   if (error) {
     const message = ERROR_MESSAGES[error.message] ?? 'Something went wrong processing this payment.'
-    throw new Error(message)
+    return { error: message }
   }
 
   const {
@@ -44,22 +44,20 @@ export async function payFeeWithWallet(paymentId: string) {
 
   revalidatePath('/parent/payments')
   revalidatePath('/parent', 'layout')
-
-  return data
 }
 
 // Parents can't credit their own wallet directly (wallets has no parent
 // write policy at all, see the schema note in CLAUDE.md) — this only ever
 // creates a pending request. Admin decides the actual amount credited,
 // which can differ from what's requested here; see approveWalletRequest.
-export async function requestWalletFunds(amount: number, note: string) {
+export async function requestWalletFunds(amount: number, note: string): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
   if (!Number.isFinite(amount) || amount <= 0) {
-    throw new Error('Enter a valid amount greater than zero.')
+    return { error: 'Enter a valid amount greater than zero.' }
   }
 
   const { error } = await supabase.from('wallet_requests').insert({
@@ -69,7 +67,7 @@ export async function requestWalletFunds(amount: number, note: string) {
   })
 
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   await logActivity(supabase, {

@@ -14,13 +14,18 @@ export function RequestPasswordReset() {
     setIsSubmitting(true)
     setMessage('')
     try {
-      await requestPasswordResetEmail()
+      const result = await requestPasswordResetEmail()
+      if (result?.error) {
+        setIsError(true)
+        setMessage(result.error)
+        return
+      }
       setIsError(false)
       setMessage('A new password has been emailed to you. Use it to log in next time.')
       setConfirming(false)
-    } catch (err) {
+    } catch {
       setIsError(true)
-      setMessage(err instanceof Error ? err.message : 'Something went wrong.')
+      setMessage('Something went wrong.')
     } finally {
       setIsSubmitting(false)
     }

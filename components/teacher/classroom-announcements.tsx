@@ -66,14 +66,18 @@ export function ClassroomAnnouncements({
     setIsSubmitting(true)
     setErrorMessage('')
     try {
-      await postAnnouncement({ title, body, classroomId: classroomId || null })
+      const result = await postAnnouncement({ title, body, classroomId: classroomId || null })
+      if (result?.error) {
+        setErrorMessage(result.error)
+        return
+      }
       setTitle('')
       setBody('')
       setClassroomId('')
       setIsPosting(false)
       router.refresh()
-    } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Something went wrong.')
+    } catch {
+      setErrorMessage('Something went wrong.')
     } finally {
       setIsSubmitting(false)
     }

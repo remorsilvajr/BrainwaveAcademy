@@ -9,12 +9,12 @@ export async function uploadRequirementDocument(
   applicationId: string,
   documentType: string,
   formData: FormData
-) {
+): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
 
   const file = formData.get('file') as File | null
   if (!file || file.size === 0) {
-    throw new Error('Please choose a file to upload.')
+    return { error: 'Please choose a file to upload.' }
   }
 
   const extension = file.name.split('.').pop() || 'bin'
@@ -38,7 +38,7 @@ export async function uploadRequirementDocument(
     .upload(path, file, { upsert: true })
 
   if (uploadError) {
-    throw new Error(uploadError.message)
+    return { error: uploadError.message }
   }
 
   const { error: upsertError } = await supabase.from('application_documents').upsert(
@@ -52,7 +52,7 @@ export async function uploadRequirementDocument(
   )
 
   if (upsertError) {
-    throw new Error(upsertError.message)
+    return { error: upsertError.message }
   }
 
   // The 2x2 ID photo doubles as the student's profile picture wherever
@@ -101,7 +101,7 @@ export async function uploadRequirementDocument(
 // Verifies ownership via a normal RLS-scoped select (only succeeds if this
 // document belongs to one of the caller's own linked children) before using
 // the service role client purely to generate the signed URL.
-export async function getOwnDocumentSignedUrl(documentId: string) {
+export async function getOwnDocumentSignedUrl(documentId: string): Promise<{ error: string } | { url: string }> {
   const supabase = await createClient()
 
   const { data: doc, error } = await supabase
@@ -111,7 +111,7 @@ export async function getOwnDocumentSignedUrl(documentId: string) {
     .single()
 
   if (error || !doc) {
-    throw new Error('Document not found or access denied.')
+    return { error: 'Document not found or access denied.' }
   }
 
   const admin = createAdminClient()
@@ -120,8 +120,8 @@ export async function getOwnDocumentSignedUrl(documentId: string) {
     .createSignedUrl(doc.file_url, 60 * 5)
 
   if (signError || !data) {
-    throw new Error(signError?.message ?? 'Could not generate a document link.')
+    return { error: signError?.message ?? 'Could not generate a document link.' }
   }
 
-  return data.signedUrl
+  return { url: data.signedUrl }
 }

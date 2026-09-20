@@ -72,15 +72,19 @@ export function RosterCheckin({
     setSavedId(null)
     setErrorMessage('')
     try {
-      await recordAttendance({ student_id: studentId, date, status })
+      const result = await recordAttendance({ student_id: studentId, date, status })
+      if (result?.error) {
+        setErrorMessage(result.error)
+        return
+      }
       setSavedId(studentId)
       // Give the "Saved" confirmation a moment to actually paint before
       // router.refresh() swaps in fresh server data — calling refresh() in
       // the same tick as the state update above raced it out, so the
       // confirmation never had a visible frame.
       setTimeout(() => router.refresh(), 400)
-    } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Something went wrong.')
+    } catch {
+      setErrorMessage('Something went wrong.')
     } finally {
       setMarkingId(null)
     }

@@ -14,17 +14,21 @@ const MILESTONE_CATEGORIES = [
   'creative',
 ] as const
 
-export async function recordAttendance(input: { student_id: string; date: string; status: string }) {
+export async function recordAttendance(input: {
+  student_id: string
+  date: string
+  status: string
+}): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
   if (!user) {
-    throw new Error('Your session has expired. Please log in again.')
+    return { error: 'Your session has expired. Please log in again.' }
   }
   if (!(ATTENDANCE_STATUSES as readonly string[]).includes(input.status)) {
-    throw new Error('Invalid attendance status.')
+    return { error: 'Invalid attendance status.' }
   }
 
   // No DB-level uniqueness on (student_id, date) to rely on for an upsert,
@@ -54,7 +58,7 @@ export async function recordAttendance(input: { student_id: string; date: string
       })
 
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   await logActivity(supabase, {
@@ -74,17 +78,17 @@ export async function submitMilestoneAssessment(input: {
   category: string
   assessment_date: string
   notes: string
-}) {
+}): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
   if (!user) {
-    throw new Error('Your session has expired. Please log in again.')
+    return { error: 'Your session has expired. Please log in again.' }
   }
   if (!(MILESTONE_CATEGORIES as readonly string[]).includes(input.category)) {
-    throw new Error('Invalid milestone category.')
+    return { error: 'Invalid milestone category.' }
   }
 
   // One current record per student+category, not an append-only history —
@@ -113,7 +117,7 @@ export async function submitMilestoneAssessment(input: {
     if (existing) {
       const { error } = await supabase.from('milestones').delete().eq('id', existing.id)
       if (error) {
-        throw new Error(error.message)
+        return { error: error.message }
       }
       await logActivity(supabase, {
         actorId: user.id,
@@ -146,7 +150,7 @@ export async function submitMilestoneAssessment(input: {
       })
 
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   await logActivity(supabase, {

@@ -16,7 +16,7 @@ import { logActivity } from '@/lib/activity-log'
 // This only ever sets hidden_from_parent — it never deletes the row or
 // touches anything admin can see. See enrollment-requests-table.tsx for
 // the admin-side "archive" equivalent, which is a separate flag entirely.
-export async function hideRejectedApplication(applicationId: string) {
+export async function hideRejectedApplication(applicationId: string): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
   const {
     data: { user },
@@ -30,10 +30,10 @@ export async function hideRejectedApplication(applicationId: string) {
     .maybeSingle()
 
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
   if (!data) {
-    throw new Error('This application could not be removed; it may no longer be rejected, or may not belong to your account.')
+    return { error: 'This application could not be removed; it may no longer be rejected, or may not belong to your account.' }
   }
 
   await logActivity(supabase, {

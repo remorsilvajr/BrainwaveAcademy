@@ -6,12 +6,15 @@ import { createClient } from '@/lib/supabase/server'
 // RLS (parents_update_own_children_avatar) enforces that this parent
 // actually has a parent_student link to studentId — no manual ownership
 // check needed here, the database rejects it otherwise.
-export async function updateStudentAvatar(studentId: string, formData: FormData) {
+export async function updateStudentAvatar(
+  studentId: string,
+  formData: FormData
+): Promise<{ error: string } | { url: string }> {
   const supabase = await createClient()
 
   const file = formData.get('avatar') as File | null
   if (!file || file.size === 0) {
-    throw new Error('Please choose an image.')
+    return { error: 'Please choose an image.' }
   }
 
   const extension = file.name.split('.').pop() || 'jpg'
@@ -19,7 +22,7 @@ export async function updateStudentAvatar(studentId: string, formData: FormData)
 
   const { error: uploadError } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
   if (uploadError) {
-    throw new Error(uploadError.message)
+    return { error: uploadError.message }
   }
 
   const { data } = supabase.storage.from('avatars').getPublicUrl(path)
@@ -27,19 +30,19 @@ export async function updateStudentAvatar(studentId: string, formData: FormData)
 
   const { error: updateError } = await supabase.from('students').update({ avatar_url: avatarUrl }).eq('id', studentId)
   if (updateError) {
-    throw new Error(updateError.message)
+    return { error: updateError.message }
   }
 
   revalidatePath('/parent/students')
-  return avatarUrl
+  return { url: avatarUrl }
 }
 
-export async function removeStudentAvatar(studentId: string) {
+export async function removeStudentAvatar(studentId: string): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
 
   const { error } = await supabase.from('students').update({ avatar_url: null }).eq('id', studentId)
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   revalidatePath('/parent/students')

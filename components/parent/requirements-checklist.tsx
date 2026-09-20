@@ -132,9 +132,12 @@ export function RequirementsChecklist({
     formData.append('file', file)
     startTransition(async () => {
       try {
-        await uploadRequirementDocument(applicationId, type, formData)
-      } catch (err) {
-        setErrorMessage(err instanceof Error ? err.message : 'Upload failed. Please try again.')
+        const result = await uploadRequirementDocument(applicationId, type, formData)
+        if (result?.error) {
+          setErrorMessage(result.error)
+        }
+      } catch {
+        setErrorMessage('Upload failed. Please try again.')
       }
     })
   }
@@ -143,11 +146,15 @@ export function RequirementsChecklist({
     const doc = getDoc(type)
     if (!doc) return
     try {
-      const url = await getOwnDocumentSignedUrl(doc.id)
+      const result = await getOwnDocumentSignedUrl(doc.id)
+      if ('error' in result) {
+        setErrorMessage(result.error)
+        return
+      }
       setPreviewTitle(documentShortLabels[type] ?? 'Document')
-      setPreviewUrl(url)
-    } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Could not open that document.')
+      setPreviewUrl(result.url)
+    } catch {
+      setErrorMessage('Could not open that document.')
     }
   }
 

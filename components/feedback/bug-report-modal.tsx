@@ -51,11 +51,15 @@ export function BugReportModal({ onClose }: { onClose: () => void }) {
     try {
       const formData = new FormData()
       if (image) formData.set('image', image)
-      await submitFeedback(subject, message, formData)
+      const result = await submitFeedback(subject, message, formData)
+      if (result?.error) {
+        setErrorMessage(result.error)
+        return
+      }
       setSent(true)
       router.refresh()
-    } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+    } catch {
+      setErrorMessage('Something went wrong. Please try again.')
     } finally {
       setIsSubmitting(false)
     }

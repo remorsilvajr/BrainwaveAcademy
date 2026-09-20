@@ -13,14 +13,18 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024 // matches the bug-reports bucket's own 
 // in this app are. `feedback.submitted_by` is RLS-scoped to auth.uid() via
 // the pre-existing `users_manage_own_feedback` policy, so this runs on the
 // regular request-scoped client, not createAdminClient().
-export async function submitFeedback(subject: string, message: string, formData: FormData) {
+export async function submitFeedback(
+  subject: string,
+  message: string,
+  formData: FormData
+): Promise<{ error: string } | undefined> {
   const trimmedSubject = subject.trim()
   const trimmedMessage = message.trim()
   if (!trimmedSubject) {
-    throw new Error('Please add a short subject.')
+    return { error: 'Please add a short subject.' }
   }
   if (!trimmedMessage) {
-    throw new Error('Please describe the issue.')
+    return { error: 'Please describe the issue.' }
   }
 
   const supabase = await createClient()
@@ -28,7 +32,7 @@ export async function submitFeedback(subject: string, message: string, formData:
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) {
-    throw new Error('You must be logged in to send a bug report.')
+    return { error: 'You must be logged in to send a bug report.' }
   }
 
   // Upload (if any) happens before the feedback row is inserted, not after
@@ -47,17 +51,17 @@ export async function submitFeedback(subject: string, message: string, formData:
   let imagePath: string | null = null
   if (image && image.size > 0) {
     if (image.size > MAX_IMAGE_BYTES) {
-      throw new Error('Screenshot must be under 5MB.')
+      return { error: 'Screenshot must be under 5MB.' }
     }
     if (!image.type.startsWith('image/')) {
-      throw new Error('Please attach an image file.')
+      return { error: 'Please attach an image file.' }
     }
     const extension = image.name.split('.').pop() || 'png'
     imagePath = `${user.id}/${randomUUID()}.${extension}`
 
     const { error: uploadError } = await supabase.storage.from('bug-reports').upload(imagePath, image)
     if (uploadError) {
-      throw new Error(uploadError.message)
+      return { error: uploadError.message }
     }
   }
 
@@ -68,7 +72,7 @@ export async function submitFeedback(subject: string, message: string, formData:
     .single()
 
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   await logActivity(supabase, {
