@@ -150,64 +150,86 @@ export function AcademyOverview() {
     <main className="relative flex w-full flex-1 flex-col items-center gap-5 overflow-hidden">
       {/* Hero */}
       <section
-        className="flex w-full max-w-[592px] flex-col items-center gap-6 px-6 pt-12 text-center"
+        className="relative flex w-full flex-col items-center gap-6 overflow-hidden px-6 pt-12 text-center"
         aria-labelledby="academy-heading"
       >
-        <div className="inline-flex items-center gap-2 rounded-full px-4 py-1">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            className="h-3 w-3"
+        {/* Photo behind the hero copy, faded to the page background at the
+            edges so it blends in rather than hard-cutting off. Centered
+            crop (the default) shows the kids' faces, which is the look
+            that was actually asked for — resist the urge to "improve" this
+            further with a color tint or a different crop without being
+            asked; the one time that happened it was flagged as an
+            unwanted change. */}
+        <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+          <Image
+            src="/images/landing/bg-landing.jpg"
             alt=""
-            src="/images/landing/badge-icon.svg"
-            aria-hidden="true"
+            fill
+            priority
+            quality={95}
+            sizes="100vw"
+            className="object-cover opacity-30 dark:opacity-20"
           />
-          <p className="text-xs font-medium tracking-[0.24px] text-[#76c828]">
-            Est. June 23, 2005 • Tagum City
-          </p>
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,white_90%)] dark:bg-[radial-gradient(ellipse_at_center,transparent_20%,#030712_90%)]" />
         </div>
-        <h1
-          id="academy-heading"
-          className="text-4xl font-bold leading-[46px] tracking-[-0.96px] text-[#0b1b62] dark:text-indigo-300 sm:text-5xl sm:leading-[56px]"
-        >
-          Nurturing Young Learners
-          <br />
-          in Their Most Formative
-          <br />
-          Years
-        </h1>
-        <p className="text-base leading-7 text-[#454650] dark:text-slate-300 sm:text-lg">
-          Guided by Directress Dr. Elena C. Lagrimas, Brainwave Preschool
-          Academy provides a holistic, vibrant environment where every
-          child&apos;s potential is recognized and cultivated.
-        </p>
-        <nav
-          className="flex flex-wrap items-center justify-center gap-4 pt-2"
-          aria-label="Academy overview links"
-        >
-          {/* Primary, above-the-fold conversion CTA — distinct from the
-              scroll-to-section buttons below it, which just navigate within
-              this same page. */}
-          <Link
-            href="/enroll"
-            className="rounded-full bg-[#e6007e] px-8 py-4 text-sm font-semibold tracking-[0.14px] text-white shadow-[0px_1px_2px_#0000000d] transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e6007e]"
+
+        <div className="relative flex w-full max-w-[592px] flex-col items-center gap-6">
+          <div className="inline-flex items-center gap-2 rounded-full px-4 py-1">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className="h-3 w-3"
+              alt=""
+              src="/images/landing/badge-icon.svg"
+              aria-hidden="true"
+            />
+            <p className="text-xs font-medium tracking-[0.24px] text-[#76c828]">
+              Est. June 23, 2005 • Tagum City
+            </p>
+          </div>
+          <h1
+            id="academy-heading"
+            className="text-4xl font-bold leading-[46px] tracking-[-0.96px] text-[#0b1b62] dark:text-indigo-300 sm:text-5xl sm:leading-[56px]"
           >
-            Enroll Now
-          </Link>
-          <button
-            type="button"
-            onClick={scrollToPrograms}
-            className="rounded-full border-2 border-[#0b1b62] px-8 py-4 text-sm font-semibold tracking-[0.14px] text-[#0b1b62] dark:border-indigo-300 dark:text-indigo-300 transition-colors hover:bg-[#0b1b620d] dark:hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b1b62]"
+            Nurturing Young Learners
+            <br />
+            in Their Most Formative
+            <br />
+            Years
+          </h1>
+          <p className="text-base leading-7 text-[#454650] dark:text-slate-300 sm:text-lg">
+            Guided by Directress Dr. Elena C. Lagrimas, Brainwave Preschool
+            Academy provides a holistic, vibrant environment where every
+            child&apos;s potential is recognized and cultivated.
+          </p>
+          <nav
+            className="flex flex-wrap items-center justify-center gap-4 pt-2"
+            aria-label="Academy overview links"
           >
-            Explore Programs
-          </button>
-          <button
-            type="button"
-            onClick={scrollToDomains}
-            className="rounded-full border-2 border-[#00a3e0] px-8 py-4 text-sm font-semibold tracking-[0.14px] text-[#00a3e0] dark:text-sky-400 transition-colors hover:bg-[#00a3e00d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00a3e0]"
-          >
-            Learn About Our 6 Domains
-          </button>
-        </nav>
+            {/* Primary, above-the-fold conversion CTA — distinct from the
+                scroll-to-section buttons below it, which just navigate within
+                this same page. */}
+            <Link
+              href="/enroll"
+              className="rounded-full bg-[#e6007e] px-8 py-4 text-sm font-semibold tracking-[0.14px] text-white shadow-[0px_1px_2px_#0000000d] transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e6007e]"
+            >
+              Enroll Now
+            </Link>
+            <button
+              type="button"
+              onClick={scrollToPrograms}
+              className="rounded-full border-2 border-[#0b1b62] px-8 py-4 text-sm font-semibold tracking-[0.14px] text-[#0b1b62] dark:border-indigo-300 dark:text-indigo-300 transition-colors hover:bg-[#0b1b620d] dark:hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b1b62]"
+            >
+              Explore Programs
+            </button>
+            <button
+              type="button"
+              onClick={scrollToDomains}
+              className="rounded-full border-2 border-[#00a3e0] px-8 py-4 text-sm font-semibold tracking-[0.14px] text-[#00a3e0] dark:text-sky-400 transition-colors hover:bg-[#00a3e00d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00a3e0]"
+            >
+              Learn About Our 6 Domains
+            </button>
+          </nav>
+        </div>
       </section>
 
       {/* Journey + Founder */}
