@@ -13,9 +13,10 @@ export default async function TeacherAttendancePage({
 
   const supabase = await createClient()
 
-  const [{ data: students }, { data: attendance }] = await Promise.all([
-    supabase.from('students').select('id, first_name, last_name').order('first_name', { ascending: true }),
+  const [{ data: students }, { data: attendance }, { data: classrooms }] = await Promise.all([
+    supabase.from('students').select('id, first_name, last_name, classroom_id').order('first_name', { ascending: true }),
     supabase.from('attendance').select('student_id, status').eq('date', selectedDate),
+    supabase.from('classrooms').select('id, name').order('created_at', { ascending: true }),
   ])
 
   const statusByStudent: Record<string, string> = {}
@@ -30,6 +31,7 @@ export default async function TeacherAttendancePage({
 
       <RosterCheckin
         students={students ?? []}
+        classrooms={classrooms ?? []}
         statusByStudent={statusByStudent}
         date={selectedDate}
         basePath="/teacher/attendance"

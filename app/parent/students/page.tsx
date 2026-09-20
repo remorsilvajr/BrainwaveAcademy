@@ -60,9 +60,19 @@ export default async function StudentProfilePage({
       .select('document_type, verification_status')
       .eq('application_id', application.id),
     application.created_student_id
-      ? supabase.from('students').select('avatar_url').eq('id', application.created_student_id).single()
+      ? supabase.from('students').select('avatar_url, classroom_id').eq('id', application.created_student_id).single()
       : Promise.resolve({ data: null }),
   ])
+
+  // Once enrolled, the actual assigned classroom is the source of truth for
+  // "which program" — requested_classroom_id was only ever a pre-enrollment
+  // request (see the Classrooms note in CLAUDE.md) and is never touched
+  // again after approval, so it's only worth showing while still an
+  // applicant with no real assignment yet.
+  const programClassroomId = student?.classroom_id ?? (!application.created_student_id ? application.requested_classroom_id : null)
+  const { data: programClassroom } = programClassroomId
+    ? await supabase.from('classrooms').select('name').eq('id', programClassroomId).maybeSingle()
+    : { data: null }
 
   const validCount = (documents ?? []).filter((d) => d.verification_status === 'valid').length
   const fullName = `${application.student_first_name}${application.student_middle_name ? ' ' + application.student_middle_name : ''} ${application.student_last_name}`
@@ -151,6 +161,14 @@ export default async function StudentProfilePage({
             <div className="rounded-lg bg-gray-50 dark:bg-gray-800/60 p-3">
               <p className="text-xs text-gray-400 dark:text-gray-500">Gender</p>
               <p className="text-sm font-medium capitalize text-gray-900 dark:text-gray-100">{application.student_gender}</p>
+            </div>
+            <div className="rounded-lg bg-gray-50 dark:bg-gray-800/60 p-3">
+              <p className="text-xs text-gray-400 dark:text-gray-500">
+                {application.created_student_id ? 'Program' : 'Requested Program'}
+              </p>
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                {programClassroom?.name ?? (application.created_student_id ? 'Unassigned' : 'Not specified')}
+              </p>
             </div>
           </div>
 

@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ChevronDown, Search } from 'lucide-react'
 
-type Student = { id: string; first_name: string; last_name: string }
+type Student = { id: string; first_name: string; last_name: string; classroom_id?: string | null }
+type Classroom = { id: string; name: string }
 
 // A plain <select> listing every student system-wide doesn't scale — a
 // school with a couple hundred enrolled students turns "pick one" into a
@@ -13,10 +14,14 @@ type Student = { id: string; first_name: string; last_name: string }
 // filters the list as you type.
 export function StudentSelector({
   students,
+  classrooms = [],
   selectedId,
   basePath = '/teacher/student-dashboard',
 }: {
   students: Student[]
+  // Optional — omit for a caller that hasn't fetched classrooms, and each
+  // option just shows the student's name with no classroom sublabel.
+  classrooms?: Classroom[]
   selectedId: string
   basePath?: string
 }) {
@@ -24,6 +29,7 @@ export function StudentSelector({
   const [isOpen, setIsOpen] = useState(false)
   const [search, setSearch] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
+  const classroomById = new Map(classrooms.map((c) => [c.id, c.name]))
 
   const selected = students.find((s) => s.id === selectedId) ?? null
 
@@ -97,6 +103,11 @@ export function StudentSelector({
                     }`}
                   >
                     {s.first_name} {s.last_name}
+                    {classrooms.length > 0 && (
+                      <span className="ml-1.5 font-normal text-gray-400 dark:text-gray-500">
+                        {s.classroom_id ? (classroomById.get(s.classroom_id) ?? '') : 'Unassigned'}
+                      </span>
+                    )}
                   </button>
                 ))
               ) : (

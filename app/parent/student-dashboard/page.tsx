@@ -73,10 +73,10 @@ export default async function ParentStudentDashboardPage({
 
   const studentId = application.created_student_id
 
-  const [{ data: student }, { data: attendance }, { data: milestones }] = await Promise.all([
+  const [{ data: student }, { data: attendance }, { data: milestones }, { data: classrooms }] = await Promise.all([
     supabase
       .from('students')
-      .select('id, first_name, middle_name, last_name, date_of_birth, gender, enrollment_status, avatar_url')
+      .select('id, first_name, middle_name, last_name, date_of_birth, gender, enrollment_status, avatar_url, classroom_id')
       .eq('id', studentId)
       .single(),
     supabase
@@ -91,7 +91,10 @@ export default async function ParentStudentDashboardPage({
       .eq('student_id', studentId)
       .order('assessment_date', { ascending: false })
       .order('created_at', { ascending: false }),
+    supabase.from('classrooms').select('id, name'),
   ])
+
+  const classroomById = new Map((classrooms ?? []).map((c) => [c.id, c.name]))
 
   return (
     <div className="space-y-6">
@@ -104,7 +107,7 @@ export default async function ParentStudentDashboardPage({
 
       {student && (
         <StudentDashboardContent
-          student={student}
+          student={{ ...student, classroomName: student.classroom_id ? (classroomById.get(student.classroom_id) ?? null) : null }}
           attendance={attendance ?? []}
           milestones={milestones ?? []}
           readOnly

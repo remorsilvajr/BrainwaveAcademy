@@ -22,14 +22,15 @@ export default async function AdminStudentDashboardPage({
   // included — now runs in one Promise.all instead.
   const studentsQuery = supabase
     .from('students')
-    .select('id, first_name, last_name')
+    .select('id, first_name, last_name, classroom_id')
     .order('first_name', { ascending: true })
+  const classroomsQuery = supabase.from('classrooms').select('id, name').order('created_at', { ascending: true })
 
   function detailQueries(id: string) {
     return Promise.all([
       supabase
         .from('students')
-        .select('id, first_name, middle_name, last_name, date_of_birth, gender, enrollment_status, avatar_url')
+        .select('id, first_name, middle_name, last_name, date_of_birth, gender, enrollment_status, avatar_url, classroom_id')
         .eq('id', id)
         .single(),
       supabase
@@ -47,21 +48,23 @@ export default async function AdminStudentDashboardPage({
     ])
   }
 
-  let students, student, attendance, milestones
+  let students, student, attendance, milestones, classrooms
   let selectedId: string | null
 
   if (studentParam) {
     selectedId = studentParam
-    const [studentsRes, [studentRes, attendanceRes, milestonesRes]] = await Promise.all([
+    const [studentsRes, classroomsRes, [studentRes, attendanceRes, milestonesRes]] = await Promise.all([
       studentsQuery,
+      classroomsQuery,
       detailQueries(studentParam),
     ])
     ;({ data: students } = studentsRes)
+    ;({ data: classrooms } = classroomsRes)
     ;({ data: student } = studentRes)
     ;({ data: attendance } = attendanceRes)
     ;({ data: milestones } = milestonesRes)
   } else {
-    ;({ data: students } = await studentsQuery)
+    ;[{ data: students }, { data: classrooms }] = await Promise.all([studentsQuery, classroomsQuery])
     selectedId = students?.[0]?.id ?? null
     if (selectedId) {
       const [studentRes, attendanceRes, milestonesRes] = await detailQueries(selectedId)
@@ -74,6 +77,8 @@ export default async function AdminStudentDashboardPage({
       milestones = null
     }
   }
+
+  const classroomById = new Map((classrooms ?? []).map((c) => [c.id, c.name]))
 
   if (!selectedId) {
     return (
@@ -99,12 +104,12 @@ export default async function AdminStudentDashboardPage({
           <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Student Dashboard</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Attendance, assessments, and milestones per student.</p>
         </div>
-        <StudentSelector students={students ?? []} selectedId={selectedId} basePath="/admin/student-dashboard" />
+        <StudentSelector students={students ?? []} classrooms={classrooms ?? []} selectedId={selectedId} basePath="/admin/student-dashboard" />
       </div>
 
       {student && (
         <StudentDashboardContent
-          student={student}
+          student={{ ...student, classroomName: student.classroom_id ? (classroomById.get(student.classroom_id) ?? null) : null }}
           attendance={attendance ?? []}
           milestones={milestones ?? []}
           avatarEditor={{
