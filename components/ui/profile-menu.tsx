@@ -27,11 +27,19 @@ export function ProfileMenu({
   myProfileHref,
   settingsHref,
   triggerClassName,
+  // Parent/teacher moved Report a Bug / Feedback & Concerns / My Feedback
+  // into their own sidebar Feedback page (app/parent/feedback,
+  // app/teacher/feedback — see components/feedback/feedback-tabs.tsx), so
+  // this dropdown stays admin/public-site-only for those three. Defaults to
+  // shown, since admin and the logged-in landing-page header still rely on
+  // this dropdown as their only entry point for them.
+  showFeedbackLinks = true,
   children,
 }: {
   myProfileHref?: string
   settingsHref: string
   triggerClassName?: string
+  showFeedbackLinks?: boolean
   children: React.ReactNode
 }) {
   const [open, setOpen] = useState(false)
@@ -74,36 +82,40 @@ export function ProfileMenu({
             <Link href={settingsHref} onClick={() => setOpen(false)} className={ITEM_CLASSNAME}>
               Settings
             </Link>
-            <button
-              type="button"
-              onClick={() => {
-                setOpen(false)
-                setShowBugReport(true)
-              }}
-              className={ITEM_CLASSNAME}
-            >
-              Report a Bug
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setOpen(false)
-                setShowFeedback(true)
-              }}
-              className={ITEM_CLASSNAME}
-            >
-              Feedback &amp; Concerns
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setOpen(false)
-                setShowMyFeedback(true)
-              }}
-              className={ITEM_CLASSNAME}
-            >
-              My Feedback
-            </button>
+            {showFeedbackLinks && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpen(false)
+                    setShowBugReport(true)
+                  }}
+                  className={ITEM_CLASSNAME}
+                >
+                  Report a Bug
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpen(false)
+                    setShowFeedback(true)
+                  }}
+                  className={ITEM_CLASSNAME}
+                >
+                  Feedback &amp; Concerns
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpen(false)
+                    setShowMyFeedback(true)
+                  }}
+                  className={ITEM_CLASSNAME}
+                >
+                  My Feedback
+                </button>
+              </>
+            )}
             <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
             <LogoutButton className={ITEM_CLASSNAME} />
           </div>

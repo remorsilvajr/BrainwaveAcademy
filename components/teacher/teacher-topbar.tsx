@@ -27,6 +27,7 @@ export function TeacherTopBar({ sections, teacher }: { sections: NavSection[]; t
           <ProfileMenu
             myProfileHref="/teacher/my-profile"
             settingsHref="/teacher/settings"
+            showFeedbackLinks={false}
             triggerClassName="flex items-center gap-2.5 rounded-lg px-1.5 py-1 hover:bg-gray-50 dark:hover:bg-gray-800"
           >
             {teacher.avatar_url ? (

@@ -98,6 +98,7 @@ export function ParentTopBar({
           <ProfileMenu
             myProfileHref="/parent/my-profile"
             settingsHref="/parent/settings"
+            showFeedbackLinks={false}
             triggerClassName="flex items-center gap-2 rounded-lg px-1.5 py-1 hover:bg-gray-50 dark:hover:bg-gray-800 sm:gap-2.5"
           >
             {parent.avatar_url ? (
