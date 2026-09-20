@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Bug } from 'lucide-react'
 import { LogoutButton } from '@/components/logout-button'
 import { BugReportModal } from '@/components/feedback/bug-report-modal'
 
@@ -78,9 +77,8 @@ export function ProfileMenu({
                 setOpen(false)
                 setShowBugReport(true)
               }}
-              className={`${ITEM_CLASSNAME} flex items-center gap-2`}
+              className={ITEM_CLASSNAME}
             >
-              <Bug className="h-4 w-4" />
               Report a Bug
             </button>
             <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
