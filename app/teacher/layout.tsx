@@ -21,7 +21,7 @@ const sections: NavSection[] = [
   },
   {
     title: 'Support',
-    items: [{ label: 'Feedback', href: '/teacher/feedback', icon: 'bug' }],
+    items: [{ label: 'Feedback', href: '/teacher/feedback', icon: 'feedback' }],
   },
   {
     title: 'Account',

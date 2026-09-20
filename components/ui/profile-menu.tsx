@@ -27,12 +27,12 @@ export function ProfileMenu({
   myProfileHref,
   settingsHref,
   triggerClassName,
-  // Parent/teacher moved Report a Bug / Feedback & Concerns / My Feedback
-  // into their own sidebar Feedback page (app/parent/feedback,
-  // app/teacher/feedback — see components/feedback/feedback-tabs.tsx), so
-  // this dropdown stays admin/public-site-only for those three. Defaults to
-  // shown, since admin and the logged-in landing-page header still rely on
-  // this dropdown as their only entry point for them.
+  // Parent/teacher moved Send Feedback / My Feedback into their own sidebar
+  // Feedback page (app/parent/feedback, app/teacher/feedback — see
+  // components/feedback/feedback-tabs.tsx), so this dropdown stays
+  // admin/public-site-only for those two. Defaults to shown, since admin
+  // and the logged-in landing-page header still rely on this dropdown as
+  // their only entry point for them.
   showFeedbackLinks = true,
   children,
 }: {
@@ -43,7 +43,6 @@ export function ProfileMenu({
   children: React.ReactNode
 }) {
   const [open, setOpen] = useState(false)
-  const [showBugReport, setShowBugReport] = useState(false)
   const [showFeedback, setShowFeedback] = useState(false)
   const [showMyFeedback, setShowMyFeedback] = useState(false)
   const pathname = usePathname()
@@ -88,21 +87,11 @@ export function ProfileMenu({
                   type="button"
                   onClick={() => {
                     setOpen(false)
-                    setShowBugReport(true)
-                  }}
-                  className={ITEM_CLASSNAME}
-                >
-                  Report a Bug
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setOpen(false)
                     setShowFeedback(true)
                   }}
                   className={ITEM_CLASSNAME}
                 >
-                  Feedback &amp; Concerns
+                  Send Feedback
                 </button>
                 <button
                   type="button"
@@ -122,8 +111,7 @@ export function ProfileMenu({
         </>
       )}
 
-      {showBugReport && <BugReportModal onClose={() => setShowBugReport(false)} initialCategory="bug" />}
-      {showFeedback && <BugReportModal onClose={() => setShowFeedback(false)} initialCategory="concern" />}
+      {showFeedback && <BugReportModal onClose={() => setShowFeedback(false)} />}
       {showMyFeedback && <MyFeedbackModal onClose={() => setShowMyFeedback(false)} />}
     </div>
   )

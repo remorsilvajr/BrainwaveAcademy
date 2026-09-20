@@ -93,9 +93,9 @@ export function FeedbackForm({
         ) : (
           <>
             <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
-              {initialCategory === 'bug'
+              {category === 'bug'
                 ? 'Ran into something broken or confusing? Let us know what happened and where. The more specific, the faster we can fix it.'
-                : "Have a concern, suggestion, or something else to share? Send it here and the admin team will follow up."}
+                : 'Have a concern, suggestion, or something else to share? Send it here and the admin team will follow up.'}
             </p>
             <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Category</label>
             <select

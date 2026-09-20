@@ -4,11 +4,10 @@ import { useState } from 'react'
 import { FeedbackForm } from '@/components/feedback/feedback-form'
 import { MyFeedbackList } from '@/components/feedback/my-feedback-list'
 
-type Tab = 'bug' | 'concern' | 'mine'
+type Tab = 'send' | 'mine'
 
 const tabs: { key: Tab; label: string }[] = [
-  { key: 'bug', label: 'Report a Bug' },
-  { key: 'concern', label: 'Feedback & Concerns' },
+  { key: 'send', label: 'Send Feedback' },
   { key: 'mine', label: 'My Feedback' },
 ]
 
@@ -18,8 +17,15 @@ const tabs: { key: Tab; label: string }[] = [
 // the ProfileMenu dropdown (which still backs this for admin and the public
 // site) so it has a proper home in the sidebar instead of being buried in
 // the account menu.
+//
+// "Report a Bug" and "Feedback & Concerns" used to be two separate tabs
+// here — both were the exact same form/table, just with a different
+// pre-selected category, so having two tabs for one form read as
+// redundant. One "Send Feedback" tab now covers both; the Category
+// dropdown inside FeedbackForm (bug listed first, per lib/feedback.ts) is
+// what actually distinguishes a bug report from a general concern.
 export function FeedbackTabs() {
-  const [tab, setTab] = useState<Tab>('bug')
+  const [tab, setTab] = useState<Tab>('send')
 
   return (
     <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
@@ -40,8 +46,7 @@ export function FeedbackTabs() {
         ))}
       </div>
 
-      {tab === 'bug' && <FeedbackForm key="bug" initialCategory="bug" />}
-      {tab === 'concern' && <FeedbackForm key="concern" initialCategory="concern" />}
+      {tab === 'send' && <FeedbackForm initialCategory="bug" />}
       {tab === 'mine' && <MyFeedbackList />}
     </div>
   )
