@@ -130,7 +130,7 @@ export default async function TermsOfServicePage() {
             outstanding fee using an in-app wallet balance the School provides. This wallet is a
             bookkeeping feature only: it is not connected to any bank account, card processor, or
             other real financial institution, and no real money moves through the Service itself.
-            A cash or check payment made directly with the School office is recorded in the
+            A cash payment made directly with the School office is recorded in the
             Service by School staff and is separate from the wallet. If a real online payment
             method (for example, a card or bank-linked payment processor) is introduced in the
             future, these Terms will be updated to describe the applicable payment terms before

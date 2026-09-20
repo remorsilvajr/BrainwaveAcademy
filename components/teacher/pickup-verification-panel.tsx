@@ -2,14 +2,11 @@
 
 import { useState } from 'react'
 import { User as UserIcon, ShieldCheck, ShieldAlert } from 'lucide-react'
-import { StudentSelector } from '@/components/teacher/student-selector'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
 import { logPickupCheck } from '@/app/teacher/pickup-verification/actions'
-import { ALL_STUDENTS } from '@/lib/pickup-constants'
 
-type Student = { id: string; first_name: string; last_name: string; classroom_id: string | null }
-type Classroom = { id: string; name: string }
+type Student = { id: string; first_name: string; last_name: string }
 type Pickup = {
   id: string
   student_id: string
@@ -28,27 +25,15 @@ function relationshipKey(relationship: string | null) {
   return key ? key : NO_RELATIONSHIP
 }
 
-export function PickupVerificationPanel({
-  students,
-  classrooms,
-  selectedId,
-  studentName,
-  pickups,
-  basePath,
-}: {
-  students: Student[]
-  classrooms: Classroom[]
-  selectedId: string
-  studentName: string
-  pickups: Pickup[]
-  basePath: string
-}) {
+// Always school-wide: every registered pickup person is searched and listed at
+// once, each labeled with the child they're authorized for (authorization is
+// per child, not per person, so "is this person on file" alone isn't enough).
+export function PickupVerificationPanel({ students, pickups }: { students: Student[]; pickups: Pickup[] }) {
   const [search, setSearch] = useState('')
   const [relationshipFilter, setRelationshipFilter] = useState('all')
   const [loggedId, setLoggedId] = useState<string | null>(null)
   const [error, setError] = useState('')
 
-  const showAll = selectedId === ALL_STUDENTS
   const studentNameById = new Map(students.map((s) => [s.id, `${s.first_name} ${s.last_name}`]))
 
   const term = search.trim().toLowerCase()
@@ -71,17 +56,14 @@ export function PickupVerificationPanel({
     return options
   })()
 
-  // The selected filter can stop existing after switching students (or when
-  // that relationship's last person is removed); treat that as "all" rather
-  // than showing an empty list under a filter the dropdown can't display.
+  // The selected filter can stop existing after a refresh removes that
+  // relationship's last person; treat that as "all" rather than showing an
+  // empty list under a filter the dropdown can't display.
   const activeFilter = relationshipOptions.some((o) => o.value === relationshipFilter) ? relationshipFilter : 'all'
 
   const listed = activeFilter === 'all' ? pickups : pickups.filter((p) => relationshipKey(p.relationship) === activeFilter)
 
-  const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(
-    listed,
-    `${selectedId}|${activeFilter}`
-  )
+  const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(listed, activeFilter)
 
   async function handleLog(pickup: Pickup) {
     setError('')
@@ -99,30 +81,6 @@ export function PickupVerificationPanel({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
-        <StudentSelector
-          students={students}
-          classrooms={classrooms}
-          selectedId={selectedId}
-          basePath={basePath}
-          align="left"
-          allOption={{ value: ALL_STUDENTS, label: 'All Students' }}
-        />
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          {showAll ? (
-            <>
-              Viewing the authorized pickup list for{' '}
-              <span className="font-semibold text-gray-900 dark:text-gray-100">all students</span>
-            </>
-          ) : (
-            <>
-              Viewing <span className="font-semibold text-gray-900 dark:text-gray-100">{studentName}</span>&apos;s
-              authorized pickup list
-            </>
-          )}
-        </p>
-      </div>
-
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
         <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">
           Type the name of the person picking up
@@ -141,9 +99,8 @@ export function PickupVerificationPanel({
             {matches.length === 0 ? (
               <div className="flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-950/30 p-3 text-sm text-red-700 dark:text-red-400">
                 <ShieldAlert className="h-4 w-4 shrink-0" />
-                {showAll
-                  ? `No match on file for "${search.trim()}" for any student. Do not release the child without admin confirmation.`
-                  : `No match on file for "${search.trim()}". Do not release the child without admin confirmation.`}
+                No match on file for &quot;{search.trim()}&quot; for any student. Do not release the child without admin
+                confirmation.
               </div>
             ) : (
               matches.map((p) => (
@@ -168,11 +125,9 @@ export function PickupVerificationPanel({
                       <p className="text-xs text-green-700 dark:text-green-400">
                         {[p.relationship, p.phone_number].filter(Boolean).join(' · ') || 'Authorized on file'}
                       </p>
-                      {showAll && (
-                        <p className="text-xs font-semibold text-green-800 dark:text-green-300">
-                          Authorized for {studentNameById.get(p.student_id) ?? 'an unknown student'}
-                        </p>
-                      )}
+                      <p className="text-xs font-semibold text-green-800 dark:text-green-300">
+                        Authorized for {studentNameById.get(p.student_id) ?? 'an unknown student'}
+                      </p>
                     </div>
                   </div>
                   <button
@@ -192,9 +147,7 @@ export function PickupVerificationPanel({
 
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
         <div className="flex flex-wrap items-end justify-between gap-3">
-          <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
-            {showAll ? 'All Authorized Pickup Persons' : 'Full Authorized List'}
-          </h2>
+          <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400">All Authorized Pickup Persons</h2>
           {pickups.length > 0 && (
             <div className="w-full sm:w-64">
               <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Relationship</label>
@@ -216,9 +169,7 @@ export function PickupVerificationPanel({
 
         {pickups.length === 0 ? (
           <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            {showAll
-              ? 'No authorized pickup persons have been registered yet.'
-              : 'No authorized pickup persons registered for this student.'}
+            No authorized pickup persons have been registered yet.
           </p>
         ) : (
           <>
@@ -238,11 +189,9 @@ export function PickupVerificationPanel({
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       {[p.relationship, p.phone_number].filter(Boolean).join(' · ') || '-'}
                     </p>
-                    {showAll && (
-                      <p className="text-xs text-gray-400 dark:text-gray-500">
-                        For {studentNameById.get(p.student_id) ?? 'an unknown student'}
-                      </p>
-                    )}
+                    <p className="text-xs text-gray-400 dark:text-gray-500">
+                      For {studentNameById.get(p.student_id) ?? 'an unknown student'}
+                    </p>
                   </div>
                 </div>
               ))}

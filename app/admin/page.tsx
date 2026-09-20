@@ -135,7 +135,7 @@ export default async function AdminDashboardPage() {
           <p className="text-sm text-gray-500 dark:text-gray-400">Total Collections Today</p>
           <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">{formatCurrency(totalCollectedToday)}</p>
           <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
-            {totalCollectedToday > 0 ? 'Paid today, wallet + cash/check' : 'No transactions yet'}
+            {totalCollectedToday > 0 ? 'Paid today, wallet + cash' : 'No transactions yet'}
           </p>
         </Link>
         <Link
@@ -182,34 +182,19 @@ export default async function AdminDashboardPage() {
                 </tr>
               ) : (
                 (recentPayments ?? []).map((p) => (
-                  // Every cell wraps its content in the same block link, so the whole
-                  // row is one click target into Payments while this stays a Server
-                  // Component (a <tr> can't itself be an <a>).
-                  <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/60">
-                    <td className="text-gray-700 dark:text-gray-300">
-                      <Link href="/admin/payments" className="block py-2">
-                        {p.receipt_ref ?? '-'}
-                        <br />
-                        <span className="text-xs text-gray-400 dark:text-gray-500">
-                          {p.transaction_date ? formatDateShort(p.transaction_date) : '-'}
-                        </span>
-                      </Link>
+                  <tr key={p.id}>
+                    <td className="py-2 text-gray-700 dark:text-gray-300">
+                      {p.receipt_ref ?? '-'}
+                      <br />
+                      <span className="text-xs text-gray-400 dark:text-gray-500">
+                        {p.transaction_date ? formatDateShort(p.transaction_date) : '-'}
+                      </span>
                     </td>
-                    <td className="text-gray-700 dark:text-gray-300">
-                      <Link href="/admin/payments" className="block py-2">
-                        {paymentStudentById.get(p.student_id) ?? 'Unknown student'}
-                      </Link>
+                    <td className="py-2 text-gray-700 dark:text-gray-300">
+                      {paymentStudentById.get(p.student_id) ?? 'Unknown student'}
                     </td>
-                    <td className="capitalize text-gray-700 dark:text-gray-300">
-                      <Link href="/admin/payments" className="block py-2">
-                        {p.payment_method ?? '-'}
-                      </Link>
-                    </td>
-                    <td className="font-medium text-gray-900 dark:text-gray-100">
-                      <Link href="/admin/payments" className="block py-2">
-                        {formatCurrency(p.amount)}
-                      </Link>
-                    </td>
+                    <td className="py-2 capitalize text-gray-700 dark:text-gray-300">{p.payment_method ?? '-'}</td>
+                    <td className="py-2 font-medium text-gray-900 dark:text-gray-100">{formatCurrency(p.amount)}</td>
                   </tr>
                 ))
               )}

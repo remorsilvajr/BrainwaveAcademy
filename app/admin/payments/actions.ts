@@ -6,7 +6,10 @@ import { logActivity } from '@/lib/activity-log'
 import { formatCurrency, roundToCents } from '@/lib/format'
 
 const FEE_TYPES = ['tuition', 'activity', 'other'] as const
-const METHODS = ['cash', 'check'] as const
+// Cash only for now: a parent has no way to pay by check anywhere in the app, so
+// offering it here would just be a dead option. `receipt-view.tsx` still labels a
+// legacy 'check' row correctly, since older payments may already carry it.
+const METHODS = ['cash'] as const
 
 type ActionResult = { error: string } | undefined
 
@@ -185,7 +188,7 @@ export async function adjustWalletBalance(parentId: string, amount: number, note
   revalidateAll()
 }
 
-// Cash/check payments, entirely separate from the wallet flow — these are
+// Cash payments, entirely separate from the wallet flow — these are
 // recorded directly as already-paid, since admin is recording money that
 // has already changed hands outside the app (see the Manual payment
 // recording note in CLAUDE.md). `classroom_id` is best-effort (the
@@ -201,7 +204,7 @@ export async function recordManualPayment(
     return { error: 'Invalid fee type.' }
   }
   if (!METHODS.includes(input.method as (typeof METHODS)[number])) {
-    return { error: 'Payment method must be cash or check.' }
+    return { error: 'Only cash payments can be recorded manually.' }
   }
   if (!Number.isFinite(input.amount) || input.amount <= 0) {
     return { error: 'Enter a valid amount greater than zero.' }
@@ -246,13 +249,13 @@ export async function recordManualPayment(
 }
 
 // Marks an already-generated pending fee item (e.g. a classroom's tuition
-// fee) as paid via cash/check, without touching the wallet — the
+// fee) as paid via cash, without touching the wallet — the
 // counterpart to payFeeWithWallet for a payment made outside the app.
 export async function markPaymentPaidManually(paymentId: string, method: string, notes?: string): Promise<ActionResult> {
   const supabase = await createClient()
 
   if (!METHODS.includes(method as (typeof METHODS)[number])) {
-    return { error: 'Payment method must be cash or check.' }
+    return { error: 'Only cash payments can be recorded manually.' }
   }
 
   const {

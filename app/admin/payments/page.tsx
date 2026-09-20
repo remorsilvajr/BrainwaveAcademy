@@ -56,7 +56,7 @@ export default async function AdminPaymentsPage() {
       <div>
         <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Payments</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Record cash/check payments, review every fee item and payment, and manage parent wallets.
+          Record cash payments, review every fee item and payment, and manage parent wallets.
         </p>
       </div>
       <PaymentsTabs payments={rows} studentOptions={studentOptions} parents={parentWalletRows} requests={walletRequestRows} />

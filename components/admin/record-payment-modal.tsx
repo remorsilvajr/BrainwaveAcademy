@@ -19,7 +19,6 @@ export function RecordPaymentModal({
   const [feeType, setFeeType] = useState('tuition')
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
-  const [method, setMethod] = useState('cash')
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -36,7 +35,7 @@ export function RecordPaymentModal({
         feeType,
         description,
         amount: Number(amount),
-        method,
+        method: 'cash',
       })
       if (result?.error) {
         setError(result.error)
@@ -61,7 +60,7 @@ export function RecordPaymentModal({
           </button>
         </div>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          For a cash or check payment received outside the app. This does not touch the parent&apos;s wallet.
+          For a cash payment received outside the app. This does not touch the parent&apos;s wallet.
         </p>
       </div>
 
@@ -96,14 +95,9 @@ export function RecordPaymentModal({
               </div>
               <div>
                 <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Payment Method</label>
-                <select
-                  value={method}
-                  onChange={(e) => setMethod(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
-                >
-                  <option value="cash">Cash</option>
-                  <option value="check">Check</option>
-                </select>
+                <p className="w-full rounded-lg border border-slate-200 bg-gray-50 text-slate-700 dark:border-slate-700 dark:bg-gray-800/60 dark:text-slate-200 px-3 py-2 text-sm">
+                  Cash
+                </p>
               </div>
             </div>
             <div>

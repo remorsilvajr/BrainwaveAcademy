@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { isValidName, NAME_VALIDATION_MESSAGE } from '@/lib/name'
+import { isValidPhoneInput, normalizePhilippineMobile, PHONE_VALIDATION_MESSAGE } from '@/lib/phone'
 import { logActivity } from '@/lib/activity-log'
 
 const MAX_PHOTO_BYTES = 2 * 1024 * 1024 // matches the pickup-photos bucket's own file_size_limit
@@ -12,15 +13,20 @@ export type PickupPersonInput = {
   fullName: string
   relationship: string
   phoneNumber: string
-  idType: string
-  idNumber: string
 }
 
 function validateInput(input: PickupPersonInput): string | null {
   const fullName = input.fullName.trim()
   if (!fullName) return 'Enter the full name of the authorized person.'
   if (!isValidName(fullName)) return NAME_VALIDATION_MESSAGE
+  const phone = input.phoneNumber.trim()
+  if (phone && !isValidPhoneInput(phone)) return PHONE_VALIDATION_MESSAGE
   return null
+}
+
+function normalizedPhone(raw: string) {
+  const phone = raw.trim()
+  return phone ? normalizePhilippineMobile(phone) : null
 }
 
 // Ownership of `studentId` is enforced by parents_manage_own_students_pickups'
@@ -73,9 +79,7 @@ export async function addPickupPerson(
       student_id: studentId,
       full_name: input.fullName.trim(),
       relationship: input.relationship.trim() || null,
-      phone_number: input.phoneNumber.trim() || null,
-      id_type: input.idType.trim() || null,
-      id_number: input.idNumber.trim() || null,
+      phone_number: normalizedPhone(input.phoneNumber),
       photo_path: photoPath,
       created_by: user.id,
     })
@@ -126,9 +130,7 @@ export async function updatePickupPerson(
   const updates: Record<string, unknown> = {
     full_name: input.fullName.trim(),
     relationship: input.relationship.trim() || null,
-    phone_number: input.phoneNumber.trim() || null,
-    id_type: input.idType.trim() || null,
-    id_number: input.idNumber.trim() || null,
+    phone_number: normalizedPhone(input.phoneNumber),
     updated_at: new Date().toISOString(),
   }
 

@@ -11,6 +11,7 @@ import {
   type PickupPersonInput,
 } from '@/app/parent/pickup/actions'
 import { Modal } from '@/components/ui/modal'
+import { isValidPhoneInput, PHONE_VALIDATION_MESSAGE } from '@/lib/phone'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 const MAX_PHOTO_BYTES = 2 * 1024 * 1024
@@ -22,12 +23,10 @@ type Pickup = {
   full_name: string
   relationship: string | null
   phone_number: string | null
-  id_type: string | null
-  id_number: string | null
   photoUrl: string | null
 }
 
-const emptyInput: PickupPersonInput = { fullName: '', relationship: '', phoneNumber: '', idType: '', idNumber: '' }
+const emptyInput: PickupPersonInput = { fullName: '', relationship: '', phoneNumber: '' }
 
 function PickupFormModal({
   studentId,
@@ -46,8 +45,6 @@ function PickupFormModal({
           fullName: editing.full_name,
           relationship: editing.relationship ?? '',
           phoneNumber: editing.phone_number ?? '',
-          idType: editing.id_type ?? '',
-          idNumber: editing.id_number ?? '',
         }
       : emptyInput
   )
@@ -95,8 +92,14 @@ function PickupFormModal({
   }
 
   async function handleSubmit() {
-    setIsSaving(true)
     setError('')
+    // Same check the server action runs; done here first so a typo is flagged
+    // instantly instead of after the photo upload round trip.
+    if (input.phoneNumber.trim() && !isValidPhoneInput(input.phoneNumber.trim())) {
+      setError(PHONE_VALIDATION_MESSAGE)
+      return
+    }
+    setIsSaving(true)
     try {
       const formData = new FormData()
       if (photo) formData.set('photo', photo)
@@ -172,25 +175,10 @@ function PickupFormModal({
             <input
               value={input.phoneNumber}
               onChange={(e) => setInput({ ...input, phoneNumber: e.target.value })}
-              className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
-            />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div>
-            <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">ID Type</label>
-            <input
-              value={input.idType}
-              onChange={(e) => setInput({ ...input, idType: e.target.value })}
-              placeholder="e.g. Driver's License"
-              className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">ID Number</label>
-            <input
-              value={input.idNumber}
-              onChange={(e) => setInput({ ...input, idNumber: e.target.value })}
+              type="tel"
+              inputMode="tel"
+              maxLength={20}
+              placeholder="e.g. 0917 123 4567"
               className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
             />
           </div>
