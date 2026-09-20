@@ -81,7 +81,10 @@ export default async function TeacherDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
+        <Link
+          href="/teacher/attendance"
+          className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6 transition hover:border-[#0b1b62]/40 dark:hover:border-indigo-400"
+        >
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Attendance</h2>
             <span className="rounded-full bg-indigo-50 dark:bg-indigo-950/40 px-3 py-1 text-sm font-medium text-indigo-700 dark:text-indigo-300">
@@ -94,15 +97,15 @@ export default async function TeacherDashboardPage() {
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             {absentCount} Absent, {lateCount} Late
           </p>
-          <Link
-            href="/teacher/attendance"
-            className="mt-4 inline-block rounded-lg border border-[#0b1b62] dark:border-indigo-300 px-4 py-2 text-sm font-semibold text-[#0b1b62] dark:text-indigo-300 hover:bg-[#0b1b62]/5"
-          >
+          <span className="mt-4 inline-block rounded-lg border border-[#0b1b62] dark:border-indigo-300 px-4 py-2 text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
             Take Attendance →
-          </Link>
-        </div>
+          </span>
+        </Link>
 
-        <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
+        <a
+          href="#assessments"
+          className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6 transition hover:border-[#e6007e]/40"
+        >
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Milestones</h2>
             {pendingStudents.length > 0 && (
@@ -113,13 +116,10 @@ export default async function TeacherDashboardPage() {
             {pendingStudents.length} <span className="text-base font-normal text-gray-500 dark:text-gray-400">Students</span>
           </p>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Have incomplete 6-domain evaluations</p>
-          <a
-            href="#assessments"
-            className="mt-4 inline-block rounded-lg bg-[#e6007e] px-4 py-2 text-sm font-semibold text-white hover:bg-[#c9006e]"
-          >
+          <span className="mt-4 inline-block rounded-lg bg-[#e6007e] px-4 py-2 text-sm font-semibold text-white">
             Complete Evaluations →
-          </a>
-        </div>
+          </span>
+        </a>
       </div>
 
       <ClassroomAnnouncements announcements={announcements} assignableClassrooms={assignableClassrooms} viewAllHref="/teacher/announcement" />

@@ -58,16 +58,17 @@ export default async function AdminDashboardPage() {
     .eq('status', 'paid')
     .gte('transaction_date', new Date(nowMs() - 24 * 60 * 60 * 1000).toISOString())
 
-  // "Pending Applications" spans both stages of the pipeline: enrollment
-  // requests that haven't been approved yet (Enrollment Requests' queue) and
-  // approved requests whose documents aren't fully verified yet, i.e. no
-  // student record created (Applications' queue) — see CLAUDE.md's note on
-  // why these are two separate, easily-confused features.
+  // Two separate stages of the pipeline, shown as two separate cards (they
+  // used to be combined into one "Pending Applications" stat linking to
+  // Enrollment Requests — found live as a real bug: the combined count
+  // included Applications' queue too, so clicking through to Enrollment
+  // Requests could show 0 even when the dashboard said 16, since all of
+  // them were actually sitting in Applications instead. See CLAUDE.md's
+  // note on why these are two separate, easily-confused features.
   const pendingReviewCount = (applications ?? []).filter((a) => a.status === 'pending_review').length
   const pendingDocumentsCount = (applications ?? []).filter(
     (a) => a.status === 'approved' && !a.created_student_id
   ).length
-  const pendingApplicationsCount = pendingReviewCount + pendingDocumentsCount
 
   const activeEnrollmentCount = (students ?? []).filter((s) => s.enrollment_status === 'active').length
 
@@ -103,31 +104,51 @@ export default async function AdminDashboardPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-amber-400 dark:border-l-amber-600 bg-white dark:bg-gray-900 p-4 shadow-sm">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Link
+          href="/admin/enroll-a-student"
+          className="rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-amber-400 dark:border-l-amber-600 bg-white dark:bg-gray-900 p-4 shadow-sm transition hover:border-amber-300 dark:hover:border-amber-500"
+        >
+          <p className="text-sm text-gray-500 dark:text-gray-400">Enrollment Requests</p>
+          <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">{pendingReviewCount}</p>
+          <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">New enrollment requests awaiting review</p>
+        </Link>
+        <Link
+          href="/admin/applications"
+          className="rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-orange-400 dark:border-l-orange-600 bg-white dark:bg-gray-900 p-4 shadow-sm transition hover:border-orange-300 dark:hover:border-orange-500"
+        >
           <p className="text-sm text-gray-500 dark:text-gray-400">Pending Applications</p>
-          <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">{pendingApplicationsCount}</p>
-          <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Awaiting review &amp; document validation</p>
-        </div>
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-green-400 dark:border-l-green-600 bg-white dark:bg-gray-900 p-4 shadow-sm">
+          <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">{pendingDocumentsCount}</p>
+          <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Approved requests awaiting document review</p>
+        </Link>
+        <Link
+          href="/admin/students"
+          className="rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-green-400 dark:border-l-green-600 bg-white dark:bg-gray-900 p-4 shadow-sm transition hover:border-green-300 dark:hover:border-green-500"
+        >
           <p className="text-sm text-gray-500 dark:text-gray-400">Active Student Enrollment</p>
           <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">{activeEnrollmentCount}</p>
           <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Currently active students</p>
-        </div>
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-red-400 dark:border-l-red-600 bg-white dark:bg-gray-900 p-4 shadow-sm">
+        </Link>
+        <Link
+          href="/admin/feedback"
+          className="rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-red-400 dark:border-l-red-600 bg-white dark:bg-gray-900 p-4 shadow-sm transition hover:border-red-300 dark:hover:border-red-500"
+        >
           <p className="text-sm text-gray-500 dark:text-gray-400">Unresolved Feedback</p>
           <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">{unresolvedFeedbackCount ?? 0}</p>
           <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Bug reports &amp; feedback needing response</p>
-        </div>
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-sky-400 bg-white dark:bg-gray-900 p-4 shadow-sm">
+        </Link>
+        <Link
+          href="/admin/payments"
+          className="rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-sky-400 bg-white dark:bg-gray-900 p-4 shadow-sm transition hover:border-sky-300 dark:hover:border-sky-500"
+        >
           <p className="text-sm text-gray-500 dark:text-gray-400">Total Collections Today</p>
           <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">{formatCurrency(totalCollectedToday)}</p>
           <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
             {totalCollectedToday > 0 ? 'Paid today, wallet + cash/check' : 'No transactions yet'}
           </p>
-        </div>
+        </Link>
         <Link
-          href="/admin/payments"
+          href="/admin/payments?tab=requests"
           className="rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-purple-400 dark:border-l-purple-600 bg-white dark:bg-gray-900 p-4 shadow-sm transition hover:border-purple-300 dark:hover:border-purple-500"
         >
           <p className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">

@@ -112,7 +112,10 @@ export default async function ParentDashboardPage({
       </h1>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
+        <Link
+          href={selectedApplication ? '/parent/requirements' : '/parent/enroll-a-student'}
+          className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6 transition hover:border-sky-300 dark:hover:border-sky-500"
+        >
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Enrollment Progress</h2>
             {selectedApplication && (
@@ -138,40 +141,33 @@ export default async function ParentDashboardPage({
               <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
                 <div className="h-full bg-sky-500" style={{ width: `${progressPercent}%` }} />
               </div>
-              <Link
-                href="/parent/requirements"
-                className="mt-4 inline-block text-sm font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline"
-              >
-                View Requirements →
-              </Link>
+              <p className="mt-4 text-sm font-semibold text-[#00a3e0] dark:text-sky-400">View Requirements →</p>
             </>
           ) : (
             <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
               No enrollment application on file yet.{' '}
-              <Link href="/parent/enroll-a-student" className="font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline">
-                Enroll a student
-              </Link>{' '}
-              to get started.
+              <span className="font-semibold text-[#00a3e0] dark:text-sky-400">Enroll a student</span> to get started.
             </p>
           )}
-        </div>
+        </Link>
 
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
+        <Link
+          href="/parent/payments"
+          className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6 transition hover:border-sky-300 dark:hover:border-sky-500"
+        >
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Due Balance</h2>
           <p className="mt-4 text-3xl font-bold text-[#0b1b62] dark:text-indigo-300">{formatCurrency(dueBalance)}</p>
           <p className="mt-2 flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
             <CalendarClock className="h-4 w-4" />
             {dueBalance > 0 ? 'Outstanding across all your children.' : 'No payments due at this time.'}
           </p>
-          <Link
-            href="/parent/payments"
-            className="mt-3 inline-block text-sm font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline"
-          >
-            View Payments →
-          </Link>
-        </div>
+          <p className="mt-3 text-sm font-semibold text-[#00a3e0] dark:text-sky-400">View Payments →</p>
+        </Link>
 
-        <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
+        <Link
+          href="/parent/payments"
+          className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6 transition hover:border-sky-300 dark:hover:border-sky-500"
+        >
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Wallet Balance</h2>
           <p className="mt-4 text-3xl font-bold text-[#0b1b62] dark:text-indigo-300">{formatCurrency(wallet?.balance ?? 0)}</p>
           <p className="mt-2 flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
@@ -180,13 +176,10 @@ export default async function ParentDashboardPage({
               ? `Top-up request of ${formatCurrency(pendingWalletRequest.requested_amount)} pending review.`
               : 'Available to pay outstanding fees.'}
           </p>
-          <Link
-            href="/parent/payments"
-            className="mt-3 inline-block text-sm font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline"
-          >
+          <p className="mt-3 text-sm font-semibold text-[#00a3e0] dark:text-sky-400">
             {pendingWalletRequest ? 'View Payments →' : 'Request Funds →'}
-          </Link>
-        </div>
+          </p>
+        </Link>
       </div>
 
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
