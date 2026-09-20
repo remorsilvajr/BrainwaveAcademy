@@ -4,6 +4,64 @@ A school admin / enrollment portal for Brainwave Preschool Academy, built with N
 
 **Live**: https://brainwave-academy-phi.vercel.app/
 
+## Features
+
+### Public site
+
+- Landing page with school info, program highlights, founder profile, and the 6 developmental domains
+- Multi-step public enrollment form (student info → program selection → parent/guardian info), with a honeypot spam guard
+- Login, Forgot/Reset Password, with brute-force lockout after repeated failed attempts
+- Privacy Policy and Terms of Service with real, jurisdiction-specific content (RA 10173 / National Privacy Commission)
+- FAQ page, branded 404, sitemap/robots.txt, and an auto-generated OG image
+- Cookie consent notice, and dark mode across the entire site
+
+### Parent portal
+
+- Dashboard with enrollment progress, due balance, wallet balance, and recent announcements — every card links to its full page
+- Enroll a Student (in-portal wizard for a second/subsequent child)
+- Requirements checklist with document upload
+- Enrollment Status tracker, with a way to remove a rejected application
+- Enrollment/Student Profile (read-only record + editable photo once enrolled)
+- Student Dashboard — read-only attendance and 6-domain milestone tracker
+- Payments — wallet balance, itemized fees, pay-with-wallet, payment history, printable receipts, and wallet top-up requests
+- Authorized Pickup — register the people allowed to pick up each child, with photo and ID details
+- School Calendar — view holidays/events and RSVP Going/Not Going
+- Feedback — Report a Bug / Feedback & Concerns / My Feedback, in its own sidebar section
+
+### Teacher portal
+
+- Dashboard with attendance summary, interactive roster check-in, milestone summary, and classroom announcements — every card links to its full page
+- Announcements scoped to the teacher's assigned classroom(s), or all parents
+- Student directory with classroom column and filter
+- Attendance — date-selectable roster, editable for today only
+- Student Dashboard — attendance and 6-domain milestone assessments (edit-in-place)
+- Pickup Verification — look up a child's authorized pickup list and confirm a match by name
+- School Calendar — view holidays/events
+- Feedback — same Report a Bug / Feedback & Concerns / My Feedback tabs as parent
+
+### Admin portal
+
+- Dashboard with real, live stats (pending applications, active enrollment, unresolved feedback, today's collections, pending fund requests) — every card links to its full page
+- User Management — edit, block, and role management, with a hidden super-admin protection tier
+- Enrollment Requests and Applications — the two-stage review pipeline from a submitted request to a verified, enrolled student
+- Create New Account (manual account provisioning)
+- Payments — tabbed Payments / Parent Wallets / Payment Requests (with a pending-count badge), manual cash/check recording, and wallet fund request review
+- Students, Teachers, and Classrooms directories, with roster/fee-schedule management
+- Student Dashboard with full edit rights and avatar upload
+- Export Progress Reports — printable per-student milestone + attendance report
+- Pickup Verification — same lookup tool as teacher
+- School Calendar — create, edit, and publish events/holidays, with RSVP headcounts
+- Feedback inbox — categorize and reply to every submission, with a submitter-visible response
+- Activity Log — a searchable audit trail of account, enrollment, payment, and student-data changes
+- Deleted Items (soft-delete review, super-admin only)
+
+### Under the hood
+
+- Role-based access enforced in middleware, backed by Row Level Security on every table
+- A closed-loop parent wallet system (no real payment gateway, by design) for tuition/fee payments
+- Real transactional email (Brevo for the app's own emails, Postmark for Supabase Auth's password-reset emails)
+- An audit trail (`activity_log`) wired into essentially every mutation across the app
+
 ## Tech stack
 
 - [Next.js 16](https://nextjs.org) (App Router, Server Actions) + React 19 + TypeScript
