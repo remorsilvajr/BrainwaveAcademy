@@ -88,10 +88,14 @@ export function FeedbackTable({ items }: { items: FeedbackItem[] }) {
     setLoadingImageId(item.id)
     setErrorMessage('')
     try {
-      const url = await getFeedbackImageUrl(item.image_path)
-      setPreviewUrl(url)
-    } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Could not load the screenshot.')
+      const result = await getFeedbackImageUrl(item.image_path)
+      if ('error' in result) {
+        setErrorMessage(result.error)
+        return
+      }
+      setPreviewUrl(result.url)
+    } catch {
+      setErrorMessage('Could not load the screenshot.')
     } finally {
       setLoadingImageId(null)
     }
@@ -101,14 +105,14 @@ export function FeedbackTable({ items }: { items: FeedbackItem[] }) {
     setWorkingId(item.id)
     setErrorMessage('')
     try {
-      if (item.resolved) {
-        await reopenFeedback(item.id)
-      } else {
-        await resolveFeedback(item.id)
+      const result = item.resolved ? await reopenFeedback(item.id) : await resolveFeedback(item.id)
+      if (result?.error) {
+        setErrorMessage(result.error)
+        return
       }
       router.refresh()
-    } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+    } catch {
+      setErrorMessage('Something went wrong. Please try again.')
     } finally {
       setWorkingId(null)
     }

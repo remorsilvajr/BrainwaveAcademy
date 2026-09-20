@@ -17,6 +17,7 @@ type Student = {
   gender: string
   enrollment_status: string
   avatar_url: string | null
+  classroomName?: string | null
 }
 type AttendanceRow = { id: string; date: string; status: string }
 type MilestoneRow = { id: string; category: string; assessment_date: string; notes: string }
@@ -43,8 +44,8 @@ export function StudentDashboardContent({
   // Bound Server Actions (e.g. updateStudentAvatar.bind(null, studentId)) so
   // the Server Component page can pass them straight through as props.
   avatarEditor?: {
-    onFileSelected: (formData: FormData) => Promise<string>
-    onRemove: () => Promise<void>
+    onFileSelected: (formData: FormData) => Promise<{ error: string } | { url: string }>
+    onRemove: () => Promise<{ error: string } | undefined>
   }
   // Parent view: no attendance-marking or assessment-editing controls —
   // parents have SELECT-only RLS on attendance/milestones, so those
@@ -82,10 +83,14 @@ export function StudentDashboardContent({
     try {
       const formData = new FormData()
       formData.append('avatar', file)
-      const newUrl = await avatarEditor.onFileSelected(formData)
-      setAvatarUrl(newUrl)
-    } catch (err) {
-      setAvatarError(err instanceof Error ? err.message : 'Something went wrong.')
+      const result = await avatarEditor.onFileSelected(formData)
+      if ('error' in result) {
+        setAvatarError(result.error)
+        return
+      }
+      setAvatarUrl(result.url)
+    } catch {
+      setAvatarError('Something went wrong.')
     } finally {
       setIsSavingAvatar(false)
     }
@@ -96,10 +101,14 @@ export function StudentDashboardContent({
     setIsSavingAvatar(true)
     setAvatarError('')
     try {
-      await avatarEditor.onRemove()
+      const result = await avatarEditor.onRemove()
+      if (result?.error) {
+        setAvatarError(result.error)
+        return
+      }
       setAvatarUrl(null)
-    } catch (err) {
-      setAvatarError(err instanceof Error ? err.message : 'Something went wrong.')
+    } catch {
+      setAvatarError('Something went wrong.')
     } finally {
       setIsSavingAvatar(false)
     }
@@ -171,6 +180,12 @@ export function StudentDashboardContent({
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             {formatDateLong(student.date_of_birth)} &middot; <span className="capitalize">{student.gender}</span> &middot;{' '}
             <span className="capitalize">{student.enrollment_status}</span>
+            {student.classroomName !== undefined && (
+              <>
+                {' '}
+                &middot; {student.classroomName ?? 'Unassigned'}
+              </>
+            )}
           </p>
         </div>
       </div>

@@ -21,17 +21,17 @@ async function getTeacherProfile(supabase: Awaited<ReturnType<typeof createClien
   return teacher
 }
 
-export async function assignLeadTeacher(classroomId: string, teacherId: string) {
+export async function assignLeadTeacher(classroomId: string, teacherId: string): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
 
   const teacher = await getTeacherProfile(supabase, teacherId)
   if (!teacher || teacher.role !== 'teacher') {
-    throw new Error('Only teacher accounts can be assigned as a lead teacher.')
+    return { error: 'Only teacher accounts can be assigned as a lead teacher.' }
   }
 
   const { data: classroom } = await supabase.from('classrooms').select('id, name').eq('id', classroomId).single()
   if (!classroom) {
-    throw new Error('Classroom not found.')
+    return { error: 'Classroom not found.' }
   }
 
   const { data: existingLead } = await supabase
@@ -41,7 +41,7 @@ export async function assignLeadTeacher(classroomId: string, teacherId: string) 
     .neq('id', classroomId)
     .maybeSingle()
   if (existingLead) {
-    throw new Error(`${teacher.first_name} ${teacher.last_name} is already the lead teacher of ${existingLead.name}.`)
+    return { error: `${teacher.first_name} ${teacher.last_name} is already the lead teacher of ${existingLead.name}.` }
   }
 
   const { data: alreadyAssistant } = await supabase
@@ -51,14 +51,14 @@ export async function assignLeadTeacher(classroomId: string, teacherId: string) 
     .eq('teacher_id', teacherId)
     .maybeSingle()
   if (alreadyAssistant) {
-    throw new Error(
-      `${teacher.first_name} ${teacher.last_name} is already an assistant teacher in this classroom. Remove them as an assistant first.`
-    )
+    return {
+      error: `${teacher.first_name} ${teacher.last_name} is already an assistant teacher in this classroom. Remove them as an assistant first.`,
+    }
   }
 
   const { error } = await supabase.from('classrooms').update({ lead_teacher_id: teacherId }).eq('id', classroomId)
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   const {
@@ -74,12 +74,12 @@ export async function assignLeadTeacher(classroomId: string, teacherId: string) 
   revalidatePath('/admin/classrooms')
 }
 
-export async function removeLeadTeacher(classroomId: string) {
+export async function removeLeadTeacher(classroomId: string): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
 
   const { error } = await supabase.from('classrooms').update({ lead_teacher_id: null }).eq('id', classroomId)
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   const {
@@ -95,12 +95,12 @@ export async function removeLeadTeacher(classroomId: string) {
   revalidatePath('/admin/classrooms')
 }
 
-export async function addAssistantTeacher(classroomId: string, teacherId: string) {
+export async function addAssistantTeacher(classroomId: string, teacherId: string): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
 
   const teacher = await getTeacherProfile(supabase, teacherId)
   if (!teacher || teacher.role !== 'teacher') {
-    throw new Error('Only teacher accounts can be assigned as an assistant teacher.')
+    return { error: 'Only teacher accounts can be assigned as an assistant teacher.' }
   }
 
   const { data: classroom } = await supabase
@@ -109,18 +109,18 @@ export async function addAssistantTeacher(classroomId: string, teacherId: string
     .eq('id', classroomId)
     .single()
   if (!classroom) {
-    throw new Error('Classroom not found.')
+    return { error: 'Classroom not found.' }
   }
   if (classroom.lead_teacher_id === teacherId) {
-    throw new Error(`${teacher.first_name} ${teacher.last_name} is already the lead teacher of this classroom.`)
+    return { error: `${teacher.first_name} ${teacher.last_name} is already the lead teacher of this classroom.` }
   }
 
   const { error } = await supabase.from('classroom_assistants').insert({ classroom_id: classroomId, teacher_id: teacherId })
   if (error) {
     if (error.code === '23505') {
-      throw new Error(`${teacher.first_name} ${teacher.last_name} is already an assistant teacher in this classroom.`)
+      return { error: `${teacher.first_name} ${teacher.last_name} is already an assistant teacher in this classroom.` }
     }
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   const {
@@ -136,7 +136,7 @@ export async function addAssistantTeacher(classroomId: string, teacherId: string
   revalidatePath('/admin/classrooms')
 }
 
-export async function removeAssistantTeacher(classroomId: string, teacherId: string) {
+export async function removeAssistantTeacher(classroomId: string, teacherId: string): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
 
   const { error } = await supabase
@@ -145,7 +145,7 @@ export async function removeAssistantTeacher(classroomId: string, teacherId: str
     .eq('classroom_id', classroomId)
     .eq('teacher_id', teacherId)
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   const {
@@ -173,11 +173,11 @@ export async function updateFeeSchedule(
     tuition_due_date: string | null
     activity_due_date: string | null
   }
-) {
+): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
 
   if (updates.tuition_fee < 0 || updates.activity_fee < 0) {
-    throw new Error('Fee amounts cannot be negative.')
+    return { error: 'Fee amounts cannot be negative.' }
   }
 
   const { error } = await supabase
@@ -191,7 +191,7 @@ export async function updateFeeSchedule(
     .eq('id', classroomId)
 
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   const {

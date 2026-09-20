@@ -13,7 +13,7 @@ import { requireAdmin } from '@/lib/require-admin'
 // Creates ONLY the parent account. The student record is intentionally NOT
 // created here — it's created later, in app/admin/applications/actions.ts,
 // only after the parent has uploaded documents and admin has validated them.
-export async function approveApplication(applicationId: string) {
+export async function approveApplication(applicationId: string): Promise<{ error: string } | undefined> {
   // This creates a real auth.users account via the service-role client
   // below, which bypasses RLS — without this check, any authenticated
   // caller could invoke this action directly (see lib/require-admin.ts)
@@ -32,7 +32,7 @@ export async function approveApplication(applicationId: string) {
     .single()
 
   if (fetchError || !application) {
-    throw new Error('Application not found.')
+    return { error: 'Application not found.' }
   }
 
   const { data: existingProfile } = await supabase
@@ -54,7 +54,7 @@ export async function approveApplication(applicationId: string) {
     })
 
     if (createError || !created.user) {
-      throw new Error(createError?.message ?? 'Could not create the parent account.')
+      return { error: createError?.message ?? 'Could not create the parent account.' }
     }
 
     parentId = created.user.id
@@ -75,7 +75,7 @@ export async function approveApplication(applicationId: string) {
     })
 
     if (profileError) {
-      throw new Error(profileError.message)
+      return { error: profileError.message }
     }
 
     // Every parent account starts with a ₱2,500 wallet balance — see the
@@ -98,7 +98,7 @@ export async function approveApplication(applicationId: string) {
     .eq('id', application.id)
 
   if (updateError) {
-    throw new Error(updateError.message)
+    return { error: updateError.message }
   }
 
   if (tempPassword) {
@@ -140,10 +140,10 @@ export async function approveApplication(applicationId: string) {
   revalidatePath('/admin/applications')
 }
 
-export async function dismissApplication(applicationId: string, reason: string) {
+export async function dismissApplication(applicationId: string, reason: string): Promise<{ error: string } | undefined> {
   const trimmedReason = reason.trim()
   if (!trimmedReason) {
-    throw new Error('Please explain why this request is being rejected.')
+    return { error: 'Please explain why this request is being rejected.' }
   }
 
   const supabase = await createClient()
@@ -158,7 +158,7 @@ export async function dismissApplication(applicationId: string, reason: string) 
     .eq('id', applicationId)
 
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   const {
@@ -180,12 +180,12 @@ export async function dismissApplication(applicationId: string, reason: string) 
 // tabs" flag, independent from the parent-facing hidden_from_parent column
 // on the same table (see components/parent/remove-application-button.tsx).
 // Reversible, so no confirm step in the UI.
-export async function archiveApplication(applicationId: string) {
+export async function archiveApplication(applicationId: string): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
 
   const { error } = await supabase.from('applications').update({ archived: true }).eq('id', applicationId)
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   const {
@@ -201,12 +201,12 @@ export async function archiveApplication(applicationId: string) {
   revalidatePath('/admin/enroll-a-student')
 }
 
-export async function unarchiveApplication(applicationId: string) {
+export async function unarchiveApplication(applicationId: string): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
 
   const { error } = await supabase.from('applications').update({ archived: false }).eq('id', applicationId)
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   const {
@@ -230,7 +230,7 @@ export async function unarchiveApplication(applicationId: string) {
 // EnrollmentRequestsTable, including its own Archived tab, not just the
 // default view. Only visible again via /admin/deleted-items
 // (super-admin-only) until restored.
-export async function deleteApplication(applicationId: string) {
+export async function deleteApplication(applicationId: string): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
 
   const { error } = await supabase
@@ -238,7 +238,7 @@ export async function deleteApplication(applicationId: string) {
     .update({ deleted_at: new Date().toISOString() })
     .eq('id', applicationId)
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   const {
@@ -257,14 +257,14 @@ export async function deleteApplication(applicationId: string) {
 
 // Bulk restore for the checkbox-list UI on /admin/deleted-items — restores
 // every id in one call rather than the page firing one request per row.
-export async function restoreApplications(applicationIds: string[]) {
+export async function restoreApplications(applicationIds: string[]): Promise<{ error: string } | undefined> {
   if (applicationIds.length === 0) return
 
   const supabase = await createClient()
 
   const { error } = await supabase.from('applications').update({ deleted_at: null }).in('id', applicationIds)
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   const {

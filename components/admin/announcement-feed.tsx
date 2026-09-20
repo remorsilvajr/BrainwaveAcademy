@@ -66,15 +66,19 @@ export function AnnouncementFeed({
     setIsSubmitting(true)
     setErrorMessage('')
     try {
-      await postAnnouncement({ title, body, target_role: targetRole, classroomId: classroomId || null })
+      const result = await postAnnouncement({ title, body, target_role: targetRole, classroomId: classroomId || null })
+      if (result?.error) {
+        setErrorMessage(result.error)
+        return
+      }
       setTitle('')
       setBody('')
       setTargetRole('all')
       setClassroomId('')
       setIsPosting(false)
       router.refresh()
-    } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Something went wrong.')
+    } catch {
+      setErrorMessage('Something went wrong.')
     } finally {
       setIsSubmitting(false)
     }
@@ -83,10 +87,14 @@ export function AnnouncementFeed({
   async function handleDelete(id: string) {
     setDeletingId(id)
     try {
-      await deleteAnnouncement(id)
+      const result = await deleteAnnouncement(id)
+      if (result?.error) {
+        setErrorMessage(result.error)
+        return
+      }
       router.refresh()
-    } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Something went wrong.')
+    } catch {
+      setErrorMessage('Something went wrong.')
     } finally {
       setDeletingId(null)
     }

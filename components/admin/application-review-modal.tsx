@@ -111,11 +111,15 @@ export function ApplicationReviewModal({
     const doc = application.documents.find((d) => d.document_type === type)
     if (!doc) return
     try {
-      const url = await getSignedDocumentUrl(doc.file_url)
+      const result = await getSignedDocumentUrl(doc.file_url)
+      if ('error' in result) {
+        setErrorMessage(result.error)
+        return
+      }
       setPreviewTitle(documentLabels[type] ?? 'Document')
-      setPreviewUrl(url)
-    } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Could not open that document.')
+      setPreviewUrl(result.url)
+    } catch {
+      setErrorMessage('Could not open that document.')
     }
   }
 
@@ -157,11 +161,15 @@ export function ApplicationReviewModal({
     setErrorMessage('')
     try {
       await saveDocumentReview(application.id, statuses, notes)
-      await approveAndCreateStudentRecord(application.id, classroomPick || null)
+      const result = await approveAndCreateStudentRecord(application.id, classroomPick || null)
+      if (result?.error) {
+        setErrorMessage(result.error)
+        return
+      }
       showResult('enrolled')
       router.refresh()
-    } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Something went wrong.')
+    } catch {
+      setErrorMessage('Something went wrong.')
     } finally {
       setIsSubmitting(false)
     }

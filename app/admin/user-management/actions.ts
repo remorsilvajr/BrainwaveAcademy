@@ -33,7 +33,10 @@ async function syncLinkedStudentsStatus(
   }
 }
 
-export async function toggleBlockUser(userId: string, currentStatus: string) {
+export async function toggleBlockUser(
+  userId: string,
+  currentStatus: string
+): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
   const newStatus = currentStatus === 'blocked' ? 'active' : 'blocked'
 
@@ -56,7 +59,7 @@ export async function toggleBlockUser(userId: string, currentStatus: string) {
     ])
 
     if (!actorProfile || !targetProfile || !canModerateAccount(actorProfile, targetProfile)) {
-      throw new Error('You do not have permission to block this account.')
+      return { error: 'You do not have permission to block this account.' }
     }
   }
 
@@ -66,7 +69,7 @@ export async function toggleBlockUser(userId: string, currentStatus: string) {
     .eq('id', userId)
 
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   // profiles.account_status is this app's own record of the block (used
@@ -83,7 +86,7 @@ export async function toggleBlockUser(userId: string, currentStatus: string) {
     ban_duration: newStatus === 'blocked' ? '876000h' : 'none',
   })
   if (banError) {
-    throw new Error(banError.message)
+    return { error: banError.message }
   }
 
   // Same last_seen_at reasoning as forceLogoutUser below — blocking also
@@ -109,7 +112,10 @@ export async function toggleBlockUser(userId: string, currentStatus: string) {
   revalidatePath('/admin/students')
 }
 
-export async function updateAccountStatus(userId: string, status: 'active' | 'inactive') {
+export async function updateAccountStatus(
+  userId: string,
+  status: 'active' | 'inactive'
+): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
 
   const { error } = await supabase
@@ -118,7 +124,7 @@ export async function updateAccountStatus(userId: string, status: 'active' | 'in
     .eq('id', userId)
 
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   await syncLinkedStudentsStatus(supabase, userId, status)
@@ -149,7 +155,7 @@ export async function updateUserProfile(
     date_of_birth: string
     gender: string
   }
-) {
+): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
 
   // This can change a target's role — without checking canModerateAccount
@@ -168,7 +174,7 @@ export async function updateUserProfile(
   ])
 
   if (!actorProfile || !targetProfile || !canModerateAccount(actorProfile, targetProfile)) {
-    throw new Error('You do not have permission to edit this account.')
+    return { error: 'You do not have permission to edit this account.' }
   }
 
   const firstName = updates.first_name.trim()
@@ -176,20 +182,20 @@ export async function updateUserProfile(
   const middleName = updates.middle_name.trim()
 
   if (!firstName || !lastName) {
-    throw new Error('First name and last name are required.')
+    return { error: 'First name and last name are required.' }
   }
   if (!isValidName(firstName) || !isValidName(lastName) || (middleName && !isValidName(middleName))) {
-    throw new Error(NAME_VALIDATION_MESSAGE)
+    return { error: NAME_VALIDATION_MESSAGE }
   }
 
   const phone = updates.phone_number.trim()
   if (phone && !isValidPhilippineMobile(phone)) {
-    throw new Error('Enter a valid PH mobile number, e.g. 0917 123 4567 or +63 917 123 4567.')
+    return { error: 'Enter a valid PH mobile number, e.g. 0917 123 4567 or +63 917 123 4567.' }
   }
 
   const dob = updates.date_of_birth.trim()
   if (dob && !isValidDob(dob, { minAge: MIN_ADULT_AGE, maxAge: MAX_AGE })) {
-    throw new Error(dobRangeMessage('This account', MIN_ADULT_AGE, MAX_AGE))
+    return { error: dobRangeMessage('This account', MIN_ADULT_AGE, MAX_AGE) }
   }
 
   const { error } = await supabase
@@ -212,7 +218,7 @@ export async function updateUserProfile(
     .eq('id', userId)
 
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   const {
@@ -228,12 +234,15 @@ export async function updateUserProfile(
   revalidatePath('/admin/user-management')
 }
 
-export async function updateUserAvatar(userId: string, formData: FormData) {
+export async function updateUserAvatar(
+  userId: string,
+  formData: FormData
+): Promise<{ error: string } | { url: string }> {
   const supabase = await createClient()
 
   const file = formData.get('avatar') as File | null
   if (!file || file.size === 0) {
-    throw new Error('Please choose an image.')
+    return { error: 'Please choose an image.' }
   }
 
   const extension = file.name.split('.').pop() || 'jpg'
@@ -241,7 +250,7 @@ export async function updateUserAvatar(userId: string, formData: FormData) {
 
   const { error: uploadError } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
   if (uploadError) {
-    throw new Error(uploadError.message)
+    return { error: uploadError.message }
   }
 
   const { data } = supabase.storage.from('avatars').getPublicUrl(path)
@@ -249,7 +258,7 @@ export async function updateUserAvatar(userId: string, formData: FormData) {
 
   const { error: updateError } = await supabase.from('profiles').update({ avatar_url: avatarUrl }).eq('id', userId)
   if (updateError) {
-    throw new Error(updateError.message)
+    return { error: updateError.message }
   }
 
   const {
@@ -263,15 +272,15 @@ export async function updateUserAvatar(userId: string, formData: FormData) {
   })
 
   revalidatePath('/admin/user-management')
-  return avatarUrl
+  return { url: avatarUrl }
 }
 
-export async function removeUserAvatar(userId: string) {
+export async function removeUserAvatar(userId: string): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
 
   const { error } = await supabase.from('profiles').update({ avatar_url: null }).eq('id', userId)
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   const {
@@ -300,11 +309,11 @@ export async function removeUserAvatar(userId: string) {
 // app/login/actions.ts already shows for a banned sign-in attempt) even
 // though their password is fine — an accepted rough edge given how narrow
 // the window is, not worth a special-cased error message for.
-export async function forceLogoutUser(userId: string) {
+export async function forceLogoutUser(userId: string): Promise<{ error: string } | undefined> {
   const admin = createAdminClient()
   const { error } = await admin.auth.admin.updateUserById(userId, { ban_duration: '15s' })
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   // Same reasoning as logout()/logoutAllDevices() in app/login/actions.ts —
@@ -334,7 +343,7 @@ export async function forceLogoutUser(userId: string) {
 // regular admin can't delete an admin account, and no one can delete a
 // super admin account. Only visible again via /admin/deleted-items
 // (super-admin-only) until restored.
-export async function deleteUserAccount(userId: string) {
+export async function deleteUserAccount(userId: string): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
   const {
     data: { user: actingUser },
@@ -346,7 +355,7 @@ export async function deleteUserAccount(userId: string) {
   ])
 
   if (!actorProfile || !targetProfile || !canModerateAccount(actorProfile, targetProfile)) {
-    throw new Error('You do not have permission to delete this account.')
+    return { error: 'You do not have permission to delete this account.' }
   }
 
   const { error } = await supabase
@@ -354,7 +363,7 @@ export async function deleteUserAccount(userId: string) {
     .update({ deleted_at: new Date().toISOString() })
     .eq('id', userId)
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   // A deleted account can't log in either — same ban_duration mechanism as
@@ -366,7 +375,7 @@ export async function deleteUserAccount(userId: string) {
   const admin = createAdminClient()
   const { error: banError } = await admin.auth.admin.updateUserById(userId, { ban_duration: '876000h' })
   if (banError) {
-    throw new Error(banError.message)
+    return { error: banError.message }
   }
   await admin.from('profiles').update({ last_seen_at: null }).eq('id', userId)
 
@@ -389,7 +398,7 @@ export async function deleteUserAccount(userId: string) {
 // place, so there's nothing left to protect against here — same reasoning
 // toggleBlockUser's unblock path already uses for not gating the reverse
 // direction.
-export async function restoreUserAccounts(userIds: string[]) {
+export async function restoreUserAccounts(userIds: string[]): Promise<{ error: string } | undefined> {
   if (userIds.length === 0) return
 
   const supabase = await createClient()
@@ -400,12 +409,12 @@ export async function restoreUserAccounts(userIds: string[]) {
     .select('id, account_status')
     .in('id', userIds)
   if (fetchError) {
-    throw new Error(fetchError.message)
+    return { error: fetchError.message }
   }
 
   const { error } = await supabase.from('profiles').update({ deleted_at: null }).in('id', userIds)
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   await Promise.all(

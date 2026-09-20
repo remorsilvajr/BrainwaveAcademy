@@ -83,11 +83,15 @@ export function DeletedAccountsTable({ accounts }: { accounts: DeletedAccount[] 
     const ids = Array.from(selected)
     startTransition(async () => {
       try {
-        await restoreUserAccounts(ids)
+        const result = await restoreUserAccounts(ids)
+        if (result?.error) {
+          setError(result.error)
+          return
+        }
         setSelected(new Set())
         router.refresh()
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      } catch {
+        setError('Something went wrong. Please try again.')
       }
     })
   }

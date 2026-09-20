@@ -79,11 +79,15 @@ export function DeletedApplicationsTable({ applications }: { applications: Delet
     const ids = Array.from(selected)
     startTransition(async () => {
       try {
-        await restoreApplications(ids)
+        const result = await restoreApplications(ids)
+        if (result?.error) {
+          setError(result.error)
+          return
+        }
         setSelected(new Set())
         router.refresh()
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      } catch {
+        setError('Something went wrong. Please try again.')
       }
     })
   }

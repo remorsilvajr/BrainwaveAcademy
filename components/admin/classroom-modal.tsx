@@ -55,11 +55,15 @@ export function ClassroomModal({
     setTeacherError('')
     setIsSavingTeacher(true)
     try {
-      await assignLeadTeacher(classroom.id, leadPick)
+      const result = await assignLeadTeacher(classroom.id, leadPick)
+      if (result?.error) {
+        setTeacherError(result.error)
+        return
+      }
       setLeadPick(null)
       router.refresh()
-    } catch (err) {
-      setTeacherError(err instanceof Error ? err.message : 'Something went wrong.')
+    } catch {
+      setTeacherError('Something went wrong.')
     } finally {
       setIsSavingTeacher(false)
     }
@@ -69,10 +73,14 @@ export function ClassroomModal({
     setTeacherError('')
     setIsSavingTeacher(true)
     try {
-      await removeLeadTeacher(classroom.id)
+      const result = await removeLeadTeacher(classroom.id)
+      if (result?.error) {
+        setTeacherError(result.error)
+        return
+      }
       router.refresh()
-    } catch (err) {
-      setTeacherError(err instanceof Error ? err.message : 'Something went wrong.')
+    } catch {
+      setTeacherError('Something went wrong.')
     } finally {
       setIsSavingTeacher(false)
     }
@@ -83,11 +91,15 @@ export function ClassroomModal({
     setTeacherError('')
     setIsSavingTeacher(true)
     try {
-      await addAssistantTeacher(classroom.id, assistantPick)
+      const result = await addAssistantTeacher(classroom.id, assistantPick)
+      if (result?.error) {
+        setTeacherError(result.error)
+        return
+      }
       setAssistantPick(null)
       router.refresh()
-    } catch (err) {
-      setTeacherError(err instanceof Error ? err.message : 'Something went wrong.')
+    } catch {
+      setTeacherError('Something went wrong.')
     } finally {
       setIsSavingTeacher(false)
     }
@@ -97,10 +109,14 @@ export function ClassroomModal({
     setTeacherError('')
     setIsSavingTeacher(true)
     try {
-      await removeAssistantTeacher(classroom.id, teacherId)
+      const result = await removeAssistantTeacher(classroom.id, teacherId)
+      if (result?.error) {
+        setTeacherError(result.error)
+        return
+      }
       router.refresh()
-    } catch (err) {
-      setTeacherError(err instanceof Error ? err.message : 'Something went wrong.')
+    } catch {
+      setTeacherError('Something went wrong.')
     } finally {
       setIsSavingTeacher(false)
     }
@@ -111,16 +127,20 @@ export function ClassroomModal({
     setFeeSaved(false)
     setIsSavingFees(true)
     try {
-      await updateFeeSchedule(classroom.id, {
+      const result = await updateFeeSchedule(classroom.id, {
         tuition_fee: Number(tuitionFee) || 0,
         activity_fee: Number(activityFee) || 0,
         tuition_due_date: tuitionDue || null,
         activity_due_date: activityDue || null,
       })
+      if (result?.error) {
+        setFeeError(result.error)
+        return
+      }
       setFeeSaved(true)
       router.refresh()
-    } catch (err) {
-      setFeeError(err instanceof Error ? err.message : 'Something went wrong.')
+    } catch {
+      setFeeError('Something went wrong.')
     } finally {
       setIsSavingFees(false)
     }

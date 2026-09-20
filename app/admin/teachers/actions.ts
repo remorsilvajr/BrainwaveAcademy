@@ -24,7 +24,7 @@ export async function updateTeacherRecord(
     date_of_birth: string
     gender: string
   }
-) {
+): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
 
   const firstName = updates.first_name.trim()
@@ -32,20 +32,20 @@ export async function updateTeacherRecord(
   const middleName = updates.middle_name.trim()
 
   if (!firstName || !lastName) {
-    throw new Error('First name and last name are required.')
+    return { error: 'First name and last name are required.' }
   }
   if (!isValidName(firstName) || !isValidName(lastName) || (middleName && !isValidName(middleName))) {
-    throw new Error(NAME_VALIDATION_MESSAGE)
+    return { error: NAME_VALIDATION_MESSAGE }
   }
 
   const phone = updates.phone_number.trim()
   if (phone && !isValidPhilippineMobile(phone)) {
-    throw new Error('Enter a valid PH mobile number, e.g. 0917 123 4567 or +63 917 123 4567.')
+    return { error: 'Enter a valid PH mobile number, e.g. 0917 123 4567 or +63 917 123 4567.' }
   }
 
   const dob = updates.date_of_birth.trim()
   if (dob && !isValidDob(dob, { minAge: MIN_ADULT_AGE, maxAge: MAX_AGE })) {
-    throw new Error(dobRangeMessage('Teacher', MIN_ADULT_AGE, MAX_AGE))
+    return { error: dobRangeMessage('Teacher', MIN_ADULT_AGE, MAX_AGE) }
   }
 
   const { error } = await supabase
@@ -61,7 +61,7 @@ export async function updateTeacherRecord(
     .eq('id', teacherId)
 
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   const {
@@ -81,12 +81,15 @@ export async function updateTeacherRecord(
 // app/admin/user-management/actions.ts (own-account photo, not a
 // student-prefixed one) — covered by the existing admins_manage_any_avatar
 // storage policy, no new RLS needed.
-export async function updateTeacherAvatar(teacherId: string, formData: FormData) {
+export async function updateTeacherAvatar(
+  teacherId: string,
+  formData: FormData
+): Promise<{ error: string } | { url: string }> {
   const supabase = await createClient()
 
   const file = formData.get('avatar') as File | null
   if (!file || file.size === 0) {
-    throw new Error('Please choose an image.')
+    return { error: 'Please choose an image.' }
   }
 
   const extension = file.name.split('.').pop() || 'jpg'
@@ -94,7 +97,7 @@ export async function updateTeacherAvatar(teacherId: string, formData: FormData)
 
   const { error: uploadError } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
   if (uploadError) {
-    throw new Error(uploadError.message)
+    return { error: uploadError.message }
   }
 
   const { data } = supabase.storage.from('avatars').getPublicUrl(path)
@@ -102,7 +105,7 @@ export async function updateTeacherAvatar(teacherId: string, formData: FormData)
 
   const { error: updateError } = await supabase.from('profiles').update({ avatar_url: avatarUrl }).eq('id', teacherId)
   if (updateError) {
-    throw new Error(updateError.message)
+    return { error: updateError.message }
   }
 
   const {
@@ -116,15 +119,15 @@ export async function updateTeacherAvatar(teacherId: string, formData: FormData)
   })
 
   revalidatePath('/admin/teachers')
-  return avatarUrl
+  return { url: avatarUrl }
 }
 
-export async function removeTeacherAvatar(teacherId: string) {
+export async function removeTeacherAvatar(teacherId: string): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
 
   const { error } = await supabase.from('profiles').update({ avatar_url: null }).eq('id', teacherId)
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   const {

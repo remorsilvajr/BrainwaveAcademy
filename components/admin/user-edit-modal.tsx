@@ -66,10 +66,14 @@ export function UserEditModal({
     try {
       const formData = new FormData()
       formData.append('avatar', file)
-      const newUrl = await updateUserAvatar(user.id, formData)
-      setAvatarUrl(newUrl)
-    } catch (err) {
-      setAvatarError(err instanceof Error ? err.message : 'Something went wrong.')
+      const result = await updateUserAvatar(user.id, formData)
+      if ('error' in result) {
+        setAvatarError(result.error)
+        return
+      }
+      setAvatarUrl(result.url)
+    } catch {
+      setAvatarError('Something went wrong.')
     } finally {
       setIsSavingAvatar(false)
     }
@@ -79,10 +83,14 @@ export function UserEditModal({
     setIsSavingAvatar(true)
     setAvatarError('')
     try {
-      await removeUserAvatar(user.id)
+      const result = await removeUserAvatar(user.id)
+      if (result?.error) {
+        setAvatarError(result.error)
+        return
+      }
       setAvatarUrl(null)
-    } catch (err) {
-      setAvatarError(err instanceof Error ? err.message : 'Something went wrong.')
+    } catch {
+      setAvatarError('Something went wrong.')
     } finally {
       setIsSavingAvatar(false)
     }
@@ -93,7 +101,7 @@ export function UserEditModal({
     setIsSubmitting(true)
     setErrorMessage('')
     try {
-      await updateUserProfile(user.id, {
+      const result = await updateUserProfile(user.id, {
         first_name: firstName,
         middle_name: middleName,
         last_name: lastName,
@@ -103,9 +111,13 @@ export function UserEditModal({
         date_of_birth: dob,
         gender,
       })
+      if (result?.error) {
+        setErrorMessage(result.error)
+        return
+      }
       onClose()
-    } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Something went wrong.')
+    } catch {
+      setErrorMessage('Something went wrong.')
     } finally {
       setIsSubmitting(false)
     }

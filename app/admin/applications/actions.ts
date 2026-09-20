@@ -106,7 +106,16 @@ export async function requestCorrections(
 // version of this insert-chain (when it lived in enroll-a-student/actions.ts)
 // did not check the parent_student insert for errors, which could fail
 // silently and leave a parent account with no visible student anywhere.
-export async function approveAndCreateStudentRecord(applicationId: string, classroomId: string | null) {
+//
+// Returns `{ error }` instead of throwing for every expected failure — this
+// is invoked as a plain `await` call from application-review-modal.tsx, not
+// through useActionState, so a thrown error's message is redacted by Next
+// in a production build (surfaces as minified React error #441). See the
+// note in CLAUDE.md under "Auth cookies, sessions, and RLS security model".
+export async function approveAndCreateStudentRecord(
+  applicationId: string,
+  classroomId: string | null
+): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
 
   const { data: application, error: fetchError } = await supabase
@@ -116,17 +125,15 @@ export async function approveAndCreateStudentRecord(applicationId: string, class
     .single()
 
   if (fetchError || !application) {
-    throw new Error('Application not found.')
+    return { error: 'Application not found.' }
   }
 
   if (!application.created_parent_id) {
-    throw new Error(
-      'This application has no parent account yet. Approve it via Enrollment Requests first.'
-    )
+    return { error: 'This application has no parent account yet. Approve it via Enrollment Requests first.' }
   }
 
   if (application.created_student_id) {
-    throw new Error('A student record already exists for this application.')
+    return { error: 'A student record already exists for this application.' }
   }
 
   const { data: student, error: studentError } = await supabase
@@ -144,7 +151,7 @@ export async function approveAndCreateStudentRecord(applicationId: string, class
     .single()
 
   if (studentError || !student) {
-    throw new Error(studentError?.message ?? 'Could not create the student record.')
+    return { error: studentError?.message ?? 'Could not create the student record.' }
   }
 
   const { error: linkError } = await supabase.from('parent_student').insert({
@@ -154,7 +161,7 @@ export async function approveAndCreateStudentRecord(applicationId: string, class
   })
 
   if (linkError) {
-    throw new Error(`Student record created, but linking to the parent failed: ${linkError.message}`)
+    return { error: `Student record created, but linking to the parent failed: ${linkError.message}` }
   }
 
   const { error: updateError } = await supabase
@@ -163,16 +170,16 @@ export async function approveAndCreateStudentRecord(applicationId: string, class
     .eq('id', application.id)
 
   if (updateError) {
-    throw new Error(updateError.message)
+    return { error: updateError.message }
   }
 
   if (classroomId) {
     try {
       await applyClassroomToStudent(supabase, student.id, student.date_of_birth, classroomId)
     } catch (err) {
-      throw new Error(
-        `Student record created, but the classroom couldn't be assigned: ${err instanceof Error ? err.message : 'unknown error'}. You can assign it later from the Student Record.`
-      )
+      return {
+        error: `Student record created, but the classroom couldn't be assigned: ${err instanceof Error ? err.message : 'unknown error'}. You can assign it later from the Student Record.`,
+      }
     }
   }
 
@@ -191,11 +198,9 @@ export async function approveAndCreateStudentRecord(applicationId: string, class
   revalidatePath('/admin/enroll-a-student')
   revalidatePath('/admin/classrooms')
   revalidatePath('/admin/payments')
-
-  return student
 }
 
-export async function getSignedDocumentUrl(path: string) {
+export async function getSignedDocumentUrl(path: string): Promise<{ error: string } | { url: string }> {
   // Generates a signed URL to a *private* document (birth certificate, ID,
   // proof of address...) via the service-role client below, which bypasses
   // RLS entirely and has no other check of its own — without this, any
@@ -207,8 +212,8 @@ export async function getSignedDocumentUrl(path: string) {
   const { data, error } = await admin.storage.from('documents').createSignedUrl(path, 60 * 5)
 
   if (error || !data) {
-    throw new Error(error?.message ?? 'Could not generate a document link.')
+    return { error: error?.message ?? 'Could not generate a document link.' }
   }
 
-  return data.signedUrl
+  return { url: data.signedUrl }
 }

@@ -78,10 +78,14 @@ export function StudentRecordModal({
     setClassroomError('')
     setIsSavingClassroom(true)
     try {
-      await assignStudentClassroom(student.id, classroomPick || null)
+      const result = await assignStudentClassroom(student.id, classroomPick || null)
+      if (result?.error) {
+        setClassroomError(result.error)
+        return
+      }
       router.refresh()
-    } catch (err) {
-      setClassroomError(err instanceof Error ? err.message : 'Something went wrong.')
+    } catch {
+      setClassroomError('Something went wrong.')
     } finally {
       setIsSavingClassroom(false)
     }
@@ -99,10 +103,14 @@ export function StudentRecordModal({
     try {
       const formData = new FormData()
       formData.append('avatar', file)
-      const newUrl = await updateStudentAvatar(student.id, formData)
-      setAvatarUrl(newUrl)
-    } catch (err) {
-      setAvatarError(err instanceof Error ? err.message : 'Something went wrong.')
+      const result = await updateStudentAvatar(student.id, formData)
+      if ('error' in result) {
+        setAvatarError(result.error)
+        return
+      }
+      setAvatarUrl(result.url)
+    } catch {
+      setAvatarError('Something went wrong.')
     } finally {
       setIsSavingAvatar(false)
     }
@@ -112,10 +120,14 @@ export function StudentRecordModal({
     setIsSavingAvatar(true)
     setAvatarError('')
     try {
-      await removeStudentAvatar(student.id)
+      const result = await removeStudentAvatar(student.id)
+      if (result?.error) {
+        setAvatarError(result.error)
+        return
+      }
       setAvatarUrl(null)
-    } catch (err) {
-      setAvatarError(err instanceof Error ? err.message : 'Something went wrong.')
+    } catch {
+      setAvatarError('Something went wrong.')
     } finally {
       setIsSavingAvatar(false)
     }
@@ -134,11 +146,15 @@ export function StudentRecordModal({
 
   async function handleViewDocument(path: string, label: string) {
     try {
-      const url = await getSignedDocumentUrl(path)
+      const result = await getSignedDocumentUrl(path)
+      if ('error' in result) {
+        setErrorMessage(result.error)
+        return
+      }
       setPreviewTitle(label)
-      setPreviewUrl(url)
-    } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Could not open that document.')
+      setPreviewUrl(result.url)
+    } catch {
+      setErrorMessage('Could not open that document.')
     }
   }
 
@@ -146,17 +162,21 @@ export function StudentRecordModal({
     setIsSaving(true)
     setSaveError('')
     try {
-      await updateStudentRecord(student.id, {
+      const result = await updateStudentRecord(student.id, {
         first_name: firstName,
         middle_name: middleName,
         last_name: lastName,
         date_of_birth: dob,
         gender,
       })
+      if (result?.error) {
+        setSaveError(result.error)
+        return
+      }
       setIsEditing(false)
       router.refresh()
-    } catch (err) {
-      setSaveError(err instanceof Error ? err.message : 'Something went wrong.')
+    } catch {
+      setSaveError('Something went wrong.')
     } finally {
       setIsSaving(false)
     }

@@ -61,11 +61,16 @@ export function EnrollmentRequestModal({
     setIsSubmitting(true)
     setErrorMessage('')
     try {
-      await approveApplication(application.id)
+      const actionResult = await approveApplication(application.id)
+      if (actionResult?.error) {
+        setErrorMessage(actionResult.error)
+        setPendingAction(null)
+        return
+      }
       setResult('approved')
       router.refresh()
-    } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+    } catch {
+      setErrorMessage('Something went wrong. Please try again.')
       setPendingAction(null)
     } finally {
       setIsSubmitting(false)
@@ -76,11 +81,16 @@ export function EnrollmentRequestModal({
     setIsSubmitting(true)
     setErrorMessage('')
     try {
-      await dismissApplication(application.id, rejectReason)
+      const actionResult = await dismissApplication(application.id, rejectReason)
+      if (actionResult?.error) {
+        setErrorMessage(actionResult.error)
+        setPendingAction(null)
+        return
+      }
       setResult('dismissed')
       router.refresh()
-    } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+    } catch {
+      setErrorMessage('Something went wrong. Please try again.')
       setPendingAction(null)
     } finally {
       setIsSubmitting(false)

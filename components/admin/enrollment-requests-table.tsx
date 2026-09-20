@@ -117,19 +117,22 @@ export function EnrollmentRequestsTable({ applications }: { applications: Applic
     setArchivingId(app.id)
     setActionError('')
     try {
-      if (app.archived) {
-        await unarchiveApplication(app.id)
-      } else {
-        await archiveApplication(app.id)
-      }
-      router.refresh()
-    } catch (err) {
       // Previously had no catch at all — a failed archive/unarchive (e.g.
       // the applications.archived column not existing yet) failed
       // completely silently, with nothing to distinguish "it worked" from
       // "it didn't" beyond the button briefly reading "Working…" and then
-      // reverting. Reported live as "Archive doesn't work."
-      setActionError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      // reverting. Reported live as "Archive doesn't work." The actions
+      // themselves later moved from throwing to returning `{ error }` for
+      // the same underlying reason a thrown error's message doesn't survive
+      // a production build (see the React error #441 note in CLAUDE.md).
+      const result = app.archived ? await unarchiveApplication(app.id) : await archiveApplication(app.id)
+      if (result?.error) {
+        setActionError(result.error)
+        return
+      }
+      router.refresh()
+    } catch {
+      setActionError('Something went wrong. Please try again.')
     } finally {
       setArchivingId(null)
     }
@@ -140,11 +143,15 @@ export function EnrollmentRequestsTable({ applications }: { applications: Applic
     setIsDeleting(true)
     setActionError('')
     try {
-      await deleteApplication(confirmingDeleteApp.id)
+      const result = await deleteApplication(confirmingDeleteApp.id)
+      if (result?.error) {
+        setActionError(result.error)
+        return
+      }
       setConfirmingDeleteId(null)
       router.refresh()
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+    } catch {
+      setActionError('Something went wrong. Please try again.')
     } finally {
       setIsDeleting(false)
     }

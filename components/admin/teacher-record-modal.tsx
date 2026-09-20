@@ -52,10 +52,14 @@ export function TeacherRecordModal({ teacher, onClose }: { teacher: Teacher; onC
     try {
       const formData = new FormData()
       formData.append('avatar', file)
-      const newUrl = await updateTeacherAvatar(teacher.id, formData)
-      setAvatarUrl(newUrl)
-    } catch (err) {
-      setAvatarError(err instanceof Error ? err.message : 'Something went wrong.')
+      const result = await updateTeacherAvatar(teacher.id, formData)
+      if ('error' in result) {
+        setAvatarError(result.error)
+        return
+      }
+      setAvatarUrl(result.url)
+    } catch {
+      setAvatarError('Something went wrong.')
     } finally {
       setIsSavingAvatar(false)
     }
@@ -65,10 +69,14 @@ export function TeacherRecordModal({ teacher, onClose }: { teacher: Teacher; onC
     setIsSavingAvatar(true)
     setAvatarError('')
     try {
-      await removeTeacherAvatar(teacher.id)
+      const result = await removeTeacherAvatar(teacher.id)
+      if (result?.error) {
+        setAvatarError(result.error)
+        return
+      }
       setAvatarUrl(null)
-    } catch (err) {
-      setAvatarError(err instanceof Error ? err.message : 'Something went wrong.')
+    } catch {
+      setAvatarError('Something went wrong.')
     } finally {
       setIsSavingAvatar(false)
     }

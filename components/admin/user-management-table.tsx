@@ -122,9 +122,12 @@ export function UserManagementTable({
     setActionError('')
     startTransition(async () => {
       try {
-        await toggleBlockUser(user.id, user.account_status)
-      } catch (err) {
-        setActionError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+        const result = await toggleBlockUser(user.id, user.account_status)
+        if (result?.error) {
+          setActionError(result.error)
+        }
+      } catch {
+        setActionError('Something went wrong. Please try again.')
       }
     })
     setConfirmingBlockId(null)
@@ -134,17 +137,28 @@ export function UserManagementTable({
     setActionError('')
     startTransition(async () => {
       try {
-        await deleteUserAccount(user.id)
-      } catch (err) {
-        setActionError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+        const result = await deleteUserAccount(user.id)
+        if (result?.error) {
+          setActionError(result.error)
+        }
+      } catch {
+        setActionError('Something went wrong. Please try again.')
       }
     })
     setConfirmingDeleteId(null)
   }
 
   function handleStatusChange(user: Profile, status: string) {
+    setActionError('')
     startTransition(async () => {
-      await updateAccountStatus(user.id, status as 'active' | 'inactive')
+      try {
+        const result = await updateAccountStatus(user.id, status as 'active' | 'inactive')
+        if (result?.error) {
+          setActionError(result.error)
+        }
+      } catch {
+        setActionError('Something went wrong. Please try again.')
+      }
     })
   }
 
@@ -152,11 +166,18 @@ export function UserManagementTable({
   const [loggedOutId, setLoggedOutId] = useState<string | null>(null)
 
   async function handleForceLogout(user: Profile) {
+    setActionError('')
     setLoggingOutId(user.id)
     try {
-      await forceLogoutUser(user.id)
+      const result = await forceLogoutUser(user.id)
+      if (result?.error) {
+        setActionError(result.error)
+        return
+      }
       setLoggedOutId(user.id)
       setTimeout(() => setLoggedOutId(null), 2000)
+    } catch {
+      setActionError('Something went wrong. Please try again.')
     } finally {
       setLoggingOutId(null)
     }

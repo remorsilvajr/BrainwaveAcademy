@@ -11,20 +11,20 @@ export async function postAnnouncement(input: {
   body: string
   target_role: string
   classroomId?: string | null
-}) {
+}): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
   if (!user) {
-    throw new Error('Your session has expired. Please log in again.')
+    return { error: 'Your session has expired. Please log in again.' }
   }
   if (!input.title.trim() || !input.body.trim()) {
-    throw new Error('Add both a title and a message.')
+    return { error: 'Add both a title and a message.' }
   }
   if (!(TARGET_ROLES as readonly string[]).includes(input.target_role)) {
-    throw new Error('Invalid target audience.')
+    return { error: 'Invalid target audience.' }
   }
 
   const { error } = await supabase.from('announcements').insert({
@@ -39,7 +39,7 @@ export async function postAnnouncement(input: {
   })
 
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   await logActivity(supabase, {
@@ -55,12 +55,12 @@ export async function postAnnouncement(input: {
   revalidatePath('/teacher/announcement')
 }
 
-export async function deleteAnnouncement(id: string) {
+export async function deleteAnnouncement(id: string): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
 
   const { error } = await supabase.from('announcements').delete().eq('id', id)
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   const {

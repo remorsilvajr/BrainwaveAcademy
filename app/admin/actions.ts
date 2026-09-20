@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { logActivity } from '@/lib/activity-log'
 
-export async function resolveFeedback(id: string) {
+export async function resolveFeedback(id: string): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
   const {
     data: { user },
@@ -12,7 +12,7 @@ export async function resolveFeedback(id: string) {
 
   const { error } = await supabase.from('feedback').update({ resolved: true }).eq('id', id)
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   await logActivity(supabase, {
@@ -26,7 +26,7 @@ export async function resolveFeedback(id: string) {
   revalidatePath('/admin/feedback')
 }
 
-export async function reopenFeedback(id: string) {
+export async function reopenFeedback(id: string): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
   const {
     data: { user },
@@ -34,7 +34,7 @@ export async function reopenFeedback(id: string) {
 
   const { error } = await supabase.from('feedback').update({ resolved: false }).eq('id', id)
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   await logActivity(supabase, {

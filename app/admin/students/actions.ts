@@ -7,6 +7,11 @@ import { isValidDob, dobRangeMessage, MIN_STUDENT_AGE, MAX_AGE } from '@/lib/dob
 import { applyClassroomToStudent } from '@/lib/classroom-assignment'
 import { logActivity } from '@/lib/activity-log'
 
+// Returns `{ error }` instead of throwing for every expected failure — this
+// is invoked as a plain `await` call from student-record-modal.tsx, not
+// through useActionState, so a thrown error's message is redacted by Next
+// in a production build (surfaces as minified React error #441). See the
+// note in CLAUDE.md under "Auth cookies, sessions, and RLS security model".
 export async function updateStudentRecord(
   studentId: string,
   updates: {
@@ -16,7 +21,7 @@ export async function updateStudentRecord(
     date_of_birth: string
     gender: string
   }
-) {
+): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
 
   const firstName = updates.first_name.trim()
@@ -24,13 +29,13 @@ export async function updateStudentRecord(
   const middleName = updates.middle_name.trim()
 
   if (!firstName || !lastName || !updates.date_of_birth || !updates.gender) {
-    throw new Error('First name, last name, date of birth, and gender are required.')
+    return { error: 'First name, last name, date of birth, and gender are required.' }
   }
   if (!isValidName(firstName) || !isValidName(lastName) || (middleName && !isValidName(middleName))) {
-    throw new Error(NAME_VALIDATION_MESSAGE)
+    return { error: NAME_VALIDATION_MESSAGE }
   }
   if (!isValidDob(updates.date_of_birth, { minAge: MIN_STUDENT_AGE, maxAge: MAX_AGE })) {
-    throw new Error(dobRangeMessage('Student', MIN_STUDENT_AGE, MAX_AGE))
+    return { error: dobRangeMessage('Student', MIN_STUDENT_AGE, MAX_AGE) }
   }
 
   const { error } = await supabase
@@ -45,7 +50,7 @@ export async function updateStudentRecord(
     .eq('id', studentId)
 
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   const {
@@ -68,7 +73,10 @@ export async function updateStudentRecord(
 // student was already billed for doesn't double-charge them. Age
 // eligibility is enforced here, not on the public/parent enroll forms —
 // see the Classrooms & fee schedule note in CLAUDE.md for why.
-export async function assignStudentClassroom(studentId: string, classroomId: string | null) {
+export async function assignStudentClassroom(
+  studentId: string,
+  classroomId: string | null
+): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
 
   const { data: student } = await supabase
@@ -77,14 +85,18 @@ export async function assignStudentClassroom(studentId: string, classroomId: str
     .eq('id', studentId)
     .single()
   if (!student) {
-    throw new Error('Student not found.')
+    return { error: 'Student not found.' }
   }
 
   if (classroomId === null) {
     const { error } = await supabase.from('students').update({ classroom_id: null }).eq('id', studentId)
-    if (error) throw new Error(error.message)
+    if (error) return { error: error.message }
   } else {
-    await applyClassroomToStudent(supabase, studentId, student.date_of_birth, classroomId)
+    try {
+      await applyClassroomToStudent(supabase, studentId, student.date_of_birth, classroomId)
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : 'Could not assign that classroom.' }
+    }
   }
 
   const {
@@ -102,12 +114,15 @@ export async function assignStudentClassroom(studentId: string, classroomId: str
   revalidatePath('/admin/payments')
 }
 
-export async function updateStudentAvatar(studentId: string, formData: FormData) {
+export async function updateStudentAvatar(
+  studentId: string,
+  formData: FormData
+): Promise<{ error: string } | { url: string }> {
   const supabase = await createClient()
 
   const file = formData.get('avatar') as File | null
   if (!file || file.size === 0) {
-    throw new Error('Please choose an image.')
+    return { error: 'Please choose an image.' }
   }
 
   const extension = file.name.split('.').pop() || 'jpg'
@@ -115,7 +130,7 @@ export async function updateStudentAvatar(studentId: string, formData: FormData)
 
   const { error: uploadError } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
   if (uploadError) {
-    throw new Error(uploadError.message)
+    return { error: uploadError.message }
   }
 
   const { data } = supabase.storage.from('avatars').getPublicUrl(path)
@@ -123,7 +138,7 @@ export async function updateStudentAvatar(studentId: string, formData: FormData)
 
   const { error: updateError } = await supabase.from('students').update({ avatar_url: avatarUrl }).eq('id', studentId)
   if (updateError) {
-    throw new Error(updateError.message)
+    return { error: updateError.message }
   }
 
   const {
@@ -138,15 +153,15 @@ export async function updateStudentAvatar(studentId: string, formData: FormData)
 
   revalidatePath('/admin/students')
   revalidatePath('/admin/student-dashboard')
-  return avatarUrl
+  return { url: avatarUrl }
 }
 
-export async function removeStudentAvatar(studentId: string) {
+export async function removeStudentAvatar(studentId: string): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
 
   const { error } = await supabase.from('students').update({ avatar_url: null }).eq('id', studentId)
   if (error) {
-    throw new Error(error.message)
+    return { error: error.message }
   }
 
   const {
