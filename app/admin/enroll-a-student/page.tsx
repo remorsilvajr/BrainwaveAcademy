@@ -23,7 +23,7 @@ export default async function EnrollAStudentPage() {
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Review light enrollment submissions from the public website, approve enrollment
           requests, and automatically trigger account setup emails. This creates the parent
-          account only — the child becomes an enrolled student after document review in
+          account only, since the child becomes an enrolled student after document review in
           Applications.
         </p>
       </div>
