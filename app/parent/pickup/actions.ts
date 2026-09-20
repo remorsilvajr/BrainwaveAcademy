@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { isValidName, NAME_VALIDATION_MESSAGE } from '@/lib/name'
 import { isValidPhoneInput, normalizePhilippineMobile, PHONE_VALIDATION_MESSAGE } from '@/lib/phone'
+import { isPickupRelationship, PICKUP_RELATIONSHIP_MESSAGE } from '@/lib/pickup-relationships'
 import { logActivity } from '@/lib/activity-log'
 
 const MAX_PHOTO_BYTES = 2 * 1024 * 1024 // matches the pickup-photos bucket's own file_size_limit
@@ -15,10 +16,18 @@ export type PickupPersonInput = {
   phoneNumber: string
 }
 
-function validateInput(input: PickupPersonInput): string | null {
+// `currentRelationship` is the value already stored on an edited row: a legacy
+// free-text relationship (from before this was a fixed list) stays valid as
+// long as it isn't changed, so editing just the phone number doesn't force a
+// relationship re-pick.
+function validateInput(input: PickupPersonInput, currentRelationship?: string | null): string | null {
   const fullName = input.fullName.trim()
   if (!fullName) return 'Enter the full name of the authorized person.'
   if (!isValidName(fullName)) return NAME_VALIDATION_MESSAGE
+  const relationship = input.relationship.trim()
+  if (!isPickupRelationship(relationship) && !(currentRelationship && relationship === currentRelationship)) {
+    return PICKUP_RELATIONSHIP_MESSAGE
+  }
   const phone = input.phoneNumber.trim()
   if (phone && !isValidPhoneInput(phone)) return PHONE_VALIDATION_MESSAGE
   return null
@@ -106,11 +115,6 @@ export async function updatePickupPerson(
   input: PickupPersonInput,
   formData: FormData
 ): Promise<{ error: string } | undefined> {
-  const validationError = validateInput(input)
-  if (validationError) {
-    return { error: validationError }
-  }
-
   const supabase = await createClient()
   const {
     data: { user },
@@ -118,11 +122,16 @@ export async function updatePickupPerson(
 
   const { data: existing } = await supabase
     .from('authorized_pickups')
-    .select('id, student_id')
+    .select('id, student_id, relationship')
     .eq('id', pickupId)
     .single()
   if (!existing) {
     return { error: 'This pickup person could not be found.' }
+  }
+
+  const validationError = validateInput(input, existing.relationship)
+  if (validationError) {
+    return { error: validationError }
   }
 
   const photoEntry = formData.get('photo')
