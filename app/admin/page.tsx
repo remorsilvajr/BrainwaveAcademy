@@ -7,9 +7,6 @@ import { PriorityFeedbackLog } from '@/components/admin/priority-feedback-log'
 type FeedbackRow = {
   id: string
   subject: string
-  message: string
-  created_at: string
-  profiles: { first_name: string; last_name: string } | null
 }
 
 export default async function AdminDashboardPage() {
@@ -27,7 +24,7 @@ export default async function AdminDashboardPage() {
     supabase.from('students').select('enrollment_status'),
     supabase
       .from('feedback')
-      .select('id, subject, message, created_at, profiles!submitted_by(first_name, last_name)')
+      .select('id, subject')
       .eq('resolved', false)
       .order('created_at', { ascending: false })
       .limit(5)
@@ -86,13 +83,7 @@ export default async function AdminDashboardPage() {
   const pendingWalletRequestCount = pendingWalletRequests?.length ?? 0
   const pendingWalletRequestTotal = (pendingWalletRequests ?? []).reduce((sum, r) => sum + r.requested_amount, 0)
 
-  const feedbackItems = (feedbackRows ?? []).map((f) => ({
-    id: f.id,
-    subject: f.subject,
-    message: f.message,
-    created_at: f.created_at,
-    submitter_name: f.profiles ? `${f.profiles.first_name} ${f.profiles.last_name}` : 'Unknown',
-  }))
+  const feedbackItems = feedbackRows ?? []
 
   return (
     <div className="space-y-6">
@@ -144,7 +135,7 @@ export default async function AdminDashboardPage() {
           <p className="text-sm text-gray-500 dark:text-gray-400">Total Collections Today</p>
           <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">{formatCurrency(totalCollectedToday)}</p>
           <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
-            {totalCollectedToday > 0 ? 'Paid today, wallet + cash/check' : 'No transactions yet'}
+            {totalCollectedToday > 0 ? 'Paid today, wallet + cash' : 'No transactions yet'}
           </p>
         </Link>
         <Link
@@ -166,7 +157,12 @@ export default async function AdminDashboardPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 shadow-sm">
-          <h2 className="mb-3 font-semibold text-[#0b1b62] dark:text-indigo-300">Recent Financial Transactions</h2>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="font-semibold text-[#0b1b62] dark:text-indigo-300">Recent Financial Transactions</h2>
+            <Link href="/admin/payments" className="text-sm font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline">
+              View All
+            </Link>
+          </div>
           <div className="overflow-x-auto">
           <table className="w-full min-w-[520px] text-sm">
             <thead className="text-left text-gray-400 dark:text-gray-500">

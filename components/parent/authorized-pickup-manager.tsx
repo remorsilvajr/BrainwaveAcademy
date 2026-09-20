@@ -1,8 +1,8 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { User as UserIcon, Plus, X, ImagePlus } from 'lucide-react'
+import { User as UserIcon, Plus, X, ImagePlus, Loader2 } from 'lucide-react'
 import {
   addPickupPerson,
   updatePickupPerson,
@@ -11,6 +11,7 @@ import {
   type PickupPersonInput,
 } from '@/app/parent/pickup/actions'
 import { Modal } from '@/components/ui/modal'
+import { isValidPhoneInput, PHONE_VALIDATION_MESSAGE } from '@/lib/phone'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 const MAX_PHOTO_BYTES = 2 * 1024 * 1024
@@ -22,12 +23,10 @@ type Pickup = {
   full_name: string
   relationship: string | null
   phone_number: string | null
-  id_type: string | null
-  id_number: string | null
   photoUrl: string | null
 }
 
-const emptyInput: PickupPersonInput = { fullName: '', relationship: '', phoneNumber: '', idType: '', idNumber: '' }
+const emptyInput: PickupPersonInput = { fullName: '', relationship: '', phoneNumber: '' }
 
 function PickupFormModal({
   studentId,
@@ -46,8 +45,6 @@ function PickupFormModal({
           fullName: editing.full_name,
           relationship: editing.relationship ?? '',
           phoneNumber: editing.phone_number ?? '',
-          idType: editing.id_type ?? '',
-          idNumber: editing.id_number ?? '',
         }
       : emptyInput
   )
@@ -55,7 +52,20 @@ function PickupFormModal({
   const [photoPreview, setPhotoPreview] = useState<string | null>(editing?.photoUrl ?? null)
   const [removingExistingPhoto, setRemovingExistingPhoto] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [isRefreshing, startRefresh] = useTransition()
   const [error, setError] = useState('')
+
+  // The save itself is only half the wait: router.refresh() re-renders the
+  // whole page server-side before the new person shows up in the list. Keep
+  // the modal (and its spinner) up until that refresh has actually landed,
+  // instead of closing it immediately and leaving the parent looking at an
+  // unchanged list for several silent seconds.
+  useEffect(() => {
+    if (saved && !isRefreshing) onClose()
+  }, [saved, isRefreshing, onClose])
+
+  const busy = isSaving || saved
 
   function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -82,8 +92,14 @@ function PickupFormModal({
   }
 
   async function handleSubmit() {
-    setIsSaving(true)
     setError('')
+    // Same check the server action runs; done here first so a typo is flagged
+    // instantly instead of after the photo upload round trip.
+    if (input.phoneNumber.trim() && !isValidPhoneInput(input.phoneNumber.trim())) {
+      setError(PHONE_VALIDATION_MESSAGE)
+      return
+    }
+    setIsSaving(true)
     try {
       const formData = new FormData()
       if (photo) formData.set('photo', photo)
@@ -108,8 +124,10 @@ function PickupFormModal({
           return
         }
       }
-      router.refresh()
-      onClose()
+      setSaved(true)
+      startRefresh(() => {
+        router.refresh()
+      })
     } catch {
       setError('Something went wrong. Please try again.')
     } finally {
@@ -118,12 +136,17 @@ function PickupFormModal({
   }
 
   return (
-    <Modal onClose={onClose} maxWidth="md">
+    <Modal onClose={busy ? () => {} : onClose} maxWidth="md">
       <div className="flex items-start justify-between border-b border-gray-100 dark:border-gray-800 p-6">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
           {editing ? 'Edit Authorized Pickup Person' : 'Add Authorized Pickup Person'}
         </h2>
-        <button onClick={onClose} aria-label="Close" className="text-gray-400 dark:text-gray-500 hover:text-gray-600">
+        <button
+          onClick={onClose}
+          disabled={busy}
+          aria-label="Close"
+          className="text-gray-400 dark:text-gray-500 hover:text-gray-600 disabled:opacity-40"
+        >
           <X className="h-5 w-5" />
         </button>
       </div>
@@ -152,25 +175,10 @@ function PickupFormModal({
             <input
               value={input.phoneNumber}
               onChange={(e) => setInput({ ...input, phoneNumber: e.target.value })}
-              className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
-            />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div>
-            <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">ID Type</label>
-            <input
-              value={input.idType}
-              onChange={(e) => setInput({ ...input, idType: e.target.value })}
-              placeholder="e.g. Driver's License"
-              className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">ID Number</label>
-            <input
-              value={input.idNumber}
-              onChange={(e) => setInput({ ...input, idNumber: e.target.value })}
+              type="tel"
+              inputMode="tel"
+              maxLength={20}
+              placeholder="e.g. 0917 123 4567"
               className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
             />
           </div>
@@ -214,22 +222,37 @@ function PickupFormModal({
         {error && (
           <p className="rounded-lg bg-red-50 dark:bg-red-950/30 px-3 py-2 text-sm text-red-600 dark:text-red-400">{error}</p>
         )}
+
+        {busy && (
+          <p
+            role="status"
+            className="flex items-center gap-2 rounded-lg bg-sky-50 dark:bg-sky-950/30 px-3 py-2 text-sm text-sky-700 dark:text-sky-300"
+          >
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+            {isSaving
+              ? photo
+                ? 'Uploading the photo and saving. This can take a few seconds.'
+                : 'Saving. This can take a few seconds.'
+              : 'Saved. Updating the list…'}
+          </p>
+        )}
       </div>
 
       <div className="flex gap-3 border-t border-gray-100 dark:border-gray-800 p-6">
         <button
           onClick={onClose}
-          disabled={isSaving}
+          disabled={busy}
           className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-60"
         >
           Cancel
         </button>
         <button
           onClick={handleSubmit}
-          disabled={isSaving || !input.fullName.trim()}
-          className="flex-1 rounded-lg bg-[#0b1b62] py-2.5 text-sm font-semibold text-white hover:bg-[#08154d] disabled:cursor-not-allowed disabled:opacity-40"
+          disabled={busy || !input.fullName.trim()}
+          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#0b1b62] py-2.5 text-sm font-semibold text-white hover:bg-[#08154d] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isSaving ? 'Saving…' : editing ? 'Save Changes' : 'Add Person'}
+          {busy && <Loader2 className="h-4 w-4 animate-spin" />}
+          {busy ? (editing ? 'Saving…' : 'Adding…') : editing ? 'Save Changes' : 'Add Person'}
         </button>
       </div>
     </Modal>

@@ -20,7 +20,7 @@ export default async function AuthorizedPickupPage() {
     studentIds.length > 0
       ? supabase
           .from('authorized_pickups')
-          .select('id, student_id, full_name, relationship, phone_number, id_type, id_number, photo_path')
+          .select('id, student_id, full_name, relationship, phone_number, photo_path')
           .in('student_id', studentIds)
           .order('created_at', { ascending: true })
       : Promise.resolve({ data: [] }),
