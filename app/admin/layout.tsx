@@ -29,6 +29,7 @@ const baseSections: NavSection[] = [
       { label: 'Students', href: '/admin/students', icon: 'user' },
       { label: 'Attendance', href: '/admin/attendance', icon: 'checklist' },
       { label: 'Student Dashboard', href: '/admin/student-dashboard', icon: 'graduationCap' },
+      { label: 'Pickup Verification', href: '/admin/pickup-verification', icon: 'pickup' },
     ],
   },
   {

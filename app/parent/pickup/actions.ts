@@ -1,0 +1,211 @@
+'use server'
+
+import { randomUUID } from 'crypto'
+import { revalidatePath } from 'next/cache'
+import { createClient } from '@/lib/supabase/server'
+import { isValidName, NAME_VALIDATION_MESSAGE } from '@/lib/name'
+import { logActivity } from '@/lib/activity-log'
+
+const MAX_PHOTO_BYTES = 2 * 1024 * 1024 // matches the pickup-photos bucket's own file_size_limit
+
+export type PickupPersonInput = {
+  fullName: string
+  relationship: string
+  phoneNumber: string
+  idType: string
+  idNumber: string
+}
+
+function validateInput(input: PickupPersonInput): string | null {
+  const fullName = input.fullName.trim()
+  if (!fullName) return 'Enter the full name of the authorized person.'
+  if (!isValidName(fullName)) return NAME_VALIDATION_MESSAGE
+  return null
+}
+
+// Ownership of `studentId` is enforced by parents_manage_own_students_pickups'
+// WITH CHECK on the regular RLS-scoped client — no separate parent_student
+// lookup needed here, the insert itself fails closed if the student isn't
+// actually linked to this parent.
+export async function addPickupPerson(
+  studentId: string,
+  input: PickupPersonInput,
+  formData: FormData
+): Promise<{ error: string } | { id: string }> {
+  const validationError = validateInput(input)
+  if (validationError) {
+    return { error: validationError }
+  }
+
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return { error: 'You must be logged in.' }
+  }
+
+  // Photo upload happens before the row insert, same reasoning as
+  // components/feedback/actions.ts's submitFeedback — a failed upload fails
+  // the whole submission cleanly instead of leaving a row with a dangling
+  // photo_path, or a photo nothing points at.
+  const photoEntry = formData.get('photo')
+  const photo = photoEntry instanceof File ? photoEntry : null
+  let photoPath: string | null = null
+  if (photo && photo.size > 0) {
+    if (photo.size > MAX_PHOTO_BYTES) {
+      return { error: 'Photo must be under 2MB.' }
+    }
+    if (!photo.type.startsWith('image/')) {
+      return { error: 'Please attach an image file.' }
+    }
+    const extension = photo.name.split('.').pop() || 'jpg'
+    photoPath = `${studentId}/${randomUUID()}.${extension}`
+    const { error: uploadError } = await supabase.storage.from('pickup-photos').upload(photoPath, photo)
+    if (uploadError) {
+      return { error: uploadError.message }
+    }
+  }
+
+  const { data, error } = await supabase
+    .from('authorized_pickups')
+    .insert({
+      student_id: studentId,
+      full_name: input.fullName.trim(),
+      relationship: input.relationship.trim() || null,
+      phone_number: input.phoneNumber.trim() || null,
+      id_type: input.idType.trim() || null,
+      id_number: input.idNumber.trim() || null,
+      photo_path: photoPath,
+      created_by: user.id,
+    })
+    .select('id')
+    .single()
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  await logActivity(supabase, {
+    actorId: user.id,
+    action: `Added ${input.fullName.trim()} as an authorized pickup person`,
+    targetTable: 'authorized_pickups',
+    targetId: data.id,
+  })
+
+  revalidatePath('/parent/pickup')
+  return { id: data.id }
+}
+
+export async function updatePickupPerson(
+  pickupId: string,
+  input: PickupPersonInput,
+  formData: FormData
+): Promise<{ error: string } | undefined> {
+  const validationError = validateInput(input)
+  if (validationError) {
+    return { error: validationError }
+  }
+
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const { data: existing } = await supabase
+    .from('authorized_pickups')
+    .select('id, student_id')
+    .eq('id', pickupId)
+    .single()
+  if (!existing) {
+    return { error: 'This pickup person could not be found.' }
+  }
+
+  const photoEntry = formData.get('photo')
+  const photo = photoEntry instanceof File ? photoEntry : null
+  const updates: Record<string, unknown> = {
+    full_name: input.fullName.trim(),
+    relationship: input.relationship.trim() || null,
+    phone_number: input.phoneNumber.trim() || null,
+    id_type: input.idType.trim() || null,
+    id_number: input.idNumber.trim() || null,
+    updated_at: new Date().toISOString(),
+  }
+
+  if (photo && photo.size > 0) {
+    if (photo.size > MAX_PHOTO_BYTES) {
+      return { error: 'Photo must be under 2MB.' }
+    }
+    if (!photo.type.startsWith('image/')) {
+      return { error: 'Please attach an image file.' }
+    }
+    const extension = photo.name.split('.').pop() || 'jpg'
+    const photoPath = `${existing.student_id}/${randomUUID()}.${extension}`
+    const { error: uploadError } = await supabase.storage.from('pickup-photos').upload(photoPath, photo)
+    if (uploadError) {
+      return { error: uploadError.message }
+    }
+    updates.photo_path = photoPath
+  }
+
+  const { error } = await supabase.from('authorized_pickups').update(updates).eq('id', pickupId)
+  if (error) {
+    return { error: error.message }
+  }
+
+  await logActivity(supabase, {
+    actorId: user?.id ?? null,
+    action: `Updated authorized pickup person ${input.fullName.trim()}`,
+    targetTable: 'authorized_pickups',
+    targetId: pickupId,
+  })
+
+  revalidatePath('/parent/pickup')
+}
+
+export async function removePickupPersonPhoto(pickupId: string): Promise<{ error: string } | undefined> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const { error } = await supabase
+    .from('authorized_pickups')
+    .update({ photo_path: null, updated_at: new Date().toISOString() })
+    .eq('id', pickupId)
+  if (error) {
+    return { error: error.message }
+  }
+
+  await logActivity(supabase, {
+    actorId: user?.id ?? null,
+    action: "Removed an authorized pickup person's photo",
+    targetTable: 'authorized_pickups',
+    targetId: pickupId,
+  })
+
+  revalidatePath('/parent/pickup')
+}
+
+export async function removePickupPerson(pickupId: string): Promise<{ error: string } | undefined> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const { data: existing } = await supabase.from('authorized_pickups').select('full_name').eq('id', pickupId).maybeSingle()
+
+  const { error } = await supabase.from('authorized_pickups').delete().eq('id', pickupId)
+  if (error) {
+    return { error: error.message }
+  }
+
+  await logActivity(supabase, {
+    actorId: user?.id ?? null,
+    action: `Removed authorized pickup person ${existing?.full_name ?? ''}`.trim(),
+    targetTable: 'authorized_pickups',
+    targetId: pickupId,
+  })
+
+  revalidatePath('/parent/pickup')
+}

@@ -24,6 +24,7 @@ const sections: NavSection[] = [
     items: [
       { label: 'Enrollment Profile', href: '/parent/students', icon: 'user' },
       { label: 'Student Dashboard', href: '/parent/student-dashboard', icon: 'graduationCap' },
+      { label: 'Authorized Pickup', href: '/parent/pickup', icon: 'pickup' },
     ],
   },
   {
