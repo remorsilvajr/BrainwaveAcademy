@@ -3,9 +3,10 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Mail, ImageIcon } from 'lucide-react'
-import { resolveFeedback, reopenFeedback } from '@/app/admin/actions'
+import { resolveFeedback, reopenFeedback, respondToFeedback } from '@/app/admin/actions'
 import { getFeedbackImageUrl } from '@/app/admin/feedback/actions'
 import { formatDateLong, formatRelativeTime } from '@/lib/format'
+import { feedbackCategoryLabels, feedbackCategoryOrder } from '@/lib/feedback'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
 import { SortSelect } from '@/components/ui/sort-select'
@@ -16,9 +17,12 @@ type FeedbackItem = {
   id: string
   subject: string
   message: string
+  category: string
   resolved: boolean
   created_at: string
   image_path: string | null
+  admin_response: string | null
+  responded_at: string | null
   submitter_name: string
   submitter_email: string | null
   submitter_role: string | null
@@ -40,10 +44,15 @@ export function FeedbackTable({ items }: { items: FeedbackItem[] }) {
   const router = useRouter()
   const [tab, setTab] = useState<Tab>('unresolved')
   const [search, setSearch] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState('all')
   const [workingId, setWorkingId] = useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [loadingImageId, setLoadingImageId] = useState<string | null>(null)
+  const [replyingId, setReplyingId] = useState<string | null>(null)
+  const [replyCategory, setReplyCategory] = useState('general')
+  const [replyText, setReplyText] = useState('')
+  const [isReplying, setIsReplying] = useState(false)
 
   const counts = {
     all: items.length,
@@ -54,6 +63,7 @@ export function FeedbackTable({ items }: { items: FeedbackItem[] }) {
   const tabItems = tab === 'all' ? items : items.filter((f) => (tab === 'resolved' ? f.resolved : !f.resolved))
 
   const filtered = tabItems.filter((f) => {
+    if (categoryFilter !== 'all' && f.category !== categoryFilter) return false
     if (!search.trim()) return true
     const term = search.toLowerCase()
     return (
@@ -75,7 +85,10 @@ export function FeedbackTable({ items }: { items: FeedbackItem[] }) {
   )
   const { sorted, sortKey, setSortKey } = useSort(filtered, sortOptions)
 
-  const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(sorted, `${tab}|${search}|${sortKey}`)
+  const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(
+    sorted,
+    `${tab}|${search}|${categoryFilter}|${sortKey}`
+  )
 
   const tabs: { key: Tab; label: string; count: number }[] = [
     { key: 'unresolved', label: 'Unresolved', count: counts.unresolved },
@@ -118,6 +131,31 @@ export function FeedbackTable({ items }: { items: FeedbackItem[] }) {
     }
   }
 
+  function openReply(item: FeedbackItem) {
+    setReplyingId(item.id)
+    setReplyCategory(item.category)
+    setReplyText(item.admin_response ?? '')
+    setErrorMessage('')
+  }
+
+  async function handleSendResponse(item: FeedbackItem) {
+    setIsReplying(true)
+    setErrorMessage('')
+    try {
+      const result = await respondToFeedback(item.id, replyCategory, replyText)
+      if (result?.error) {
+        setErrorMessage(result.error)
+        return
+      }
+      setReplyingId(null)
+      router.refresh()
+    } catch {
+      setErrorMessage('Something went wrong. Please try again.')
+    } finally {
+      setIsReplying(false)
+    }
+  }
+
   return (
     <>
       <div className="flex flex-wrap gap-2">
@@ -143,7 +181,7 @@ export function FeedbackTable({ items }: { items: FeedbackItem[] }) {
       )}
 
       <div className="mt-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_260px]">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_200px_260px]">
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Search</label>
             <input
@@ -152,6 +190,21 @@ export function FeedbackTable({ items }: { items: FeedbackItem[] }) {
               placeholder="Subject, message, name, or email"
               className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
             />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Category</label>
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+            >
+              <option value="all">All</option>
+              {feedbackCategoryOrder.map((value) => (
+                <option key={value} value={value}>
+                  {feedbackCategoryLabels[value]}
+                </option>
+              ))}
+            </select>
           </div>
           <SortSelect value={sortKey} onChange={setSortKey} options={sortOptions} />
         </div>
@@ -177,6 +230,9 @@ export function FeedbackTable({ items }: { items: FeedbackItem[] }) {
                           {item.submitter_role}
                         </span>
                       )}
+                      <span className="inline-block rounded-full bg-indigo-50 dark:bg-indigo-950/40 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:text-indigo-300">
+                        {feedbackCategoryLabels[item.category] ?? item.category}
+                      </span>
                     </div>
                     {item.submitter_email && (
                       <p className="text-xs text-gray-400 dark:text-gray-500">{item.submitter_email}</p>
@@ -199,6 +255,64 @@ export function FeedbackTable({ items }: { items: FeedbackItem[] }) {
                         </button>
                       )}
                     </div>
+
+                    {item.admin_response && replyingId !== item.id && (
+                      <div className="mt-3 rounded-lg bg-gray-50 dark:bg-gray-800/60 p-3">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
+                          Admin Response{item.responded_at ? ` · ${formatDateLong(item.responded_at)}` : ''}
+                        </p>
+                        <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">{item.admin_response}</p>
+                      </div>
+                    )}
+
+                    {replyingId === item.id ? (
+                      <div className="mt-3 space-y-2 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+                        <select
+                          value={replyCategory}
+                          onChange={(e) => setReplyCategory(e.target.value)}
+                          className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+                        >
+                          {feedbackCategoryOrder.map((value) => (
+                            <option key={value} value={value}>
+                              {feedbackCategoryLabels[value]}
+                            </option>
+                          ))}
+                        </select>
+                        <textarea
+                          value={replyText}
+                          onChange={(e) => setReplyText(e.target.value)}
+                          rows={3}
+                          placeholder="Write a response…"
+                          className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setReplyingId(null)}
+                            disabled={isReplying}
+                            className="rounded-lg border border-gray-300 dark:border-gray-600 px-4 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-60"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleSendResponse(item)}
+                            disabled={isReplying || !replyText.trim()}
+                            className="rounded-lg bg-[#0b1b62] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#08154d] disabled:cursor-not-allowed disabled:opacity-40"
+                          >
+                            {isReplying ? 'Sending…' : 'Send Response'}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => openReply(item)}
+                        className="mt-2 text-xs font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline"
+                      >
+                        {item.admin_response ? 'Edit Response' : 'Categorize & Reply'}
+                      </button>
+                    )}
                   </div>
                 </div>
                 <button

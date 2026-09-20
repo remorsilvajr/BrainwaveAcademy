@@ -8,6 +8,7 @@ const sections: NavSection[] = [
     items: [
       { label: 'Dashboard', href: '/parent', icon: 'dashboard' },
       { label: 'Announcement', href: '/parent/announcement', icon: 'announcement' },
+      { label: 'Calendar', href: '/parent/calendar', icon: 'calendar' },
     ],
   },
   {
@@ -24,6 +25,7 @@ const sections: NavSection[] = [
     items: [
       { label: 'Enrollment Profile', href: '/parent/students', icon: 'user' },
       { label: 'Student Dashboard', href: '/parent/student-dashboard', icon: 'graduationCap' },
+      { label: 'Authorized Pickup', href: '/parent/pickup', icon: 'pickup' },
     ],
   },
   {

@@ -27,7 +27,7 @@ export default async function AdminDashboardPage() {
     supabase.from('students').select('enrollment_status'),
     supabase
       .from('feedback')
-      .select('id, subject, message, created_at, profiles(first_name, last_name)')
+      .select('id, subject, message, created_at, profiles!submitted_by(first_name, last_name)')
       .eq('resolved', false)
       .order('created_at', { ascending: false })
       .limit(5)

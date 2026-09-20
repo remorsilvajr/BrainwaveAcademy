@@ -5,17 +5,29 @@ import { useRouter } from 'next/navigation'
 import { Bug, X, ImagePlus } from 'lucide-react'
 import { submitFeedback } from '@/components/feedback/actions'
 import { Modal } from '@/components/ui/modal'
+import { feedbackCategoryLabels, feedbackCategoryOrder } from '@/lib/feedback'
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024 // matches the bug-reports bucket's own file_size_limit
 
 // Reachable from ProfileMenu, so this modal has no idea what page it was
 // opened from (public site, admin/teacher/parent portal) — it only needs an
-// authenticated user, enforced server-side in submitFeedback.
-export function BugReportModal({ onClose }: { onClose: () => void }) {
+// authenticated user, enforced server-side in submitFeedback. One shared
+// modal backs both ProfileMenu entry points ("Report a Bug" and "Feedback &
+// Concerns") — initialCategory just pre-selects the dropdown to match
+// whichever the user clicked, since the underlying table/review flow is the
+// same either way.
+export function BugReportModal({
+  onClose,
+  initialCategory = 'bug',
+}: {
+  onClose: () => void
+  initialCategory?: string
+}) {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [subject, setSubject] = useState('')
   const [message, setMessage] = useState('')
+  const [category, setCategory] = useState(initialCategory)
   const [image, setImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -51,7 +63,7 @@ export function BugReportModal({ onClose }: { onClose: () => void }) {
     try {
       const formData = new FormData()
       if (image) formData.set('image', image)
-      const result = await submitFeedback(subject, message, formData)
+      const result = await submitFeedback(subject, message, category, formData)
       if (result?.error) {
         setErrorMessage(result.error)
         return
@@ -70,7 +82,9 @@ export function BugReportModal({ onClose }: { onClose: () => void }) {
       <div className="flex items-start justify-between border-b border-gray-100 dark:border-gray-800 p-6">
         <div className="flex items-center gap-2">
           <Bug className="h-5 w-5 text-[#e6007e]" />
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Report a Bug</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            {initialCategory === 'bug' ? 'Report a Bug' : 'Send Feedback'}
+          </h2>
         </div>
         <button onClick={onClose} aria-label="Close" className="text-gray-400 dark:text-gray-500 hover:text-gray-600">
           <X className="h-5 w-5" />
@@ -80,14 +94,29 @@ export function BugReportModal({ onClose }: { onClose: () => void }) {
       <div className="p-6">
         {sent ? (
           <div className="rounded-lg border border-green-200 bg-green-50 dark:bg-green-950/30 p-4 text-center">
-            <p className="font-medium text-green-800">Thanks, your report was sent to the admin team.</p>
+            <p className="font-medium text-green-800">Thanks, this was sent to the admin team.</p>
           </div>
         ) : (
           <>
             <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
-              Ran into something broken or confusing? Let us know what happened and where. The
-              more specific, the faster we can fix it.
+              {initialCategory === 'bug'
+                ? 'Ran into something broken or confusing? Let us know what happened and where. The more specific, the faster we can fix it.'
+                : "Have a concern, suggestion, or something else to share? Send it here and the admin team will follow up."}
             </p>
+            <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
+              Category
+            </label>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="mb-4 w-full rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+            >
+              {feedbackCategoryOrder.map((value) => (
+                <option key={value} value={value}>
+                  {feedbackCategoryLabels[value]}
+                </option>
+              ))}
+            </select>
             <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
               Subject
             </label>
@@ -180,7 +209,7 @@ export function BugReportModal({ onClose }: { onClose: () => void }) {
               disabled={isSubmitting || !subject.trim() || !message.trim()}
               className="flex-1 rounded-lg bg-[#e6007e] py-3 text-sm font-semibold text-white hover:bg-[#c9006e] disabled:cursor-not-allowed disabled:opacity-40"
             >
-              {isSubmitting ? 'Sending…' : 'Send Report'}
+              {isSubmitting ? 'Sending…' : 'Send'}
             </button>
           </>
         )}
