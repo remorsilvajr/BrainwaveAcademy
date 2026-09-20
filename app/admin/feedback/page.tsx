@@ -20,7 +20,7 @@ export default async function AdminFeedbackPage() {
   const { data } = await supabase
     .from('feedback')
     .select(
-      'id, subject, message, category, resolved, created_at, image_path, admin_response, responded_at, profiles(first_name, last_name, email, role)'
+      'id, subject, message, category, resolved, created_at, image_path, admin_response, responded_at, profiles!submitted_by(first_name, last_name, email, role)'
     )
     .order('created_at', { ascending: false })
     .returns<FeedbackRow[]>()
