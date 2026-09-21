@@ -39,9 +39,9 @@ function stepStatus(stepIndex: number, currentStage: Stage) {
 export default async function EnrollmentStatusPage({
   searchParams,
 }: {
-  searchParams: Promise<{ student?: string }>
+  searchParams: Promise<{ student?: string; welcome?: string }>
 }) {
-  const { student: studentParam } = await searchParams
+  const { student: studentParam, welcome } = await searchParams
   const supabase = await createClient()
   const {
     data: { user },
@@ -90,6 +90,19 @@ export default async function EnrollmentStatusPage({
         <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Enrollment Status</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Track your child&apos;s enrollment progress.</p>
       </div>
+
+      {welcome === '1' && (
+        <div className="flex items-start gap-3 rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-950/30">
+          <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-green-600 dark:text-green-400" />
+          <div>
+            <p className="text-sm font-semibold text-green-800 dark:text-green-300">Your account is ready and your request was submitted.</p>
+            <p className="mt-1 text-sm text-green-700 dark:text-green-400">
+              You&apos;re signed in. The school will review your request and email you once it is decided. You can start uploading
+              the requirements now from the Requirements tab.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
         <div className="flex items-center justify-between">

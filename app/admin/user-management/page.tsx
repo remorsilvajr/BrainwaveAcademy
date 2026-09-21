@@ -57,6 +57,8 @@ export default async function UserManagementPage() {
   const users = (data ?? []).map(({ is_super_admin, ...row }) => ({
     ...row,
     canModerate: canModerateAccount(actor, { role: row.role, is_super_admin: !!is_super_admin }),
+    // Setting someone's password is a super-admin-only power, on any account but their own.
+    canSetPassword: actor.is_super_admin && row.id !== user?.id,
     parent_student: (row.parent_student ?? []).map((ps: {
       relationship: string
       students: { id: string; first_name: string; middle_name: string | null; last_name: string; classroom_id: string | null } | null

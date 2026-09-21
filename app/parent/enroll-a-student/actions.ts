@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { validateProgramOptions } from '@/lib/program-options'
 import { notifyAdmins } from '@/lib/notify'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
 import { isValidDob, dobRangeMessage, MIN_STUDENT_AGE, MAX_STUDENT_AGE } from '@/lib/dob'
 import { isAgeEligibleForClassroom } from '@/lib/classrooms'
@@ -116,13 +117,14 @@ export async function submitStudent(
     return { error: 'Please fix the highlighted fields below.', fieldErrors, values }
   }
 
-  // Still goes through the normal admin review queue (status pending_review,
-  // no created_parent_id yet) rather than auto-approving — Enroll A Student
-  // on the admin side already knows how to match an existing parent by
-  // email and reuse the account without creating a duplicate or sending a
-  // new welcome email, so this reuses that same path rather than a special
-  // "already logged in" bypass.
-  const { error } = await supabase.from('applications').insert({
+  // Still goes through the normal admin review queue (status pending_review), but the
+  // request is linked to this parent's account from the start (created_parent_id) so
+  // Requirements opens right away, like a first request from the public form. The
+  // applications INSERT policy only allows created_parent_id null, so this inserts
+  // with the service role; the caller was verified from the session above and the
+  // parent columns come from their own profile, never from the form.
+  const { error } = await createAdminClient().from('applications').insert({
+    created_parent_id: user.id,
     student_first_name: toTitleCase(values.student_first_name),
     student_middle_name: values.student_middle_name ? toTitleCase(values.student_middle_name) : null,
     student_last_name: toTitleCase(values.student_last_name),

@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { SECURE_COOKIES } from '@/lib/supabase/secure-cookie'
+import { setRememberMeCookie, setSessionMarkerCookies } from '@/lib/auth-cookies'
 
 // Brute-force lockout: 5 failed attempts per email within a 5-minute
 // sliding window blocks further attempts (even a correct password) until
@@ -31,18 +31,10 @@ export async function login(formData: FormData) {
   const password = formData.get('password') as string
   const rememberMe = formData.get('remember-me') === 'on'
 
-  // Must be set BEFORE createClient()/signInWithPassword() below — its
-  // setAll() reads this same cookie (via the same request-scoped cookie
-  // jar) to decide whether the sb-* auth cookies it's about to write should
-  // be session-only. See lib/supabase/remember-me.ts.
+  // Must be set BEFORE createClient()/signInWithPassword() below (see
+  // lib/auth-cookies.ts).
   const cookieStore = await cookies()
-  cookieStore.set('remember_me', rememberMe ? 'true' : 'false', {
-    httpOnly: true,
-    secure: SECURE_COOKIES,
-    sameSite: 'lax',
-    path: '/',
-    ...(rememberMe ? { maxAge: 60 * 60 * 24 * 30 } : {}),
-  })
+  setRememberMeCookie(cookieStore, rememberMe)
 
   // login_attempts has RLS enabled with zero policies, same as
   // ref_counters — it's only ever touched via this service-role client,
@@ -125,44 +117,11 @@ export async function login(formData: FormData) {
 
   const role = profile?.role ?? 'parent'
 
-  // Cached so middleware doesn't have to re-query profiles.role on every
-  // single navigation — see middleware.ts. Short-lived so a role change
-  // (rare for this app) is picked up again soon rather than staying stale
-  // for the rest of the session.
-  cookieStore.set('user_role', role, {
-    httpOnly: true,
-    secure: SECURE_COOKIES,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 60 * 60,
-  })
-
-  // account_status and presence_ping are otherwise only ever set
-  // reactively by middleware.ts, never by login() itself — which is
-  // exactly the bug reported live: logging in as a *different* account in
-  // the same browser (cookies are shared per-browser, not per-identity)
-  // could inherit a stale account_status cookie from whoever used this
-  // browser last, and definitely inherited a still-valid presence_ping
-  // cookie that suppressed the new user's very first "last seen" ping for
-  // up to its own 60s TTL. Setting both explicitly here, plus last_seen_at
-  // itself directly (more precise than waiting on middleware's next pass
-  // anyway — this *is* the moment they became active), means a fresh
-  // login is correct immediately, with nothing left for the next request
-  // to sort out.
-  cookieStore.set('account_status', profile?.account_status ?? 'active', {
-    httpOnly: true,
-    secure: SECURE_COOKIES,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 60 * 5, // matches middleware.ts's own account_status TTL
-  })
-  cookieStore.set('presence_ping', '1', {
-    httpOnly: true,
-    secure: SECURE_COOKIES,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 60,
-  })
+  // role/account_status/presence_ping are otherwise only ever set reactively by
+  // middleware.ts. Setting them here means logging in as a different account in
+  // the same browser can't inherit the previous user's stale cookies (a real bug
+  // reported live), and last_seen_at below is set at the moment they became active.
+  setSessionMarkerCookies(cookieStore, role, profile?.account_status ?? 'active')
   await supabase.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', data.user.id)
 
   redirect(`/${role}`)

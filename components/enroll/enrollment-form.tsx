@@ -9,6 +9,7 @@ import { PlainSelect } from '@/components/ui/plain-select'
 import { Field } from '@/components/enroll/enroll-field'
 import { StepTab } from '@/components/enroll/step-tab'
 import { ProgramSelector, type SelectableClassroom } from '@/components/enroll/program-selector'
+import { PasswordFields } from '@/components/ui/password-fields'
 
 const initialState: SubmitApplicationState = {}
 const NAME_PATTERN = "[A-Za-zÀ-ÖØ-öø-ÿ' -]+"
@@ -57,6 +58,10 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
   const [parentDob, setParentDob] = useState('')
   const [parentContactNumber, setParentContactNumber] = useState('')
   const [parentEmail, setParentEmail] = useState('')
+  // Held in state only so the rules can show live and so a failed submit can clear
+  // them; the server never sends a password back (see submitApplication).
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
 
   // Sync local state from the action result as it changes — the "adjusting
   // state when a prop changes" pattern (done inline during render, not in a
@@ -83,6 +88,9 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
     setParentDob(state.values?.parent_dob ?? '')
     setParentContactNumber(state.values?.parent_contact_number ?? '')
     setParentEmail(state.values?.parent_email ?? '')
+    // Never repopulated after a failed submit: the person types it again.
+    setPassword('')
+    setConfirmPassword('')
 
     // After a failed submission, jump to whichever step actually has the
     // error(s) rather than leaving the visitor stuck looking at Parent /
@@ -153,6 +161,8 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
     !!relationshipValue &&
     !!parentContactNumber &&
     !!parentEmail &&
+    !!password &&
+    password === confirmPassword &&
     !parentStepHasError
 
   return (
@@ -457,8 +467,32 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
             }}
           />
           <p className="mt-1 text-xs text-[#454650] dark:text-slate-300">
-            Your login credentials and admission confirmation will be sent here.
+            This is your login email. We&apos;ll also send updates about your request here.
           </p>
+        </div>
+
+        <div>
+          <h2 className="mb-1 border-b border-[#00a3e0] pb-2 text-xl font-semibold text-[#0b1b62] dark:text-indigo-300">
+            Create Your Password
+          </h2>
+          <p className="mb-4 mt-2 text-sm text-[#454650] dark:text-slate-300">
+            You&apos;ll use this email and password to log in to the Parent Portal. You&apos;ll be signed in as soon as you submit.
+          </p>
+          <PasswordFields
+            password={password}
+            confirm={confirmPassword}
+            onPasswordChange={(v) => {
+              setPassword(v)
+              clearError('password')
+            }}
+            onConfirmChange={(v) => {
+              setConfirmPassword(v)
+              clearError('confirm_password')
+            }}
+            required={step === 3}
+            passwordError={liveErrors.password}
+            confirmError={liveErrors.confirm_password}
+          />
         </div>
 
         <div className="flex flex-col gap-3">
@@ -520,7 +554,7 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
             disabled={isPending}
             className="order-1 shrink-0 rounded-full bg-[#e6007e] px-6 py-3 text-sm font-semibold text-white hover:bg-[#c9006e] disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b1b62] sm:order-2"
           >
-            {isPending ? 'Submitting…' : 'Submit Application →'}
+            {isPending ? 'Creating your account…' : 'Submit & Create Account →'}
           </button>
         </div>
       </div>

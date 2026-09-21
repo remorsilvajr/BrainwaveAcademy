@@ -1,6 +1,7 @@
 'use server'
 
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 import { validateProgramOptions } from '@/lib/program-options'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -12,6 +13,9 @@ import { notifyAdmins } from '@/lib/notify'
 import { genderFromParentRelationship } from '@/lib/gender'
 import { isAgeEligibleForClassroom } from '@/lib/classrooms'
 import { logActivity } from '@/lib/activity-log'
+import { isPasswordBreached, validateNewPassword } from '@/lib/password'
+import { createParentWithApplication } from '@/lib/parent-signup'
+import { setRememberMeCookie, setSessionMarkerCookies } from '@/lib/auth-cookies'
 
 export type SubmitApplicationState = {
   error?: string
@@ -147,6 +151,26 @@ export async function submitApplication(
     }
   }
 
+  // The password the parent typed twice. It is read straight from the form and
+  // never put in `values` (which is echoed back to the browser), logged or stored
+  // by this app: it goes to Supabase Auth, which keeps only a bcrypt hash. The
+  // network lookup for breached passwords is skipped while other fields are still
+  // wrong, so a form with several mistakes doesn't wait on it.
+  const password = (formData.get('password') as string) ?? ''
+  const confirmPassword = (formData.get('confirm_password') as string) ?? ''
+  const otherErrors = Object.keys(fieldErrors).length > 0
+  const passwordProblem = await validateNewPassword(
+    password,
+    confirmPassword,
+    { email: values.parent_email, names: [values.parent_first_name, values.parent_last_name] },
+    (candidate) => (otherErrors ? Promise.resolve(null) : isPasswordBreached(candidate))
+  )
+  if (passwordProblem) {
+    if (!password) fieldErrors.password = 'Password is required.'
+    else if (password !== confirmPassword) fieldErrors.confirm_password = passwordProblem
+    else fieldErrors.password = passwordProblem
+  }
+
   if (Object.keys(fieldErrors).length > 0) {
     return {
       error: 'Please fix the highlighted fields below.',
@@ -155,68 +179,69 @@ export async function submitApplication(
     }
   }
 
-  // This public form is for brand-new parents only — an existing parent
-  // enrolling another child should do it logged in, via Enroll A Student in
-  // their portal, not resubmit this form (which would otherwise silently
-  // reuse their account with no new email sent, per approveApplication's
-  // own duplicate-email handling — confusing here since nothing in this
-  // form's own confirmation message reflects that).
-  //
-  // Uses the admin client because this check has to run for anonymous
-  // visitors, and `profiles` has no RLS policy letting `anon` read it —
-  // regular anon inserts into `applications` stay on the normal RLS-scoped
-  // client below.
+  // Creates the parent's account with the password they chose, a wallet, and their
+  // first enrollment request (linked to that account from the start). Uses the
+  // service-role client because this runs for an anonymous visitor. An email that
+  // already has an account, or that is on an older request with no account, is
+  // refused inside (see lib/parent-signup.ts).
   const admin = createAdminClient()
-  const { data: existingProfile } = await admin
-    .from('profiles')
-    .select('id')
-    .eq('email', normalizeEmail(values.parent_email))
-    .maybeSingle()
-
-  if (existingProfile) {
-    return {
-      error:
-        'An account already exists with this email. Please log in and use Enroll A Student in your portal to add another child.',
-      values,
-    }
-  }
-
-  const supabase = await createClient()
-
-  // No .select() chained onto this insert — anon has no SELECT policy on
-  // applications (parent_view_own_applications requires auth.uid()), so
-  // asking PostgREST to return the inserted row would fail the whole
-  // request even though the insert itself succeeded.
-  const { error } = await supabase.from('applications').insert({
-    student_first_name: toTitleCase(values.student_first_name),
-    student_middle_name: values.student_middle_name ? toTitleCase(values.student_middle_name) : null,
-    student_last_name: toTitleCase(values.student_last_name),
-    student_dob: values.student_dob,
-    student_gender: values.student_gender,
-    parent_first_name: toTitleCase(values.parent_first_name),
-    parent_middle_name: values.parent_middle_name ? toTitleCase(values.parent_middle_name) : null,
-    parent_last_name: toTitleCase(values.parent_last_name),
-    parent_dob: values.parent_dob,
-    parent_relationship: values.parent_relationship,
-    parent_gender: genderFromParentRelationship(values.parent_relationship, values.parent_gender),
-    parent_contact_number: normalizePhilippineMobile(values.parent_contact_number),
-    parent_email: normalizeEmail(values.parent_email),
-    requested_classroom_id: values.requested_classroom_id || null,
-    requested_program_options: programOptions,
+  const email = normalizeEmail(values.parent_email)
+  const created = await createParentWithApplication(admin, {
+    email,
+    password,
+    profile: {
+      first_name: toTitleCase(values.parent_first_name),
+      middle_name: values.parent_middle_name ? toTitleCase(values.parent_middle_name) : null,
+      last_name: toTitleCase(values.parent_last_name),
+      phone_number: normalizePhilippineMobile(values.parent_contact_number),
+      date_of_birth: values.parent_dob,
+      relationship_to_student: values.parent_relationship,
+      gender: genderFromParentRelationship(values.parent_relationship, values.parent_gender),
+    },
+    application: {
+      student_first_name: toTitleCase(values.student_first_name),
+      student_middle_name: values.student_middle_name ? toTitleCase(values.student_middle_name) : null,
+      student_last_name: toTitleCase(values.student_last_name),
+      student_dob: values.student_dob,
+      student_gender: values.student_gender,
+      parent_first_name: toTitleCase(values.parent_first_name),
+      parent_middle_name: values.parent_middle_name ? toTitleCase(values.parent_middle_name) : null,
+      parent_last_name: toTitleCase(values.parent_last_name),
+      parent_dob: values.parent_dob,
+      parent_relationship: values.parent_relationship,
+      parent_gender: genderFromParentRelationship(values.parent_relationship, values.parent_gender),
+      parent_contact_number: normalizePhilippineMobile(values.parent_contact_number),
+      requested_classroom_id: values.requested_classroom_id || null,
+      requested_program_options: programOptions,
+    },
   })
 
-  if (error) {
+  if (!created.ok) {
     return {
-      error: 'Something went wrong submitting your application. Please try again.',
+      error: created.error,
+      fieldErrors: created.field === 'email' ? { parent_email: created.error } : undefined,
       values,
     }
   }
 
-  // actorId is null — this is the public, unauthenticated enrollment form.
+  // Sign them in right away so they land in their portal (same cookies as login()).
+  // remember_me must be set before signInWithPassword so the session cookies get
+  // the right lifetime. If sign-in somehow fails the account still exists, so send
+  // them to the login page rather than showing an error for a form that succeeded.
+  const cookieStore = await cookies()
+  setRememberMeCookie(cookieStore, true)
+  const supabase = await createClient()
+  const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+  if (signInError) {
+    redirect(`/login?message=${encodeURIComponent('Your account was created. Please log in.')}`)
+  }
+  setSessionMarkerCookies(cookieStore, 'parent', 'active')
+
   await logActivity(supabase, {
-    actorId: null,
+    actorId: created.userId,
     action: `New enrollment application submitted (public site) for ${values.student_first_name} ${values.student_last_name}`,
     targetTable: 'applications',
+    targetId: created.applicationId,
   })
 
   await notifyAdmins({
@@ -226,5 +251,5 @@ export async function submitApplication(
     href: '/admin/enroll-a-student',
   })
 
-  redirect('/enroll/thank-you')
+  redirect('/parent/enrollment-status?welcome=1')
 }

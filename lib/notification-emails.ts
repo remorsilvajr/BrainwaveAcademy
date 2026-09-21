@@ -35,15 +35,67 @@ export function enrollmentRejectedEmail(input: {
   }
 }
 
-// For a parent who already has an account (a second child): approval never sent
-// them anything before, since the welcome email carries a new password.
-export function enrollmentApprovedExistingParentEmail(input: { parentFirstName: string; studentName: string; siteUrl: string }): Mail {
+// Sent whenever admin approves an enrollment request. The parent already has an
+// account (they created it, with their own password, when they submitted the
+// form), so this only says what happens next.
+export function enrollmentApprovedEmail(input: { parentFirstName: string; studentName: string; note?: string | null; siteUrl: string }): Mail {
   return {
     subject: `Enrollment request approved for ${input.studentName}`,
     html: shell(
       'Enrollment request approved',
       `<p>Hi ${escapeHtml(input.parentFirstName)}, we've approved the enrollment request for <strong>${escapeHtml(input.studentName)}</strong>.</p>
+       ${input.note ? `<p><strong>Note from the school:</strong> ${escapeHtml(input.note)}</p>` : ''}
        <p>Log in to your portal and open <strong>Requirements</strong> to upload the documents we need. Once they're verified, ${escapeHtml(input.studentName)} is enrolled.</p>`,
+      input.siteUrl,
+      { label: 'Open your portal', path: '/parent/requirements' }
+    ),
+  }
+}
+
+// Admin asked for changes to the details on the request itself (not a document).
+export function enrollmentCorrectionEmail(input: { parentFirstName: string; studentName: string; note: string; siteUrl: string }): Mail {
+  return {
+    subject: `Please update your enrollment request for ${input.studentName}`,
+    html: shell(
+      'A correction is needed',
+      `<p>Hi ${escapeHtml(input.parentFirstName)}, thank you for applying for <strong>${escapeHtml(input.studentName)}</strong>. Before we can approve the request, we need a small correction.</p>
+       <p><strong>Note from the school:</strong> ${escapeHtml(input.note)}</p>
+       <p>Log in, open <strong>Enrollment Status</strong>, update the details and resubmit. We'll review it again right away.</p>`,
+      input.siteUrl,
+      { label: 'Update your request', path: '/parent/enrollment-status' }
+    ),
+  }
+}
+
+// The one place an account owner is sent a way to choose a password. The link is
+// the only secret in it; it opens a page that asks for a click before it is used
+// (see app/auth/set-password), and it stops working after it is used once or after
+// the Auth project's one-time-link expiry.
+export function setPasswordEmail(input: { firstName: string; url: string; kind: 'welcome' | 'reset'; forAccount?: string }): Mail {
+  const welcome = input.kind === 'welcome'
+  return {
+    subject: welcome ? 'Set your password for Brainwave Preschool Academy' : 'Reset your Brainwave Preschool Academy password',
+    html: shell(
+      welcome ? 'Welcome to Brainwave Preschool Academy' : 'Reset your password',
+      `<p>Hi ${escapeHtml(input.firstName)},</p>
+       ${input.forAccount ? `<p><strong>For account:</strong> ${escapeHtml(input.forAccount)}</p>` : ''}
+       <p>${welcome ? 'An account has been created for you.' : 'You asked to reset your password.'} Use the button below to choose your own password. Nobody at the school ever sees it.</p>
+       <p style="color:#666;font-size:13px">This link works once and expires soon. If it has expired, choose <em>Forgot Password?</em> on the login page to get a new one. If you did not expect this email, you can ignore it.</p>`,
+      '',
+      { label: welcome ? 'Set my password' : 'Choose a new password', path: input.url }
+    ),
+  }
+}
+
+// Sent to the account owner when a super admin set their password for them, so a
+// change they did not ask for is never silent. Never contains the password.
+export function passwordChangedByAdminEmail(input: { firstName: string; siteUrl: string }): Mail {
+  return {
+    subject: 'Your Brainwave Preschool Academy password was changed',
+    html: shell(
+      'Your password was changed',
+      `<p>Hi ${escapeHtml(input.firstName)}, a school administrator has set a new password for your account, and you have been signed out everywhere.</p>
+       <p>The school will give you the new password directly. If you were not expecting this, please contact the school office right away.</p>`,
       input.siteUrl
     ),
   }
