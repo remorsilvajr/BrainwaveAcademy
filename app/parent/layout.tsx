@@ -1,5 +1,6 @@
 import { Sidebar, type NavSection } from '@/components/sidebar'
 import { ParentTopBar } from '@/components/parent/parent-topbar'
+import { SelectedChildBanner } from '@/components/parent/selected-child-banner'
 import { createClient } from '@/lib/supabase/server'
 import { parentApplicationsFilter } from '@/lib/parent-applications'
 
@@ -15,10 +16,10 @@ const sections: NavSection[] = [
   {
     title: 'Enrollment',
     items: [
-      { label: 'Enroll A Student', href: '/parent/enroll-a-student', icon: 'userPlus' },
+      { label: 'Enrollment Status', href: '/parent/enrollment-status', icon: 'file' },
       { label: 'Requirements', href: '/parent/requirements', icon: 'checklist' },
       { label: 'Payments', href: '/parent/payments', icon: 'wallet' },
-      { label: 'Enrollment Status', href: '/parent/enrollment-status', icon: 'file' },
+      { label: 'Enroll A Student', href: '/parent/enroll-a-student', icon: 'userPlus' },
       { label: 'Unenroll A Student', href: '/parent/unenrollment', icon: 'userMinus' },
     ],
   },
@@ -99,6 +100,7 @@ export default async function ParentLayout({ children }: { children: React.React
             avatar_url: profile?.avatar_url ?? null,
           }}
         />
+        <SelectedChildBanner students={students} />
         <main className="p-4 sm:p-8">{children}</main>
       </div>
     </div>

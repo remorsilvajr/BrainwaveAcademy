@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/server'
 import { logActivity } from '@/lib/activity-log'
 import { isRealIsoDate } from '@/lib/dob'
 import { todayIso } from '@/lib/format'
+import { notifyRole } from '@/lib/notify'
+import { formatDateLong } from '@/lib/format'
 
 const EVENT_TYPES = ['event', 'holiday'] as const
 
@@ -79,6 +81,18 @@ export async function createEvent(input: EventInput): Promise<{ error: string } 
     targetTable: 'events',
     targetId: data.id,
   })
+
+  // Parents and teachers are told about a new event (bell + the Calendar badge).
+  const label = input.eventType === 'holiday' ? 'holiday' : 'event'
+  const notice = {
+    kind: 'message',
+    title: `New ${label}: ${input.title.trim()}`.slice(0, 120),
+    body: formatDateLong(input.eventDate),
+    dedupeKey: `event:${data.id}`,
+  }
+  const month = input.eventDate.slice(0, 7)
+  await notifyRole('parent', { ...notice, href: `/parent/calendar?month=${month}` })
+  await notifyRole('teacher', { ...notice, href: `/teacher/calendar?month=${month}` })
 
   revalidatePath('/admin/calendar')
   revalidatePath('/teacher/calendar')

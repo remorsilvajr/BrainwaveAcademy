@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { logActivity } from '@/lib/activity-log'
+import { notifyClassroomParents, notifyRole } from '@/lib/notify'
 
 const TARGET_ROLES = ['parent', 'teacher', 'all'] as const
 
@@ -27,7 +28,9 @@ export async function postAnnouncement(input: {
     return { error: 'Invalid target audience.' }
   }
 
-  const { error } = await supabase.from('announcements').insert({
+  const { data: posted, error } = await supabase
+    .from('announcements')
+    .insert({
     title: input.title.trim(),
     body: input.body.trim(),
     posted_by: user.id,
@@ -36,10 +39,12 @@ export async function postAnnouncement(input: {
     // lib/parent-classrooms.ts. Harmless to set on a teacher-only one, it
     // just has no effect since classroom scoping only restricts parents.
     classroom_id: input.classroomId || null,
-  })
+    })
+    .select('id')
+    .single()
 
-  if (error) {
-    return { error: error.message }
+  if (error || !posted) {
+    return { error: error?.message ?? 'Could not post the announcement.' }
   }
 
   await logActivity(supabase, {
@@ -47,6 +52,19 @@ export async function postAnnouncement(input: {
     action: `Posted announcement (${input.target_role})`,
     targetTable: 'announcements',
   })
+
+  // Tell the people it is for (bell + the sidebar badge on Announcement). A scoped
+  // announcement reaches only that class's parents, like the announcement itself.
+  const heading = `New announcement: ${input.title.trim()}`.slice(0, 120)
+  const preview = input.body.trim().slice(0, 140)
+  if (input.target_role === 'parent' || input.target_role === 'all') {
+    const forParents = { kind: 'message', title: heading, body: preview, href: '/parent/announcement', dedupeKey: `announcement:${posted.id}` }
+    if (input.classroomId) await notifyClassroomParents(input.classroomId, forParents)
+    else await notifyRole('parent', forParents)
+  }
+  if (input.target_role === 'teacher' || input.target_role === 'all') {
+    await notifyRole('teacher', { kind: 'message', title: heading, body: preview, href: '/teacher/announcement', dedupeKey: `announcement:${posted.id}` })
+  }
 
   revalidatePath('/admin/announcement')
   revalidatePath('/parent')
