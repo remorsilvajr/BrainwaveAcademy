@@ -24,7 +24,7 @@ A school admin / enrollment portal for Brainwave Preschool Academy, built with N
 - **Unenroll a Student**: ask the school to withdraw a child, and see the decision (with the admin's note)
 - Enrollment/Student Profile (read-only record + editable photo once enrolled)
 - Student Dashboard: read-only attendance and 6-domain milestone tracker
-- Payments: wallet balance, itemized fees, pay-with-wallet, payment history, printable receipts, and wallet top-up requests
+- Payments: wallet balance with Add Funds, then two tabs: Fees & Payments (itemized fees, pay-with-wallet, payment history, printable receipts) and Request History (every wallet top-up request and the school's decision)
 - Authorized Pickup: register the people allowed to pick up each child (first/middle/last name, relationship, phone, photo)
 - **Health & Emergency**: allergies, conditions, medications, doctor/hospital, and up to 3 emergency contacts per child
 - **Photo Album**: photos teachers upload, by date, only for the child's own class
