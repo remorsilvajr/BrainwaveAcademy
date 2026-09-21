@@ -33,6 +33,17 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
     }
   )
 
+  // Every redirect below must carry supabaseResponse's cookies. getUser() can
+  // refresh the session (rotating the refresh token) or clear it on this very
+  // request; a bare NextResponse.redirect() drops those Set-Cookie headers, so
+  // the browser keeps the old, already-rotated token. It usually heals on the
+  // next request, but it is the documented way to lose a session.
+  function redirectTo(url: URL) {
+    const response = NextResponse.redirect(url)
+    supabaseResponse.cookies.getAll().forEach((cookie) => response.cookies.set(cookie))
+    return response
+  }
+
   // Refreshes the session cookie if it's expired — required for auth to
   // keep working across page loads. Do not remove this call.
   const {
@@ -82,7 +93,7 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
   if (!user && isProtected) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
-    return NextResponse.redirect(url)
+    return redirectTo(url)
   }
 
   // app/login/actions.ts already refuses a blocked account at sign-in, but
@@ -133,7 +144,7 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
       const url = request.nextUrl.clone()
       url.pathname = '/login'
       url.searchParams.set('error', 'This account has been blocked. Contact the school.')
-      return NextResponse.redirect(url)
+      return redirectTo(url)
     }
 
     // Throttled "last seen" ping for the admin's Online indicator in User
@@ -202,13 +213,13 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
     if (isPublicOnly) {
       const url = request.nextUrl.clone()
       url.pathname = `/${role ?? 'parent'}`
-      return NextResponse.redirect(url)
+      return redirectTo(url)
     }
 
     if (role && !path.startsWith(`/${role}`)) {
       const url = request.nextUrl.clone()
       url.pathname = `/${role}`
-      return NextResponse.redirect(url)
+      return redirectTo(url)
     }
   }
 

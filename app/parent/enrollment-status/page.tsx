@@ -5,6 +5,7 @@ import { formatDateLong } from '@/lib/format'
 import { EmptyState } from '@/components/ui/empty-state'
 import { parentApplicationsFilter } from '@/lib/parent-applications'
 import { RemoveApplicationButton } from '@/components/parent/remove-application-button'
+import { withStudent } from '@/lib/parent-links'
 
 type Stage = 'submitted' | 'approved' | 'documents' | 'enrolled' | 'rejected'
 
@@ -152,7 +153,7 @@ export default async function EnrollmentStatusPage({
 
         {stage === 'documents' && (
           <Link
-            href="/parent/requirements"
+            href={withStudent('/parent/requirements', studentParam)}
             className="mt-6 inline-block text-sm font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline"
           >
             Go to Requirements →

@@ -193,7 +193,13 @@ export async function logout() {
     await supabase.from('profiles').update({ last_seen_at: null }).eq('id', user.id)
   }
 
-  await supabase.auth.signOut()
+  // scope: 'local' is required: supabase-js's default for signOut() is
+  // 'global', which ends every session of this account on every device. That
+  // made a plain Log Out on one browser (or one lab PC sharing a login) sign
+  // the same account out everywhere, i.e. the "random" logouts; the separate
+  // logoutAllDevices() below is the only place that should do that. Proven
+  // in tests/integration/auth-sessions.test.ts.
+  await supabase.auth.signOut({ scope: 'local' })
 
   const cookieStore = await cookies()
   cookieStore.delete('user_role')
