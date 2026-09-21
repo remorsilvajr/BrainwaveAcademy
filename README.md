@@ -97,7 +97,7 @@ npm run start             # run the production build
 npm run lint              # ESLint
 npm run typecheck         # TypeScript
 npm test                  # unit tests (no network)
-npm run test:integration  # security/wallet checks against the real Supabase project (self-cleaning)
+npm run test:integration  # RLS, wallet, unenrollment, album, year-end and daily-job checks against the real Supabase project (self-cleaning)
 npm run test:sweep        # remove leftovers from an interrupted integration run
 npm run db:verify         # prove supabase/migrations rebuild the live schema (needs Docker)
 npm run backup            # save all data + uploaded files to backups/ (gitignored)

@@ -46,7 +46,7 @@ const tryRun = async (sql, params) => {
   }
 }
 if (allStudents.length) {
-  for (const table of ['student_health', 'emergency_contacts', 'do_not_release', 'album_photos', 'attendance', 'milestones', 'authorized_pickups', 'payment_adjustments', 'unenrollment_requests', 'student_promotions', 'parent_student', 'payments']) {
+  for (const table of ['student_health', 'emergency_contacts', 'do_not_release', 'attendance', 'milestones', 'authorized_pickups', 'payment_adjustments', 'unenrollment_requests', 'student_promotions', 'parent_student', 'payments']) {
     await tryRun(`delete from public.${table} where student_id = any($1)`, [allStudents])
   }
   await tryRun(`delete from public.students where id = any($1)`, [allStudents])
@@ -55,12 +55,13 @@ if (ids.length) {
   await tryRun(`delete from public.parent_student where parent_id = any($1)`, [ids])
   for (const [table, column] of [
     ['notifications', 'user_id'],
-    ['notification_log', 'user_id'],
     ['wallet_transactions', 'parent_id'],
     ['wallet_requests', 'parent_id'],
     ['wallets', 'parent_id'],
     ['feedback', 'submitted_by'],
     ['event_rsvps', 'parent_id'],
+    ['album_photos', 'uploaded_by'],
+    ['classroom_assistants', 'teacher_id'],
     ['activity_log', 'actor_id'],
     ['profiles', 'id'],
   ]) {
