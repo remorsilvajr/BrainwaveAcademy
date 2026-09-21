@@ -56,28 +56,28 @@ const journeyItems = [
 const programs = [
   {
     title: 'Little Explorers',
-    age: 'Ages 2-3',
+    age: 'Ages 1 yr 6 mo - 2 yrs',
     description:
       'Sensory-rich environment focusing on gross motor skills and basic socialization.',
     image: '/images/landing/program-little-explorers.jpg',
   },
   {
     title: 'Advanced Toddler',
-    age: 'Ages 3-4',
+    age: 'Ages 2 yrs 1 mo - 2 yrs 10 mo',
     description:
       'Introduction to structured play, fine motor skills, and early language development.',
     image: '/images/landing/program-advanced-toddler.jpg',
   },
   {
     title: 'Smart Explorers',
-    age: 'Nursery',
+    age: 'Nursery, ages 2 yrs 11 mo - 3 yrs 10 mo',
     description:
       'Foundational phonics, basic numeracy, and fostering independence.',
     image: '/images/landing/program-smart-explorers.jpg',
   },
   {
     title: 'Curious Adventurers',
-    age: 'Kinder',
+    age: 'Pre-Kindergarten, ages 3 yrs 11 mo - 4 yrs 10 mo',
     description:
       'Kindergarten readiness, advanced phonics, early reading, and creative expression.',
     image: '/images/landing/program-curious-adventurers.jpg',

@@ -18,7 +18,7 @@ export default async function ApplicationsPage() {
     supabase.from('application_documents').select('*'),
     supabase
       .from('classrooms')
-      .select('id, name, slug, min_age_years, max_age_years, tuition_fee, activity_fee')
+      .select('id, name, slug, min_age_months, max_age_months, tuition_fee, activity_fee')
       .order('created_at'),
   ])
 

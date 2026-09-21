@@ -7,7 +7,9 @@ import {
   MAX_STUDENT_AGE,
   MIN_ADULT_AGE,
   MIN_STUDENT_AGE,
+  wholeMonthsOld,
   wholeYearsOld,
+  ageInYearsLabel,
 } from '@/lib/dob'
 import { formatCurrency, isToday, roundToCents, todayIso } from '@/lib/format'
 import { attendanceDateFromParam, monthFromParam } from '@/lib/date-params'
@@ -51,11 +53,28 @@ describe('wholeYearsOld', () => {
   })
 })
 
+describe('wholeMonthsOld', () => {
+  it('a month completes on the same day of the month', () => {
+    expect(wholeMonthsOld('2025-03-21', '2026-09-21')).toBe(18)
+    expect(wholeMonthsOld('2025-03-22', '2026-09-21')).toBe(17)
+    expect(wholeMonthsOld('2026-09-21', '2026-09-21')).toBe(0)
+  })
+})
+
+describe('ageInYearsLabel', () => {
+  it('reads fractional years as years and months', () => {
+    expect(ageInYearsLabel(1.5)).toBe('1 year 6 months')
+    expect(ageInYearsLabel(2)).toBe('2 years')
+    expect(ageInYearsLabel(18)).toBe('18 years')
+  })
+})
+
 describe('isValidDob', () => {
   const student = { minAge: MIN_STUDENT_AGE, maxAge: MAX_STUDENT_AGE }
-  it('student ages are 2 to 18 whole years, both inclusive', () => {
-    expect(isValidDob('2024-09-21', student)).toBe(true) // exactly 2 today
-    expect(isValidDob('2024-09-22', student)).toBe(false) // one day short of 2
+  it('students are 1 year 6 months to 18 years, both inclusive', () => {
+    expect(isValidDob('2025-03-21', student)).toBe(true) // exactly 18 months today
+    expect(isValidDob('2025-03-22', student)).toBe(false) // one day short of 18 months
+    expect(isValidDob('2024-09-21', student)).toBe(true) // exactly 2
     expect(isValidDob('2007-09-22', student)).toBe(true) // 18y 364d
   })
   it('the maximum is inclusive up to the next birthday', () => {
@@ -76,6 +95,7 @@ describe('isValidDob', () => {
 describe('DOB picker bounds', () => {
   it('latest date makes someone exactly minAge today; earliest is the oldest still allowed', () => {
     expect(dobInputMax(2)).toBe('2024-09-21')
+    expect(dobInputMax(1.5)).toBe('2025-03-21')
     expect(dobInputMin(18)).toBe('2007-09-22')
   })
   it('a Feb 29 today falls back to Feb 28 in a non-leap target year', async () => {

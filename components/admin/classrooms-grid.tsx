@@ -12,8 +12,8 @@ export type ClassroomRow = {
   id: string
   name: string
   slug: string
-  min_age_years: number | null
-  max_age_years: number | null
+  min_age_months: number | null
+  max_age_months: number | null
   lead_teacher_id: string | null
   leadTeacherName: string | null
   tuition_fee: number

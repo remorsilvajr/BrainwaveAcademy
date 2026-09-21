@@ -5,11 +5,13 @@ import { todayIso } from '@/lib/format'
 // edits) so "negative age" (future date) and "over 100 years old" can't
 // slip through on any one surface while being caught on the others —
 // found via retro pen-testing that these were previously unvalidated.
-export const MIN_STUDENT_AGE = 2
+// Youngest program (Little Explorers) starts at 1 year 6 months; fractional years
+// are supported by isValidDob/dobInputMax (1.5 = 18 whole months).
+export const MIN_STUDENT_AGE = 1.5
 // The oldest a student can be: Tutorial and Quiz Bee & Competitions are
 // set to ages 5-18, so the cap can't be lower than 18 or those programs could
 // never take an older student. Anything beyond is almost certainly a typo in the
-// date of birth. Keep this at or above every program's max_age_years.
+// date of birth. Keep this at or above every program's max_age_months.
 export const MAX_STUDENT_AGE = 18
 export const MIN_ADULT_AGE = 18
 export const MAX_AGE = 100
@@ -35,8 +37,17 @@ export function wholeYearsOld(dob: string, today: string = todayIso()): number {
   return ty - by - (beforeBirthday ? 1 : 0)
 }
 
-// `minAge`/`maxAge` are ages in whole years, both inclusive: maxAge 12 allows
-// anyone up to their 13th birthday, the way "Ages 2-3" reads to a parent.
+// Whole months old on `today`, counted the same way as wholeYearsOld (the
+// month completes on the same day-of-month as the birth).
+export function wholeMonthsOld(dob: string, today: string = todayIso()): number {
+  const [by, bm, bd] = dob.split('-').map(Number)
+  const [ty, tm, td] = today.split('-').map(Number)
+  return (ty - by) * 12 + (tm - bm) - (td < bd ? 1 : 0)
+}
+
+// `minAge` is in years and may be fractional (1.5 = 18 whole months); `maxAge`
+// is in whole years, both inclusive: maxAge 12 allows anyone up to their 13th
+// birthday, the way "Ages 5-18" reads to a parent.
 export function isValidDob(
   value: string,
   { minAge = 0, maxAge = MAX_AGE }: { minAge?: number; maxAge?: number } = {}
@@ -45,11 +56,22 @@ export function isValidDob(
   const today = todayIso()
   if (value > today) return false // future date -> negative age
   const age = wholeYearsOld(value, today)
-  return age >= minAge && age <= maxAge
+  return wholeMonthsOld(value, today) >= Math.round(minAge * 12) && age <= maxAge
+}
+
+// "1 year 6 months", "2 years", "18 years" from a (possibly fractional) year count.
+export function ageInYearsLabel(years: number): string {
+  const totalMonths = Math.round(years * 12)
+  const y = Math.floor(totalMonths / 12)
+  const m = totalMonths % 12
+  const parts: string[] = []
+  if (y > 0 || m === 0) parts.push(`${y} ${y === 1 ? 'year' : 'years'}`)
+  if (m > 0) parts.push(`${m} ${m === 1 ? 'month' : 'months'}`)
+  return parts.join(' ')
 }
 
 export function dobRangeMessage(subject: string, minAge: number, maxAge: number = MAX_AGE): string {
-  return `Please enter a valid date of birth. ${subject} must be between ${minAge} and ${maxAge} years old.`
+  return `Please enter a valid date of birth. ${subject} must be between ${ageInYearsLabel(minAge)} and ${maxAge} years old.`
 }
 
 function addDays(iso: string, days: number): string {
@@ -58,14 +80,16 @@ function addDays(iso: string, days: number): string {
   return date.toISOString().slice(0, 10)
 }
 
-// today minus N years, keeping the month/day (Feb 29 falls back to Feb 28 when
-// the target year isn't a leap year).
+// today minus N years (may be fractional, whole months), keeping the day of
+// month (clamped to the target month's length, so Feb 29 falls back to Feb 28
+// when the target year isn't a leap year).
 function yearsBefore(iso: string, years: number): string {
   const [y, m, d] = iso.split('-').map(Number)
-  const target = y - years
-  const isLeap = (target % 4 === 0 && target % 100 !== 0) || target % 400 === 0
-  const day = m === 2 && d === 29 && !isLeap ? 28 : d
-  return `${String(target).padStart(4, '0')}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+  const index = y * 12 + (m - 1) - Math.round(years * 12)
+  const ty = Math.floor(index / 12)
+  const tm = (index % 12) + 1
+  const day = Math.min(d, new Date(Date.UTC(ty, tm, 0)).getUTCDate())
+  return `${String(ty).padStart(4, '0')}-${String(tm).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 }
 
 // Client-side bounds for the DOB pickers (UX only; the real enforcement is

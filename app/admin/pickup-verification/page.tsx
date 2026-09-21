@@ -8,16 +8,16 @@ import { loadAllPickupsWithPhotos } from '@/lib/pickup-list'
 export default async function AdminPickupVerificationPage() {
   const supabase = await createClient()
 
-  const [{ data: students }, pickups, { data: doNotRelease }] = await Promise.all([
+  const [{ data: students }, pickups] = await Promise.all([
     supabase
       .from('students')
       .select('id, first_name, last_name')
       .not('enrollment_status', 'in', TERMINAL_STATUS_FILTER)
       .order('first_name', { ascending: true }),
     loadAllPickupsWithPhotos(supabase),
-    supabase.from('do_not_release').select('id, student_id, first_name, last_name, note'),
   ])
 
+  // The Do-Not-Release list is a hidden feature for now (super admin only), so it is not checked here.
   // A withdrawn or graduated child's pickup people aren't on the verification list.
   const enrolledIds = new Set((students ?? []).map((s) => s.id))
 
@@ -36,7 +36,6 @@ export default async function AdminPickupVerificationPage() {
         <PickupVerificationPanel
           students={students ?? []}
           pickups={pickups.filter((p) => enrolledIds.has(p.student_id))}
-          doNotRelease={(doNotRelease ?? []).filter((d) => enrolledIds.has(d.student_id))}
         />
       )}
     </div>

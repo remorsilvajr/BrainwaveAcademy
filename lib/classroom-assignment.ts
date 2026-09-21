@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { isAgeEligibleForClassroom } from '@/lib/classrooms'
+import { isAgeEligibleForClassroom, classroomAgeRangeLabel } from '@/lib/classrooms'
 import { isHourlyProgram, validateProgramOptions } from '@/lib/program-options'
 
 // Shared by assignStudentClassroom (admin/students/actions.ts, assigning an
@@ -19,7 +19,7 @@ export async function applyClassroomToStudent(
 ): Promise<{ classroomName: string }> {
   const { data: classroom } = await supabase
     .from('classrooms')
-    .select('id, name, slug, min_age_years, max_age_years, tuition_fee, activity_fee, tuition_due_date, activity_due_date')
+    .select('id, name, slug, min_age_months, max_age_months, tuition_fee, activity_fee, tuition_due_date, activity_due_date')
     .eq('id', classroomId)
     .single()
 
@@ -29,7 +29,7 @@ export async function applyClassroomToStudent(
 
   if (!isAgeEligibleForClassroom(dateOfBirth, classroom)) {
     throw new Error(
-      `This student's age doesn't fall within ${classroom.name}'s allowed range (${classroom.min_age_years}-${classroom.max_age_years} years old).`
+      `This student's age doesn't fall within ${classroom.name}'s allowed range (${classroomAgeRangeLabel(classroom)}).`
     )
   }
 

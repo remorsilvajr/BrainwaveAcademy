@@ -132,7 +132,7 @@ export async function resubmitApplication(
   if (values.requested_classroom_id && values.student_dob && !fieldErrors.student_dob) {
     const { data: classroom } = await supabase
       .from('classrooms')
-      .select('id, slug, min_age_years, max_age_years')
+      .select('id, slug, min_age_months, max_age_months')
       .eq('id', values.requested_classroom_id)
       .maybeSingle()
     if (!classroom) {

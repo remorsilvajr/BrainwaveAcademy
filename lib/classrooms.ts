@@ -1,22 +1,20 @@
-import { isValidDob, MAX_AGE } from '@/lib/dob'
+import { isRealIsoDate, MAX_AGE, wholeMonthsOld } from '@/lib/dob'
 import { todayIso } from '@/lib/format'
 
-// A classroom's age bounds are null when the program has no age
-// restriction (Nursery, Kinder, and both support programs — see CLAUDE.md's
-// Classrooms & fee schedule note for why only Little Explorers and
-// Advanced Toddler currently have bounds). isValidDob already treats a
-// missing bound as "no restriction on that side," so passing 0/MAX through
-// when a bound is null reuses the exact same age-gate logic as every other
-// DOB check in this app rather than a bespoke one just for classrooms.
+// A classroom's age bounds (`min_age_months`/`max_age_months`) are whole
+// completed months, both inclusive, and null when the program has no age
+// restriction on that side. Little Explorers, for example, is 18-24 months:
+// a child stays eligible until the day they turn 2 years 1 month.
 export function isAgeEligibleForClassroom(
   dateOfBirth: string,
-  classroom: { min_age_years: number | null; max_age_years: number | null }
+  classroom: { min_age_months: number | null; max_age_months: number | null }
 ): boolean {
-  if (classroom.min_age_years == null && classroom.max_age_years == null) return true
-  return isValidDob(dateOfBirth, {
-    minAge: classroom.min_age_years ?? 0,
-    maxAge: classroom.max_age_years ?? MAX_AGE,
-  })
+  if (classroom.min_age_months == null && classroom.max_age_months == null) return true
+  if (!isRealIsoDate(dateOfBirth)) return false
+  const today = todayIso()
+  if (dateOfBirth > today) return false
+  const months = wholeMonthsOld(dateOfBirth, today)
+  return months >= (classroom.min_age_months ?? 0) && months <= (classroom.max_age_months ?? MAX_AGE * 12)
 }
 
 // The two support programs are sessions, not a school day, so they have no
@@ -35,9 +33,26 @@ export function nonDailyClassroomIds(classrooms: { id: string; slug: string }[])
   return new Set(classrooms.filter((c) => !tracksDailyAttendance(c)).map((c) => c.id))
 }
 
-export function classroomAgeRangeLabel(classroom: { min_age_years: number | null; max_age_years: number | null }): string {
-  if (classroom.min_age_years == null && classroom.max_age_years == null) return 'All ages'
-  return `Ages ${classroom.min_age_years}-${classroom.max_age_years}`
+// "2 yrs 1 mo", "2 yrs", "1 yr 6 mo" from a month count.
+function monthsLabel(totalMonths: number): string {
+  const y = Math.floor(totalMonths / 12)
+  const m = totalMonths % 12
+  const parts: string[] = []
+  if (y > 0 || m === 0) parts.push(`${y} ${y === 1 ? 'yr' : 'yrs'}`)
+  if (m > 0) parts.push(`${m} mo`)
+  return parts.join(' ')
+}
+
+export function classroomAgeRangeLabel(classroom: { min_age_months: number | null; max_age_months: number | null }): string {
+  const { min_age_months: min, max_age_months: max } = classroom
+  if (min == null && max == null) return 'All ages'
+  // Whole-year programs (Tutorial, Quiz Bee: 60-227) read as "Ages 5-18".
+  if (min != null && max != null && min % 12 === 0 && (max + 1) % 12 === 0) {
+    return `Ages ${min / 12}-${(max + 1) / 12 - 1}`
+  }
+  if (min != null && max != null) return `Ages ${monthsLabel(min)} - ${monthsLabel(max)}`
+  if (min != null) return `Ages ${monthsLabel(min)} and up`
+  return `Up to ${monthsLabel(max as number)}`
 }
 
 // Fee amounts are fixed (no UI or action changes them); only the two due dates

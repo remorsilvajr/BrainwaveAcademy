@@ -134,7 +134,7 @@ export async function submitApplication(
     const supabaseForClassroomCheck = await createClient()
     const { data: requestedClassroom } = await supabaseForClassroomCheck
       .from('classrooms')
-      .select('id, slug, min_age_years, max_age_years')
+      .select('id, slug, min_age_months, max_age_months')
       .eq('id', values.requested_classroom_id)
       .maybeSingle()
 
