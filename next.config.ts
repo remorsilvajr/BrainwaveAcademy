@@ -33,7 +33,7 @@ const nextConfig: NextConfig = {
           // The app never uses the camera/microphone/geolocation APIs, so
           // deny them outright rather than leaving them open to whatever a
           // future compromised third-party script might try.
-          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+          { key: 'Permissions-Policy', value: 'camera=(self), microphone=(), geolocation=()' },
           // 2 years, matching MDN's own preload-eligible example — safe
           // since the whole site (including Vercel's own preview domains)
           // is HTTPS-only already.

@@ -275,6 +275,7 @@ export function UserEditModal({
             >
               <option value="parent" className={optionClasses}>Parent</option>
               <option value="teacher" className={optionClasses}>Teacher</option>
+              <option value="cashier" className={optionClasses}>Cashier</option>
               <option value="admin" className={optionClasses}>Admin</option>
             </select>
           </div>

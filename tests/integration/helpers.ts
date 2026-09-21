@@ -4,7 +4,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 export const TEST_EMAIL_DOMAIN = 'example.test'
 export const TEST_EMAIL_PREFIX = 'zz-test-'
 
-export type Role = 'admin' | 'teacher' | 'parent'
+export type Role = 'admin' | 'teacher' | 'parent' | 'cashier'
 export type TestUser = { id: string; email: string; password: string; role: Role; client: SupabaseClient }
 
 export function adminClient(): SupabaseClient {

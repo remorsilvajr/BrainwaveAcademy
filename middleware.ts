@@ -68,7 +68,7 @@ export async function middleware(request: NextRequest, event: NextFetchEvent) {
   const isServerAction = request.headers.has('next-action')
 
   const path = request.nextUrl.pathname
-  const protectedPaths = ['/parent', '/teacher', '/admin']
+  const protectedPaths = ['/parent', '/teacher', '/admin', '/cashier']
   const isProtected = protectedPaths.some((p) => path.startsWith(p))
 
   if (isServerAction) {

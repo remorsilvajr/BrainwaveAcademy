@@ -24,8 +24,8 @@ type Classroom = {
   id: string
   name: string
   slug: string
-  min_age_years: number | null
-  max_age_years: number | null
+  min_age_months: number | null
+  max_age_months: number | null
   tuition_fee: number
   activity_fee: number
 }

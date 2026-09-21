@@ -28,7 +28,7 @@ const faqs = [
   {
     question: 'What age groups and programs do you offer?',
     answer:
-      "We offer four programs across early childhood: Little Explorers (ages 2-3), Advanced Toddler (ages 3-4), Smart Explorers (Nursery), and Curious Adventurers (Kindergarten). Every program is built around our 6 Domains of Development; see the Programs and 6 Domains sections on our home page for more detail.",
+      "We offer four programs across early childhood: Little Explorers (1 year 6 months to 2 years), Advanced Toddler (2 years 1 month to 2 years 10 months), Smart Explorers (Nursery, 2 years 11 months to 3 years 10 months), and Curious Adventurers (Pre-Kindergarten, 3 years 11 months to 4 years 10 months). Every program is built around our 6 Domains of Development; see the Programs and 6 Domains sections on our home page for more detail.",
   },
   {
     question: 'Can I enroll more than one child?',
@@ -59,7 +59,7 @@ export default async function FaqPage() {
   const auth = await getPortalAuth()
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-gradient-to-b from-white to-slate-50 dark:from-gray-950 dark:to-gray-900">
+    <div className="flex min-h-screen w-full flex-col bg-white dark:bg-gray-950">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}

@@ -31,9 +31,7 @@ const baseSections: NavSection[] = [
     items: [
       { label: 'Students', href: '/admin/students', icon: 'user' },
       { label: 'Student Dashboard', href: '/admin/student-dashboard', icon: 'graduationCap' },
-      { label: 'Year-End Promotion', href: '/admin/year-end', icon: 'yearEnd' },
       { label: 'Pickup Verification', href: '/admin/pickup-verification', icon: 'pickup' },
-      { label: 'Do-Not-Release', href: '/admin/do-not-release', icon: 'ban' },
     ],
   },
   {
@@ -54,6 +52,17 @@ const baseSections: NavSection[] = [
     ],
   },
 ]
+
+// Unfinished features, kept in the code but only reachable by the super admin
+// (the pages and their actions re-check on the server). The tier itself must not
+// be discoverable by a regular admin, so this section is simply absent for them.
+const hiddenFeaturesSection: NavSection = {
+  title: 'Hidden Features (Bonus, Unfinished)',
+  items: [
+    { label: 'Year-End Promotion', href: '/admin/year-end', icon: 'yearEnd' },
+    { label: 'Do-Not-Release', href: '/admin/do-not-release', icon: 'ban' },
+  ],
+}
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   // Reverted 2026-09-04 (was briefly a distinct "Super Admin Portal" label
@@ -82,7 +91,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   const isSuperAdmin = !!profile?.is_super_admin
 
-  const sections: NavSection[] = baseSections.map((section) =>
+  const visibleSections = isSuperAdmin ? [...baseSections.slice(0, -1), hiddenFeaturesSection, ...baseSections.slice(-1)] : baseSections
+
+  const sections: NavSection[] = visibleSections.map((section) =>
     section.title === 'Admin' && isSuperAdmin
       ? {
           ...section,

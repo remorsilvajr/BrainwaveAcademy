@@ -32,3 +32,26 @@ export async function requireAdmin() {
 
   return user
 }
+
+// The cash-desk actions (record or mark a cash payment, approve or deny a wallet top-up)
+// are open to the cashier as well as the admin. Everything that corrects or undoes money
+// (waive, void, edit, reverse, wallet adjustments) stays on requireAdmin(). The database
+// policies for the cashier are the second layer; this is the one that names the roles.
+export async function requirePaymentsStaff() {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    throw new Error('You must be logged in to do this.')
+  }
+
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+
+  if (profile?.role !== 'admin' && profile?.role !== 'cashier') {
+    throw new Error('You do not have permission to do this.')
+  }
+
+  return user
+}

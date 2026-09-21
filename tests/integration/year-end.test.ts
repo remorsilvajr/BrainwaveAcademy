@@ -11,24 +11,25 @@ import { Fixture, type TestUser } from './helpers'
 const YEAR = '2031-2032'
 const f = new Fixture()
 let admin: TestUser
-let from: { id: string; name: string; tuition_fee: number; activity_fee: number; min_age_years: number | null; max_age_years: number | null }
+let from: { id: string; name: string; tuition_fee: number; activity_fee: number; min_age_months: number | null; max_age_months: number | null }
 let to: typeof from
 let dob: string
 
 const feeRowsPerProgram = (c: typeof from) => (c.tuition_fee > 0 ? 1 : 0) + (c.activity_fee > 0 ? 1 : 0)
 
-// A birthday that puts a child in both programs' age range.
-const dobEligibleForBoth = () => {
+// A birthday that makes a child eligible for the destination program (the ranges
+// no longer overlap, so a child already placed in Little Explorers is simply old
+// enough for Advanced Toddler at year-end). Found by scanning months so it follows
+// any future change to the ranges; a mid-month day keeps it stable across midnight.
+const dobEligibleForDestination = () => {
   const today = todayIso()
-  for (let age = 2; age <= 8; age++) {
-    const candidate = `${Number(today.slice(0, 4)) - age - 1}${today.slice(4)}`
-    // one day past a whole birthday, so it is stable if the test runs across midnight
-    const shifted = new Date(`${candidate}T00:00:00Z`)
-    shifted.setUTCDate(shifted.getUTCDate() - 1)
-    const iso = shifted.toISOString().slice(0, 10)
-    if (isAgeEligibleForClassroom(iso, from) && isAgeEligibleForClassroom(iso, to)) return iso
+  for (let months = 12; months <= 120; months++) {
+    const d = new Date(`${today.slice(0, 7)}-15T00:00:00Z`)
+    d.setUTCMonth(d.getUTCMonth() - months)
+    const iso = d.toISOString().slice(0, 10)
+    if (isAgeEligibleForClassroom(iso, to)) return iso
   }
-  throw new Error('No age fits both Little Explorers and Advanced Toddler: the age ranges changed, update this test.')
+  throw new Error('No age fits Advanced Toddler: the age ranges changed, update this test.')
 }
 
 const child = (first: string, extra: Record<string, unknown> = {}) =>
@@ -39,11 +40,11 @@ const studentRow = async (id: string) => (await f.admin.from('students').select(
 beforeAll(async () => {
   const { data } = await f.admin
     .from('classrooms')
-    .select('id, slug, name, tuition_fee, activity_fee, min_age_years, max_age_years')
+    .select('id, slug, name, tuition_fee, activity_fee, min_age_months, max_age_months')
     .in('slug', ['little-explorers', 'advanced-toddler'])
   from = data!.find((c) => c.slug === 'little-explorers')!
   to = data!.find((c) => c.slug === 'advanced-toddler')!
-  dob = dobEligibleForBoth()
+  dob = dobEligibleForDestination()
   admin = await f.user('admin')
 }, 120_000)
 
@@ -99,10 +100,12 @@ describe('applying the review', () => {
   })
 
   it('reports a child who cannot be promoted and still applies everyone else', async () => {
-    // Two years old: in range for Little Explorers, too young for Advanced Toddler.
-    const youngDob = `${Number(todayIso().slice(0, 4)) - 2}-01-01`
+    // Eighteen months old: in range for Little Explorers, too young for Advanced Toddler.
+    const young = new Date(`${todayIso().slice(0, 7)}-15T00:00:00Z`)
+    young.setUTCMonth(young.getUTCMonth() - 19)
+    const youngDob = young.toISOString().slice(0, 10)
     if (isAgeEligibleForClassroom(youngDob, to)) {
-      throw new Error('A two-year-old now fits Advanced Toddler: the age ranges changed, update this test.')
+      throw new Error('A 19-month-old now fits Advanced Toddler: the age ranges changed, update this test.')
     }
     const tooYoung = await child('TooYoung', { date_of_birth: youngDob })
     const fine = await child('Fine')

@@ -123,6 +123,8 @@ export function PaymentsTable({
   adjustmentsByPayment,
   studentOptions,
   initialStatus = 'all',
+  canCorrect = true,
+  receiptBasePath = '/admin/payments',
 }: {
   view: PaymentsView
   payments: PaymentRow[]
@@ -130,6 +132,9 @@ export function PaymentsTable({
   adjustmentsByPayment: Record<string, FeeAdjustment[]>
   studentOptions: SearchableOption[]
   initialStatus?: string
+  // Admin only: waive, void, edit and reverse. The cashier portal passes false.
+  canCorrect?: boolean
+  receiptBasePath?: string
 }) {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState(
@@ -390,31 +395,35 @@ export function PaymentsTable({
                         {view === 'received' ? (
                           <div className="flex flex-wrap items-center gap-2">
                             <Link
-                              href={`/admin/payments/${p.id}/receipt`}
+                              href={`${receiptBasePath}/${p.id}/receipt`}
                               className="rounded-full border border-[#0b1b62] dark:border-indigo-300 px-4 py-1.5 text-xs font-semibold text-[#0b1b62] dark:text-indigo-300 hover:bg-[#0b1b62] hover:text-white"
                             >
                               View Receipt
                             </Link>
-                            <button
-                              type="button"
-                              onClick={() => setReversing(p)}
-                              className="rounded-full border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-xs font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
-                            >
-                              Reverse
-                            </button>
+                            {canCorrect && (
+                              <button
+                                type="button"
+                                onClick={() => setReversing(p)}
+                                className="rounded-full border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-xs font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                              >
+                                Reverse
+                              </button>
+                            )}
                           </div>
                         ) : p.status === 'pending' ? (
                           <div className="flex flex-wrap items-center gap-2">
                             <MarkPaidControl paymentId={p.id} />
-                            <button
-                              type="button"
-                              onClick={() => setManaging(p)}
-                              className="rounded-full border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-xs font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
-                            >
-                              Manage
-                            </button>
+                            {canCorrect && (
+                              <button
+                                type="button"
+                                onClick={() => setManaging(p)}
+                                className="rounded-full border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-xs font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                              >
+                                Manage
+                              </button>
+                            )}
                           </div>
-                        ) : (
+                        ) : canCorrect ? (
                           <button
                             type="button"
                             onClick={() => setManaging(p)}
@@ -422,7 +431,7 @@ export function PaymentsTable({
                           >
                             Details
                           </button>
-                        )}
+                        ) : null}
                       </td>
                     </tr>
                   )

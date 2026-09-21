@@ -21,43 +21,66 @@ import {
   type DoNotReleaseEntry,
 } from '@/lib/health'
 
-// birth date for a child who is `years` years and `months` months old on the pinned "today" (2026-09-21)
-const dob = (years: number, months = 0) => {
-  const d = new Date(Date.UTC(2026 - years, 8 - months, 15))
+// A date of birth that is exactly `months` whole months old on the pinned
+// today (2026-09-21), plus 6 days into the next month so it is unambiguous.
+const dobMonths = (months: number) => {
+  const d = new Date(Date.UTC(2026, 8 - months, 15))
   return d.toISOString().slice(0, 10)
 }
 
-describe('program age ranges (whole years, inclusive)', () => {
-  const LE = { min_age_years: 2, max_age_years: 3 }
-  const AT = { min_age_years: 3, max_age_years: 4 }
-  const open = { min_age_years: null, max_age_years: null }
+describe('program age ranges (whole months, inclusive)', () => {
+  const LE = { min_age_months: 18, max_age_months: 24 }
+  const AT = { min_age_months: 25, max_age_months: 34 }
+  const NSE = { min_age_months: 35, max_age_months: 46 }
+  const PK = { min_age_months: 47, max_age_months: 58 }
+  const open = { min_age_months: null, max_age_months: null }
 
-  it('"Ages 2-3" takes a child up to their 4th birthday (the original off-by-one bug)', () => {
-    for (const [y, m, expected] of [
-      [2, 0, true],
-      [2, 6, true],
-      [3, 0, true],
-      [3, 11, true],
-      [4, 0, false],
-      [1, 11, false],
+  it('Little Explorers is 1y 6m to 2y 0m, Advanced Toddler starts at 2y 1m with no gap', () => {
+    for (const [months, le, at] of [
+      [17, false, false],
+      [18, true, false],
+      [24, true, false], // 2y 0m (and up to 2y 0m 29d)
+      [25, false, true], // 2y 1m
+      [34, false, true], // 2y 10m
+      [35, false, false], // 2y 11m is Nursery
     ] as const) {
-      expect(isAgeEligibleForClassroom(dob(y, m), LE), `${y}y${m}m`).toBe(expected)
+      expect(isAgeEligibleForClassroom(dobMonths(months), LE), `LE ${months}m`).toBe(le)
+      expect(isAgeEligibleForClassroom(dobMonths(months), AT), `AT ${months}m`).toBe(at)
     }
   })
-  it('"Ages 3-4" takes a 4-year-old; ranges may overlap', () => {
-    expect(isAgeEligibleForClassroom(dob(4, 10), AT)).toBe(true)
-    expect(isAgeEligibleForClassroom(dob(5, 0), AT)).toBe(false)
-    expect(isAgeEligibleForClassroom(dob(3, 6), LE) && isAgeEligibleForClassroom(dob(3, 6), AT)).toBe(true)
+  it('Nursery is 2y 11m to 3y 10m and Pre-Kindergarten 3y 11m to 4y 10m', () => {
+    expect(isAgeEligibleForClassroom(dobMonths(35), NSE)).toBe(true)
+    expect(isAgeEligibleForClassroom(dobMonths(46), NSE)).toBe(true)
+    expect(isAgeEligibleForClassroom(dobMonths(47), NSE)).toBe(false)
+    expect(isAgeEligibleForClassroom(dobMonths(47), PK)).toBe(true)
+    expect(isAgeEligibleForClassroom(dobMonths(58), PK)).toBe(true)
+    expect(isAgeEligibleForClassroom(dobMonths(59), PK)).toBe(false)
+  })
+  it('a child one day short of the first month is not eligible yet', () => {
+    // exactly 18 months old today is the earliest
+    expect(isAgeEligibleForClassroom('2025-03-21', LE)).toBe(true)
+    expect(isAgeEligibleForClassroom('2025-03-22', LE)).toBe(false)
+    // 2y 1m starts on the 21st
+    expect(isAgeEligibleForClassroom('2024-08-21', AT)).toBe(true)
+    expect(isAgeEligibleForClassroom('2024-08-22', AT)).toBe(false)
   })
   it('a program with no range takes anyone, and has a label saying so', () => {
-    expect(isAgeEligibleForClassroom(dob(9), open)).toBe(true)
+    expect(isAgeEligibleForClassroom(dobMonths(108), open)).toBe(true)
     expect(classroomAgeRangeLabel(open)).toBe('All ages')
-    expect(classroomAgeRangeLabel(LE)).toBe('Ages 2-3')
   })
-  it('a support program 5-18 takes a 15-year-old but not a 4-year-old', () => {
-    const support = { min_age_years: 5, max_age_years: 18 }
-    expect(isAgeEligibleForClassroom(dob(15), support)).toBe(true)
-    expect(isAgeEligibleForClassroom(dob(4), support)).toBe(false)
+  it('labels read as years and months', () => {
+    expect(classroomAgeRangeLabel(LE)).toBe('Ages 1 yr 6 mo - 2 yrs')
+    expect(classroomAgeRangeLabel(AT)).toBe('Ages 2 yrs 1 mo - 2 yrs 10 mo')
+    expect(classroomAgeRangeLabel(NSE)).toBe('Ages 2 yrs 11 mo - 3 yrs 10 mo')
+    expect(classroomAgeRangeLabel(PK)).toBe('Ages 3 yrs 11 mo - 4 yrs 10 mo')
+  })
+  it('a support program 5-18 (60-227 months) takes a 15-year-old but not a 4-year-old, and reads "Ages 5-18"', () => {
+    const support = { min_age_months: 60, max_age_months: 227 }
+    expect(isAgeEligibleForClassroom(dobMonths(15 * 12), support)).toBe(true)
+    expect(isAgeEligibleForClassroom(dobMonths(4 * 12), support)).toBe(false)
+    expect(isAgeEligibleForClassroom(dobMonths(18 * 12 + 11), support)).toBe(true)
+    expect(isAgeEligibleForClassroom(dobMonths(19 * 12), support)).toBe(false)
+    expect(classroomAgeRangeLabel(support)).toBe('Ages 5-18')
   })
 })
 
@@ -139,13 +162,13 @@ describe('student statuses', () => {
 })
 
 describe('year-end promotion suggestions', () => {
-  const room = (slug: string, min: number | null, max: number | null): LadderClassroom => ({ id: `id-${slug}`, name: slug, slug, min_age_years: min, max_age_years: max })
+  const room = (slug: string, min: number | null, max: number | null): LadderClassroom => ({ id: `id-${slug}`, name: slug, slug, min_age_months: min, max_age_months: max })
   const classrooms = [
-    room('smart-explorers', null, null),
-    room('advanced-toddler', 3, 4),
-    room('little-explorers', 2, 3),
-    room('curious-adventurers', null, null),
-    room('academic-tutorials', 5, 18),
+    room('smart-explorers', 35, 46),
+    room('advanced-toddler', 25, 34),
+    room('little-explorers', 18, 24),
+    room('curious-adventurers', 47, 58),
+    room('academic-tutorials', 60, 227),
   ]
   const ladder = ladderClassrooms(classrooms)
 
@@ -153,18 +176,18 @@ describe('year-end promotion suggestions', () => {
     expect(ladder.map((c) => c.slug)).toEqual([...PROMOTION_LADDER])
   })
   it('each step goes to the next program and the last graduates', () => {
-    const pick = (slug: string, age = 3) => suggestChoice({ date_of_birth: dob(age), classroomSlug: slug }, ladder).choice
+    const pick = (slug: string, months = 30) => suggestChoice({ date_of_birth: dobMonths(months), classroomSlug: slug }, ladder).choice
     expect(pick('little-explorers')).toBe('id-advanced-toddler')
-    expect(pick('advanced-toddler', 4)).toBe('id-smart-explorers')
-    expect(pick('smart-explorers', 5)).toBe('id-curious-adventurers')
-    expect(pick('curious-adventurers', 6)).toBe(CHOICE_GRADUATE)
+    expect(pick('advanced-toddler', 40)).toBe('id-smart-explorers')
+    expect(pick('smart-explorers', 50)).toBe('id-curious-adventurers')
+    expect(pick('curious-adventurers', 70)).toBe(CHOICE_GRADUATE)
   })
   it('a support program or no program stays', () => {
-    expect(suggestChoice({ date_of_birth: dob(8), classroomSlug: 'academic-tutorials' }, ladder).choice).toBe(CHOICE_STAY)
-    expect(suggestChoice({ date_of_birth: dob(4), classroomSlug: null }, ladder).choice).toBe(CHOICE_STAY)
+    expect(suggestChoice({ date_of_birth: dobMonths(96), classroomSlug: 'academic-tutorials' }, ladder).choice).toBe(CHOICE_STAY)
+    expect(suggestChoice({ date_of_birth: dobMonths(48), classroomSlug: null }, ladder).choice).toBe(CHOICE_STAY)
   })
   it('a child too old for the next program stays, with a note saying why', () => {
-    const r = suggestChoice({ date_of_birth: dob(8), classroomSlug: 'little-explorers' }, ladder)
+    const r = suggestChoice({ date_of_birth: dobMonths(96), classroomSlug: 'little-explorers' }, ladder)
     expect(r.choice).toBe(CHOICE_STAY)
     expect(r.note).toContain('advanced-toddler')
   })

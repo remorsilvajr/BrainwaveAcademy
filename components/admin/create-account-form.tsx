@@ -10,6 +10,7 @@ const initialState: CreateSystemUserState = {}
 const roleOptions = [
   { value: 'parent', label: 'Parent' },
   { value: 'teacher', label: 'Teacher' },
+  { value: 'cashier', label: 'Cashier' },
   { value: 'admin', label: 'Admin' },
 ]
 

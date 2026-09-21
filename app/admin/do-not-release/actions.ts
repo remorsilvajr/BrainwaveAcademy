@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import { requireAdmin } from '@/lib/require-admin'
+import { requireSuperAdmin } from '@/lib/require-super-admin'
 import { logActivity } from '@/lib/activity-log'
 import { notifyAdmins } from '@/lib/notify'
 import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
@@ -18,7 +18,7 @@ export async function addDoNotRelease(input: {
   lastName: string
   note: string
 }): Promise<{ error: string } | undefined> {
-  const admin = await requireAdmin()
+  const admin = await requireSuperAdmin()
   const firstName = input.firstName.trim()
   const lastName = input.lastName.trim()
   const note = input.note.trim()
@@ -55,7 +55,7 @@ export async function addDoNotRelease(input: {
 }
 
 export async function removeDoNotRelease(id: string): Promise<{ error: string } | undefined> {
-  const admin = await requireAdmin()
+  const admin = await requireSuperAdmin()
   const supabase = await createClient()
   const { data: removed, error } = await supabase.from('do_not_release').delete().eq('id', id).select('first_name, last_name')
   if (error) return { error: error.message }

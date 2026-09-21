@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { logActivity } from '@/lib/activity-log'
 import { emailReceiptFor } from '@/lib/send-receipt'
 import { formatCurrency, formatDateShort, roundToCents } from '@/lib/format'
-import { requireAdmin } from '@/lib/require-admin'
+import { requireAdmin, requirePaymentsStaff } from '@/lib/require-admin'
 import { notifyParentsOfStudent, notifyUsers } from '@/lib/notify'
 import { sendEmail } from '@/lib/email'
 import { walletDecisionEmail } from '@/lib/notification-emails'
@@ -55,6 +55,7 @@ async function tellParentAboutWalletRequest(
 
 function revalidateAll() {
   revalidatePath('/admin/payments')
+  revalidatePath('/cashier/payments')
   revalidatePath('/admin/students')
   revalidatePath('/admin')
   revalidatePath('/parent/payments')
@@ -88,6 +89,7 @@ export async function approveWalletRequest(
   reviewNote?: string
 ): Promise<ActionResult> {
   const supabase = await createClient()
+  await requirePaymentsStaff()
 
   if (!Number.isFinite(approvedAmount) || approvedAmount <= 0) {
     return { error: 'Enter a valid amount greater than zero.' }
@@ -158,6 +160,7 @@ export async function approveWalletRequest(
 
 export async function denyWalletRequest(requestId: string, reviewNote?: string): Promise<ActionResult> {
   const supabase = await createClient()
+  await requirePaymentsStaff()
   const { data: original } = await supabase
     .from('wallet_requests')
     .select('parent_id, requested_amount')
@@ -211,6 +214,7 @@ export async function denyWalletRequest(requestId: string, reviewNote?: string):
 // a deduction can never be validated against stale data.
 export async function adjustWalletBalance(parentId: string, amount: number, note?: string): Promise<ActionResult> {
   const supabase = await createClient()
+  await requireAdmin()
 
   if (!Number.isFinite(amount) || amount === 0) {
     return { error: 'Enter a non-zero amount.' }
@@ -275,6 +279,7 @@ export async function recordManualPayment(
   input: { feeType: string; description: string; amount: number; method: string }
 ): Promise<ActionResult> {
   const supabase = await createClient()
+  await requirePaymentsStaff()
 
   if (!FEE_TYPES.includes(input.feeType as (typeof FEE_TYPES)[number])) {
     return { error: 'Invalid fee type.' }
@@ -336,6 +341,7 @@ export async function recordManualPayment(
 // counterpart to payFeeWithWallet for a payment made outside the app.
 export async function markPaymentPaidManually(paymentId: string, method: string, notes?: string): Promise<ActionResult> {
   const supabase = await createClient()
+  await requirePaymentsStaff()
 
   if (!METHODS.includes(method as (typeof METHODS)[number])) {
     return { error: 'Only cash payments can be recorded manually.' }

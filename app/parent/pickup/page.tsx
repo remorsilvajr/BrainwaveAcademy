@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { EmptyState } from '@/components/ui/empty-state'
 import { PICKUP_PHOTO_URL_TTL_SECONDS } from '@/lib/pickup-list'
+import { pickupIdCode, pickupIdLabel } from '@/lib/pickup-id'
 import { AuthorizedPickupManager } from '@/components/parent/authorized-pickup-manager'
 
 export default async function AuthorizedPickupPage() {
@@ -41,9 +42,11 @@ export default async function AuthorizedPickupPage() {
   const adminClient = createAdminClient()
   const pickupsWithUrls = await Promise.all(
     (pickups ?? []).map(async (p) => {
-      if (!p.photo_path) return { ...p, photoUrl: null }
+      const idCode = pickupIdCode(p.id)
+      const idLabel = pickupIdLabel(p.id)
+      if (!p.photo_path) return { ...p, photoUrl: null, idCode, idLabel }
       const { data: signed } = await adminClient.storage.from('pickup-photos').createSignedUrl(p.photo_path, PICKUP_PHOTO_URL_TTL_SECONDS)
-      return { ...p, photoUrl: signed?.signedUrl ?? null }
+      return { ...p, photoUrl: signed?.signedUrl ?? null, idCode, idLabel }
     })
   )
 

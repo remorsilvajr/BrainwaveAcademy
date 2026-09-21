@@ -57,6 +57,7 @@ type Profile = {
 const roleBadgeClasses: Record<string, string> = {
   parent: 'bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300',
   teacher: 'bg-pink-50 dark:bg-pink-950/40 text-pink-700 dark:text-pink-300',
+  cashier: 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300',
   admin: 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300',
 }
 
@@ -231,6 +232,7 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
               <option value="all" className={optionClasses}>All Roles</option>
               <option value="parent" className={optionClasses}>Parent</option>
               <option value="teacher" className={optionClasses}>Teacher</option>
+              <option value="cashier" className={optionClasses}>Cashier</option>
               <option value="admin" className={optionClasses}>Admin</option>
             </select>
           </div>

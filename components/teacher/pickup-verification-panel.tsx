@@ -7,6 +7,8 @@ import { usePagination } from '@/lib/use-pagination'
 import { logPickupCheck } from '@/app/teacher/pickup-verification/actions'
 import { logDoNotReleaseHit } from '@/app/admin/do-not-release/actions'
 import { PickupAvatar } from '@/components/pickup/pickup-avatar'
+import { PickupCardModal } from '@/components/pickup/pickup-card-modal'
+import { PickupScanner } from '@/components/pickup/pickup-scanner'
 import { PICKUP_RELATIONSHIPS } from '@/lib/pickup-relationships'
 import { pickupDisplayName } from '@/lib/pickup-names'
 import { matchDoNotRelease, type DoNotReleaseEntry } from '@/lib/health'
@@ -21,6 +23,8 @@ type Pickup = {
   relationship: string | null
   phone_number: string | null
   photoUrl: string | null
+  idCode: string
+  idLabel: string
 }
 
 const NO_RELATIONSHIP = '__none__'
@@ -64,6 +68,7 @@ export function PickupVerificationPanel({
   const [relationshipFilter, setRelationshipFilter] = useState('all')
   const [loggedId, setLoggedId] = useState<string | null>(null)
   const [error, setError] = useState('')
+  const [cardFor, setCardFor] = useState<Pickup | null>(null)
 
   const studentNameById = new Map(students.map((s) => [s.id, `${s.first_name} ${s.last_name}`]))
 
@@ -149,6 +154,8 @@ export function PickupVerificationPanel({
 
   return (
     <div className="space-y-4">
+      <PickupScanner />
+
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
         <p className="mb-2 text-xs font-medium text-gray-500 dark:text-gray-400">
           Type the first and last name of the person picking up
@@ -224,6 +231,7 @@ export function PickupVerificationPanel({
                       sizeClassName="h-12 w-12"
                       iconClassName="h-5 w-5"
                       fallbackClassName="bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500"
+                      onClick={() => setCardFor(p)}
                     />
                     <div>
                       <p className="flex items-center gap-1.5 font-medium text-green-800 dark:text-green-300">
@@ -305,8 +313,9 @@ export function PickupVerificationPanel({
                     sizeClassName="h-9 w-9"
                     iconClassName="h-4 w-4"
                     fallbackClassName="bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300"
+                    onClick={() => setCardFor(p)}
                   />
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{pickupDisplayName(p)}</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       {[p.relationship, p.phone_number].filter(Boolean).join(' · ') || '-'}
@@ -315,6 +324,13 @@ export function PickupVerificationPanel({
                       For {studentNameById.get(p.student_id) ?? 'an unknown student'}
                     </p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => setCardFor(p)}
+                    className="shrink-0 rounded-full border border-[#0b1b62] px-3 py-1.5 text-xs font-semibold text-[#0b1b62] hover:bg-[#0b1b62] hover:text-white dark:border-indigo-300 dark:text-indigo-300 dark:hover:bg-indigo-300 dark:hover:text-gray-900"
+                  >
+                    View Card
+                  </button>
                 </div>
               ))}
             </div>
@@ -328,6 +344,14 @@ export function PickupVerificationPanel({
           </>
         )}
       </div>
+
+      {cardFor && (
+        <PickupCardModal
+          person={cardFor}
+          studentName={studentNameById.get(cardFor.student_id) ?? 'an unknown student'}
+          onClose={() => setCardFor(null)}
+        />
+      )}
     </div>
   )
 }

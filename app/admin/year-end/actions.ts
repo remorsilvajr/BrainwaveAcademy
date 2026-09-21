@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import { requireAdmin } from '@/lib/require-admin'
+import { requireSuperAdmin } from '@/lib/require-super-admin'
 import { applyYearEndDecisions, type YearEndDecision, type YearEndResult } from '@/lib/year-end'
 
 // Thin wrapper: the admin check and the request-scoped client live here, the
@@ -13,7 +13,7 @@ export async function applyYearEnd(
   schoolYear: string,
   decisions: YearEndDecision[]
 ): Promise<{ error: string } | YearEndResult> {
-  const admin = await requireAdmin()
+  const admin = await requireSuperAdmin()
   const supabase = await createClient()
 
   const result = await applyYearEndDecisions(supabase, admin.id, schoolYear, decisions)

@@ -81,7 +81,7 @@ export function LoginForm({ error }: { error?: string }) {
               aria-pressed={showPassword}
               className="absolute right-0 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-[#454650] dark:text-slate-300"
             >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {showPassword ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
             </button>
           </div>
         </div>

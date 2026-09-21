@@ -1,8 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
+import { requireSuperAdminPage } from '@/lib/require-super-admin'
 import { DoNotReleaseManager, type DnrRow } from '@/components/admin/do-not-release-manager'
 import { TERMINAL_STATUS_FILTER } from '@/lib/student-status'
 
 export default async function AdminDoNotReleasePage() {
+  await requireSuperAdminPage()
   const supabase = await createClient()
   const [{ data: entries }, { data: students }] = await Promise.all([
     supabase.from('do_not_release').select('id, student_id, first_name, last_name, note, created_at').order('created_at', { ascending: false }),

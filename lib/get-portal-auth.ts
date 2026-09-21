@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 
-export type PortalRole = 'admin' | 'teacher' | 'parent'
+export type PortalRole = 'admin' | 'teacher' | 'parent' | 'cashier'
 
 export type PortalAuth = {
   role: PortalRole

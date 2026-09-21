@@ -11,6 +11,7 @@ import { PlainSelect } from '@/components/ui/plain-select'
 import { Field } from '@/components/enroll/enroll-field'
 import { StepTab } from '@/components/enroll/step-tab'
 import { ProgramSelector, type SelectableClassroom } from '@/components/enroll/program-selector'
+import { validateEnrollField, validateEnrollFields, STUDENT_KEYS, PROGRAM_KEYS } from '@/lib/enroll-validation'
 
 const initialState: SubmitStudentState = {}
 const NAME_PATTERN = "[A-Za-zÀ-ÖØ-öø-ÿ' -]+"
@@ -37,6 +38,7 @@ export function EnrollStudentForm({
   const [genderValue, setGenderValue] = useState(state.values?.student_gender ?? '')
   const [selectedClassroomId, setSelectedClassroomId] = useState(state.values?.requested_classroom_id ?? '')
   const [studentFirstName, setStudentFirstName] = useState(state.values?.student_first_name ?? '')
+  const [studentMiddleName, setStudentMiddleName] = useState(state.values?.student_middle_name ?? '')
   const [studentLastName, setStudentLastName] = useState(state.values?.student_last_name ?? '')
   const [studentDob, setStudentDob] = useState(state.values?.student_dob ?? '')
 
@@ -47,6 +49,7 @@ export function EnrollStudentForm({
     setGenderValue(state.values?.student_gender ?? '')
     setSelectedClassroomId(state.values?.requested_classroom_id ?? '')
     setStudentFirstName(state.values?.student_first_name ?? '')
+    setStudentMiddleName(state.values?.student_middle_name ?? '')
     setStudentLastName(state.values?.student_last_name ?? '')
     setStudentDob(state.values?.student_dob ?? '')
 
@@ -80,12 +83,48 @@ export function EnrollStudentForm({
     })
   }
 
+  // What has been typed so far, so a mistake shows as soon as the person leaves a
+  // field or a step instead of only after Submit (the server still validates it all).
+  const currentValues = {
+    student_first_name: studentFirstName,
+    student_middle_name: studentMiddleName,
+    student_last_name: studentLastName,
+    student_dob: studentDob,
+    student_gender: genderValue,
+    requested_classroom_id: selectedClassroomId,
+  }
+
+  function checkField(key: string, override: Record<string, string> = {}) {
+    const message = validateEnrollField(key, { ...currentValues, ...override }, classrooms)
+    setLiveErrors((prev) => {
+      if (!message && !prev[key]) return prev
+      const next = { ...prev }
+      if (message) next[key] = message
+      else delete next[key]
+      return next
+    })
+  }
+
+  function goToStep(target: 1 | 2) {
+    if (target !== step) {
+      const keys = step === 1 ? STUDENT_KEYS : PROGRAM_KEYS
+      const found = validateEnrollFields(keys, currentValues, classrooms)
+      setLiveErrors((prev) => {
+        const rest = { ...prev }
+        for (const key of keys) delete rest[key]
+        return { ...rest, ...found }
+      })
+    }
+    setStep(target)
+  }
+
   const values = state.values ?? {}
   const studentStepHasError = Object.keys(liveErrors).some((k) => STUDENT_FIELD_KEYS.includes(k))
   const programStepHasError = Object.keys(liveErrors).some((k) => k === 'requested_classroom_id' || k === 'requested_program_options')
 
-  const studentDone = !!studentFirstName && !!studentLastName && !!studentDob && !!genderValue && !studentStepHasError
-  const programDone = !!selectedClassroomId && !programStepHasError
+  const isStepValid = (keys: string[]) => Object.keys(validateEnrollFields(keys, currentValues, classrooms)).length === 0
+  const studentDone = isStepValid(STUDENT_KEYS) && !studentStepHasError
+  const programDone = isStepValid(PROGRAM_KEYS) && !programStepHasError
 
   return (
     <form action={formAction} className="space-y-6">
@@ -102,8 +141,8 @@ export function EnrollStudentForm({
       )}
 
       <div className="flex flex-col gap-2 sm:flex-row">
-        <StepTab step={1} activeStep={step} label="Student Information" hasError={studentStepHasError} isDone={studentDone} onClick={() => setStep(1)} />
-        <StepTab step={2} activeStep={step} label="Program" hasError={programStepHasError} isDone={programDone} onClick={() => setStep(2)} />
+        <StepTab step={1} activeStep={step} label="Student Information" hasError={studentStepHasError} isDone={studentDone} onClick={() => goToStep(1)} />
+        <StepTab step={2} activeStep={step} label="Program" hasError={programStepHasError} isDone={programDone} onClick={() => goToStep(2)} />
       </div>
 
       <div className={step === 1 ? 'space-y-6' : 'hidden'}>
@@ -127,6 +166,7 @@ export function EnrollStudentForm({
               minLength={2}
               defaultValue={values.student_first_name}
               error={liveErrors.student_first_name}
+              onBlur={(v) => checkField('student_first_name', { student_first_name: v })}
               onChange={(v) => {
                 setStudentFirstName(v)
                 clearError('student_first_name')
@@ -141,7 +181,11 @@ export function EnrollStudentForm({
               minLength={2}
               defaultValue={values.student_middle_name}
               error={liveErrors.student_middle_name}
-              onChange={() => clearError('student_middle_name')}
+              onBlur={(v) => checkField('student_middle_name', { student_middle_name: v })}
+              onChange={(v) => {
+                setStudentMiddleName(v)
+                clearError('student_middle_name')
+              }}
             />
             <Field
               label="Last Name"
@@ -153,6 +197,7 @@ export function EnrollStudentForm({
               minLength={2}
               defaultValue={values.student_last_name}
               error={liveErrors.student_last_name}
+              onBlur={(v) => checkField('student_last_name', { student_last_name: v })}
               onChange={(v) => {
                 setStudentLastName(v)
                 clearError('student_last_name')
@@ -170,7 +215,8 @@ export function EnrollStudentForm({
               max={dobInputMax(MIN_STUDENT_AGE)}
               onChange={(v) => {
                 setStudentDob(v)
-                clearError('student_dob')
+                if (v) checkField('student_dob', { student_dob: v })
+                else clearError('student_dob')
               }}
             />
             <PlainSelect
@@ -199,7 +245,7 @@ export function EnrollStudentForm({
           </Link>
           <button
             type="button"
-            onClick={() => setStep(2)}
+            onClick={() => goToStep(2)}
             className="rounded-lg bg-[#0b1b62] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#08154d]"
           >
             Next: Program →
@@ -240,7 +286,7 @@ export function EnrollStudentForm({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <button
             type="button"
-            onClick={() => setStep(1)}
+            onClick={() => goToStep(1)}
             className="order-2 rounded-lg border border-slate-200 dark:border-slate-700 px-6 py-2.5 text-sm font-semibold text-[#0b1b62] dark:text-indigo-300 hover:bg-black/5 dark:hover:bg-white/10 sm:order-1"
           >
             ← Back: Student Information

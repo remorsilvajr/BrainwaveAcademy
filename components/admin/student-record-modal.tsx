@@ -54,7 +54,7 @@ type Student = {
   unpaidFees: UnpaidFee[]
 }
 
-type Classroom = { id: string; name: string; slug: string; min_age_years: number | null; max_age_years: number | null }
+type Classroom = { id: string; name: string; slug: string; min_age_months: number | null; max_age_months: number | null }
 
 type Tab = 'personal' | 'guardian' | 'documents' | 'balance' | 'health'
 

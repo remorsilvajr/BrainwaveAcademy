@@ -90,7 +90,7 @@ export function ResetPasswordForm() {
               aria-pressed={showNewPassword}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-[#454650] dark:text-slate-300"
             >
-              {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {showNewPassword ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
             </button>
           </div>
         </div>
@@ -120,7 +120,7 @@ export function ResetPasswordForm() {
               aria-pressed={showConfirmPassword}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-[#454650] dark:text-slate-300"
             >
-              {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {showConfirmPassword ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
             </button>
           </div>
         </div>

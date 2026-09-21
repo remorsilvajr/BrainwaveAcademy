@@ -1,10 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
+import { requireSuperAdminPage } from '@/lib/require-super-admin'
 import { YearEndReview, type YearEndStudent } from '@/components/admin/year-end-review'
 import { ladderClassrooms, PROMOTION_LADDER } from '@/lib/promotion'
 import { currentSchoolYear, isValidSchoolYear, schoolYearOptions } from '@/lib/school-year'
 import { summarizeOutstanding } from '@/lib/payments'
 
 export default async function AdminYearEndPage({ searchParams }: { searchParams: Promise<{ year?: string }> }) {
+  await requireSuperAdminPage()
   const { year: yearParam } = await searchParams
   const schoolYear = yearParam && isValidSchoolYear(yearParam) ? yearParam : currentSchoolYear()
 
@@ -15,7 +17,7 @@ export default async function AdminYearEndPage({ searchParams }: { searchParams:
       .select('id, first_name, last_name, student_id, date_of_birth, classroom_id')
       .eq('enrollment_status', 'active')
       .order('first_name', { ascending: true }),
-    supabase.from('classrooms').select('id, name, slug, min_age_years, max_age_years').order('created_at', { ascending: true }),
+    supabase.from('classrooms').select('id, name, slug, min_age_months, max_age_months').order('created_at', { ascending: true }),
     supabase.from('student_promotions').select('student_id, action').eq('school_year', schoolYear),
     supabase.from('payments').select('student_id, amount, status, due_date').eq('status', 'pending'),
   ])
@@ -66,7 +68,7 @@ export default async function AdminYearEndPage({ searchParams }: { searchParams:
         schoolYear={schoolYear}
         yearOptions={schoolYearOptions()}
         students={rows}
-        ladder={ladder.map((c) => ({ id: c.id, name: c.name, slug: c.slug, min_age_years: c.min_age_years, max_age_years: c.max_age_years }))}
+        ladder={ladder.map((c) => ({ id: c.id, name: c.name, slug: c.slug, min_age_months: c.min_age_months, max_age_months: c.max_age_months }))}
         ladderNames={PROMOTION_LADDER.map((slug) => (classrooms ?? []).find((c) => c.slug === slug)?.name ?? slug)}
         processed={processed}
       />

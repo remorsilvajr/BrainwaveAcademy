@@ -10,6 +10,7 @@ import { Field } from '@/components/enroll/enroll-field'
 import { StepTab } from '@/components/enroll/step-tab'
 import { ProgramSelector, type SelectableClassroom } from '@/components/enroll/program-selector'
 import { PasswordFields } from '@/components/ui/password-fields'
+import { validateEnrollField, validateEnrollFields, STUDENT_KEYS, PROGRAM_KEYS, PARENT_KEYS } from '@/lib/enroll-validation'
 
 const initialState: SubmitApplicationState = {}
 const NAME_PATTERN = "[A-Za-zÀ-ÖØ-öø-ÿ' -]+"
@@ -51,9 +52,11 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
   // updates after mount. These mirror the DOM value on every change purely
   // for that completeness check, they don't drive the inputs themselves.
   const [studentFirstName, setStudentFirstName] = useState('')
+  const [studentMiddleName, setStudentMiddleName] = useState('')
   const [studentLastName, setStudentLastName] = useState('')
   const [studentDob, setStudentDob] = useState('')
   const [parentFirstName, setParentFirstName] = useState('')
+  const [parentMiddleName, setParentMiddleName] = useState('')
   const [parentLastName, setParentLastName] = useState('')
   const [parentDob, setParentDob] = useState('')
   const [parentContactNumber, setParentContactNumber] = useState('')
@@ -84,9 +87,11 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
     setParentGenderValue(state.values?.parent_gender ?? '')
     setSelectedClassroomId(state.values?.requested_classroom_id ?? '')
     setStudentFirstName(state.values?.student_first_name ?? '')
+    setStudentMiddleName(state.values?.student_middle_name ?? '')
     setStudentLastName(state.values?.student_last_name ?? '')
     setStudentDob(state.values?.student_dob ?? '')
     setParentFirstName(state.values?.parent_first_name ?? '')
+    setParentMiddleName(state.values?.parent_middle_name ?? '')
     setParentLastName(state.values?.parent_last_name ?? '')
     setParentDob(state.values?.parent_dob ?? '')
     setParentContactNumber(state.values?.parent_contact_number ?? '')
@@ -141,6 +146,54 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
     })
   }
 
+  // What the person has typed so far, for checking fields before Submit. The server
+  // still validates everything; this only lets a mistake show as soon as they move
+  // on from a field or a step.
+  const currentValues = {
+    student_first_name: studentFirstName,
+    student_middle_name: studentMiddleName,
+    student_last_name: studentLastName,
+    student_dob: studentDob,
+    student_gender: genderValue,
+    requested_classroom_id: selectedClassroomId,
+    parent_first_name: parentFirstName,
+    parent_middle_name: parentMiddleName,
+    parent_last_name: parentLastName,
+    parent_dob: parentDob,
+    parent_relationship: relationshipValue,
+    parent_contact_number: parentContactNumber,
+    parent_email: parentEmail,
+    password,
+    confirm_password: confirmPassword,
+  }
+
+  // Show (or clear) one field's error. `override` carries a value that state has not
+  // caught up with yet (a DOB or select reports its new value in its own onChange).
+  function checkField(key: string, override: Record<string, string> = {}) {
+    const message = validateEnrollField(key, { ...currentValues, ...override }, classrooms)
+    setLiveErrors((prev) => {
+      if (!message && !prev[key]) return prev
+      const next = { ...prev }
+      if (message) next[key] = message
+      else delete next[key]
+      return next
+    })
+  }
+
+  // Leaving a step checks all of its fields, so the tab shows a problem before Submit.
+  function goToStep(next: 1 | 2 | 3) {
+    const keys = step === 1 ? STUDENT_KEYS : step === 2 ? PROGRAM_KEYS : PARENT_KEYS
+    if (next !== step) {
+      const found = validateEnrollFields(keys, currentValues, classrooms)
+      setLiveErrors((prev) => {
+        const next = { ...prev }
+        for (const key of keys) delete next[key]
+        return { ...next, ...found }
+      })
+    }
+    setStep(next)
+  }
+
   const values = state.values ?? {}
   const studentStepHasError = Object.keys(liveErrors).some((k) => STUDENT_FIELD_KEYS.includes(k))
   const programStepHasError = Object.keys(liveErrors).some((k) => PROGRAM_FIELD_KEYS.includes(k))
@@ -153,18 +206,10 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
   // also re-check name pattern/minLength/phone-format validity, since
   // liveErrors (folded in via `!studentStepHasError`) already covers that
   // once a submission attempt has run.
-  const studentDone = !!studentFirstName && !!studentLastName && !!studentDob && !!genderValue && !studentStepHasError
-  const programDone = !!selectedClassroomId && !programStepHasError
-  const parentDone =
-    !!parentFirstName &&
-    !!parentLastName &&
-    !!parentDob &&
-    !!relationshipValue &&
-    !!parentContactNumber &&
-    !!parentEmail &&
-    !!password &&
-    password === confirmPassword &&
-    !parentStepHasError
+  const isStepValid = (keys: string[]) => Object.keys(validateEnrollFields(keys, currentValues, classrooms)).length === 0
+  const studentDone = isStepValid(STUDENT_KEYS) && !studentStepHasError
+  const programDone = isStepValid(PROGRAM_KEYS) && !programStepHasError
+  const parentDone = isStepValid(PARENT_KEYS) && !parentStepHasError
 
   return (
     <form action={formAction} className="space-y-6 rounded-xl border border-[#c6c5d2] dark:border-slate-700 bg-white dark:bg-gray-900 p-8 shadow-sm">
@@ -185,9 +230,9 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
       )}
 
       <div className="flex flex-col gap-2 sm:flex-row">
-        <StepTab step={1} activeStep={step} label="Student Information" hasError={studentStepHasError} isDone={studentDone} onClick={() => setStep(1)} />
-        <StepTab step={2} activeStep={step} label="Program" hasError={programStepHasError} isDone={programDone} onClick={() => setStep(2)} />
-        <StepTab step={3} activeStep={step} label="Parent / Guardian Information" hasError={parentStepHasError} isDone={parentDone} onClick={() => setStep(3)} />
+        <StepTab step={1} activeStep={step} label="Student Information" hasError={studentStepHasError} isDone={studentDone} onClick={() => goToStep(1)} />
+        <StepTab step={2} activeStep={step} label="Program" hasError={programStepHasError} isDone={programDone} onClick={() => goToStep(2)} />
+        <StepTab step={3} activeStep={step} label="Parent / Guardian Information" hasError={parentStepHasError} isDone={parentDone} onClick={() => goToStep(3)} />
       </div>
 
       <div className={step === 1 ? 'space-y-8' : 'hidden'}>
@@ -215,6 +260,7 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
               minLength={2}
               defaultValue={values.student_first_name}
               error={liveErrors.student_first_name}
+              onBlur={(v) => checkField('student_first_name', { student_first_name: v })}
               onChange={(v) => {
                 setStudentFirstName(v)
                 clearError('student_first_name')
@@ -229,7 +275,11 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
               minLength={2}
               defaultValue={values.student_middle_name}
               error={liveErrors.student_middle_name}
-              onChange={() => clearError('student_middle_name')}
+              onBlur={(v) => checkField('student_middle_name', { student_middle_name: v })}
+              onChange={(v) => {
+                setStudentMiddleName(v)
+                clearError('student_middle_name')
+              }}
             />
             <Field
               label="Last Name"
@@ -241,6 +291,7 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
               minLength={2}
               defaultValue={values.student_last_name}
               error={liveErrors.student_last_name}
+              onBlur={(v) => checkField('student_last_name', { student_last_name: v })}
               onChange={(v) => {
                 setStudentLastName(v)
                 clearError('student_last_name')
@@ -258,7 +309,10 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
               max={dobInputMax(MIN_STUDENT_AGE)}
               onChange={(v) => {
                 setStudentDob(v)
-                clearError('student_dob')
+                if (v) checkField('student_dob', { student_dob: v })
+                else clearError('student_dob')
+                // The parent must be 10+ years older, so a new student date can change that answer.
+                if (parentDob) checkField('parent_dob', { student_dob: v })
               }}
             />
             <PlainSelect
@@ -284,7 +338,7 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
         <div className="flex justify-end">
           <button
             type="button"
-            onClick={() => setStep(2)}
+            onClick={() => goToStep(2)}
             className="rounded-full bg-[#0b1b62] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#08154d]"
           >
             Next: Program →
@@ -322,14 +376,14 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <button
             type="button"
-            onClick={() => setStep(1)}
+            onClick={() => goToStep(1)}
             className="order-2 rounded-full border border-slate-200 dark:border-slate-700 px-6 py-2.5 text-sm font-semibold text-[#0b1b62] dark:text-indigo-300 hover:bg-black/5 dark:hover:bg-white/10 sm:order-1"
           >
             ← Back: Student Information
           </button>
           <button
             type="button"
-            onClick={() => setStep(3)}
+            onClick={() => goToStep(3)}
             className="order-1 rounded-full bg-[#0b1b62] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#08154d] sm:order-2"
           >
             Next: Parent / Guardian Information →
@@ -358,6 +412,7 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
               minLength={2}
               defaultValue={values.parent_first_name}
               error={liveErrors.parent_first_name}
+              onBlur={(v) => checkField('parent_first_name', { parent_first_name: v })}
               onChange={(v) => {
                 setParentFirstName(v)
                 clearError('parent_first_name')
@@ -372,7 +427,11 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
               minLength={2}
               defaultValue={values.parent_middle_name}
               error={liveErrors.parent_middle_name}
-              onChange={() => clearError('parent_middle_name')}
+              onBlur={(v) => checkField('parent_middle_name', { parent_middle_name: v })}
+              onChange={(v) => {
+                setParentMiddleName(v)
+                clearError('parent_middle_name')
+              }}
             />
             <Field
               label="Last Name"
@@ -384,6 +443,7 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
               minLength={2}
               defaultValue={values.parent_last_name}
               error={liveErrors.parent_last_name}
+              onBlur={(v) => checkField('parent_last_name', { parent_last_name: v })}
               onChange={(v) => {
                 setParentLastName(v)
                 clearError('parent_last_name')
@@ -401,7 +461,8 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
               max={dobInputMax(MIN_ADULT_AGE)}
               onChange={(v) => {
                 setParentDob(v)
-                clearError('parent_dob')
+                if (v) checkField('parent_dob', { parent_dob: v })
+                else clearError('parent_dob')
               }}
             />
             <PlainSelect
@@ -432,6 +493,7 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
               required={step === 3}
               defaultValue={values.parent_contact_number}
               error={liveErrors.parent_contact_number}
+              onBlur={(v) => checkField('parent_contact_number', { parent_contact_number: v })}
               onChange={(v) => {
                 setParentContactNumber(v)
                 clearError('parent_contact_number')
@@ -462,6 +524,7 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
             required={step === 3}
             defaultValue={values.parent_email}
             error={liveErrors.parent_email}
+            onBlur={(v) => checkField('parent_email', { parent_email: v })}
             onChange={(v) => {
               setParentEmail(v)
               clearError('parent_email')
@@ -474,10 +537,10 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
 
         <div>
           <h2 className="mb-1 border-b border-[#00a3e0] pb-2 text-xl font-semibold text-[#0b1b62] dark:text-indigo-300">
-            Create Your Password
+            Password
           </h2>
           <p className="mb-4 mt-2 text-sm text-[#454650] dark:text-slate-300">
-            You&apos;ll use this email and password to log in to the Parent Portal. You&apos;ll be signed in as soon as you submit.
+            Use this email and password to log in.
           </p>
           <PasswordFields
             password={password}
@@ -486,6 +549,8 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
               setPassword(v)
               clearError('password')
             }}
+            onPasswordBlur={() => checkField('password')}
+            onConfirmBlur={() => checkField('confirm_password')}
             onConfirmChange={(v) => {
               setConfirmPassword(v)
               clearError('confirm_password')
@@ -546,7 +611,7 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <button
             type="button"
-            onClick={() => setStep(2)}
+            onClick={() => goToStep(2)}
             className="order-2 rounded-full border border-slate-200 dark:border-slate-700 px-6 py-2.5 text-sm font-semibold text-[#0b1b62] dark:text-indigo-300 hover:bg-black/5 dark:hover:bg-white/10 sm:order-1"
           >
             ← Back: Program

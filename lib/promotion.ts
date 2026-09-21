@@ -15,8 +15,8 @@ export type LadderClassroom = {
   id: string
   name: string
   slug: string
-  min_age_years: number | null
-  max_age_years: number | null
+  min_age_months: number | null
+  max_age_months: number | null
 }
 
 // What the admin picks per student: keep them where they are, graduate them, or

@@ -35,16 +35,6 @@ export async function assignLeadTeacher(classroomId: string, teacherId: string):
     return { error: 'Classroom not found.' }
   }
 
-  const { data: existingLead } = await supabase
-    .from('classrooms')
-    .select('id, name')
-    .eq('lead_teacher_id', teacherId)
-    .neq('id', classroomId)
-    .maybeSingle()
-  if (existingLead) {
-    return { error: `${teacher.first_name} ${teacher.last_name} is already the lead teacher of ${existingLead.name}.` }
-  }
-
   const { data: alreadyAssistant } = await supabase
     .from('classroom_assistants')
     .select('classroom_id')

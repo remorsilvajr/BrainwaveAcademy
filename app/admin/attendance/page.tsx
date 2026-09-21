@@ -1,19 +1,49 @@
 import { createClient } from '@/lib/supabase/server'
 import { attendanceDateFromParam } from '@/lib/date-params'
 import { TeacherAttendanceRoster } from '@/components/admin/teacher-attendance-roster'
+import { AttendanceRecords } from '@/components/attendance/attendance-records'
+import { AttendanceTabLinks } from '@/components/attendance/attendance-tab-links'
+import { loadStudentAttendanceRecords, loadTeacherAttendanceRecords } from '@/lib/attendance-records'
+
+const TABS = [
+  { key: 'checkin', label: 'Teacher Check-in' },
+  { key: 'teachers', label: 'Teacher Records' },
+  { key: 'students', label: 'Student Records' },
+]
 
 // The admin records attendance for the TEACHERS. Student attendance is recorded by the
-// teachers themselves (/teacher/attendance) and is only viewable by the admin, on each
-// student's dashboard and in the Export Report.
+// teachers themselves (/teacher/attendance); the admin reads it on the Student Records
+// tab, on each student's dashboard and in the Export Report.
 export default async function AdminAttendancePage({
   searchParams,
 }: {
-  searchParams: Promise<{ date?: string }>
+  searchParams: Promise<{ date?: string; tab?: string }>
 }) {
-  const { date: dateParam } = await searchParams
+  const { date: dateParam, tab: tabParam } = await searchParams
   const selectedDate = attendanceDateFromParam(dateParam)
 
   const supabase = await createClient()
+
+  if (tabParam === 'teachers' || tabParam === 'students') {
+    const { rows, capped } = tabParam === 'teachers' ? await loadTeacherAttendanceRecords(supabase) : await loadStudentAttendanceRecords(supabase)
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Teacher Attendance</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            {tabParam === 'teachers' ? 'Every teacher attendance record on file.' : 'Every student attendance record on file. Teachers record these.'}
+          </p>
+        </div>
+        <AttendanceTabLinks basePath="/admin/attendance" active={tabParam} tabs={TABS} />
+        <AttendanceRecords
+          rows={rows}
+          subject={tabParam === 'teachers' ? 'teacher' : 'student'}
+          groupLabel={tabParam === 'teachers' ? 'Classroom' : 'Program'}
+          capped={capped}
+        />
+      </div>
+    )
+  }
 
   const [{ data: teachers }, { data: records }, { data: classrooms }, { data: assistants }] = await Promise.all([
     supabase
@@ -53,6 +83,8 @@ export default async function AdminAttendancePage({
           attendance is recorded by the teachers.
         </p>
       </div>
+
+      <AttendanceTabLinks basePath="/admin/attendance" active="checkin" tabs={TABS} />
 
       <TeacherAttendanceRoster
         teachers={roster.map((t) => ({ id: t.id, first_name: t.first_name, last_name: t.last_name, subtitle: (subtitleByTeacher.get(t.id) ?? []).join(' • ') }))}
