@@ -22,3 +22,8 @@ export function classroomAgeRangeLabel(classroom: { min_age_years: number | null
   if (classroom.min_age_years == null && classroom.max_age_years == null) return 'All ages'
   return `Ages ${classroom.min_age_years}-${classroom.max_age_years}`
 }
+
+// Programs' tuition/activity fees and due dates are locked for now: the Fee
+// Schedule tab is read-only and updateFeeSchedule rejects any change. Flip to
+// true to bring editing back (the form is still in classroom-modal.tsx).
+export const FEE_SCHEDULE_EDITABLE = false

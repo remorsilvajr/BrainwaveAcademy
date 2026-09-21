@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { X, User as UserIcon } from 'lucide-react'
-import { calculateAge } from '@/lib/format'
-import { classroomAgeRangeLabel } from '@/lib/classrooms'
+import { calculateAge, formatCurrency, formatDateLong } from '@/lib/format'
+import { classroomAgeRangeLabel, FEE_SCHEDULE_EDITABLE } from '@/lib/classrooms'
 import { Modal } from '@/components/ui/modal'
 import { SearchableSelect, type SearchableOption } from '@/components/ui/searchable-select'
 import {
@@ -290,7 +290,34 @@ export function ClassroomModal({
           </div>
         )}
 
-        {tab === 'fees' && (
+        {tab === 'fees' && !FEE_SCHEDULE_EDITABLE && (
+          <div className="space-y-4">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Program fees and due dates are locked and can&apos;t be changed right now.
+            </p>
+            <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {[
+                { label: 'Tuition Fee', value: formatCurrency(classroom.tuition_fee) },
+                {
+                  label: 'Tuition Due Date',
+                  value: classroom.tuition_due_date ? formatDateLong(classroom.tuition_due_date) : 'Not set',
+                },
+                { label: 'Activity Fee', value: formatCurrency(classroom.activity_fee) },
+                {
+                  label: 'Activity Fee Due Date',
+                  value: classroom.activity_due_date ? formatDateLong(classroom.activity_due_date) : 'Not set',
+                },
+              ].map((row) => (
+                <div key={row.label} className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 px-3 py-2">
+                  <dt className="text-xs font-semibold text-[#0b1b62] dark:text-indigo-300">{row.label}</dt>
+                  <dd className="mt-0.5 text-sm text-gray-900 dark:text-gray-100">{row.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        )}
+
+        {tab === 'fees' && FEE_SCHEDULE_EDITABLE && (
           <div className="space-y-4">
             <p className="text-xs text-gray-500 dark:text-gray-400">
               Changes here only apply to students assigned to this classroom from now on. Fees already generated for

@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { logActivity } from '@/lib/activity-log'
+import { FEE_SCHEDULE_EDITABLE } from '@/lib/classrooms'
 
 // All four teacher-assignment actions below rely on admins_manage_classrooms
 // / admins_manage_classroom_assistants (both `for all`, admin-only) for the
@@ -174,6 +175,10 @@ export async function updateFeeSchedule(
     activity_due_date: string | null
   }
 ): Promise<{ error: string } | undefined> {
+  if (!FEE_SCHEDULE_EDITABLE) {
+    return { error: 'Program fees and due dates are locked and cannot be changed right now.' }
+  }
+
   const supabase = await createClient()
 
   if (updates.tuition_fee < 0 || updates.activity_fee < 0) {
