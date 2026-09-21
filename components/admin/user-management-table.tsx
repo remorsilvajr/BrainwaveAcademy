@@ -14,7 +14,6 @@ import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
 import { SortSelect } from '@/components/ui/sort-select'
 import { useSort, compareStrings, compareDates, type SortOption } from '@/lib/use-sort'
-import { canModerateAccount, type AccountForModeration } from '@/lib/permissions'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 type LinkedStudent = {
@@ -46,7 +45,9 @@ type Profile = {
   created_at: string
   avatar_url: string | null
   isOnline: boolean
-  is_super_admin: boolean
+  // Computed server-side (lib/permissions.ts); the raw is_super_admin flag is
+  // deliberately never sent to the client.
+  canModerate: boolean
   parent_student?: { relationship: string; students: LinkedStudent | null }[]
   applicants?: Applicant[]
 }
@@ -57,13 +58,7 @@ const roleBadgeClasses: Record<string, string> = {
   admin: 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300',
 }
 
-export function UserManagementTable({
-  users,
-  currentUser,
-}: {
-  users: Profile[]
-  currentUser: AccountForModeration & { id: string }
-}) {
+export function UserManagementTable({ users }: { users: Profile[] }) {
   const router = useRouter()
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState('all')
@@ -271,8 +266,8 @@ export function UserManagementTable({
                 pageItems.map((u) => (
                   <tr
                     key={u.id}
-                    onDoubleClick={() => canModerateAccount(currentUser, u) && setEditingUserId(u.id)}
-                    className={canModerateAccount(currentUser, u) ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/60' : undefined}
+                    onDoubleClick={() => u.canModerate && setEditingUserId(u.id)}
+                    className={u.canModerate ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/60' : undefined}
                   >
                     <td className="p-4">
                       <div className="flex items-center gap-1.5">
@@ -320,7 +315,7 @@ export function UserManagementTable({
                     <td className="p-4 text-gray-500 dark:text-gray-400">{formatDateShort(u.created_at)}</td>
                     <td className="p-4">
                       <div className="flex items-center gap-2">
-                        {canModerateAccount(currentUser, u) && (
+                        {u.canModerate && (
                           <button
                             onClick={() => setEditingUserId(u.id)}
                             className="rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -351,7 +346,7 @@ export function UserManagementTable({
                           >
                             Unblock
                           </button>
-                        ) : !canModerateAccount(currentUser, u) ? (
+                        ) : !u.canModerate ? (
                           <span
                             title="You don't have permission to block or delete this account."
                             className="cursor-default rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 px-3 py-1.5 text-xs font-semibold text-gray-400 dark:text-gray-500"
@@ -367,7 +362,7 @@ export function UserManagementTable({
                             Block
                           </button>
                         )}
-                        {canModerateAccount(currentUser, u) && (
+                        {u.canModerate && (
                           <button
                             onClick={() => setConfirmingDeleteId(u.id)}
                             disabled={isPending}

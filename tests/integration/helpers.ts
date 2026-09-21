@@ -74,7 +74,7 @@ const bestEffort = async (run: PromiseLike<unknown>) => {
 /** Removes the given test users and students and every row that hangs off them. */
 export async function cleanupTestData(admin: SupabaseClient, userIds: string[], studentIds: string[]) {
   if (studentIds.length > 0) {
-    for (const table of ['student_health', 'emergency_contacts', 'do_not_release', 'album_photos', 'attendance', 'milestones', 'authorized_pickups', 'payment_adjustments', 'unenrollment_requests', 'student_promotions', 'parent_student']) {
+    for (const table of ['student_health', 'emergency_contacts', 'do_not_release', 'attendance', 'milestones', 'authorized_pickups', 'payment_adjustments', 'unenrollment_requests', 'student_promotions', 'parent_student']) {
       await bestEffort(admin.from(table).delete().in('student_id', studentIds))
     }
     await bestEffort(admin.from('payments').delete().in('student_id', studentIds))
@@ -84,12 +84,15 @@ export async function cleanupTestData(admin: SupabaseClient, userIds: string[], 
     await bestEffort(admin.from('parent_student').delete().in('parent_id', userIds))
     for (const [table, column] of [
       ['notifications', 'user_id'],
-      ['notification_log', 'user_id'],
       ['wallet_transactions', 'parent_id'],
       ['wallet_requests', 'parent_id'],
       ['wallets', 'parent_id'],
       ['feedback', 'submitted_by'],
       ['event_rsvps', 'parent_id'],
+      // Photos hang off the uploading teacher (they have no student), and a test
+      // teacher may have been made an assistant of a real classroom.
+      ['album_photos', 'uploaded_by'],
+      ['classroom_assistants', 'teacher_id'],
     ] as const) {
       await bestEffort(admin.from(table).delete().in(column, userIds))
     }

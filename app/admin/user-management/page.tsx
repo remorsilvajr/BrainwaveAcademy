@@ -1,6 +1,7 @@
 import { Users, CheckCircle2, Clock, Ban } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { nowMs } from '@/lib/format'
+import { canModerateAccount } from '@/lib/permissions'
 import { UserManagementTable } from '@/components/admin/user-management-table'
 
 export default async function UserManagementPage() {
@@ -35,10 +36,16 @@ export default async function UserManagementPage() {
     applicantsByParentId.set(application.created_parent_id, [...existing, application])
   }
 
-  // Needed so the table knows whether the acting admin is a super admin
-  // (see lib/permissions.ts's canBlockAccount) — read from the same
-  // already-fetched `data` rather than a second round trip.
+  // The acting admin's tier, read from the same already-fetched `data`
+  // rather than a second round trip. It only feeds canModerateAccount below:
+  // neither it nor any row's is_super_admin is passed to the client, so the
+  // tier isn't in this page's RSC payload (a regular admin must never be able
+  // to discover it).
   const currentProfile = (data ?? []).find((row) => row.id === user?.id) ?? null
+  const actor = {
+    role: currentProfile?.role ?? 'admin',
+    is_super_admin: currentProfile?.is_super_admin ?? false,
+  }
 
   // "Online" is a heuristic, not true presence — this app has no realtime
   // channel tracking actual open connections. middleware.ts pings
@@ -47,8 +54,9 @@ export default async function UserManagementPage() {
   // still has the portal open" without needing that heavier realtime setup.
   const ONLINE_WINDOW_MS = 5 * 60 * 1000
   const now = nowMs()
-  const users = (data ?? []).map((row) => ({
+  const users = (data ?? []).map(({ is_super_admin, ...row }) => ({
     ...row,
+    canModerate: canModerateAccount(actor, { role: row.role, is_super_admin: !!is_super_admin }),
     parent_student: (row.parent_student ?? []).map((ps: {
       relationship: string
       students: { id: string; first_name: string; middle_name: string | null; last_name: string; classroom_id: string | null } | null
@@ -118,14 +126,7 @@ export default async function UserManagementPage() {
         </div>
       </div>
 
-      <UserManagementTable
-        users={users}
-        currentUser={{
-          id: user?.id ?? '',
-          role: currentProfile?.role ?? 'admin',
-          is_super_admin: currentProfile?.is_super_admin ?? false,
-        }}
-      />
+      <UserManagementTable users={users} />
     </div>
   )
 }
