@@ -97,7 +97,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="flex">
       <Sidebar sections={sections} schoolName="Brainwave Academy" portalLabel="Admin Portal" />
-      <div className="min-w-0 flex-1 pt-14 lg:ml-64 lg:pt-0">
+      <div className="min-w-0 flex-1 pt-14 lg:ml-72 lg:pt-0">
         <AdminTopBar
           sections={sections}
           admin={{

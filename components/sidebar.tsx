@@ -202,17 +202,21 @@ function NavLinks({
                       onLinkClick(hrefWithStudent(item.href!), e)
                       onNavigate?.()
                     }}
-                    className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium ${
+                    className={`flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium ${
                       active
                         ? 'bg-[#e6007e] text-white'
                         : 'text-[#c7cff0] hover:bg-white/10 hover:text-white'
                     }`}
                   >
                     {Icon && <Icon className="h-4 w-4 shrink-0" />}
-                    {item.label}
+                    {/* One line always (a badge used to push a long label onto a second line,
+                        making only that row taller); an ellipsis is the last resort. */}
+                    <span className="min-w-0 truncate whitespace-nowrap" title={item.label}>
+                      {item.label}
+                    </span>
                     {badge > 0 && (
                       <span
-                        className={`ml-auto flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-bold leading-none ${
+                        className={`ml-auto flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-bold leading-none ${
                           active ? 'bg-white text-[#e6007e]' : 'bg-[#e6007e] text-white'
                         }`}
                       >
@@ -243,7 +247,7 @@ export function Sidebar({
   // replaced by this fixed top strip (hamburger + name) plus an off-canvas
   // drawer — the same NavLinks content, just reachable without permanently
   // eating ~70% of a phone's width. See app/*/layout.tsx for the matching
-  // `pt-14 lg:pt-0 lg:ml-64` on the content side, and each role's top bar
+  // `pt-14 lg:pt-0 lg:ml-72` on the content side, and each role's top bar
   // for the matching `top-14 lg:top-0` so nothing sticks underneath this.
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const router = useRouter()
@@ -353,7 +357,7 @@ export function Sidebar({
             onClick={() => setIsMobileOpen(false)}
             aria-hidden="true"
           />
-          <aside className="relative flex h-full w-64 max-w-[80vw] flex-col overflow-y-auto bg-[#0b1b62] p-4 shadow-xl">
+          <aside className="relative flex h-full w-72 max-w-[85vw] flex-col overflow-y-auto bg-[#0b1b62] p-4 shadow-xl">
             <div className="mb-6 flex items-center justify-between px-2">
               <Link
                 href="/"
@@ -394,7 +398,7 @@ export function Sidebar({
         </div>
       )}
 
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 shrink-0 flex-col overflow-y-auto bg-[#0b1b62] p-4 lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 shrink-0 flex-col overflow-y-auto bg-[#0b1b62] p-4 lg:flex">
         <div className="mb-6 px-2">
           <Link href="/" onClick={(e) => handleLinkClick('/', e)} className="flex flex-col items-center gap-1.5 hover:opacity-80" title="Back to homepage">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -446,10 +450,10 @@ function NavLinksFallback({ sections }: { sections: NavSection[] }) {
                 <li key={item.href}>
                   <Link
                     href={item.href!}
-                    className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-[#c7cff0] hover:bg-white/10 hover:text-white"
+                    className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-[#c7cff0] hover:bg-white/10 hover:text-white"
                   >
                     {Icon && <Icon className="h-4 w-4 shrink-0" />}
-                    {item.label}
+                    <span className="min-w-0 truncate whitespace-nowrap">{item.label}</span>
                   </Link>
                 </li>
               )
