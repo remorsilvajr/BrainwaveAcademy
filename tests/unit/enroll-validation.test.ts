@@ -12,6 +12,17 @@ describe('enroll form live validation (mirrors the server checks)', () => {
     expect(validateEnrollField('student_middle_name', {})).toBeUndefined()
     expect(validateEnrollField('parent_gender', {})).toBeUndefined()
   })
+  it('can leave "is required" out so blank fields are only flagged on submit', () => {
+    const live = { includeRequired: false }
+    expect(validateEnrollField('student_first_name', {}, [], live)).toBeUndefined()
+    expect(validateEnrollField('requested_classroom_id', {}, [], live)).toBeUndefined()
+    expect(validateEnrollField('password', { password: '' }, [], live)).toBeUndefined()
+    expect(validateEnrollField('confirm_password', { password: 'Abcdefg1', confirm_password: '' }, [], live)).toBeUndefined()
+    expect(validateEnrollFields(STUDENT_KEYS, {}, [], live)).toEqual({})
+    // a wrong value is still flagged live
+    expect(validateEnrollField('student_first_name', { student_first_name: 'A1' }, [], live)).toMatch(/Names must/)
+    expect(validateEnrollField('password', { password: 'abc' }, [], live)).toMatch(/must be at least 8/)
+  })
   it('rejects a bad name, email and phone', () => {
     expect(validateEnrollField('student_first_name', { student_first_name: 'A1' })).toMatch(/Names must/)
     expect(validateEnrollField('student_middle_name', { student_middle_name: '---' })).toMatch(/Names must/)

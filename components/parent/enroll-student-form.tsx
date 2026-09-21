@@ -95,7 +95,7 @@ export function EnrollStudentForm({
   }
 
   function checkField(key: string, override: Record<string, string> = {}) {
-    const message = validateEnrollField(key, { ...currentValues, ...override }, classrooms)
+    const message = validateEnrollField(key, { ...currentValues, ...override }, classrooms, { includeRequired: false })
     setLiveErrors((prev) => {
       if (!message && !prev[key]) return prev
       const next = { ...prev }
@@ -108,7 +108,7 @@ export function EnrollStudentForm({
   function goToStep(target: 1 | 2) {
     if (target !== step) {
       const keys = step === 1 ? STUDENT_KEYS : PROGRAM_KEYS
-      const found = validateEnrollFields(keys, currentValues, classrooms)
+      const found = validateEnrollFields(keys, currentValues, classrooms, { includeRequired: false })
       setLiveErrors((prev) => {
         const rest = { ...prev }
         for (const key of keys) delete rest[key]
