@@ -11,10 +11,9 @@ import { StepTab } from '@/components/enroll/step-tab'
 import { ProgramSelector, type SelectableClassroom } from '@/components/enroll/program-selector'
 import { PasswordFields } from '@/components/ui/password-fields'
 import { validateEnrollField, validateEnrollFields, STUDENT_KEYS, PROGRAM_KEYS, PARENT_KEYS } from '@/lib/enroll-validation'
+import { NAME_HTML_PATTERN, NAME_HTML_TITLE } from '@/lib/name'
 
 const initialState: SubmitApplicationState = {}
-const NAME_PATTERN = "[A-Za-zÀ-ÖØ-öø-ÿ' -]+"
-const NAME_TITLE = 'Only letters, spaces, hyphens, and apostrophes are allowed.'
 
 const STUDENT_FIELD_KEYS = ['student_first_name', 'student_middle_name', 'student_last_name', 'student_dob', 'student_gender']
 const PROGRAM_FIELD_KEYS = ['requested_classroom_id', 'requested_program_options']
@@ -255,8 +254,8 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
               // it can't show a validation bubble on an element that isn't
               // rendered.
               required={step === 1}
-              pattern={NAME_PATTERN}
-              title={NAME_TITLE}
+              pattern={NAME_HTML_PATTERN}
+              title={NAME_HTML_TITLE}
               minLength={2}
               defaultValue={values.student_first_name}
               error={liveErrors.student_first_name}
@@ -270,8 +269,8 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
               label="Middle Name"
               name="student_middle_name"
               placeholder="e.g. Grace"
-              pattern={NAME_PATTERN}
-              title={NAME_TITLE}
+              pattern={NAME_HTML_PATTERN}
+              title={NAME_HTML_TITLE}
               minLength={2}
               defaultValue={values.student_middle_name}
               error={liveErrors.student_middle_name}
@@ -286,8 +285,8 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
               name="student_last_name"
               placeholder="e.g. Smith"
               required={step === 1}
-              pattern={NAME_PATTERN}
-              title={NAME_TITLE}
+              pattern={NAME_HTML_PATTERN}
+              title={NAME_HTML_TITLE}
               minLength={2}
               defaultValue={values.student_last_name}
               error={liveErrors.student_last_name}
@@ -407,8 +406,8 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
               // Enter-key submit from a different step's input could
               // silently block on this hidden, still-blank field.
               required={step === 3}
-              pattern={NAME_PATTERN}
-              title={NAME_TITLE}
+              pattern={NAME_HTML_PATTERN}
+              title={NAME_HTML_TITLE}
               minLength={2}
               defaultValue={values.parent_first_name}
               error={liveErrors.parent_first_name}
@@ -422,8 +421,8 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
               label="Middle Name"
               name="parent_middle_name"
               placeholder="Optional"
-              pattern={NAME_PATTERN}
-              title={NAME_TITLE}
+              pattern={NAME_HTML_PATTERN}
+              title={NAME_HTML_TITLE}
               minLength={2}
               defaultValue={values.parent_middle_name}
               error={liveErrors.parent_middle_name}
@@ -438,8 +437,8 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
               name="parent_last_name"
               placeholder="e.g. Smith"
               required={step === 3}
-              pattern={NAME_PATTERN}
-              title={NAME_TITLE}
+              pattern={NAME_HTML_PATTERN}
+              title={NAME_HTML_TITLE}
               minLength={2}
               defaultValue={values.parent_last_name}
               error={liveErrors.parent_last_name}
