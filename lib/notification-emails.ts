@@ -177,3 +177,40 @@ export function albumDigestEmail(input: { parentFirstName: string; date: string;
     ),
   }
 }
+
+const paymentMethodLabels: Record<string, string> = { wallet: 'Wallet', cash: 'Cash', check: 'Check' }
+
+// Sent when a fee is paid (from the parent's wallet, or recorded by the school as cash). It
+// is the receipt itself in text, plus a link to the printable one in the portal. Everything
+// that is not a fixed label (the fee description, names) goes through escapeHtml.
+export function paymentReceiptEmail(input: {
+  parentFirstName: string
+  studentName: string
+  receiptRef: string | null
+  description: string
+  amount: number
+  method: string | null
+  paidAt: string | null
+  paymentId: string
+  siteUrl: string
+}): Mail {
+  const row = (label: string, value: string) =>
+    `<tr><td style="padding:4px 16px 4px 0;color:#666">${escapeHtml(label)}</td><td style="padding:4px 0"><strong>${escapeHtml(value)}</strong></td></tr>`
+  return {
+    subject: `Payment receipt${input.receiptRef ? ` ${input.receiptRef}` : ''} for ${input.studentName}`,
+    html: shell(
+      'Payment received',
+      `<p>Hi ${escapeHtml(input.parentFirstName)}, thank you. We received this payment for <strong>${escapeHtml(input.studentName)}</strong>.</p>
+       <table style="border-collapse:collapse;margin:8px 0 16px">
+         ${input.receiptRef ? row('Receipt no.', input.receiptRef) : ''}
+         ${row('For', input.description)}
+         ${row('Amount', formatCurrency(input.amount))}
+         ${row('Paid by', paymentMethodLabels[input.method ?? ''] ?? (input.method ?? '-'))}
+         ${input.paidAt ? row('Date', formatDateLong(input.paidAt)) : ''}
+       </table>
+       <p>You can view and print the receipt any time from Payments in your portal.</p>`,
+      input.siteUrl,
+      { label: 'View receipt', path: `/parent/payments/${input.paymentId}/receipt` }
+    ),
+  }
+}
