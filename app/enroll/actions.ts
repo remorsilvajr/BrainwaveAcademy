@@ -14,6 +14,7 @@ import { genderFromParentRelationship } from '@/lib/gender'
 import { isAgeEligibleForClassroom } from '@/lib/classrooms'
 import { logActivity } from '@/lib/activity-log'
 import { isPasswordBreached, validateNewPassword } from '@/lib/password'
+import { formErrorBanner } from '@/lib/form-errors'
 import { createParentWithApplication } from '@/lib/parent-signup'
 import { setRememberMeCookie, setSessionMarkerCookies } from '@/lib/auth-cookies'
 
@@ -173,7 +174,7 @@ export async function submitApplication(
 
   if (Object.keys(fieldErrors).length > 0) {
     return {
-      error: 'Please fix the highlighted fields below.',
+      error: formErrorBanner(fieldErrors),
       fieldErrors,
       values,
     }
@@ -219,7 +220,12 @@ export async function submitApplication(
   if (!created.ok) {
     return {
       error: created.error,
-      fieldErrors: created.field === 'email' ? { parent_email: created.error } : undefined,
+      fieldErrors:
+        created.field === 'email'
+          ? { parent_email: created.error }
+          : created.field === 'password'
+            ? { password: created.error }
+            : undefined,
       values,
     }
   }

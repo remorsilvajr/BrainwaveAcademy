@@ -58,10 +58,13 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
   const [parentDob, setParentDob] = useState('')
   const [parentContactNumber, setParentContactNumber] = useState('')
   const [parentEmail, setParentEmail] = useState('')
-  // Held in state only so the rules can show live and so a failed submit can clear
-  // them; the server never sends a password back (see submitApplication).
+  // Held in state so the rules can show live and so they survive a failed submit: a
+  // mistake elsewhere on the form must not make anyone retype their password. The
+  // server never sends a password back (see submitApplication); this is only what the
+  // person typed in this browser. `responses` remounts the inputs after each response.
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [responses, setResponses] = useState(0)
 
   // Sync local state from the action result as it changes — the "adjusting
   // state when a prop changes" pattern (done inline during render, not in a
@@ -88,9 +91,7 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
     setParentDob(state.values?.parent_dob ?? '')
     setParentContactNumber(state.values?.parent_contact_number ?? '')
     setParentEmail(state.values?.parent_email ?? '')
-    // Never repopulated after a failed submit: the person types it again.
-    setPassword('')
-    setConfirmPassword('')
+    setResponses((n) => n + 1)
 
     // After a failed submission, jump to whichever step actually has the
     // error(s) rather than leaving the visitor stuck looking at Parent /
@@ -490,6 +491,7 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
               clearError('confirm_password')
             }}
             required={step === 3}
+            resetKey={responses}
             passwordError={liveErrors.password}
             confirmError={liveErrors.confirm_password}
           />

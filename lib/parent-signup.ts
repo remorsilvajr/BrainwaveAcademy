@@ -70,7 +70,13 @@ export async function createParentWithApplication(
     email_confirm: true,
   })
   if (createError || !created.user) {
-    // The details of an Auth error can echo a password rule; keep it generic here.
+    // Supabase enforces its own password rules too (set in its dashboard). Its message
+    // says which rule ("Password should be at least ... characters") and never contains
+    // the password, so show it: hiding it left someone with matching, valid-looking
+    // passwords and no idea why the account wasn't created.
+    if (createError?.code === 'weak_password') {
+      return { ok: false, field: 'password', error: createError.message }
+    }
     return { ok: false, error: 'Could not create your account. Please try again.' }
   }
   const userId = created.user.id
