@@ -5,6 +5,7 @@ import { ChevronDown, User as UserIcon } from 'lucide-react'
 import type { NavSection } from '@/components/sidebar'
 import { ProfileMenu } from '@/components/ui/profile-menu'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { NotificationBell } from '@/components/notifications/notification-bell'
 
 type Admin = { first_name: string; last_name: string; avatar_url: string | null }
 
@@ -30,6 +31,8 @@ export function AdminTopBar({ sections, admin }: { sections: NavSection[]; admin
         <h1 className="text-lg font-bold text-[#0b1b62] dark:text-indigo-300 sm:text-xl">{title}</h1>
 
         <div className="flex items-center gap-2">
+          <NotificationBell />
+
           <ThemeToggle className="text-[#0b1b62] hover:bg-black/5 dark:text-slate-200 dark:hover:bg-white/10" />
 
           <ProfileMenu

@@ -83,8 +83,8 @@ export function FeeBreakdown({
   walletBalance: number
   payments: Payment[]
 }) {
-  // Waived fees (cancelled at withdrawal) are neither owed nor paid, so they are in neither list.
-  const outstanding = payments.filter((p) => p.status !== 'paid' && p.status !== 'waived')
+  // Waived and voided fees (cancelled at withdrawal, or corrected by admin) are neither owed nor paid, so they are in neither list.
+  const outstanding = payments.filter((p) => p.status !== 'paid' && p.status !== 'waived' && p.status !== 'voided')
   const history = payments.filter((p) => p.status === 'paid')
   const totalDue = outstanding.reduce((sum, p) => sum + p.amount, 0)
 

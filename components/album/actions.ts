@@ -6,6 +6,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { logActivity } from '@/lib/activity-log'
 import { getTeacherAssignedClassrooms } from '@/lib/teacher-classrooms'
 import { ALBUM_BUCKET, ALBUM_MAX_PHOTOS_PER_UPLOAD } from '@/lib/album'
+import { notifyClassroomParents } from '@/lib/notify'
+import { todayIso } from '@/lib/format'
 
 // Shared by all three portals (like components/feedback/actions.ts), so it isn't
 // colocated with one route. Both actions return `{ error }` instead of throwing:
@@ -71,6 +73,19 @@ export async function recordAlbumPhotos(
     actorId: user.id,
     action: `Added ${paths.length} photo${paths.length === 1 ? '' : 's'} to the album`,
     targetTable: 'album_photos',
+  })
+
+  // One notification per parent per class per day, however many uploads that day
+  // (the dedupe key), pointing at today's folder. The daily job also emails a
+  // digest to parents who haven't switched email off.
+  const { data: classroom } = await supabase.from('classrooms').select('name').eq('id', classroomId).maybeSingle()
+  const today = todayIso()
+  await notifyClassroomParents(classroomId, {
+    kind: 'photos',
+    title: 'New photos in the album',
+    body: `${classroom?.name ?? 'Your child\'s class'} shared new photos today.`,
+    href: `/parent/album/${today}`,
+    dedupeKey: `album:${today}:${classroomId}`,
   })
 
   revalidateAlbum()

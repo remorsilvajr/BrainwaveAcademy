@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { logActivity } from '@/lib/activity-log'
 import { feedbackCategoryOrder } from '@/lib/feedback'
+import { notifyUsers } from '@/lib/notify'
 
 export async function resolveFeedback(id: string): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
@@ -72,7 +73,7 @@ export async function respondToFeedback(
     data: { user },
   } = await supabase.auth.getUser()
 
-  const { error } = await supabase
+  const { data: replied, error } = await supabase
     .from('feedback')
     .update({
       category,
@@ -82,8 +83,23 @@ export async function respondToFeedback(
       resolved: true,
     })
     .eq('id', id)
+    .select('submitted_by, subject')
+    .maybeSingle()
   if (error) {
     return { error: error.message }
+  }
+
+  // Before this, a reply could only be found by going back and opening My
+  // Feedback: nothing told the submitter it existed.
+  if (replied?.submitted_by) {
+    const { data: submitter } = await supabase.from('profiles').select('role').eq('id', replied.submitted_by).maybeSingle()
+    await notifyUsers([replied.submitted_by], {
+      kind: 'message',
+      title: 'Your feedback has a reply',
+      body: replied.subject,
+      href:
+        submitter?.role === 'parent' ? '/parent/feedback' : submitter?.role === 'teacher' ? '/teacher/feedback' : '/admin/feedback',
+    })
   }
 
   await logActivity(supabase, {

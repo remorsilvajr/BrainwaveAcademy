@@ -10,6 +10,7 @@ import { getSiteUrl } from '@/lib/site-url'
 import { genderFromParentRelationship } from '@/lib/gender'
 import { requireAdmin } from '@/lib/require-admin'
 import { normalizeEmail } from '@/lib/email-validation'
+import { enrollmentApprovedExistingParentEmail, enrollmentRejectedEmail } from '@/lib/notification-emails'
 
 // Creates ONLY the parent account. The student record is intentionally NOT
 // created here — it's created later, in app/admin/applications/actions.ts,
@@ -114,6 +115,21 @@ export async function approveApplication(applicationId: string): Promise<{ error
     return { error: updateError.message }
   }
 
+  // A parent who already had an account (a second child) gets no welcome email
+  // (that one carries a new password), so tell them the request was approved.
+  if (!tempPassword) {
+    try {
+      const mail = enrollmentApprovedExistingParentEmail({
+        parentFirstName: application.parent_first_name,
+        studentName: `${application.student_first_name} ${application.student_last_name}`,
+        siteUrl: getSiteUrl(),
+      })
+      await sendEmail({ to: parentEmail, subject: mail.subject, html: mail.html })
+    } catch (err) {
+      console.error('sendEmail failed for the approved (existing parent) email:', err)
+    }
+  }
+
   if (tempPassword) {
     const siteUrl = getSiteUrl()
     // Best-effort, like logActivity elsewhere — the account/student/link
@@ -161,7 +177,7 @@ export async function dismissApplication(applicationId: string, reason: string):
 
   const supabase = await createClient()
 
-  const { error } = await supabase
+  const { data: rejected, error } = await supabase
     .from('applications')
     .update({
       status: 'rejected',
@@ -169,9 +185,27 @@ export async function dismissApplication(applicationId: string, reason: string):
       review_notes: trimmedReason,
     })
     .eq('id', applicationId)
+    .select('parent_email, parent_first_name, student_first_name, student_last_name')
+    .maybeSingle()
 
   if (error) {
     return { error: error.message }
+  }
+
+  // The parent has no account yet at this stage, so email is the only way they
+  // hear back (before this, the reason only showed in a portal they can't open).
+  if (rejected?.parent_email) {
+    try {
+      const mail = enrollmentRejectedEmail({
+        parentFirstName: rejected.parent_first_name,
+        studentName: `${rejected.student_first_name} ${rejected.student_last_name}`,
+        reason: trimmedReason,
+        siteUrl: getSiteUrl(),
+      })
+      await sendEmail({ to: rejected.parent_email, subject: mail.subject, html: mail.html })
+    } catch (err) {
+      console.error('sendEmail failed for the enrollment rejection email:', err)
+    }
   }
 
   const {

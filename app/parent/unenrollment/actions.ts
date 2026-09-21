@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { notifyAdmins } from '@/lib/notify'
 import { createClient } from '@/lib/supabase/server'
 import { logActivity } from '@/lib/activity-log'
 import { validateLastDay, validateReason } from '@/lib/unenrollment'
@@ -60,6 +61,14 @@ export async function requestUnenrollment(
     action: `Requested unenrollment for ${student.first_name} ${student.last_name}`,
     targetTable: 'unenrollment_requests',
     targetId: created.id,
+  })
+
+  await notifyAdmins({
+    kind: 'unenroll',
+    title: 'New unenrollment request',
+    body: `A parent asked to unenroll ${student.first_name} ${student.last_name}.`,
+    href: '/admin/unenrollment',
+    dedupeKey: `unenroll-request:${created.id}`,
   })
 
   revalidatePath('/parent/unenrollment')

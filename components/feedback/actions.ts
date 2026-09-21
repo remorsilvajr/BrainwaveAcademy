@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { logActivity } from '@/lib/activity-log'
 import { feedbackCategoryOrder } from '@/lib/feedback'
+import { notifyAdmins } from '@/lib/notify'
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024 // matches the bug-reports bucket's own file_size_limit
 
@@ -94,6 +95,14 @@ export async function submitFeedback(
     action: category === 'bug' ? 'Submitted a bug report' : 'Submitted feedback',
     targetTable: 'feedback',
     targetId: data.id,
+  })
+
+  await notifyAdmins({
+    kind: 'message',
+    title: category === 'bug' ? 'New bug report' : 'New feedback',
+    body: trimmedSubject,
+    href: `/admin/feedback?open=${data.id}`,
+    dedupeKey: `feedback:${data.id}`,
   })
 
   revalidatePath('/admin')

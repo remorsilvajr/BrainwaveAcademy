@@ -7,6 +7,7 @@ import { logActivity } from '@/lib/activity-log'
 import { escapeHtml, sendEmail } from '@/lib/email'
 import { formatCurrency, formatDateLong } from '@/lib/format'
 import { getSiteUrl } from '@/lib/site-url'
+import { notifyUsers } from '@/lib/notify'
 import { UNENROLLMENT_REASON_MAX, UNENROLLMENT_REASON_MIN, type FeeDecision } from '@/lib/unenrollment'
 
 // Every expected failure is returned as `{ error }`, never thrown, since a thrown
@@ -140,6 +141,13 @@ export async function approveUnenrollment(
     targetId: student.id,
   })
 
+  await notifyUsers([request.requested_by], {
+    kind: 'unenroll',
+    title: 'Unenrollment approved',
+    body: `${student.first_name} ${student.last_name} has been unenrolled.`,
+    href: '/parent/unenrollment',
+  })
+
   if (parent?.email) {
     try {
       const feeLine =
@@ -204,6 +212,13 @@ export async function declineUnenrollment(requestId: string, note: string): Prom
     action: `Declined unenrollment for ${student.first_name} ${student.last_name}`,
     targetTable: 'students',
     targetId: student.id,
+  })
+
+  await notifyUsers([loaded.request.requested_by], {
+    kind: 'unenroll',
+    title: 'Unenrollment request declined',
+    body: `${student.first_name} ${student.last_name} stays enrolled. ${trimmedNote}`,
+    href: '/parent/unenrollment',
   })
 
   if (parent?.email) {

@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { validateProgramOptions } from '@/lib/program-options'
+import { notifyAdmins } from '@/lib/notify'
 import { createClient } from '@/lib/supabase/server'
 import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
 import { isValidDob, dobRangeMessage, MIN_STUDENT_AGE, MAX_STUDENT_AGE } from '@/lib/dob'
@@ -146,6 +147,13 @@ export async function submitStudent(
     actorId: user.id,
     action: `Enrollment application submitted for ${values.student_first_name} ${values.student_last_name}`,
     targetTable: 'applications',
+  })
+
+  await notifyAdmins({
+    kind: 'request',
+    title: 'New enrollment request',
+    body: `${values.student_first_name} ${values.student_last_name} was submitted for review.`,
+    href: '/admin/enroll-a-student',
   })
 
   redirect('/parent/enroll-a-student?submitted=true')

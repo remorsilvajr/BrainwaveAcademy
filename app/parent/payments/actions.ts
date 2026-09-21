@@ -1,6 +1,8 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { formatCurrency } from '@/lib/format'
+import { notifyAdmins } from '@/lib/notify'
 import { createClient } from '@/lib/supabase/server'
 import { logActivity } from '@/lib/activity-log'
 
@@ -75,6 +77,13 @@ export async function requestWalletFunds(amount: number, note: string): Promise<
     action: `Requested ${amount} added to their wallet`,
     targetTable: 'wallet_requests',
     targetId: user?.id ?? undefined,
+  })
+
+  await notifyAdmins({
+    kind: 'request',
+    title: 'New wallet fund request',
+    body: `A parent asked for ${formatCurrency(amount)} to be added to their wallet.`,
+    href: '/admin/payments?tab=requests',
   })
 
   revalidatePath('/parent/payments')

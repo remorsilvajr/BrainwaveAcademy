@@ -87,6 +87,8 @@ export default async function ParentPaymentsPage({
       .from('payments')
       .select('*')
       .eq('student_id', application.created_student_id)
+      // Waived and voided fees are neither owed nor paid, so they aren't sent to the page at all.
+      .not('status', 'in', '(waived,voided)')
       .order('due_date', { ascending: true }),
   ])
 

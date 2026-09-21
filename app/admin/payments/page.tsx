@@ -13,6 +13,7 @@ export default async function AdminPaymentsPage() {
     { data: wallets },
     { data: parentStudentLinks },
     { data: walletTransactions },
+    { data: adjustments },
   ] =
     await Promise.all([
       supabase.from('payments').select('*').order('created_at', { ascending: false }),
@@ -25,6 +26,7 @@ export default async function AdminPaymentsPage() {
       supabase.from('wallets').select('parent_id, balance'),
       supabase.from('parent_student').select('parent_id, student_id'),
       supabase.from('wallet_transactions').select('*').order('created_at', { ascending: false }),
+      supabase.from('payment_adjustments').select('id, payment_id, action, reason, created_at').order('created_at', { ascending: false }),
     ])
 
   const studentById = new Map((students ?? []).map((s) => [s.id, s]))
@@ -67,6 +69,12 @@ export default async function AdminPaymentsPage() {
     }
   })
 
+  // Every fee's own history (waived, voided, edited, reversed), newest first.
+  const adjustmentsByPayment: Record<string, { id: string; action: 'waived' | 'voided' | 'edited' | 'reversed'; reason: string; created_at: string }[]> = {}
+  for (const a of adjustments ?? []) {
+    ;(adjustmentsByPayment[a.payment_id] ??= []).push({ id: a.id, action: a.action, reason: a.reason, created_at: a.created_at })
+  }
+
   const balanceByParentId = new Map((wallets ?? []).map((w) => [w.parent_id, w.balance]))
   // A parent's outstanding balance is every pending fee across their linked
   // children, the same sum the parent's own dashboard shows as Due Balance.
@@ -97,7 +105,7 @@ export default async function AdminPaymentsPage() {
           Record cash payments, review every fee item and payment, and manage parent wallets.
         </p>
       </div>
-      <PaymentsTabs payments={rows} walletTransactions={walletTransactionRows} studentOptions={studentOptions} parents={parentWalletRows} requests={walletRequestRows} />
+      <PaymentsTabs payments={rows} walletTransactions={walletTransactionRows} adjustmentsByPayment={adjustmentsByPayment} studentOptions={studentOptions} parents={parentWalletRows} requests={walletRequestRows} />
     </div>
   )
 }

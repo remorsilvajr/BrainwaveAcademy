@@ -8,6 +8,7 @@ import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
 import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
 import { isValidDob, dobRangeMessage, MIN_STUDENT_AGE, MAX_STUDENT_AGE, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
 import { isValidEmail, EMAIL_VALIDATION_MESSAGE, normalizeEmail } from '@/lib/email-validation'
+import { notifyAdmins } from '@/lib/notify'
 import { genderFromParentRelationship } from '@/lib/gender'
 import { isAgeEligibleForClassroom } from '@/lib/classrooms'
 import { logActivity } from '@/lib/activity-log'
@@ -216,6 +217,13 @@ export async function submitApplication(
     actorId: null,
     action: `New enrollment application submitted (public site) for ${values.student_first_name} ${values.student_last_name}`,
     targetTable: 'applications',
+  })
+
+  await notifyAdmins({
+    kind: 'request',
+    title: 'New enrollment request',
+    body: `${values.student_first_name} ${values.student_last_name} was submitted for review.`,
+    href: '/admin/enroll-a-student',
   })
 
   redirect('/enroll/thank-you')

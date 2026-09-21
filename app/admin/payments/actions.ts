@@ -3,7 +3,13 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { logActivity } from '@/lib/activity-log'
-import { formatCurrency, roundToCents } from '@/lib/format'
+import { formatCurrency, formatDateShort, roundToCents } from '@/lib/format'
+import { requireAdmin } from '@/lib/require-admin'
+import { notifyParentsOfStudent, notifyUsers } from '@/lib/notify'
+import { sendEmail } from '@/lib/email'
+import { walletDecisionEmail } from '@/lib/notification-emails'
+import { getSiteUrl } from '@/lib/site-url'
+import { validateFeeAmount, validateFeeDueDate, validateFeeReason } from '@/lib/fees'
 
 const FEE_TYPES = ['tuition', 'activity', 'other'] as const
 // Cash only for now: a parent has no way to pay by check anywhere in the app, so
@@ -12,6 +18,39 @@ const FEE_TYPES = ['tuition', 'activity', 'other'] as const
 const METHODS = ['cash'] as const
 
 type ActionResult = { error: string } | undefined
+
+// A wallet request decision always reaches the parent: an email (best effort,
+// logged if it fails) and a bell notification. Both happen only after the
+// decision itself succeeded, so neither can fail it.
+async function tellParentAboutWalletRequest(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  parentId: string,
+  decision: { approved: boolean; requestedAmount: number; approvedAmount: number | null; note: string | null }
+) {
+  await notifyUsers([parentId], {
+    kind: 'money',
+    title: decision.approved ? 'Wallet top-up approved' : 'Wallet top-up not approved',
+    body: decision.approved
+      ? `${formatCurrency(decision.approvedAmount ?? decision.requestedAmount)} was added to your wallet.`
+      : `Your request for ${formatCurrency(decision.requestedAmount)} was not approved.${decision.note ? ` ${decision.note}` : ''}`,
+    href: '/parent/payments',
+  })
+  try {
+    const { data: parent } = await supabase.from('profiles').select('email, first_name').eq('id', parentId).maybeSingle()
+    if (!parent?.email) return
+    const mail = walletDecisionEmail({
+      parentFirstName: parent.first_name,
+      approved: decision.approved,
+      requestedAmount: decision.requestedAmount,
+      approvedAmount: decision.approvedAmount,
+      note: decision.note,
+      siteUrl: getSiteUrl(),
+    })
+    await sendEmail({ to: parent.email, subject: mail.subject, html: mail.html })
+  } catch (err) {
+    console.error('sendEmail failed for the wallet request decision:', err)
+  }
+}
 
 function revalidateAll() {
   revalidatePath('/admin/payments')
@@ -55,7 +94,7 @@ export async function approveWalletRequest(
 
   const { data: request } = await supabase
     .from('wallet_requests')
-    .select('id, parent_id, status')
+    .select('id, parent_id, status, requested_amount')
     .eq('id', requestId)
     .single()
   if (!request || request.status !== 'pending') {
@@ -106,11 +145,23 @@ export async function approveWalletRequest(
     targetId: requestId,
   })
 
+  await tellParentAboutWalletRequest(supabase, request.parent_id, {
+    approved: true,
+    requestedAmount: request.requested_amount,
+    approvedAmount,
+    note: reviewNote?.trim() || null,
+  })
+
   revalidateAll()
 }
 
 export async function denyWalletRequest(requestId: string, reviewNote?: string): Promise<ActionResult> {
   const supabase = await createClient()
+  const { data: original } = await supabase
+    .from('wallet_requests')
+    .select('parent_id, requested_amount')
+    .eq('id', requestId)
+    .maybeSingle()
   const {
     data: { user: actingAdmin },
   } = await supabase.auth.getUser()
@@ -140,6 +191,15 @@ export async function denyWalletRequest(requestId: string, reviewNote?: string):
     targetTable: 'wallet_requests',
     targetId: requestId,
   })
+
+  if (original) {
+    await tellParentAboutWalletRequest(supabase, original.parent_id, {
+      approved: false,
+      requestedAmount: original.requested_amount,
+      approvedAmount: null,
+      note: reviewNote?.trim() || null,
+    })
+  }
 
   revalidateAll()
 }
@@ -305,5 +365,194 @@ export async function markPaymentPaidManually(paymentId: string, method: string,
     targetId: paymentId,
   })
 
+  revalidateAll()
+}
+
+// ---------------------------------------------------------------------------
+// Fee corrections. Each needs a written reason, is guarded on the fee's current
+// status (so a stale screen or two admins can't apply it twice), leaves a
+// payment_adjustments row as the audit trail, and tells the child's parents in
+// the bell. Waive/void/edit only ever touch a `pending` fee; reversing only a
+// `paid` one.
+
+type FeeRow = { id: string; student_id: string; amount: number; due_date: string | null; description: string | null; fee_type: string }
+
+function feeLabel(fee: { description: string | null; fee_type: string }) {
+  return fee.description || `${fee.fee_type.charAt(0).toUpperCase()}${fee.fee_type.slice(1)} fee`
+}
+
+async function recordAdjustment(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  paymentId: string,
+  action: 'waived' | 'voided' | 'edited' | 'reversed',
+  reason: string,
+  adminId: string,
+  before: Record<string, unknown> | null,
+  after: Record<string, unknown> | null
+) {
+  const { error } = await supabase
+    .from('payment_adjustments')
+    .insert({ payment_id: paymentId, action, reason: reason.trim(), before, after, created_by: adminId })
+  // The correction itself already went through, so a failed audit row is logged
+  // rather than reported as a failed correction.
+  if (error) console.error(`payment_adjustments insert failed: ${error.message}`)
+}
+
+async function loadPendingFee(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  paymentId: string
+): Promise<{ fee: FeeRow; error: null } | { fee: null; error: string }> {
+  const { data } = await supabase
+    .from('payments')
+    .select('id, student_id, amount, due_date, description, fee_type, status')
+    .eq('id', paymentId)
+    .maybeSingle()
+  if (!data) return { fee: null, error: 'That fee could not be found.' }
+  if (data.status !== 'pending') {
+    return { fee: null, error: 'Only an unpaid fee can be changed this way. It may already have been handled.' }
+  }
+  return { fee: data as FeeRow, error: null }
+}
+
+async function settleFee(paymentId: string, reason: string, kind: 'waived' | 'voided'): Promise<ActionResult> {
+  const admin = await requireAdmin()
+  const reasonError = validateFeeReason(reason)
+  if (reasonError) return { error: reasonError }
+
+  const supabase = await createClient()
+  const { fee, error: loadError } = await loadPendingFee(supabase, paymentId)
+  if (!fee) return { error: loadError }
+
+  const { data: updated, error } = await supabase
+    .from('payments')
+    .update({ status: kind })
+    .eq('id', paymentId)
+    .eq('status', 'pending')
+    .select('id')
+  if (error) return { error: error.message }
+  if (!updated || updated.length === 0) return { error: 'This fee has already been handled.' }
+
+  await recordAdjustment(supabase, paymentId, kind, reason, admin.id, { status: 'pending', amount: fee.amount }, { status: kind })
+  await logActivity(supabase, {
+    actorId: admin.id,
+    action: `${kind === 'waived' ? 'Waived' : 'Voided'} a fee (${formatCurrency(fee.amount)}): ${reason.trim()}`,
+    targetTable: 'payments',
+    targetId: paymentId,
+  })
+  await notifyParentsOfStudent(fee.student_id, {
+    kind: 'money',
+    title: kind === 'waived' ? 'A fee was waived' : 'A fee was cancelled',
+    body: `${feeLabel(fee)} (${formatCurrency(fee.amount)}) no longer needs to be paid.`,
+    href: '/parent/payments',
+  })
+  revalidateAll()
+}
+
+export async function waiveFee(paymentId: string, reason: string): Promise<ActionResult> {
+  return settleFee(paymentId, reason, 'waived')
+}
+
+export async function voidFee(paymentId: string, reason: string): Promise<ActionResult> {
+  return settleFee(paymentId, reason, 'voided')
+}
+
+export async function editPendingFee(
+  paymentId: string,
+  changes: { amount: number; dueDate: string | null },
+  reason: string
+): Promise<ActionResult> {
+  const admin = await requireAdmin()
+  const amount = roundToCents(changes.amount)
+  const dueDate = changes.dueDate || null
+  const problem = validateFeeAmount(amount) ?? validateFeeDueDate(dueDate) ?? validateFeeReason(reason)
+  if (problem) return { error: problem }
+
+  const supabase = await createClient()
+  const { fee, error: loadError } = await loadPendingFee(supabase, paymentId)
+  if (!fee) return { error: loadError }
+  if (amount === fee.amount && dueDate === fee.due_date) {
+    return { error: 'Nothing was changed.' }
+  }
+
+  const { data: updated, error } = await supabase
+    .from('payments')
+    .update({ amount, due_date: dueDate })
+    .eq('id', paymentId)
+    .eq('status', 'pending')
+    .select('id')
+  if (error) return { error: error.message }
+  if (!updated || updated.length === 0) return { error: 'This fee has already been handled.' }
+
+  await recordAdjustment(
+    supabase,
+    paymentId,
+    'edited',
+    reason,
+    admin.id,
+    { amount: fee.amount, due_date: fee.due_date },
+    { amount, due_date: dueDate }
+  )
+  await logActivity(supabase, {
+    actorId: admin.id,
+    action: `Edited a fee: ${formatCurrency(fee.amount)} to ${formatCurrency(amount)}${dueDate !== fee.due_date ? `, due ${dueDate ? formatDateShort(dueDate) : 'not set'}` : ''}`,
+    targetTable: 'payments',
+    targetId: paymentId,
+  })
+  await notifyParentsOfStudent(fee.student_id, {
+    kind: 'money',
+    title: 'A fee was updated',
+    body: `${feeLabel(fee)} is now ${formatCurrency(amount)}${dueDate ? `, due ${formatDateShort(dueDate)}` : ''}.`,
+    href: '/parent/payments',
+  })
+  revalidateAll()
+}
+
+// Undoes a payment recorded in error: back to pending, and a wallet payment is
+// refunded to the wallet (with a ledger entry). Both happen inside the
+// reverse_payment database function, in one transaction, so the wallet and the
+// fee can never disagree the way two sequential writes could.
+export async function reversePayment(paymentId: string, reason: string): Promise<ActionResult> {
+  const admin = await requireAdmin()
+  const reasonError = validateFeeReason(reason)
+  if (reasonError) return { error: reasonError }
+
+  const supabase = await createClient()
+  const { data: before } = await supabase
+    .from('payments')
+    .select('student_id, amount, description, fee_type, payment_method')
+    .eq('id', paymentId)
+    .maybeSingle()
+
+  const { error } = await supabase.rpc('reverse_payment', { p_payment_id: paymentId, p_reason: reason.trim() })
+  if (error) {
+    const messages: Record<string, string> = {
+      NOT_ADMIN: 'Only an admin can reverse a payment.',
+      REASON_REQUIRED: 'Add a short reason so there is a record of why.',
+      PAYMENT_NOT_FOUND: 'That payment could not be found.',
+      PAYMENT_NOT_PAID: 'This payment is not marked as paid, so there is nothing to reverse.',
+      WALLET_NOT_FOUND: "The paying parent's wallet could not be found, so it could not be refunded.",
+      PAYER_UNKNOWN:
+        'This wallet payment cannot be refunded automatically because more than one parent is linked to the child and it is not recorded who paid. Refund the right parent with Adjust in Parent Wallets, then reverse the payment as cash.',
+    }
+    const code = Object.keys(messages).find((c) => error.message.includes(c))
+    return { error: code ? messages[code] : error.message }
+  }
+
+  await logActivity(supabase, {
+    actorId: admin.id,
+    action: `Reversed a payment${before ? ` (${formatCurrency(before.amount)}, ${before.payment_method ?? 'no method'})` : ''}: ${reason.trim()}`,
+    targetTable: 'payments',
+    targetId: paymentId,
+  })
+  if (before) {
+    await notifyParentsOfStudent(before.student_id, {
+      kind: 'money',
+      title: 'A payment was reversed',
+      body: `${feeLabel(before)} (${formatCurrency(before.amount)}) is unpaid again${
+        before.payment_method === 'wallet' ? ', and the amount was returned to your wallet' : ''
+      }.`,
+      href: '/parent/payments',
+    })
+  }
   revalidateAll()
 }
