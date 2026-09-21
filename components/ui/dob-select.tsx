@@ -72,6 +72,7 @@ export function DobSelect({
   min,
   max,
   onChange,
+  onPartialChange,
 }: {
   label: string
   name?: string
@@ -84,6 +85,10 @@ export function DobSelect({
   min: string
   max: string
   onChange?: (value: string) => void
+  // True while some but not all of Day/Month/Year are picked. onChange emits ''
+  // for that state too (same as "nothing picked"), so a caller that must not
+  // treat a half-finished edit as "cleared" listens here as well.
+  onPartialChange?: (isPartial: boolean) => void
 }) {
   const initial = parseIsoDate(defaultValue)
   const [day, setDay] = useState(initial.day)
@@ -104,6 +109,7 @@ export function DobSelect({
   function composeAndEmit(nextDay: string, nextMonth: string, nextYear: string) {
     const value = nextDay && nextMonth && nextYear ? `${nextYear}-${nextMonth}-${nextDay}` : ''
     onChange?.(value)
+    onPartialChange?.(!value && !!(nextDay || nextMonth || nextYear))
   }
 
   function handleDayChange(value: string) {

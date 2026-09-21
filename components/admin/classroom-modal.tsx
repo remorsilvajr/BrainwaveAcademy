@@ -6,6 +6,7 @@ import { X, User as UserIcon } from 'lucide-react'
 import { calculateAge, formatCurrency } from '@/lib/format'
 import { classroomAgeRangeLabel, feeDueDateBounds, validateFeeDueDate } from '@/lib/classrooms'
 import { Modal } from '@/components/ui/modal'
+import { DobSelect } from '@/components/ui/dob-select'
 import { SearchableSelect, type SearchableOption } from '@/components/ui/searchable-select'
 import {
   assignLeadTeacher,
@@ -17,6 +18,82 @@ import {
 import type { ClassroomRow } from '@/components/admin/classrooms-grid'
 
 type Tab = 'roster' | 'teachers' | 'fees'
+
+// One fee: its fixed amount on the left, its editable due date on the right as
+// the same Day/Month/Year dropdowns the birthday fields use (a native date input
+// was unreliable here). DobSelect seeds itself once on mount, so Clear remounts
+// it with an empty seed. `onPartialChange` lets Save refuse a half-picked date
+// instead of quietly treating it as cleared.
+function DueDateRow({
+  feeLabel,
+  feeAmount,
+  dueLabel,
+  initialValue,
+  min,
+  max,
+  onChange,
+  onPartialChange,
+}: {
+  feeLabel: string
+  feeAmount: number
+  dueLabel: string
+  initialValue: string
+  min: string
+  max: string
+  onChange: (value: string) => void
+  onPartialChange: (isPartial: boolean) => void
+}) {
+  const [seed, setSeed] = useState(initialValue)
+  const [resetKey, setResetKey] = useState(0)
+  const [hasValue, setHasValue] = useState(!!initialValue)
+  const [isPartial, setIsPartial] = useState(false)
+
+  function handleClear() {
+    setSeed('')
+    setResetKey((k) => k + 1)
+    setHasValue(false)
+    setIsPartial(false)
+    onChange('')
+    onPartialChange(false)
+  }
+
+  return (
+    <div className="grid grid-cols-1 items-end gap-3 sm:grid-cols-[8.5rem_1fr]">
+      <div>
+        <p className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">{feeLabel}</p>
+        <p className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 px-3 py-2 text-sm text-gray-900 dark:text-gray-100">
+          {formatCurrency(feeAmount)}
+        </p>
+      </div>
+      <div>
+        <DobSelect
+          key={resetKey}
+          label={dueLabel}
+          defaultValue={seed}
+          min={min}
+          max={max}
+          onChange={(value) => {
+            setHasValue(!!value)
+            onChange(value)
+          }}
+          onPartialChange={(partial) => {
+            setIsPartial(partial)
+            onPartialChange(partial)
+          }}
+        />
+        {(hasValue || isPartial) && (
+          <button
+            type="button"
+            onClick={handleClear}
+            className="mt-1 text-xs font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline"
+          >
+            Clear date
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
 
 export function ClassroomModal({
   classroom,
@@ -37,6 +114,8 @@ export function ClassroomModal({
 
   const [tuitionDue, setTuitionDue] = useState(classroom.tuition_due_date ?? '')
   const [activityDue, setActivityDue] = useState(classroom.activity_due_date ?? '')
+  const [tuitionPartial, setTuitionPartial] = useState(false)
+  const [activityPartial, setActivityPartial] = useState(false)
   const [feeError, setFeeError] = useState('')
   const [isSavingFees, setIsSavingFees] = useState(false)
   const [feeSaved, setFeeSaved] = useState(false)
@@ -125,6 +204,10 @@ export function ClassroomModal({
   async function handleSaveFees() {
     setFeeError('')
     setFeeSaved(false)
+    if (tuitionPartial || activityPartial) {
+      setFeeError('Pick the day, month, and year for each due date, or clear it.')
+      return
+    }
     // Same check the server action runs, but only for a date being changed,
     // so a typo is flagged instantly.
     for (const [value, stored] of [
@@ -180,7 +263,13 @@ export function ClassroomModal({
           {tabs.map((t) => (
             <button
               key={t.key}
-              onClick={() => setTab(t.key)}
+              onClick={() => {
+                setTab(t.key)
+                // The fee pickers unmount with their tab and re-seed from tuitionDue/activityDue,
+                // so a half-picked date is lost on leaving; drop its stale flag too.
+                setTuitionPartial(false)
+                setActivityPartial(false)
+              }}
               className={`border-b-2 px-1 pb-3 text-sm font-medium ${
                 tab === t.key ? 'border-[#e6007e] text-[#e6007e]' : 'border-transparent text-gray-500 dark:text-gray-400'
               }`}
@@ -309,39 +398,27 @@ export function ClassroomModal({
               fixed. A new due date applies to students assigned to this program from now on; fees already generated for
               currently-assigned students keep their existing due dates.
             </p>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div>
-                <p className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Tuition Fee</p>
-                <p className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 px-3 py-2 text-sm text-gray-900 dark:text-gray-100">{formatCurrency(classroom.tuition_fee)}</p>
-              </div>
-              <div>
-                <label htmlFor="tuition-due" className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Tuition Due Date</label>
-                <input
-                  id="tuition-due"
-                  type="date"
-                  min={bounds.min}
-                  max={bounds.max}
-                  value={tuitionDue}
-                  onChange={(e) => setTuitionDue(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
-                />
-              </div>
-              <div>
-                <p className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Activity Fee</p>
-                <p className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 px-3 py-2 text-sm text-gray-900 dark:text-gray-100">{formatCurrency(classroom.activity_fee)}</p>
-              </div>
-              <div>
-                <label htmlFor="activity-due" className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Activity Fee Due Date</label>
-                <input
-                  id="activity-due"
-                  type="date"
-                  min={bounds.min}
-                  max={bounds.max}
-                  value={activityDue}
-                  onChange={(e) => setActivityDue(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
-                />
-              </div>
+            <div className="space-y-4">
+              <DueDateRow
+                feeLabel="Tuition Fee"
+                feeAmount={classroom.tuition_fee}
+                dueLabel="Tuition Due Date"
+                initialValue={tuitionDue}
+                min={bounds.min}
+                max={bounds.max}
+                onChange={setTuitionDue}
+                onPartialChange={setTuitionPartial}
+              />
+              <DueDateRow
+                feeLabel="Activity Fee"
+                feeAmount={classroom.activity_fee}
+                dueLabel="Activity Fee Due Date"
+                initialValue={activityDue}
+                min={bounds.min}
+                max={bounds.max}
+                onChange={setActivityDue}
+                onPartialChange={setActivityPartial}
+              />
             </div>
 
             {feeError && (
