@@ -170,7 +170,7 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
   // Show (or clear) one field's error. `override` carries a value that state has not
   // caught up with yet (a DOB or select reports its new value in its own onChange).
   function checkField(key: string, override: Record<string, string> = {}) {
-    const message = validateEnrollField(key, { ...currentValues, ...override }, classrooms)
+    const message = validateEnrollField(key, { ...currentValues, ...override }, classrooms, { includeRequired: false })
     setLiveErrors((prev) => {
       if (!message && !prev[key]) return prev
       const next = { ...prev }
@@ -184,7 +184,7 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
   function goToStep(next: 1 | 2 | 3) {
     const keys = step === 1 ? STUDENT_KEYS : step === 2 ? PROGRAM_KEYS : PARENT_KEYS
     if (next !== step) {
-      const found = validateEnrollFields(keys, currentValues, classrooms)
+      const found = validateEnrollFields(keys, currentValues, classrooms, { includeRequired: false })
       setLiveErrors((prev) => {
         const next = { ...prev }
         for (const key of keys) delete next[key]

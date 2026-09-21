@@ -53,30 +53,35 @@ const NAME_KEYS = [
   'parent_last_name',
 ]
 
+// `includeRequired: false` skips the "... is required." messages, so a blank field is not
+// flagged while the person is still filling the form in: those only appear when they try to
+// submit (from the server's answer). The forms still use the default (true) to decide whether
+// a step is complete.
 export function validateEnrollField(
   key: string,
   values: EnrollValues,
-  classrooms: ClassroomAges[] = []
+  classrooms: ClassroomAges[] = [],
+  { includeRequired = true }: { includeRequired?: boolean } = {}
 ): string | undefined {
   const value = (values[key] ?? '').trim()
 
   if (key === 'password') {
     const password = values.password ?? ''
-    if (!password) return 'Password is required.'
+    if (!password) return includeRequired ? 'Password is required.' : undefined
     const unmet = passwordRequirements.filter((r) => !r.test(password))
     if (unmet.length > 0) return `Your password must ${unmet.map((r) => r.phrase).join(', and ')}.`
     return undefined
   }
   if (key === 'confirm_password') {
     const confirm = values.confirm_password ?? ''
-    if (!confirm) return 'Confirm your password.'
+    if (!confirm) return includeRequired ? 'Confirm your password.' : undefined
     if (confirm !== (values.password ?? '')) return 'The two passwords do not match.'
     return undefined
   }
 
   if (!value) {
     const label = REQUIRED_LABELS[key]
-    return label ? `${label} is required.` : undefined
+    return includeRequired && label ? `${label} is required.` : undefined
   }
 
   if (NAME_KEYS.includes(key)) return isValidName(value) ? undefined : NAME_VALIDATION_MESSAGE
@@ -114,11 +119,12 @@ export function validateEnrollField(
 export function validateEnrollFields(
   keys: string[],
   values: EnrollValues,
-  classrooms: ClassroomAges[] = []
+  classrooms: ClassroomAges[] = [],
+  options: { includeRequired?: boolean } = {}
 ): Record<string, string> {
   const errors: Record<string, string> = {}
   for (const key of keys) {
-    const message = validateEnrollField(key, values, classrooms)
+    const message = validateEnrollField(key, values, classrooms, options)
     if (message) errors[key] = message
   }
   return errors
