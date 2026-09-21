@@ -13,6 +13,7 @@ export function Field({
   title,
   defaultValue,
   onChange,
+  onBlur,
   min,
   max,
   minLength,
@@ -28,6 +29,9 @@ export function Field({
   title?: string
   defaultValue?: string
   onChange?: (value: string) => void
+  // Fired when the person leaves the field, with its current value: the enroll
+  // forms use it to show an error before Submit.
+  onBlur?: (value: string) => void
   min?: string
   max?: string
   minLength?: number
@@ -54,6 +58,7 @@ export function Field({
         title={title}
         defaultValue={defaultValue}
         onChange={(e) => onChange?.(e.target.value)}
+        onBlur={(e) => onBlur?.(e.target.value)}
         min={min}
         max={max}
         minLength={minLength}

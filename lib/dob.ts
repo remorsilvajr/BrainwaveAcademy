@@ -71,7 +71,7 @@ export function ageInYearsLabel(years: number): string {
 }
 
 export function dobRangeMessage(subject: string, minAge: number, maxAge: number = MAX_AGE): string {
-  return `Please enter a valid date of birth. ${subject} must be between ${ageInYearsLabel(minAge)} and ${maxAge} years old.`
+  return `Please enter a valid date of birth. ${subject} must be between ${Number.isInteger(minAge) ? minAge : ageInYearsLabel(minAge)} and ${maxAge} years old.`
 }
 
 function addDays(iso: string, days: number): string {

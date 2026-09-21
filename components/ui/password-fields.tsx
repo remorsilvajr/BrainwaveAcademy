@@ -17,6 +17,8 @@ export function PasswordFields({
   confirm,
   onPasswordChange,
   onConfirmChange,
+  onPasswordBlur,
+  onConfirmBlur,
   required,
   passwordError,
   confirmError,
@@ -26,6 +28,9 @@ export function PasswordFields({
   confirm: string
   onPasswordChange: (value: string) => void
   onConfirmChange: (value: string) => void
+  // Optional: fired when the person leaves each input, so a form can check it early.
+  onPasswordBlur?: () => void
+  onConfirmBlur?: () => void
   required: boolean
   passwordError?: string
   confirmError?: string
@@ -58,6 +63,7 @@ export function PasswordFields({
             autoComplete="new-password"
             value={password}
             onChange={(e) => onPasswordChange(e.target.value)}
+            onBlur={onPasswordBlur}
             required={required}
             className={inputClass(passwordError)}
           />
@@ -86,6 +92,7 @@ export function PasswordFields({
           autoComplete="new-password"
           value={confirm}
           onChange={(e) => onConfirmChange(e.target.value)}
+          onBlur={onConfirmBlur}
           required={required}
           className={inputClass(confirmError)}
         />
