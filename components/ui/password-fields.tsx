@@ -68,7 +68,7 @@ export function PasswordFields({
             aria-pressed={show}
             className="absolute right-0 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-[#454650] dark:text-slate-300"
           >
-            {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {show ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
           </button>
         </div>
         {passwordError && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{passwordError}</p>}
@@ -114,9 +114,6 @@ export function PasswordFields({
             </li>
           ))}
         </ul>
-        <p className="mt-2 text-xs text-[#454650] dark:text-slate-300">
-          Avoid your name, your email, or a common password. Your password is stored securely and nobody at the school can see it.
-        </p>
       </div>
     </div>
   )

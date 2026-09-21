@@ -21,12 +21,6 @@ import {
   type DoNotReleaseEntry,
 } from '@/lib/health'
 
-// birth date for a child who is `years` years and `months` months old on the pinned "today" (2026-09-21)
-const dob = (years: number, months = 0) => {
-  const d = new Date(Date.UTC(2026 - years, 8 - months, 15))
-  return d.toISOString().slice(0, 10)
-}
-
 // A date of birth that is exactly `months` whole months old on the pinned
 // today (2026-09-21), plus 6 days into the next month so it is unambiguous.
 const dobMonths = (months: number) => {

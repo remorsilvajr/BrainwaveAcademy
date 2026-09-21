@@ -474,10 +474,10 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
 
         <div>
           <h2 className="mb-1 border-b border-[#00a3e0] pb-2 text-xl font-semibold text-[#0b1b62] dark:text-indigo-300">
-            Create Your Password
+            Password
           </h2>
           <p className="mb-4 mt-2 text-sm text-[#454650] dark:text-slate-300">
-            You&apos;ll use this email and password to log in to the Parent Portal. You&apos;ll be signed in as soon as you submit.
+            Use this email and password to log in.
           </p>
           <PasswordFields
             password={password}
