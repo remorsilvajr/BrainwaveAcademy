@@ -391,173 +391,177 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
       </div>
 
       <div className={step === 3 ? 'space-y-8' : 'hidden'}>
-        <div>
-          <h2 className="mb-4 border-b border-[#00a3e0] pb-2 text-xl font-semibold text-[#0b1b62] dark:text-indigo-300">
-            Parent / Guardian Information
-          </h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <Field
-              label="First Name"
-              name="parent_first_name"
-              placeholder="e.g. John"
-              // See student_first_name's comment above — same reasoning,
-              // mirrored: this field must stop being natively `required`
-              // while another step is the one visible, or an implicit
-              // Enter-key submit from a different step's input could
-              // silently block on this hidden, still-blank field.
-              required={step === 3}
-              pattern={NAME_HTML_PATTERN}
-              title={NAME_HTML_TITLE}
-              minLength={2}
-              defaultValue={values.parent_first_name}
-              error={liveErrors.parent_first_name}
-              onBlur={(v) => checkField('parent_first_name', { parent_first_name: v })}
-              onChange={(v) => {
-                setParentFirstName(v)
-                clearError('parent_first_name')
-              }}
-            />
-            <Field
-              label="Middle Name"
-              name="parent_middle_name"
-              placeholder="Optional"
-              pattern={NAME_HTML_PATTERN}
-              title={NAME_HTML_TITLE}
-              minLength={2}
-              defaultValue={values.parent_middle_name}
-              error={liveErrors.parent_middle_name}
-              onBlur={(v) => checkField('parent_middle_name', { parent_middle_name: v })}
-              onChange={(v) => {
-                setParentMiddleName(v)
-                clearError('parent_middle_name')
-              }}
-            />
-            <Field
-              label="Last Name"
-              name="parent_last_name"
-              placeholder="e.g. Smith"
-              required={step === 3}
-              pattern={NAME_HTML_PATTERN}
-              title={NAME_HTML_TITLE}
-              minLength={2}
-              defaultValue={values.parent_last_name}
-              error={liveErrors.parent_last_name}
-              onBlur={(v) => checkField('parent_last_name', { parent_last_name: v })}
-              onChange={(v) => {
-                setParentLastName(v)
-                clearError('parent_last_name')
-              }}
-            />
-          </div>
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <DobSelect
-              label="Date of Birth"
-              name="parent_dob"
-              required
-              defaultValue={values.parent_dob}
-              error={liveErrors.parent_dob}
-              min={dobInputMin(MAX_AGE)}
-              max={dobInputMax(MIN_ADULT_AGE)}
-              onChange={(v) => {
-                setParentDob(v)
-                if (v) checkField('parent_dob', { parent_dob: v })
-                else clearError('parent_dob')
-              }}
-            />
-            <PlainSelect
-              label="Relationship"
-              name="parent_relationship"
-              required
-              extraLabelRow
-              value={relationshipValue}
-              onChange={(v) => {
-                setRelationshipValue(v)
-                clearError('parent_relationship')
-              }}
-              options={[
-                { value: 'Mother', label: 'Mother' },
-                { value: 'Father', label: 'Father' },
-                { value: 'Guardian', label: 'Guardian' },
-              ]}
-              placeholder="Select Relationship"
-              error={liveErrors.parent_relationship}
-            />
-          </div>
-          <div className={`mt-4 grid grid-cols-1 gap-4 ${relationshipValue === 'Guardian' ? 'sm:grid-cols-2' : ''}`}>
-            <Field
-              label="Contact Number"
-              name="parent_contact_number"
-              type="tel"
-              placeholder="09XX XXX XXXX or +63 9XX XXX XXXX"
-              required={step === 3}
-              defaultValue={values.parent_contact_number}
-              error={liveErrors.parent_contact_number}
-              onBlur={(v) => checkField('parent_contact_number', { parent_contact_number: v })}
-              onChange={(v) => {
-                setParentContactNumber(v)
-                clearError('parent_contact_number')
-              }}
-            />
-            {relationshipValue === 'Guardian' && (
-              <PlainSelect
-                label="Gender"
-                name="parent_gender"
-                value={parentGenderValue}
-                onChange={setParentGenderValue}
-                options={[
-                  { value: 'male', label: 'Male' },
-                  { value: 'female', label: 'Female' },
-                ]}
-                placeholder="Not set"
+        {/* One group with even 16px gaps between every field, so Contact Number, Email and
+            the two password fields line up the same way; the 32px gap is only between groups. */}
+        <div className="space-y-4">
+          <div>
+            <h2 className="mb-4 border-b border-[#00a3e0] pb-2 text-xl font-semibold text-[#0b1b62] dark:text-indigo-300">
+              Parent / Guardian Information
+            </h2>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <Field
+                label="First Name"
+                name="parent_first_name"
+                placeholder="e.g. John"
+                // See student_first_name's comment above — same reasoning,
+                // mirrored: this field must stop being natively `required`
+                // while another step is the one visible, or an implicit
+                // Enter-key submit from a different step's input could
+                // silently block on this hidden, still-blank field.
+                required={step === 3}
+                pattern={NAME_HTML_PATTERN}
+                title={NAME_HTML_TITLE}
+                minLength={2}
+                defaultValue={values.parent_first_name}
+                error={liveErrors.parent_first_name}
+                onBlur={(v) => checkField('parent_first_name', { parent_first_name: v })}
+                onChange={(v) => {
+                  setParentFirstName(v)
+                  clearError('parent_first_name')
+                }}
               />
-            )}
+              <Field
+                label="Middle Name"
+                name="parent_middle_name"
+                placeholder="Optional"
+                pattern={NAME_HTML_PATTERN}
+                title={NAME_HTML_TITLE}
+                minLength={2}
+                defaultValue={values.parent_middle_name}
+                error={liveErrors.parent_middle_name}
+                onBlur={(v) => checkField('parent_middle_name', { parent_middle_name: v })}
+                onChange={(v) => {
+                  setParentMiddleName(v)
+                  clearError('parent_middle_name')
+                }}
+              />
+              <Field
+                label="Last Name"
+                name="parent_last_name"
+                placeholder="e.g. Smith"
+                required={step === 3}
+                pattern={NAME_HTML_PATTERN}
+                title={NAME_HTML_TITLE}
+                minLength={2}
+                defaultValue={values.parent_last_name}
+                error={liveErrors.parent_last_name}
+                onBlur={(v) => checkField('parent_last_name', { parent_last_name: v })}
+                onChange={(v) => {
+                  setParentLastName(v)
+                  clearError('parent_last_name')
+                }}
+              />
+            </div>
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <DobSelect
+                label="Date of Birth"
+                name="parent_dob"
+                required
+                defaultValue={values.parent_dob}
+                error={liveErrors.parent_dob}
+                min={dobInputMin(MAX_AGE)}
+                max={dobInputMax(MIN_ADULT_AGE)}
+                onChange={(v) => {
+                  setParentDob(v)
+                  if (v) checkField('parent_dob', { parent_dob: v })
+                  else clearError('parent_dob')
+                }}
+              />
+              <PlainSelect
+                label="Relationship"
+                name="parent_relationship"
+                required
+                extraLabelRow
+                value={relationshipValue}
+                onChange={(v) => {
+                  setRelationshipValue(v)
+                  clearError('parent_relationship')
+                }}
+                options={[
+                  { value: 'Mother', label: 'Mother' },
+                  { value: 'Father', label: 'Father' },
+                  { value: 'Guardian', label: 'Guardian' },
+                ]}
+                placeholder="Select Relationship"
+                error={liveErrors.parent_relationship}
+              />
+            </div>
+            <div className={`mt-4 grid grid-cols-1 gap-4 ${relationshipValue === 'Guardian' ? 'sm:grid-cols-2' : ''}`}>
+              <Field
+                label="Contact Number"
+                name="parent_contact_number"
+                type="tel"
+                placeholder="09XX XXX XXXX or +63 9XX XXX XXXX"
+                required={step === 3}
+                defaultValue={values.parent_contact_number}
+                error={liveErrors.parent_contact_number}
+                onBlur={(v) => checkField('parent_contact_number', { parent_contact_number: v })}
+                onChange={(v) => {
+                  setParentContactNumber(v)
+                  clearError('parent_contact_number')
+                }}
+              />
+              {relationshipValue === 'Guardian' && (
+                <PlainSelect
+                  label="Gender"
+                  name="parent_gender"
+                  value={parentGenderValue}
+                  onChange={setParentGenderValue}
+                  options={[
+                    { value: 'male', label: 'Male' },
+                    { value: 'female', label: 'Female' },
+                  ]}
+                  placeholder="Not set"
+                />
+              )}
+            </div>
           </div>
-        </div>
 
-        <div>
-          <Field
-            label="Email Address"
-            name="parent_email"
-            type="email"
-            placeholder="email@example.com"
-            required={step === 3}
-            defaultValue={values.parent_email}
-            error={liveErrors.parent_email}
-            onBlur={(v) => checkField('parent_email', { parent_email: v })}
-            onChange={(v) => {
-              setParentEmail(v)
-              clearError('parent_email')
-            }}
-          />
-          <p className="mt-1 text-xs text-[#454650] dark:text-slate-300">
-            This is your login email. We&apos;ll also send updates about your request here.
-          </p>
-        </div>
+          <div>
+            <Field
+              label="Email Address"
+              name="parent_email"
+              type="email"
+              placeholder="email@example.com"
+              required={step === 3}
+              defaultValue={values.parent_email}
+              error={liveErrors.parent_email}
+              onBlur={(v) => checkField('parent_email', { parent_email: v })}
+              onChange={(v) => {
+                setParentEmail(v)
+                clearError('parent_email')
+              }}
+            />
+            <p className="mt-1 text-xs text-[#454650] dark:text-slate-300">
+              This is your login email. We&apos;ll also send updates about your request here.
+            </p>
+          </div>
 
-        <div>
-          <PasswordFields
-            password={password}
-            confirm={confirmPassword}
-            onPasswordChange={(v) => {
-              setPassword(v)
-              clearError('password')
-            }}
-            onPasswordBlur={() => checkField('password')}
-            onConfirmBlur={() => checkField('confirm_password')}
-            onConfirmChange={(v) => {
-              setConfirmPassword(v)
-              clearError('confirm_password')
-            }}
-            required={step === 3}
-            resetKey={responses}
-            passwordError={liveErrors.password}
-            confirmError={liveErrors.confirm_password}
-          />
+          <div>
+            <PasswordFields
+              password={password}
+              confirm={confirmPassword}
+              onPasswordChange={(v) => {
+                setPassword(v)
+                clearError('password')
+              }}
+              onPasswordBlur={() => checkField('password')}
+              onConfirmBlur={() => checkField('confirm_password')}
+              onConfirmChange={(v) => {
+                setConfirmPassword(v)
+                clearError('confirm_password')
+              }}
+              required={step === 3}
+              resetKey={responses}
+              passwordError={liveErrors.password}
+              confirmError={liveErrors.confirm_password}
+            />
+          </div>
         </div>
 
         <div className="flex flex-col gap-3">
           <label className="flex items-start gap-2 text-sm text-[#454650] dark:text-slate-300">
-            <input type="checkbox" required className="mt-1 h-4 w-4 rounded border-slate-200 dark:border-slate-700" />
+            <input type="checkbox" required className="mt-1 h-4 w-4 shrink-0 rounded border-slate-200 dark:border-slate-700" />
             <span>
               I confirm that all information provided is accurate and true to the best of my
               knowledge.
@@ -568,7 +572,7 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
               type="checkbox"
               name="agreed_to_policies"
               required
-              className={`mt-1 h-4 w-4 rounded ${
+              className={`mt-1 h-4 w-4 shrink-0 rounded ${
                 liveErrors.agreed_to_policies ? 'border-red-400' : 'border-slate-200 dark:border-slate-700'
               }`}
               onChange={() => clearError('agreed_to_policies')}
