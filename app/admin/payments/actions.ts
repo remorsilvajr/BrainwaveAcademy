@@ -178,6 +178,21 @@ export async function adjustWalletBalance(parentId: string, amount: number, note
   const {
     data: { user: actingAdmin },
   } = await supabase.auth.getUser()
+
+  // The ledger row that the Payments table shows. Best effort, like the
+  // activity log below: the balance has already changed, so a failed ledger
+  // write is logged server-side rather than reported as a failed adjustment.
+  const { error: ledgerError } = await supabase.from('wallet_transactions').insert({
+    parent_id: parentId,
+    amount,
+    balance_after: newBalance,
+    note: note?.trim() || null,
+    created_by: actingAdmin?.id ?? null,
+  })
+  if (ledgerError) {
+    console.error(`Wallet adjustment ledger write failed: ${ledgerError.message}`)
+  }
+
   await logActivity(supabase, {
     actorId: actingAdmin?.id ?? null,
     action: `${amount > 0 ? 'Added' : 'Deducted'} ${Math.abs(amount)} ${amount > 0 ? 'to' : 'from'} a parent's wallet${note ? `: ${note.trim()}` : ''}`,

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { formatCurrency, formatDateShort } from '@/lib/format'
+import { formatCurrency, formatDateShort, roundToCents } from '@/lib/format'
 import { isOverdue, summarizeOutstanding } from '@/lib/payments'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
@@ -27,7 +27,36 @@ export type PaymentRow = {
   receipt_ref: string | null
 }
 
+// One admin wallet adjustment (the Adjust button in Parent Wallets). `amount` is
+// signed: negative is a deduction, positive an addition. Shown in this table
+// beside the fee payments, but it's parent-level (no student) and it isn't a
+// fee, so it never counts toward Outstanding or Total Collected.
+export type WalletTxRow = {
+  id: string
+  parentName: string
+  parentEmail: string | null
+  amount: number
+  balance_after: number | null
+  note: string | null
+  created_at: string
+}
+
+// Everything the table lists, normalized so search/sort/pagination treat a fee
+// payment and a wallet adjustment the same way.
+type Item = {
+  key: string
+  name: string
+  amount: number
+  due: string | null
+  status: string
+  searchText: string
+  payment: PaymentRow | null
+  tx: WalletTxRow | null
+}
+
 const statusBadgeClasses: Record<string, string> = {
+  deducted: 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400',
+  added: 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400',
   paid: 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400',
   pending: 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300',
   overdue: 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400',
@@ -43,10 +72,12 @@ function displayStatus(row: PaymentRow) {
 
 export function PaymentsTable({
   payments,
+  walletTransactions,
   studentOptions,
   initialStatus = 'all',
 }: {
   payments: PaymentRow[]
+  walletTransactions: WalletTxRow[]
   studentOptions: SearchableOption[]
   initialStatus?: string
 }) {
@@ -54,32 +85,61 @@ export function PaymentsTable({
   const [statusFilter, setStatusFilter] = useState(initialStatus)
   const [showRecordModal, setShowRecordModal] = useState(false)
 
-  const filtered = payments.filter((p) => {
-    if (statusFilter !== 'all' && displayStatus(p) !== statusFilter) return false
+  const items: Item[] = useMemo(
+    () => [
+      ...payments.map((p) => ({
+        key: `payment-${p.id}`,
+        name: p.studentName,
+        amount: p.amount,
+        due: p.due_date,
+        status: displayStatus(p),
+        searchText: [p.studentName, p.studentAccountId, p.description, p.receipt_ref].filter(Boolean).join(' ').toLowerCase(),
+        payment: p,
+        tx: null,
+      })),
+      ...walletTransactions.map((t) => ({
+        key: `wallet-${t.id}`,
+        name: t.parentName,
+        amount: Math.abs(t.amount),
+        due: null,
+        status: t.amount < 0 ? 'deducted' : 'added',
+        searchText: [t.parentName, t.parentEmail, t.note, 'wallet', t.amount < 0 ? 'deduction' : 'addition']
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase(),
+        payment: null,
+        tx: t,
+      })),
+    ],
+    [payments, walletTransactions]
+  )
+
+  const filtered = items.filter((item) => {
+    if (statusFilter !== 'all' && item.status !== statusFilter) return false
     if (!search.trim()) return true
-    const term = search.toLowerCase()
-    return (
-      p.studentName.toLowerCase().includes(term) ||
-      (p.studentAccountId ?? '').toLowerCase().includes(term) ||
-      (p.description ?? '').toLowerCase().includes(term) ||
-      (p.receipt_ref ?? '').toLowerCase().includes(term)
-    )
+    return item.searchText.includes(search.trim().toLowerCase())
   })
 
   // Overall figures ignore the search/status filters on purpose (they're the
-  // school's real outstanding balance); the third tile follows the filters, so
-  // searching a student's name answers "how much does this family still owe".
+  // school's real totals); the last tile follows the filters, so searching a
+  // student's name answers "how much does this family still owe". Wallet
+  // adjustments are excluded from all of them: they aren't fees.
   const overall = summarizeOutstanding(payments)
-  const inView = summarizeOutstanding(filtered)
+  const inView = summarizeOutstanding(filtered.flatMap((item) => (item.payment ? [item.payment] : [])))
   const isFiltered = statusFilter !== 'all' || search.trim() !== ''
 
-  const sortOptions: SortOption<PaymentRow>[] = useMemo(
+  const paid = payments.filter((p) => p.status === 'paid')
+  const collectedTotal = roundToCents(paid.reduce((sum, p) => sum + p.amount, 0))
+  const collectedViaWallet = roundToCents(paid.filter((p) => p.payment_method === 'wallet').reduce((sum, p) => sum + p.amount, 0))
+  const collectedOther = roundToCents(collectedTotal - collectedViaWallet)
+
+  const sortOptions: SortOption<Item>[] = useMemo(
     () => [
-      { value: 'student_asc', label: 'Student Name (A-Z)', compare: (a, b) => compareStrings(a.studentName, b.studentName) },
-      { value: 'student_desc', label: 'Student Name (Z-A)', compare: (a, b) => compareStrings(b.studentName, a.studentName) },
+      { value: 'student_asc', label: 'Name (A-Z)', compare: (a, b) => compareStrings(a.name, b.name) },
+      { value: 'student_desc', label: 'Name (Z-A)', compare: (a, b) => compareStrings(b.name, a.name) },
       { value: 'amount_desc', label: 'Amount (High-Low)', compare: (a, b) => b.amount - a.amount },
       { value: 'amount_asc', label: 'Amount (Low-High)', compare: (a, b) => a.amount - b.amount },
-      { value: 'due_date_asc', label: 'Due Date (Soonest)', compare: (a, b) => compareDates(a.due_date, b.due_date) },
+      { value: 'due_date_asc', label: 'Due Date (Soonest)', compare: (a, b) => compareDates(a.due, b.due) },
     ],
     []
   )
@@ -92,7 +152,15 @@ export function PaymentsTable({
 
   return (
     <>
-      <div className={`mb-4 grid grid-cols-1 gap-4 ${isFiltered ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
+      <div className={`mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 ${isFiltered ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-green-400 dark:border-l-green-600 bg-white dark:bg-gray-900 p-4 shadow-sm">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Total Collected</p>
+          <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">{formatCurrency(collectedTotal)}</p>
+          <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+            {paid.length} paid fee {paid.length === 1 ? 'item' : 'items'}: {formatCurrency(collectedViaWallet)} wallet,{' '}
+            {formatCurrency(collectedOther)} cash
+          </p>
+        </div>
         <div className="rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-rose-400 dark:border-l-rose-600 bg-white dark:bg-gray-900 p-4 shadow-sm">
           <p className="text-sm text-gray-500 dark:text-gray-400">Total Outstanding Balance</p>
           <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">{formatCurrency(overall.outstanding)}</p>
@@ -125,7 +193,7 @@ export function PaymentsTable({
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Student name, ID, description, or receipt #"
+              placeholder="Name, student ID, description, note, or receipt #"
               className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 placeholder-slate-400 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 dark:placeholder-slate-500 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
             />
           </div>
@@ -140,6 +208,8 @@ export function PaymentsTable({
               <option value="pending">Pending</option>
               <option value="overdue">Overdue</option>
               <option value="paid">Paid</option>
+              <option value="deducted">Wallet Deductions</option>
+              <option value="added">Wallet Additions</option>
             </select>
           </div>
           <SortSelect value={sortKey} onChange={setSortKey} options={sortOptions} />
@@ -169,10 +239,49 @@ export function PaymentsTable({
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
               {pageItems.length > 0 ? (
-                pageItems.map((p) => {
-                  const status = displayStatus(p)
+                pageItems.map((item) => {
+                  const p = item.payment
+                  const t = item.tx
+                  if (t) {
+                    const isDeduction = t.amount < 0
+                    return (
+                      <tr key={item.key}>
+                        <td className="p-4">
+                          <p className="font-medium text-[#0b1b62] dark:text-indigo-300">{t.parentName}</p>
+                          <p className="text-xs text-gray-400 dark:text-gray-500">Parent wallet</p>
+                        </td>
+                        <td className="p-4 text-gray-700 dark:text-gray-300">
+                          <p>{isDeduction ? 'Wallet deduction' : 'Wallet addition'}</p>
+                          <p className="text-xs text-gray-400 dark:text-gray-500">
+                            {[t.note, t.balance_after != null ? `Balance after ${formatCurrency(t.balance_after)}` : null]
+                              .filter(Boolean)
+                              .join(' · ') || 'By admin'}
+                          </p>
+                        </td>
+                        <td
+                          className={`p-4 font-medium ${
+                            isDeduction ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'
+                          }`}
+                        >
+                          {isDeduction ? '-' : '+'}
+                          {formatCurrency(Math.abs(t.amount))}
+                        </td>
+                        <td className="p-4 text-gray-700 dark:text-gray-300">{formatDateShort(t.created_at)}</td>
+                        <td className="p-4">
+                          <span
+                            className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium capitalize ${statusBadgeClasses[item.status]}`}
+                          >
+                            {item.status}
+                          </span>
+                        </td>
+                        <td className="p-4 text-gray-400 dark:text-gray-500">-</td>
+                      </tr>
+                    )
+                  }
+                  if (!p) return null
+                  const status = item.status
                   return (
-                    <tr key={p.id}>
+                    <tr key={item.key}>
                       <td className="p-4">
                         <p className="font-medium text-[#0b1b62] dark:text-indigo-300">{p.studentName}</p>
                         <p className="text-xs text-gray-400 dark:text-gray-500">{p.studentAccountId ?? '-'}</p>

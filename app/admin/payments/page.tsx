@@ -12,6 +12,7 @@ export default async function AdminPaymentsPage() {
     { data: parents },
     { data: wallets },
     { data: parentStudentLinks },
+    { data: walletTransactions },
   ] =
     await Promise.all([
       supabase.from('payments').select('*').order('created_at', { ascending: false }),
@@ -23,6 +24,7 @@ export default async function AdminPaymentsPage() {
       supabase.from('profiles').select('id, first_name, last_name, email').eq('role', 'parent').order('first_name', { ascending: true }),
       supabase.from('wallets').select('parent_id, balance'),
       supabase.from('parent_student').select('parent_id, student_id'),
+      supabase.from('wallet_transactions').select('*').order('created_at', { ascending: false }),
     ])
 
   const studentById = new Map((students ?? []).map((s) => [s.id, s]))
@@ -49,6 +51,19 @@ export default async function AdminPaymentsPage() {
       ...r,
       parentName: parent ? `${parent.first_name} ${parent.last_name}` : 'Unknown parent',
       parentEmail: parent?.email ?? null,
+    }
+  })
+
+  const walletTransactionRows = (walletTransactions ?? []).map((t) => {
+    const parent = parentById.get(t.parent_id)
+    return {
+      id: t.id,
+      parentName: parent ? `${parent.first_name} ${parent.last_name}` : 'Unknown parent',
+      parentEmail: parent?.email ?? null,
+      amount: t.amount,
+      balance_after: t.balance_after,
+      note: t.note,
+      created_at: t.created_at,
     }
   })
 
@@ -82,7 +97,7 @@ export default async function AdminPaymentsPage() {
           Record cash payments, review every fee item and payment, and manage parent wallets.
         </p>
       </div>
-      <PaymentsTabs payments={rows} studentOptions={studentOptions} parents={parentWalletRows} requests={walletRequestRows} />
+      <PaymentsTabs payments={rows} walletTransactions={walletTransactionRows} studentOptions={studentOptions} parents={parentWalletRows} requests={walletRequestRows} />
     </div>
   )
 }
