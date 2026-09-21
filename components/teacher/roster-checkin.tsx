@@ -139,7 +139,7 @@ export function RosterCheckin({
           const status = statusByStudent[s.id]
           return (
             <div key={s.id} className="flex flex-col gap-2 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+              <p className="min-w-0 text-sm font-medium text-gray-900 dark:text-gray-100 sm:flex-1">
                 {s.first_name} {s.last_name}
                 {alerts[s.id] && (
                   <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-red-600 px-2 py-0.5 text-[11px] font-bold text-white" title={alerts[s.id]}>
@@ -162,7 +162,7 @@ export function RosterCheckin({
                   {status ?? 'Not marked'}
                 </span>
               ) : (
-                <div className="flex flex-wrap items-center gap-1.5">
+                <div className="flex flex-wrap items-center gap-1.5 sm:shrink-0 sm:flex-nowrap">
                   {['present', 'late', 'absent'].map((option) => (
                     <button
                       key={option}
