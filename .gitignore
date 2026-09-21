@@ -42,3 +42,6 @@ TEST_ACCOUNTS.md
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local database backups (personal data + password hashes)
+/backups/

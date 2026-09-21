@@ -33,7 +33,7 @@ npm run start    # run production build
 npm run lint     # eslint (flat config, eslint-config-next)
 ```
 
-There is no test runner configured in this repo.
+Also: `npm test` (unit), `npm run test:integration`, `npm run typecheck`, `npm run db:verify`, `npm run backup` / `restore` / `restore:drill`, `npm run test:sweep` (see the Database section).
 
 ## Before writing Next.js code
 
@@ -394,7 +394,9 @@ A "Photo Album" sidebar tab in all three portals (`iconMap.album`, `components/a
 
 ## Database
 
-No migrations are checked into the repo — schema lives in Supabase directly, evolved via one-off SQL run manually in the Supabase SQL Editor. Consider formalizing into a `supabase/migrations` folder if this project continues past the retro.
+The full schema is checked in as `supabase/migrations/*.sql` (baseline `20260921000000_baseline_schema.sql`, taken from the live database and proven identical by replay), with reference data in `supabase/seed.sql`. **The workflow is unchanged, the user still runs every schema/RLS SQL block manually in the Supabase SQL Editor, but every such block must ALSO be saved as the next numbered file in `supabase/migrations/` (`YYYYMMDDHHMMSS_name.sql`) in the same commit. Never edit an old migration.** After the user says it has run, `npm run db:verify` (needs Docker running) replays all migrations into a scratch Postgres and diffs them against the live database (tables, columns, constraints, indexes, functions, triggers, policies, RLS flags, enums, buckets); it must report "identical", and it also catches a hand change with no migration file. **Backups**: `npm run backup` writes every table (incl. `auth.users` password hashes) and every uploaded file to a gitignored `backups/<timestamp>/` with checksums; `npm run restore -- <folder> [--dry-run]` restores into a new empty project; `npm run restore:drill -- <folder>` proves a backup restores, in a throwaway Docker Postgres. Full procedure in `supabase/README.md`. Backups contain children's data, so never commit or share them.
+
+**Tests** (`tests/README.md`): `npm test` (unit, time pinned to Manila 2026-09-21, no network), `npm run test:integration` (real RLS/wallet checks with throwaway `zz-test-*@example.test` accounts against the live project, self-cleaning; `npm run test:sweep` removes leftovers; never call `notifyAdmins` from one, it reaches real admins), `npm run typecheck`. CI (`.github/workflows/ci.yml`) runs lint + typecheck + unit tests on push. When fixing a real bug in a rule (age, fee, date, permission), add a test that would have caught it.
 
 Tables: `profiles`, `applications` (has a `requested_program_options text[]` for Tutorial / Quiz Bee & Competitions, see the Classrooms note, and a `requested_classroom_id` FK to `classrooms`, nullable — the parent's Program-step pick at enrollment; see the Classrooms note), `application_documents`, `students` (has a `classroom_id` FK and a `program_options text[]`), `parent_student`, `attendance`, `milestones`, `announcements`, `payments` (extended with `fee_type`, `description`, `payment_method`, `recorded_by`, `classroom_id`, `receipt_ref` — see the Payments & wallet system note), `feedback` (extended with `category`, `admin_response`, `responded_by`, `responded_at` — see the Feedback categorization & reply note; has two FKs into `profiles`, so any embed must be qualified `profiles!submitted_by(...)` or `profiles!responded_by(...)`), `activity_log`, `ref_counters`, `classrooms`, `classroom_assistants`, `wallets`, `login_attempts` (email + timestamp, RLS enabled with zero policies — see the Login note), `authorized_pickups`, `events`, `event_rsvps`, `wallet_transactions`, `unenrollment_requests`, `student_promotions`, `payment_adjustments`, `notifications`, `notification_log`, `student_health`, `emergency_contacts`, `do_not_release`, `album_photos` (see their dedicated notes above).
 
@@ -418,7 +420,7 @@ RLS is enabled on every table. Parents see only their own linked students (via `
 
 ## Development workflow
 
-There is no automated test suite — "testing" means verifying against the real running app, not skipping from an error message straight to a guessed fix:
+There is now a unit + integration suite (see the Database section) covering pure rules and RLS, but it does not replace verifying against the real running app, and it is not a reason to skip from an error message straight to a guessed fix. Run `npm test` after touching a date/age/fee/validation rule:
 
 - **Before implementing a fix**: reproduce the actual problem first. Read the relevant file(s) in full, check `npm run dev`'s terminal output for the real underlying error (often surfaced generically to the browser but printed in full server-side), and confirm the root cause before editing. Several bugs in this project's history looked like one thing and were actually another (an email typo, an RLS policy, a naming collision) — don't patch the described symptom without confirming the cause.
 - **Before implementing a new feature**: check the Route status table and the actual target-route files first — confirm whether something is a true placeholder or partially wired, so an existing `actions.ts` pattern gets reused rather than reinvented differently.
