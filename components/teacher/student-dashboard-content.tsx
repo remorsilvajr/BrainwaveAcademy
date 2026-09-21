@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { HealthSummary } from '@/components/health/health-summary'
+import type { EmergencyContact, StudentHealth } from '@/lib/health'
 import { useRouter } from 'next/navigation'
 import { CalendarCheck, ClipboardList, User as UserIcon } from 'lucide-react'
 import { recordAttendance, submitMilestoneAssessment } from '@/app/teacher/student-dashboard/actions'
@@ -35,10 +37,14 @@ export function StudentDashboardContent({
   avatarEditor,
   readOnly = false,
   attendanceTracked = true,
+  health,
 }: {
   student: Student
   attendance: AttendanceRow[]
   milestones: MilestoneRow[]
+  // Health and emergency information (read-only here; parents edit it on their own
+  // Health & Emergency page and admin from the Student Record).
+  health?: { health: StudentHealth | null; contacts: EmergencyContact[] }
   // When provided, the header avatar becomes an upload/remove control
   // instead of a read-only display - used by admin (full permissions),
   // deliberately not by teacher (view-only per the current product rules).
@@ -201,6 +207,8 @@ export function StudentDashboardContent({
           </p>
         </div>
       </div>
+
+      {health && <HealthSummary health={health.health} contacts={health.contacts} />}
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">

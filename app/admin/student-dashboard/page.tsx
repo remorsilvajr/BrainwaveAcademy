@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { loadStudentHealth } from '@/lib/health-load'
 import { Users } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { StudentDashboardContent } from '@/components/teacher/student-dashboard-content'
@@ -81,6 +82,7 @@ export default async function AdminStudentDashboardPage({
   }
 
   const classroomById = new Map((classrooms ?? []).map((c) => [c.id, c.name]))
+  const healthData = await loadStudentHealth(supabase, selectedId)
 
   if (!selectedId) {
     return (
@@ -119,6 +121,7 @@ export default async function AdminStudentDashboardPage({
 
       {student && (
         <StudentDashboardContent
+          health={healthData}
           student={{ ...student, classroomName: student.classroom_id ? (classroomById.get(student.classroom_id) ?? null) : null }}
           attendance={attendance ?? []}
           attendanceTracked={tracksDailyAttendance((classrooms ?? []).find((c) => c.id === student.classroom_id))}

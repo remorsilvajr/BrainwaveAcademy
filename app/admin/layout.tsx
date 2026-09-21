@@ -34,6 +34,7 @@ const baseSections: NavSection[] = [
       { label: 'Student Dashboard', href: '/admin/student-dashboard', icon: 'graduationCap' },
       { label: 'Year-End Promotion', href: '/admin/year-end', icon: 'yearEnd' },
       { label: 'Pickup Verification', href: '/admin/pickup-verification', icon: 'pickup' },
+      { label: 'Do-Not-Release', href: '/admin/do-not-release', icon: 'ban' },
     ],
   },
   {

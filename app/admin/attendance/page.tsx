@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { allergyAlert } from '@/lib/health'
 import { TERMINAL_STATUS_FILTER } from '@/lib/student-status'
 import { RosterCheckin } from '@/components/teacher/roster-checkin'
 import { attendanceDateFromParam } from '@/lib/date-params'
@@ -30,6 +31,11 @@ export default async function AdminAttendancePage({
   const rosterStudents = (students ?? []).filter((s) => !s.classroom_id || !nonDaily.has(s.classroom_id))
   const rosterClassrooms = (classrooms ?? []).filter((c) => !nonDaily.has(c.id))
 
+  // Severe allergies are flagged beside the child's name on the list.
+  const { data: severe } = await supabase.from('student_health').select('student_id, allergies, severe_allergy').eq('severe_allergy', true)
+  const alerts: Record<string, string> = {}
+  for (const h of severe ?? []) alerts[h.student_id] = allergyAlert(h) ?? 'Severe allergy'
+
   const statusByStudent: Record<string, string> = {}
   for (const a of attendance ?? []) statusByStudent[a.student_id] = a.status
 
@@ -46,6 +52,7 @@ export default async function AdminAttendancePage({
         students={rosterStudents}
         classrooms={rosterClassrooms}
         statusByStudent={statusByStudent}
+        alerts={alerts}
         date={selectedDate}
         basePath="/admin/attendance"
         readOnly={false}

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { AlertTriangle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Check } from 'lucide-react'
 import { recordAttendance } from '@/app/teacher/student-dashboard/actions'
@@ -25,7 +26,10 @@ export function RosterCheckin({
   date,
   basePath,
   readOnly = false,
+  alerts = {},
 }: {
+  // studentId -> a short allergy alert shown beside their name.
+  alerts?: Record<string, string>
   students: Student[]
   // Classroom assignment is an org/billing structure, not an access
   // boundary (see the Classrooms note in CLAUDE.md) — this filter is a
@@ -137,6 +141,12 @@ export function RosterCheckin({
             <div key={s.id} className="flex flex-col gap-2 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                 {s.first_name} {s.last_name}
+                {alerts[s.id] && (
+                  <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-red-600 px-2 py-0.5 text-[11px] font-bold text-white" title={alerts[s.id]}>
+                    <AlertTriangle className="h-3 w-3" />
+                    Allergy: {alerts[s.id]}
+                  </span>
+                )}
                 {classroomFilter === 'all' && (
                   <span className="ml-2 text-xs font-normal text-gray-400 dark:text-gray-500">
                     {s.classroom_id ? (classroomById.get(s.classroom_id) ?? '') : 'Unassigned'}

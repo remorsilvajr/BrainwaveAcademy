@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import type { HealthInput } from '@/lib/health'
 import Link from 'next/link'
 import { User as UserIcon } from 'lucide-react'
 import { formatCurrency } from '@/lib/format'
@@ -27,6 +28,7 @@ type Student = {
   classroom_id: string | null
   classroomName: string | null
   program_options: string[]
+  health: HealthInput
   guardians: Guardian[]
   documents: DocRow[]
   outstanding: number

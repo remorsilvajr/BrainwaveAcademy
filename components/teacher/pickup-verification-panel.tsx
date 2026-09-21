@@ -1,13 +1,15 @@
 'use client'
 
-import { useState } from 'react'
-import { ShieldCheck, ShieldAlert, ShieldQuestion } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Ban, ShieldCheck, ShieldAlert, ShieldQuestion } from 'lucide-react'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
 import { logPickupCheck } from '@/app/teacher/pickup-verification/actions'
+import { logDoNotReleaseHit } from '@/app/admin/do-not-release/actions'
 import { PickupAvatar } from '@/components/pickup/pickup-avatar'
 import { PICKUP_RELATIONSHIPS } from '@/lib/pickup-relationships'
 import { pickupDisplayName } from '@/lib/pickup-names'
+import { matchDoNotRelease, type DoNotReleaseEntry } from '@/lib/health'
 
 type Student = { id: string; first_name: string; last_name: string }
 type Pickup = {
@@ -48,7 +50,15 @@ const MAX_SIMILAR_SHOWN = 5
 // Always school-wide: every registered pickup person is searched and listed at
 // once, each labeled with the child they're authorized for (authorization is
 // per child, not per person, so "is this person on file" alone isn't enough).
-export function PickupVerificationPanel({ students, pickups }: { students: Student[]; pickups: Pickup[] }) {
+export function PickupVerificationPanel({
+  students,
+  pickups,
+  doNotRelease = [],
+}: {
+  students: Student[]
+  pickups: Pickup[]
+  doNotRelease?: DoNotReleaseEntry[]
+}) {
   const [firstSearch, setFirstSearch] = useState('')
   const [lastSearch, setLastSearch] = useState('')
   const [relationshipFilter, setRelationshipFilter] = useState('all')
@@ -70,6 +80,24 @@ export function PickupVerificationPanel({ students, pickups }: { students: Stude
     ? pickups.filter((p) => nameKey(p.first_name) === typedFirst && nameKey(p.last_name) === typedLast)
     : []
   const matchIds = new Set(matches.map((p) => p.id))
+
+  // A do-not-release match overrides everything: the green "authorized" result
+  // is hidden entirely, even if the same person is also registered as a pickup
+  // for a child (a parent can register anyone, so the barred person could have
+  // been added by the other guardian). Exact first+last only goes red; anything
+  // looser is a "confirm identity" prompt.
+  const { matches: dnrMatches, similar: dnrSimilar } = matchDoNotRelease(doNotRelease, firstSearch, lastSearch)
+  const dnrKey = dnrMatches.map((d) => d.id).sort().join('|')
+  const reportedRef = useRef<Set<string>>(new Set())
+  useEffect(() => {
+    // Record each hit once per page visit (log + tell every admin), however
+    // many keystrokes it takes to type the name.
+    for (const id of dnrKey ? dnrKey.split('|') : []) {
+      if (reportedRef.current.has(id)) continue
+      reportedRef.current.add(id)
+      void logDoNotReleaseHit(id)
+    }
+  }, [dnrKey])
   const similar = hasSearch
     ? pickups.filter(
         (p) =>
@@ -146,7 +174,35 @@ export function PickupVerificationPanel({ students, pickups }: { students: Stude
 
         {hasSearch && (
           <div className="mt-3 space-y-2">
-            {!canMatch ? (
+            {dnrMatches.map((d) => (
+              <div key={d.id} className="rounded-xl border-2 border-red-600 bg-red-600 p-4 text-white shadow-lg" role="alert">
+                <p className="flex items-center gap-2 text-lg font-extrabold uppercase tracking-wide">
+                  <Ban className="h-6 w-6 shrink-0" />
+                  Do not release
+                </p>
+                <p className="mt-1 text-base font-semibold">
+                  {d.first_name} {d.last_name} must not be given {studentNameById.get(d.student_id) ?? 'this child'}.
+                </p>
+                {d.note && <p className="mt-1 whitespace-pre-wrap text-sm text-red-50">{d.note}</p>}
+                <p className="mt-2 text-sm font-semibold">Do not hand over any child. Call the school office now.</p>
+              </div>
+            ))}
+            {dnrSimilar.length > 0 && dnrMatches.length === 0 && (
+              <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
+                <p className="flex items-center gap-1.5 font-semibold">
+                  <Ban className="h-4 w-4 shrink-0" />
+                  Similar to a name on the do-not-release list. Confirm the person&apos;s exact name before releasing any child.
+                </p>
+                <ul className="mt-1 text-xs">
+                  {dnrSimilar.slice(0, 5).map((d) => (
+                    <li key={d.id}>
+                      {d.first_name} {d.last_name} (not to be given {studentNameById.get(d.student_id) ?? 'a child'})
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {dnrMatches.length > 0 ? null : !canMatch ? (
               <p className="rounded-lg bg-gray-50 dark:bg-gray-800/60 p-3 text-sm text-gray-600 dark:text-gray-300">
                 Enter both a first and last name to check for an authorized match.
               </p>

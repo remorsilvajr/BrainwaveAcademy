@@ -1,4 +1,5 @@
 import { ClipboardList, Clock } from 'lucide-react'
+import { loadStudentHealth } from '@/lib/health-load'
 import { createClient } from '@/lib/supabase/server'
 import { StudentDashboardContent } from '@/components/teacher/student-dashboard-content'
 import { tracksDailyAttendance } from '@/lib/classrooms'
@@ -96,6 +97,7 @@ export default async function ParentStudentDashboardPage({
   ])
 
   const classroomById = new Map((classrooms ?? []).map((c) => [c.id, c.name]))
+  const healthData = await loadStudentHealth(supabase, student?.id ?? null)
 
   return (
     <div className="space-y-6">
@@ -108,6 +110,7 @@ export default async function ParentStudentDashboardPage({
 
       {student && (
         <StudentDashboardContent
+          health={healthData}
           student={{ ...student, classroomName: student.classroom_id ? (classroomById.get(student.classroom_id) ?? null) : null }}
           attendance={attendance ?? []}
           attendanceTracked={tracksDailyAttendance((classrooms ?? []).find((c) => c.id === student.classroom_id))}

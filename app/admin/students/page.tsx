@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { healthInputFrom, type EmergencyContact, type StudentHealth } from '@/lib/health'
 import { StudentsTable } from '@/components/admin/students-table'
 import { summarizeOutstanding, type UnpaidFee } from '@/lib/payments'
 
@@ -26,7 +27,7 @@ type StudentRow = {
 export default async function StudentsPage() {
   const supabase = await createClient()
 
-  const [{ data: students }, { data: documents }, { data: classrooms }, { data: pendingFees }] = await Promise.all([
+  const [{ data: students }, { data: documents }, { data: classrooms }, { data: pendingFees }, { data: healthRows }, { data: contactRows }] = await Promise.all([
     supabase
       .from('students')
       .select('*, parent_student(relationship, profiles(first_name, last_name, phone_number, email))')
@@ -43,6 +44,8 @@ export default async function StudentsPage() {
       .select('id, student_id, fee_type, description, amount, due_date, status')
       .eq('status', 'pending')
       .order('due_date', { ascending: true, nullsFirst: false }),
+    supabase.from('student_health').select('*'),
+    supabase.from('emergency_contacts').select('student_id, position, full_name, relationship, phone_number'),
   ])
 
   const docs = documents ?? []
@@ -65,6 +68,10 @@ export default async function StudentsPage() {
     }))
     return {
     ...s,
+    health: healthInputFrom(
+      ((healthRows ?? []).find((h) => h.student_id === s.id) as StudentHealth | undefined) ?? null,
+      (contactRows ?? []).filter((c) => c.student_id === s.id) as EmergencyContact[]
+    ),
     outstanding: summary.outstanding,
     overdue: summary.overdue,
     unpaidFees,

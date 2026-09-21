@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { HealthForm } from '@/components/health/health-form'
+import type { HealthInput } from '@/lib/health'
 import { useRouter } from 'next/navigation'
 import { X } from 'lucide-react'
 import { calculateAge, formatCurrency, formatDateLong } from '@/lib/format'
@@ -44,6 +46,7 @@ type Student = {
   classroom_id: string | null
   classroomName: string | null
   program_options: string[]
+  health: HealthInput
   guardians: Guardian[]
   documents: DocRow[]
   outstanding: number
@@ -53,7 +56,7 @@ type Student = {
 
 type Classroom = { id: string; name: string; slug: string; min_age_years: number | null; max_age_years: number | null }
 
-type Tab = 'personal' | 'guardian' | 'documents' | 'balance'
+type Tab = 'personal' | 'guardian' | 'documents' | 'balance' | 'health'
 
 function InfoField({ label, value }: { label: string; value: string }) {
   return (
@@ -208,6 +211,7 @@ export function StudentRecordModal({
     { key: 'guardian', label: 'Guardian Info' },
     { key: 'documents', label: 'Documents' },
     { key: 'balance', label: 'Balance' },
+    { key: 'health', label: 'Health' },
   ]
 
   return (
@@ -424,6 +428,15 @@ export function StudentRecordModal({
               ) : (
                 <p className="text-sm text-gray-500 dark:text-gray-400">No linked guardian on file.</p>
               )}
+            </div>
+          )}
+
+          {tab === 'health' && (
+            <div className="space-y-3">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Health and emergency information. Parents fill this in from their portal; admin can correct it here.
+              </p>
+              <HealthForm key={student.id} studentId={student.id} initial={student.health} />
             </div>
           )}
 

@@ -136,6 +136,22 @@ export default async function PrivacyPolicyPage() {
               of our Terms of Service).
             </li>
             <li>
+              <strong>Health and emergency information (sensitive):</strong> if you choose to provide
+              it, a child&apos;s allergies, medical conditions, medications, doctor and preferred
+              hospital, other notes about their care, and up to three emergency contacts (name,
+              relationship, phone number). This is health information, which the Data Privacy Act treats
+              as sensitive personal information, so it is optional, entered only by a parent/guardian (or
+              School staff on their behalf), visible only to that child&apos;s parents/guardians, the
+              child&apos;s teachers and School administrators, and used only to look after the child at
+              school and in an emergency.
+            </li>
+            <li>
+              <strong>Pickup safety records:</strong> the names, relationships, phone numbers and
+              optional photos of people a parent authorizes to collect a child, and, where a court order
+              or similar instruction exists, a School-maintained list of people who must not be given a
+              child. That list is visible only to teachers and administrators.
+            </li>
+            <li>
               <strong>Staff information:</strong> for teacher and admin accounts, first/middle/last
               name, date of birth, gender, contact details, profile photo, and role/permissions
               within the portal.
@@ -152,6 +168,7 @@ export default async function PrivacyPolicyPage() {
             <li>To process and review enrollment applications and admission decisions.</li>
             <li>To create and manage parent, teacher, and admin portal accounts.</li>
             <li>To record attendance and track developmental milestones for enrolled students.</li>
+            <li>To keep children safe: acting on allergy and medical information, contacting emergency contacts, and checking who may collect a child.</li>
             <li>To track tuition and other fees owed, and to record payments made via the in-app wallet or received directly by School staff.</li>
             <li>To communicate with parents/guardians about admission decisions, account credentials, requests to correct or resubmit a document, password resets, and school announcements.</li>
             <li>To verify identity and eligibility documents submitted as part of enrollment.</li>
