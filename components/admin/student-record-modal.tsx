@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { X } from 'lucide-react'
-import { calculateAge, formatDateLong } from '@/lib/format'
+import { calculateAge, formatCurrency, formatDateLong } from '@/lib/format'
+import { isOverdue, type UnpaidFee } from '@/lib/payments'
 import { dobInputMin, dobInputMax, MIN_STUDENT_AGE, MAX_AGE } from '@/lib/dob'
 import { isAgeEligibleForClassroom, classroomAgeRangeLabel } from '@/lib/classrooms'
 import { documentLabels, documentOrder } from '@/lib/documents'
@@ -42,11 +43,14 @@ type Student = {
   classroomName: string | null
   guardians: Guardian[]
   documents: DocRow[]
+  outstanding: number
+  overdue: number
+  unpaidFees: UnpaidFee[]
 }
 
 type Classroom = { id: string; name: string; min_age_years: number | null; max_age_years: number | null }
 
-type Tab = 'personal' | 'guardian' | 'documents'
+type Tab = 'personal' | 'guardian' | 'documents' | 'balance'
 
 function InfoField({ label, value }: { label: string; value: string }) {
   return (
@@ -196,6 +200,7 @@ export function StudentRecordModal({
     { key: 'personal', label: 'Personal Details' },
     { key: 'guardian', label: 'Guardian Info' },
     { key: 'documents', label: 'Documents' },
+    { key: 'balance', label: 'Balance' },
   ]
 
   return (
@@ -394,6 +399,47 @@ export function StudentRecordModal({
                 ))
               ) : (
                 <p className="text-sm text-gray-500 dark:text-gray-400">No linked guardian on file.</p>
+              )}
+            </div>
+          )}
+
+          {tab === 'balance' && (
+            <div className="space-y-3">
+              <div className="rounded-lg bg-gray-50 dark:bg-gray-800/60 p-4">
+                <p className="text-xs text-gray-400 dark:text-gray-500">Outstanding Balance</p>
+                <p
+                  className={`text-2xl font-bold ${
+                    student.outstanding > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'
+                  }`}
+                >
+                  {formatCurrency(student.outstanding)}
+                </p>
+                {student.overdue > 0 && (
+                  <p className="text-xs text-red-500 dark:text-red-400">{formatCurrency(student.overdue)} of this is overdue</p>
+                )}
+              </div>
+              {student.unpaidFees.length > 0 ? (
+                student.unpaidFees.map((fee) => {
+                  const overdue = isOverdue({ status: 'pending', due_date: fee.due_date })
+                  return (
+                    <div
+                      key={fee.id}
+                      className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 dark:border-gray-700 p-3"
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {fee.description || `${fee.fee_type.charAt(0).toUpperCase()}${fee.fee_type.slice(1)} fee`}
+                        </p>
+                        <p className={`text-xs ${overdue ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                          {fee.due_date ? `${overdue ? 'Overdue, was due' : 'Due'} ${formatDateLong(fee.due_date)}` : 'No due date'}
+                        </p>
+                      </div>
+                      <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(fee.amount)}</span>
+                    </div>
+                  )
+                })
+              ) : (
+                <p className="text-sm text-gray-500 dark:text-gray-400">No unpaid fees for this student.</p>
               )}
             </div>
           )}

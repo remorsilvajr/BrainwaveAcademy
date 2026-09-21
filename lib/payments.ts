@@ -1,5 +1,14 @@
 import { roundToCents, todayIso } from '@/lib/format'
 
+// One unpaid fee line, as shown per child in the admin Student Record.
+export type UnpaidFee = {
+  id: string
+  fee_type: string
+  description: string | null
+  amount: number
+  due_date: string | null
+}
+
 type FeeLike = { status: string; due_date: string | null }
 
 // "Overdue" is display-only (no scheduled job flips the status column), so this

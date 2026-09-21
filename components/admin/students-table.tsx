@@ -3,6 +3,8 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { User as UserIcon } from 'lucide-react'
+import { formatCurrency } from '@/lib/format'
+import type { UnpaidFee } from '@/lib/payments'
 import { StudentRecordModal } from '@/components/admin/student-record-modal'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
@@ -26,6 +28,9 @@ type Student = {
   classroomName: string | null
   guardians: Guardian[]
   documents: DocRow[]
+  outstanding: number
+  overdue: number
+  unpaidFees: UnpaidFee[]
 }
 
 type Classroom = { id: string; name: string; min_age_years: number | null; max_age_years: number | null }
@@ -64,6 +69,7 @@ export function StudentsTable({ students, classrooms }: { students: Student[]; c
       { value: 'name_asc', label: 'Name (A-Z)', compare: (a, b) => compareStrings(`${a.first_name} ${a.last_name}`, `${b.first_name} ${b.last_name}`) },
       { value: 'name_desc', label: 'Name (Z-A)', compare: (a, b) => compareStrings(`${b.first_name} ${b.last_name}`, `${a.first_name} ${a.last_name}`) },
       { value: 'dob_desc', label: 'Date of Birth (Youngest)', compare: (a, b) => compareDates(b.date_of_birth, a.date_of_birth) },
+      { value: 'outstanding_desc', label: 'Outstanding (High-Low)', compare: (a, b) => b.outstanding - a.outstanding },
       { value: 'dob_asc', label: 'Date of Birth (Oldest)', compare: (a, b) => compareDates(a.date_of_birth, b.date_of_birth) },
     ],
     []
@@ -109,12 +115,13 @@ export function StudentsTable({ students, classrooms }: { students: Student[]; c
 
       <div className="mt-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
         <div className="min-h-[420px] overflow-x-auto">
-        <table className="w-full min-w-[640px] text-sm">
+        <table className="w-full min-w-[760px] text-sm">
           <thead className="bg-gray-50 dark:bg-gray-800/60 text-left text-gray-500 dark:text-gray-400">
             <tr>
               <th className="p-4 font-medium">Student</th>
               <th className="p-4 font-medium">Guardian Contact</th>
               <th className="p-4 font-medium">Classroom</th>
+              <th className="p-4 font-medium">Outstanding</th>
               <th className="p-4 font-medium">Status</th>
               <th className="p-4 font-medium">Action</th>
             </tr>
@@ -161,6 +168,18 @@ export function StudentsTable({ students, classrooms }: { students: Student[]; c
                       {s.classroomName ?? <span className="text-gray-400 dark:text-gray-500">Unassigned</span>}
                     </td>
                     <td className="p-4">
+                      <p
+                        className={`font-medium ${
+                          s.outstanding > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-700 dark:text-gray-300'
+                        }`}
+                      >
+                        {formatCurrency(s.outstanding)}
+                      </p>
+                      {s.overdue > 0 && (
+                        <p className="text-xs text-red-500 dark:text-red-400">{formatCurrency(s.overdue)} overdue</p>
+                      )}
+                    </td>
+                    <td className="p-4">
                       <span
                         className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium capitalize ${
                           s.enrollment_status === 'active'
@@ -192,7 +211,7 @@ export function StudentsTable({ students, classrooms }: { students: Student[]; c
               })
             ) : (
               <tr>
-                <td colSpan={5} className="p-8 text-center text-gray-400 dark:text-gray-500">
+                <td colSpan={6} className="p-8 text-center text-gray-400 dark:text-gray-500">
                   No students match your search.
                 </td>
               </tr>
