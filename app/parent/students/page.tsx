@@ -60,7 +60,7 @@ export default async function StudentProfilePage({
       .select('document_type, verification_status')
       .eq('application_id', application.id),
     application.created_student_id
-      ? supabase.from('students').select('avatar_url, classroom_id').eq('id', application.created_student_id).single()
+      ? supabase.from('students').select('avatar_url, classroom_id, program_options').eq('id', application.created_student_id).single()
       : Promise.resolve({ data: null }),
   ])
 
@@ -73,6 +73,10 @@ export default async function StudentProfilePage({
   const { data: programClassroom } = programClassroomId
     ? await supabase.from('classrooms').select('name').eq('id', programClassroomId).maybeSingle()
     : { data: null }
+
+  // The options they picked inside a Tutorial / Quiz Bee style program: the
+  // student's own once enrolled, the request's until then.
+  const programOptions: string[] = (application.created_student_id ? student?.program_options : application.requested_program_options) ?? []
 
   const validCount = (documents ?? []).filter((d) => d.verification_status === 'valid').length
   const fullName = `${application.student_first_name}${application.student_middle_name ? ' ' + application.student_middle_name : ''} ${application.student_last_name}`
@@ -169,6 +173,9 @@ export default async function StudentProfilePage({
               <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                 {programClassroom?.name ?? (application.created_student_id ? 'Unassigned' : 'Not specified')}
               </p>
+              {programOptions.length > 0 && (
+                <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{programOptions.join(', ')}</p>
+              )}
             </div>
           </div>
 

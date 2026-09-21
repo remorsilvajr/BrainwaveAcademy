@@ -1,6 +1,7 @@
 'use server'
 
 import { redirect } from 'next/navigation'
+import { validateProgramOptions } from '@/lib/program-options'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
@@ -120,11 +121,14 @@ export async function submitApplication(
   // pen-testing convention requires the real boundary to be server-side, so
   // re-check the requested classroom actually exists and is still
   // age-eligible for the given DOB before trusting it.
+  // Named options inside a Tutorial / Quiz Bee style program. The checkboxes are
+  // UX only, so they're re-validated against the program's fixed list here.
+  let programOptions: string[] = []
   if (values.requested_classroom_id && values.student_dob && !fieldErrors.student_dob) {
     const supabaseForClassroomCheck = await createClient()
     const { data: requestedClassroom } = await supabaseForClassroomCheck
       .from('classrooms')
-      .select('id, min_age_years, max_age_years')
+      .select('id, slug, min_age_years, max_age_years')
       .eq('id', values.requested_classroom_id)
       .maybeSingle()
 
@@ -132,6 +136,13 @@ export async function submitApplication(
       fieldErrors.requested_classroom_id = 'Please select a valid program.'
     } else if (!isAgeEligibleForClassroom(values.student_dob, requestedClassroom)) {
       fieldErrors.requested_classroom_id = "The selected program isn't available for this student's age."
+    } else {
+      const checked = validateProgramOptions(
+        requestedClassroom.slug,
+        formData.getAll('requested_program_options').filter((v): v is string => typeof v === 'string')
+      )
+      if (checked.ok) programOptions = checked.options
+      else fieldErrors.requested_program_options = checked.error
     }
   }
 
@@ -190,6 +201,7 @@ export async function submitApplication(
     parent_contact_number: normalizePhilippineMobile(values.parent_contact_number),
     parent_email: normalizeEmail(values.parent_email),
     requested_classroom_id: values.requested_classroom_id || null,
+    requested_program_options: programOptions,
   })
 
   if (error) {

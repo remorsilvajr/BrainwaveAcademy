@@ -1,6 +1,7 @@
 'use server'
 
 import { redirect } from 'next/navigation'
+import { validateProgramOptions } from '@/lib/program-options'
 import { createClient } from '@/lib/supabase/server'
 import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
 import { isValidDob, dobRangeMessage, MIN_STUDENT_AGE, MAX_STUDENT_AGE } from '@/lib/dob'
@@ -86,10 +87,13 @@ export async function submitStudent(
   // The Program step's disabled cards are UX only — re-check server-side
   // that the requested classroom actually exists and is still age-eligible,
   // same boundary as the public enroll form.
+  // Named options inside a Tutorial / Quiz Bee style program. The checkboxes are
+  // UX only, so they're re-validated against the program's fixed list here.
+  let programOptions: string[] = []
   if (values.requested_classroom_id && values.student_dob && !fieldErrors.student_dob) {
     const { data: requestedClassroom } = await supabase
       .from('classrooms')
-      .select('id, min_age_years, max_age_years')
+      .select('id, slug, min_age_years, max_age_years')
       .eq('id', values.requested_classroom_id)
       .maybeSingle()
 
@@ -97,6 +101,13 @@ export async function submitStudent(
       fieldErrors.requested_classroom_id = 'Please select a valid program.'
     } else if (!isAgeEligibleForClassroom(values.student_dob, requestedClassroom)) {
       fieldErrors.requested_classroom_id = "The selected program isn't available for this student's age."
+    } else {
+      const checked = validateProgramOptions(
+        requestedClassroom.slug,
+        formData.getAll('requested_program_options').filter((v): v is string => typeof v === 'string')
+      )
+      if (checked.ok) programOptions = checked.options
+      else fieldErrors.requested_program_options = checked.error
     }
   }
 
@@ -124,6 +135,7 @@ export async function submitStudent(
     parent_contact_number: profile.phone_number,
     parent_email: profile.email,
     requested_classroom_id: values.requested_classroom_id || null,
+    requested_program_options: programOptions,
   })
 
   if (error) {

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { programOptionConfig } from '@/lib/program-options'
 import { Users, GraduationCap } from 'lucide-react'
 import { classroomAgeRangeLabel } from '@/lib/classrooms'
 import { formatCurrency } from '@/lib/format'
@@ -10,6 +11,7 @@ import type { SearchableOption } from '@/components/ui/searchable-select'
 export type ClassroomRow = {
   id: string
   name: string
+  slug: string
   min_age_years: number | null
   max_age_years: number | null
   lead_teacher_id: string | null
@@ -19,7 +21,7 @@ export type ClassroomRow = {
   tuition_due_date: string | null
   activity_due_date: string | null
   assistants: { id: string; name: string }[]
-  roster: { id: string; first_name: string; last_name: string; student_id: string | null; avatar_url: string | null; date_of_birth: string }[]
+  roster: { id: string; first_name: string; last_name: string; student_id: string | null; avatar_url: string | null; date_of_birth: string; program_options: string[] }[]
 }
 
 // Six fixed classrooms, one per program — no search/pagination scaffolding
@@ -72,7 +74,15 @@ export function ClassroomsGrid({
             </div>
 
             <div className="mt-4 border-t border-gray-100 dark:border-gray-800 pt-3 text-xs text-gray-500 dark:text-gray-400">
-              Tuition {formatCurrency(c.tuition_fee)} · Activity {formatCurrency(c.activity_fee)}
+              {programOptionConfig(c.slug) ? (
+                <>
+                  {formatCurrency(programOptionConfig(c.slug)!.hourlyRate)} per hour · {programOptionConfig(c.slug)!.options.length} options
+                </>
+              ) : (
+                <>
+                  Tuition {formatCurrency(c.tuition_fee)} · Activity {formatCurrency(c.activity_fee)}
+                </>
+              )}
             </div>
           </button>
         ))}

@@ -48,7 +48,7 @@ export default async function TeacherDashboardPage() {
   const assignableClassrooms = await getTeacherAssignedClassrooms(supabase, user?.id ?? '')
 
   const roster = students ?? []
-  // Attendance is daily-only: Academic Tutorials and Quiz Bee & Exam Prep
+  // Attendance is daily-only: Tutorial and Quiz Bee & Competitions
   // students are left out of the check-in list and its counts (milestones
   // below still use the full roster).
   const nonDaily = nonDailyClassroomIds(classrooms ?? [])

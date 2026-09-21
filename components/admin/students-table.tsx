@@ -26,6 +26,7 @@ type Student = {
   avatar_url: string | null
   classroom_id: string | null
   classroomName: string | null
+  program_options: string[]
   guardians: Guardian[]
   documents: DocRow[]
   outstanding: number
@@ -33,7 +34,7 @@ type Student = {
   unpaidFees: UnpaidFee[]
 }
 
-type Classroom = { id: string; name: string; min_age_years: number | null; max_age_years: number | null }
+type Classroom = { id: string; name: string; slug: string; min_age_years: number | null; max_age_years: number | null }
 
 export function StudentsTable({ students, classrooms }: { students: Student[]; classrooms: Classroom[] }) {
   const [search, setSearch] = useState('')

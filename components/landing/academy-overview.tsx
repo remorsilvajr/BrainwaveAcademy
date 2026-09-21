@@ -85,13 +85,13 @@ const programs = [
 
 const supportPrograms = [
   {
-    title: 'Academic Tutorials',
+    title: 'Tutorial',
     description:
       'One-on-one and small group specialized tutoring to support individual learning paces.',
     icon: '/images/landing/icon-tutorials.svg',
   },
   {
-    title: 'Quiz Bee & Exam Prep',
+    title: 'Quiz Bee & Competitions',
     description:
       'Coaching for external competitions and preparation for elementary entrance examinations.',
     icon: '/images/landing/icon-quiz-bee.svg',

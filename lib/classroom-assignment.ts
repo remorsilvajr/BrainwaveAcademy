@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { isAgeEligibleForClassroom } from '@/lib/classrooms'
+import { isHourlyProgram, validateProgramOptions } from '@/lib/program-options'
 
 // Shared by assignStudentClassroom (admin/students/actions.ts, assigning an
 // existing student from the Student Record modal) and
@@ -11,11 +12,14 @@ export async function applyClassroomToStudent(
   supabase: SupabaseClient,
   studentId: string,
   dateOfBirth: string,
-  classroomId: string
+  classroomId: string,
+  // The named options inside a Tutorial / Quiz Bee style program. Ignored (and
+  // stored as none) for every other program; required (at least one) for those.
+  programOptions: string[] = []
 ): Promise<{ classroomName: string }> {
   const { data: classroom } = await supabase
     .from('classrooms')
-    .select('id, name, min_age_years, max_age_years, tuition_fee, activity_fee, tuition_due_date, activity_due_date')
+    .select('id, name, slug, min_age_years, max_age_years, tuition_fee, activity_fee, tuition_due_date, activity_due_date')
     .eq('id', classroomId)
     .single()
 
@@ -29,11 +33,23 @@ export async function applyClassroomToStudent(
     )
   }
 
+  const checkedOptions = validateProgramOptions(classroom.slug, programOptions)
+  if (!checkedOptions.ok) {
+    throw new Error(checkedOptions.error)
+  }
+
   const { error: assignError } = await supabase
     .from('students')
-    .update({ classroom_id: classroomId })
+    .update({ classroom_id: classroomId, program_options: checkedOptions.options })
     .eq('id', studentId)
   if (assignError) throw new Error(assignError.message)
+
+  // Hourly programs (Tutorial, Quiz Bee & Competitions) are billed by the hours
+  // actually taken, so no fixed tuition/activity fee is generated for them;
+  // admin records those payments with Record Manual Payment.
+  if (isHourlyProgram(classroom.slug)) {
+    return { classroomName: classroom.name }
+  }
 
   const { data: existingFees } = await supabase
     .from('payments')

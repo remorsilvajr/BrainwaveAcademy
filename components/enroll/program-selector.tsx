@@ -1,12 +1,16 @@
 'use client'
 
+import { useState } from 'react'
 import { Check } from 'lucide-react'
 import { isAgeEligibleForClassroom, classroomAgeRangeLabel } from '@/lib/classrooms'
 import { formatCurrency } from '@/lib/format'
+import { programOptionConfig, PROGRAM_BRANCH_NOTE } from '@/lib/program-options'
+import { ProgramOptionsPicker } from '@/components/enroll/program-options-picker'
 
 export type SelectableClassroom = {
   id: string
   name: string
+  slug: string
   min_age_years: number | null
   max_age_years: number | null
   tuition_fee: number
@@ -24,12 +28,18 @@ export function ProgramSelector({
   value,
   onChange,
   error,
+  optionsError,
+  onOptionsChange,
 }: {
   classrooms: SelectableClassroom[]
   studentDob: string
   value: string
   onChange: (classroomId: string) => void
   error?: string
+  optionsError?: string
+  // Lets the parent form clear a stale "choose at least one" error as soon as
+  // the visitor ticks a box.
+  onOptionsChange?: () => void
 }) {
   // Eligibility can only be judged once a DOB exists — with nothing entered
   // yet, no card is disabled. Resetting the selection when a DOB edit makes
@@ -72,7 +82,13 @@ export function ProgramSelector({
               <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
                 {classroomAgeRangeLabel(classroom)}
               </p>
-              {eligible ? (
+              {eligible && programOptionConfig(classroom.slug) ? (
+                <div className="mt-3 space-y-0.5 text-xs text-gray-700 dark:text-gray-300">
+                  <p className="font-semibold">{formatCurrency(programOptionConfig(classroom.slug)!.hourlyRate)} per hour</p>
+                  <p className="text-gray-500 dark:text-gray-400">{programOptionConfig(classroom.slug)!.options.length} options to choose from</p>
+                  <p className="text-gray-500 dark:text-gray-400">{PROGRAM_BRANCH_NOTE}</p>
+                </div>
+              ) : eligible ? (
                 <div className="mt-3 space-y-0.5 text-xs text-gray-700 dark:text-gray-300">
                   {classroom.tuition_fee > 0 && (
                     <p>Tuition: {formatCurrency(classroom.tuition_fee)}</p>
@@ -93,12 +109,37 @@ export function ProgramSelector({
           )
         })}
       </div>
-      {selectedClassroom && (
-        <p className="mt-3 text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
-          Total: {formatCurrency(selectedClassroom.tuition_fee + selectedClassroom.activity_fee)}
-        </p>
+      {selectedClassroom && programOptionConfig(selectedClassroom.slug) ? (
+        <div className="mt-4">
+          {/* key: choosing a different program starts a fresh, empty selection. */}
+          <EnrollmentOptions key={selectedClassroom.id} slug={selectedClassroom.slug} error={optionsError} onChange={onOptionsChange} />
+        </div>
+      ) : (
+        selectedClassroom && (
+          <p className="mt-3 text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
+            Total: {formatCurrency(selectedClassroom.tuition_fee + selectedClassroom.activity_fee)}
+          </p>
+        )
       )}
       {error && <p className="mt-2 text-xs text-red-600 dark:text-red-400">{error}</p>}
     </div>
+  )
+}
+
+// The wizard's checkboxes post as `requested_program_options` (one value per
+// checked box). State lives here, remounted per program via `key` above.
+function EnrollmentOptions({ slug, error, onChange }: { slug: string; error?: string; onChange?: () => void }) {
+  const [selected, setSelected] = useState<string[]>([])
+  return (
+    <ProgramOptionsPicker
+      slug={slug}
+      selected={selected}
+      onChange={(next) => {
+        setSelected(next)
+        onChange?.()
+      }}
+      name="requested_program_options"
+      error={error}
+    />
   )
 }

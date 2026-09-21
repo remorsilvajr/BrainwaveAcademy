@@ -9,6 +9,7 @@ import { logActivity } from '@/lib/activity-log'
 import { getSiteUrl } from '@/lib/site-url'
 import { requireAdmin } from '@/lib/require-admin'
 import { applyClassroomToStudent } from '@/lib/classroom-assignment'
+import { validateProgramOptionsForClassroom } from '@/lib/program-options'
 
 type DocumentStatuses = Record<string, 'valid' | 'needs_correction' | 'pending'>
 
@@ -114,9 +115,20 @@ export async function requestCorrections(
 // note in CLAUDE.md under "Auth cookies, sessions, and RLS security model".
 export async function approveAndCreateStudentRecord(
   applicationId: string,
-  classroomId: string | null
+  classroomId: string | null,
+  programOptions: string[] = []
 ): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
+
+  // Checked before anything is created: applyClassroomToStudent would reject a
+  // missing/invalid option list too, but only after the student record and the
+  // parent link already exist.
+  if (classroomId) {
+    const checked = await validateProgramOptionsForClassroom(supabase, classroomId, programOptions)
+    if (!checked.ok) {
+      return { error: checked.error }
+    }
+  }
 
   const { data: application, error: fetchError } = await supabase
     .from('applications')
@@ -175,7 +187,7 @@ export async function approveAndCreateStudentRecord(
 
   if (classroomId) {
     try {
-      await applyClassroomToStudent(supabase, student.id, student.date_of_birth, classroomId)
+      await applyClassroomToStudent(supabase, student.id, student.date_of_birth, classroomId, programOptions)
     } catch (err) {
       return {
         error: `Student record created, but the classroom couldn't be assigned: ${err instanceof Error ? err.message : 'unknown error'}. You can assign it later from the Student Record.`,

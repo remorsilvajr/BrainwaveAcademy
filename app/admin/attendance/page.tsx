@@ -19,7 +19,7 @@ export default async function AdminAttendancePage({
     supabase.from('classrooms').select('id, name, slug').order('created_at', { ascending: true }),
   ])
 
-  // Academic Tutorials and Quiz Bee & Exam Prep aren't daily, so their students
+  // Tutorial and Quiz Bee & Competitions aren't daily, so their students
   // (and those programs in the filter) are left out of the attendance roster.
   const nonDaily = nonDailyClassroomIds(classrooms ?? [])
   const rosterStudents = (students ?? []).filter((s) => !s.classroom_id || !nonDaily.has(s.classroom_id))

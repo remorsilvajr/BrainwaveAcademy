@@ -15,7 +15,7 @@ const NAME_PATTERN = "[A-Za-zÀ-ÖØ-öø-ÿ' -]+"
 const NAME_TITLE = 'Only letters, spaces, hyphens, and apostrophes are allowed.'
 
 const STUDENT_FIELD_KEYS = ['student_first_name', 'student_middle_name', 'student_last_name', 'student_dob', 'student_gender']
-const PROGRAM_FIELD_KEYS = ['requested_classroom_id']
+const PROGRAM_FIELD_KEYS = ['requested_classroom_id', 'requested_program_options']
 
 export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom[] }) {
   const [state, formAction, isPending] = useActionState(submitApplication, initialState)
@@ -298,6 +298,8 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
               clearError('requested_classroom_id')
             }}
             error={liveErrors.requested_classroom_id}
+            optionsError={liveErrors.requested_program_options}
+            onOptionsChange={() => clearError('requested_program_options')}
           />
           {/* Required, but enforced via the server action + this error
               message rather than a native `required` attribute — there's no

@@ -14,7 +14,7 @@ export default async function EnrollPage() {
   const supabase = await createClient()
   const { data: classrooms } = await supabase
     .from('classrooms')
-    .select('id, name, min_age_years, max_age_years, tuition_fee, activity_fee')
+    .select('id, name, slug, min_age_years, max_age_years, tuition_fee, activity_fee')
     .order('created_at')
 
   return (

@@ -82,7 +82,7 @@ export function EnrollStudentForm({
 
   const values = state.values ?? {}
   const studentStepHasError = Object.keys(liveErrors).some((k) => STUDENT_FIELD_KEYS.includes(k))
-  const programStepHasError = Object.keys(liveErrors).some((k) => k === 'requested_classroom_id')
+  const programStepHasError = Object.keys(liveErrors).some((k) => k === 'requested_classroom_id' || k === 'requested_program_options')
 
   const studentDone = !!studentFirstName && !!studentLastName && !!studentDob && !!genderValue && !studentStepHasError
   const programDone = !!selectedClassroomId && !programStepHasError
@@ -224,6 +224,8 @@ export function EnrollStudentForm({
               clearError('requested_classroom_id')
             }}
             error={liveErrors.requested_classroom_id}
+            optionsError={liveErrors.requested_program_options}
+            onOptionsChange={() => clearError('requested_program_options')}
           />
         </div>
 

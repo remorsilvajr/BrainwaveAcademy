@@ -19,6 +19,8 @@ import { AvatarEditor } from '@/components/ui/avatar-editor'
 import { DocumentPreviewModal } from '@/components/ui/document-preview-modal'
 import { DobSelect } from '@/components/ui/dob-select'
 import { Modal } from '@/components/ui/modal'
+import { ProgramOptionsPicker } from '@/components/enroll/program-options-picker'
+import { isHourlyProgram } from '@/lib/program-options'
 
 type Guardian = {
   name: string
@@ -41,6 +43,7 @@ type Student = {
   avatar_url: string | null
   classroom_id: string | null
   classroomName: string | null
+  program_options: string[]
   guardians: Guardian[]
   documents: DocRow[]
   outstanding: number
@@ -48,7 +51,7 @@ type Student = {
   unpaidFees: UnpaidFee[]
 }
 
-type Classroom = { id: string; name: string; min_age_years: number | null; max_age_years: number | null }
+type Classroom = { id: string; name: string; slug: string; min_age_years: number | null; max_age_years: number | null }
 
 type Tab = 'personal' | 'guardian' | 'documents' | 'balance'
 
@@ -75,6 +78,10 @@ export function StudentRecordModal({
   const [errorMessage, setErrorMessage] = useState('')
 
   const [classroomPick, setClassroomPick] = useState(student.classroom_id ?? '')
+  const [optionPicks, setOptionPicks] = useState<string[]>(student.program_options ?? [])
+  const pickedClassroom = classrooms.find((c) => c.id === classroomPick)
+  const optionsChanged =
+    [...optionPicks].sort().join('|') !== [...(student.program_options ?? [])].sort().join('|')
   const [isSavingClassroom, setIsSavingClassroom] = useState(false)
   const [classroomError, setClassroomError] = useState('')
 
@@ -82,7 +89,7 @@ export function StudentRecordModal({
     setClassroomError('')
     setIsSavingClassroom(true)
     try {
-      const result = await assignStudentClassroom(student.id, classroomPick || null)
+      const result = await assignStudentClassroom(student.id, classroomPick || null, optionPicks)
       if (result?.error) {
         setClassroomError(result.error)
         return
@@ -278,10 +285,22 @@ export function StudentRecordModal({
                 <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                   Currently: <span className="font-medium text-gray-900 dark:text-gray-100">{student.classroomName ?? 'Unassigned'}</span>
                 </p>
+                {student.classroom_id && classrooms.some((c) => c.id === student.classroom_id && isHourlyProgram(c.slug)) && (
+                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    Options:{' '}
+                    <span className="font-medium text-gray-900 dark:text-gray-100">
+                      {(student.program_options ?? []).length > 0 ? student.program_options.join(', ') : 'None chosen yet'}
+                    </span>
+                  </p>
+                )}
                 <div className="mt-2 flex flex-col gap-2 sm:flex-row">
                   <select
                     value={classroomPick}
-                    onChange={(e) => setClassroomPick(e.target.value)}
+                    onChange={(e) => {
+                      setClassroomPick(e.target.value)
+                      // Options belong to a program: keep the saved ones only while the pick is still that program.
+                      setOptionPicks(e.target.value === (student.classroom_id ?? '') ? (student.program_options ?? []) : [])
+                    }}
                     className="flex-1 rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
                   >
                     <option value="">Unassigned</option>
@@ -296,12 +315,17 @@ export function StudentRecordModal({
                   </select>
                   <button
                     onClick={handleAssignClassroom}
-                    disabled={isSavingClassroom || classroomPick === (student.classroom_id ?? '')}
+                    disabled={isSavingClassroom || (classroomPick === (student.classroom_id ?? '') && !optionsChanged)}
                     className="rounded-lg bg-[#0b1b62] px-4 py-2 text-sm font-semibold text-white hover:bg-[#08154d] disabled:opacity-60"
                   >
                     {isSavingClassroom ? 'Saving…' : 'Save'}
                   </button>
                 </div>
+                {pickedClassroom && isHourlyProgram(pickedClassroom.slug) && (
+                  <div className="mt-3">
+                    <ProgramOptionsPicker slug={pickedClassroom.slug} selected={optionPicks} onChange={setOptionPicks} />
+                  </div>
+                )}
                 {classroomError && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{classroomError}</p>}
               </div>
             </div>

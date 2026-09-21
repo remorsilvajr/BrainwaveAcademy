@@ -52,7 +52,7 @@ export async function recordAttendance(input: {
     return { error: 'Teachers can only record attendance for today. Ask an admin to correct a past date.' }
   }
 
-  // Academic Tutorials and Quiz Bee & Exam Prep aren't daily, so their
+  // Tutorial and Quiz Bee & Competitions aren't daily, so their
   // students don't get attendance at all.
   const { data: student } = await supabase.from('students').select('classroom_id').eq('id', input.student_id).maybeSingle()
   if (!student) {

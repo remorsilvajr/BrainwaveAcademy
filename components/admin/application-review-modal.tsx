@@ -14,6 +14,8 @@ import { documentLabels, documentShortLabels, documentOrder } from '@/lib/docume
 import { isAgeEligibleForClassroom, classroomAgeRangeLabel } from '@/lib/classrooms'
 import { DocumentPreviewModal } from '@/components/ui/document-preview-modal'
 import { Modal } from '@/components/ui/modal'
+import { ProgramOptionsPicker } from '@/components/enroll/program-options-picker'
+import { isHourlyProgram } from '@/lib/program-options'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 type DocRow = { document_type: string; file_url: string; verification_status: string }
@@ -21,6 +23,7 @@ type DocRow = { document_type: string; file_url: string; verification_status: st
 type Classroom = {
   id: string
   name: string
+  slug: string
   min_age_years: number | null
   max_age_years: number | null
   tuition_fee: number
@@ -42,6 +45,7 @@ type Application = {
   parent_contact_number: string
   parent_email: string
   requested_classroom_id: string | null
+  requested_program_options: string[]
   documents: DocRow[]
 }
 
@@ -78,6 +82,9 @@ export function ApplicationReviewModal({
   })
   const [notes, setNotes] = useState(application.review_notes ?? '')
   const [classroomPick, setClassroomPick] = useState(application.requested_classroom_id ?? '')
+  // The options the family asked for come pre-ticked, but only while the program is still the one they requested.
+  const [optionPicks, setOptionPicks] = useState<string[]>(application.requested_program_options ?? [])
+  const pickedClassroom = classrooms.find((c) => c.id === classroomPick)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [result, setResult] = useState<'saved' | 'corrections' | 'enrolled' | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
@@ -161,7 +168,7 @@ export function ApplicationReviewModal({
     setErrorMessage('')
     try {
       await saveDocumentReview(application.id, statuses, notes)
-      const result = await approveAndCreateStudentRecord(application.id, classroomPick || null)
+      const result = await approveAndCreateStudentRecord(application.id, classroomPick || null, optionPicks)
       if (result?.error) {
         setErrorMessage(result.error)
         return
@@ -241,7 +248,10 @@ export function ApplicationReviewModal({
             </p>
             <select
               value={classroomPick}
-              onChange={(e) => setClassroomPick(e.target.value)}
+              onChange={(e) => {
+                setClassroomPick(e.target.value)
+                setOptionPicks(e.target.value === application.requested_classroom_id ? (application.requested_program_options ?? []) : [])
+              }}
               disabled={alreadyHasStudent}
               className="mt-2 w-full rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none disabled:opacity-60"
             >
@@ -255,6 +265,16 @@ export function ApplicationReviewModal({
                 )
               })}
             </select>
+            {pickedClassroom && isHourlyProgram(pickedClassroom.slug) && (
+              <div className="mt-3">
+                <ProgramOptionsPicker
+                  slug={pickedClassroom.slug}
+                  selected={optionPicks}
+                  onChange={setOptionPicks}
+                  disabled={alreadyHasStudent}
+                />
+              </div>
+            )}
           </div>
 
           <p className="mb-2 mt-6 text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">

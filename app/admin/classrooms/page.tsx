@@ -14,7 +14,7 @@ export default async function ClassroomsPage() {
     supabase.from('classroom_assistants').select('classroom_id, teacher_id'),
     supabase
       .from('students')
-      .select('id, first_name, last_name, student_id, avatar_url, classroom_id, date_of_birth')
+      .select('id, first_name, last_name, student_id, avatar_url, classroom_id, date_of_birth, program_options')
       .not('classroom_id', 'is', null),
   ])
 

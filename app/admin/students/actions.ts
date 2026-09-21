@@ -75,7 +75,8 @@ export async function updateStudentRecord(
 // see the Classrooms & fee schedule note in CLAUDE.md for why.
 export async function assignStudentClassroom(
   studentId: string,
-  classroomId: string | null
+  classroomId: string | null,
+  programOptions: string[] = []
 ): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
 
@@ -89,11 +90,11 @@ export async function assignStudentClassroom(
   }
 
   if (classroomId === null) {
-    const { error } = await supabase.from('students').update({ classroom_id: null }).eq('id', studentId)
+    const { error } = await supabase.from('students').update({ classroom_id: null, program_options: [] }).eq('id', studentId)
     if (error) return { error: error.message }
   } else {
     try {
-      await applyClassroomToStudent(supabase, studentId, student.date_of_birth, classroomId)
+      await applyClassroomToStudent(supabase, studentId, student.date_of_birth, classroomId, programOptions)
     } catch (err) {
       return { error: err instanceof Error ? err.message : 'Could not assign that classroom.' }
     }

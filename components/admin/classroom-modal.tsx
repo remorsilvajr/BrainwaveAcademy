@@ -7,6 +7,7 @@ import { calculateAge, formatCurrency } from '@/lib/format'
 import { classroomAgeRangeLabel, feeDueDateBounds, validateFeeDueDate } from '@/lib/classrooms'
 import { Modal } from '@/components/ui/modal'
 import { DobSelect } from '@/components/ui/dob-select'
+import { isHourlyProgram, programOptionConfig, PROGRAM_BRANCH_NOTE } from '@/lib/program-options'
 import { SearchableSelect, type SearchableOption } from '@/components/ui/searchable-select'
 import {
   assignLeadTeacher,
@@ -305,6 +306,11 @@ export function ClassroomModal({
                     <p className="text-xs text-gray-400 dark:text-gray-500">
                       {s.student_id ?? '-'} · {calculateAge(s.date_of_birth)}y
                     </p>
+                    {isHourlyProgram(classroom.slug) && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {s.program_options.length > 0 ? s.program_options.join(', ') : 'No options chosen yet'}
+                      </p>
+                    )}
                   </div>
                 </div>
               ))
@@ -391,7 +397,25 @@ export function ClassroomModal({
           </div>
         )}
 
-        {tab === 'fees' && (
+        {tab === 'fees' && isHourlyProgram(classroom.slug) && (
+          <div className="space-y-3">
+            <div className="rounded-lg bg-gray-50 dark:bg-gray-800/60 p-4">
+              <p className="text-xs text-gray-400 dark:text-gray-500">Hourly Rate</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                {formatCurrency(programOptionConfig(classroom.slug)!.hourlyRate)} per hour
+              </p>
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              This program is billed by the hours actually taken, so no fixed fee is generated when a student is
+              assigned. Record each payment from Payments with Record Manual Payment. {PROGRAM_BRANCH_NOTE}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Options: {programOptionConfig(classroom.slug)!.options.join(', ')}.
+            </p>
+          </div>
+        )}
+
+        {tab === 'fees' && !isHourlyProgram(classroom.slug) && (
           <div className="space-y-4">
             <p className="text-xs text-gray-500 dark:text-gray-400">
               Only the due dates can be changed, from today through December 31, {bounds.max.slice(0, 4)}. Fee amounts are

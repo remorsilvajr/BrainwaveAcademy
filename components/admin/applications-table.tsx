@@ -13,6 +13,7 @@ type DocRow = { document_type: string; file_url: string; verification_status: st
 type Classroom = {
   id: string
   name: string
+  slug: string
   min_age_years: number | null
   max_age_years: number | null
   tuition_fee: number
@@ -36,6 +37,7 @@ type Application = {
   parent_contact_number: string
   parent_email: string
   requested_classroom_id: string | null
+  requested_program_options: string[]
   documents: DocRow[]
 }
 

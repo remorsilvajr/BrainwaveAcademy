@@ -6,7 +6,7 @@ import { todayIso } from '@/lib/format'
 // slip through on any one surface while being caught on the others —
 // found via retro pen-testing that these were previously unvalidated.
 export const MIN_STUDENT_AGE = 2
-// The oldest a student can be: Academic Tutorials and Quiz Bee & Exam Prep are
+// The oldest a student can be: Tutorial and Quiz Bee & Competitions are
 // set to ages 5-18, so the cap can't be lower than 18 or those programs could
 // never take an older student. Anything beyond is almost certainly a typo in the
 // date of birth. Keep this at or above every program's max_age_years.

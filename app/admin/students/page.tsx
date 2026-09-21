@@ -19,6 +19,7 @@ type StudentRow = {
   avatar_url: string | null
   application_id: string | null
   classroom_id: string | null
+  program_options: string[]
   parent_student: ParentLink[] | null
 }
 
@@ -33,7 +34,7 @@ export default async function StudentsPage() {
     supabase.from('application_documents').select('*'),
     supabase
       .from('classrooms')
-      .select('id, name, min_age_years, max_age_years')
+      .select('id, name, slug, min_age_years, max_age_years')
       .order('created_at', { ascending: true }),
     // Every unpaid fee school-wide (uncapped: it feeds per-child sums), grouped
     // by child below. Same "pending = outstanding" rule as the dashboard.

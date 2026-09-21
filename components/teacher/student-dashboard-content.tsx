@@ -53,7 +53,7 @@ export function StudentDashboardContent({
   // mutations would fail anyway. Teacher/admin both omit this (default
   // false) since they hold the only write access to these tables.
   readOnly?: boolean
-  // False for a student in Academic Tutorials or Quiz Bee & Exam Prep, which
+  // False for a student in Tutorial or Quiz Bee & Competitions, which
   // don't run daily: the attendance controls and history are replaced by a note.
   attendanceTracked?: boolean
 }) {

@@ -14,7 +14,7 @@ export type MilestoneReportData = {
   enrollmentStatus: string
   milestonesByCategory: Record<string, { assessmentDate: string; notes: string } | undefined>
   attendance: { date: string; status: string }[]
-  // False for Academic Tutorials / Quiz Bee & Exam Prep (not daily): the
+  // False for Tutorial / Quiz Bee & Competitions (not daily): the
   // attendance section is left out of the report.
   attendanceTracked: boolean
 }

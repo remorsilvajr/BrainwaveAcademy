@@ -16,7 +16,7 @@ export default async function EnrollAStudentPage({
     supabase.from('profiles').select('first_name, last_name').eq('id', user?.id ?? '').single(),
     supabase
       .from('classrooms')
-      .select('id, name, min_age_years, max_age_years, tuition_fee, activity_fee')
+      .select('id, name, slug, min_age_years, max_age_years, tuition_fee, activity_fee')
       .order('created_at'),
   ])
 
