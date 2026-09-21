@@ -4,6 +4,7 @@ import { parentApplicationsFilter } from '@/lib/parent-applications'
 import { EmptyState } from '@/components/ui/empty-state'
 import { FeeBreakdown } from '@/components/parent/fee-breakdown'
 import { WalletPanel } from '@/components/parent/wallet-panel'
+import { PaymentsTabs } from '@/components/parent/payments-tabs'
 import { withStudent } from '@/lib/parent-links'
 
 export default async function ParentPaymentsPage({
@@ -29,10 +30,10 @@ export default async function ParentPaymentsPage({
     supabase.from('wallets').select('balance').eq('parent_id', user?.id ?? '').maybeSingle(),
     supabase
       .from('wallet_requests')
-      .select('*')
+      .select('id, requested_amount, approved_amount, status, note, review_note, reviewed_at, created_at')
       .eq('parent_id', user?.id ?? '')
       .order('created_at', { ascending: false })
-      .limit(5),
+      .limit(100),
   ])
 
   const walletBalance = wallet?.balance ?? 0
@@ -50,12 +51,17 @@ export default async function ParentPaymentsPage({
           <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Payments</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">View billing history and pay outstanding fees.</p>
         </div>
-        <WalletPanel balance={walletBalance} requests={walletRequests ?? []} />
-        <EmptyState
-          icon={ClipboardList}
-          title="No Enrollment Application Yet"
-          description="Once your child is enrolled and assigned to a classroom, their fee breakdown and payment history will appear here."
-          action={{ href: '/parent/enroll-a-student', label: 'Enroll A Student' }}
+        <WalletPanel balance={walletBalance} />
+        <PaymentsTabs
+          requests={walletRequests ?? []}
+          feesContent={
+            <EmptyState
+              icon={ClipboardList}
+              title="No Enrollment Application Yet"
+              description="Once your child is enrolled and assigned to a classroom, their fee breakdown and payment history will appear here."
+              action={{ href: '/parent/enroll-a-student', label: 'Enroll A Student' }}
+            />
+          }
         />
       </div>
     )
@@ -70,13 +76,18 @@ export default async function ParentPaymentsPage({
           <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Payments</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">View billing history and pay outstanding fees.</p>
         </div>
-        <WalletPanel balance={walletBalance} requests={walletRequests ?? []} />
-        <EmptyState
-          icon={GraduationCap}
-          title="Not Enrolled Yet"
-          tone="warning"
-          description={`${studentName} hasn't been enrolled and assigned to a classroom yet, so there are no fees to show. Check Enrollment Status for the latest update.`}
-          action={{ href: withStudent('/parent/enrollment-status', studentParam), label: 'View Enrollment Status' }}
+        <WalletPanel balance={walletBalance} />
+        <PaymentsTabs
+          requests={walletRequests ?? []}
+          feesContent={
+            <EmptyState
+              icon={GraduationCap}
+              title="Not Enrolled Yet"
+              tone="warning"
+              description={`${studentName} hasn't been enrolled and assigned to a classroom yet, so there are no fees to show. Check Enrollment Status for the latest update.`}
+              action={{ href: withStudent('/parent/enrollment-status', studentParam), label: 'View Enrollment Status' }}
+            />
+          }
         />
       </div>
     )
@@ -103,12 +114,17 @@ export default async function ParentPaymentsPage({
         <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Payments</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">View billing history and pay outstanding fees.</p>
       </div>
-      <WalletPanel balance={walletBalance} requests={walletRequests ?? []} />
-      <FeeBreakdown
-        studentName={studentName}
-        classroomName={classroom?.name ?? null}
-        walletBalance={walletBalance}
-        payments={payments ?? []}
+      <WalletPanel balance={walletBalance} />
+      <PaymentsTabs
+        requests={walletRequests ?? []}
+        feesContent={
+          <FeeBreakdown
+            studentName={studentName}
+            classroomName={classroom?.name ?? null}
+            walletBalance={walletBalance}
+            payments={payments ?? []}
+          />
+        }
       />
     </div>
   )
