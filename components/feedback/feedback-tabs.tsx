@@ -22,7 +22,7 @@ const tabs: { key: Tab; label: string }[] = [
 // here — both were the exact same form/table, just with a different
 // pre-selected category, so having two tabs for one form read as
 // redundant. One "Send Feedback" tab now covers both; the Category
-// dropdown inside FeedbackForm (bug listed first, per lib/feedback.ts) is
+// dropdown inside FeedbackForm (order in lib/feedback.ts) is
 // what actually distinguishes a bug report from a general concern.
 export function FeedbackTabs() {
   const [tab, setTab] = useState<Tab>('send')
@@ -46,7 +46,7 @@ export function FeedbackTabs() {
         ))}
       </div>
 
-      {tab === 'send' && <FeedbackForm initialCategory="bug" />}
+      {tab === 'send' && <FeedbackForm />}
       {tab === 'mine' && <MyFeedbackList />}
     </div>
   )

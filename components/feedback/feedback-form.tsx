@@ -4,7 +4,7 @@ import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { X, ImagePlus } from 'lucide-react'
 import { submitFeedback } from '@/components/feedback/actions'
-import { feedbackCategoryLabels, feedbackCategoryOrder } from '@/lib/feedback'
+import { DEFAULT_FEEDBACK_CATEGORY, feedbackCategoryLabels, feedbackCategoryOrder, feedbackPrompts } from '@/lib/feedback'
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024 // matches the bug-reports bucket's own file_size_limit
 
@@ -13,7 +13,7 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024 // matches the bug-reports bucket's own 
 // tabs (renders this directly, no onCancel, so it never shows a Cancel
 // button and resets itself instead of closing after a successful send).
 export function FeedbackForm({
-  initialCategory = 'bug',
+  initialCategory = DEFAULT_FEEDBACK_CATEGORY,
   onCancel,
 }: {
   initialCategory?: string
@@ -29,6 +29,7 @@ export function FeedbackForm({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [sent, setSent] = useState(false)
+  const prompts = feedbackPrompts[category] ?? feedbackPrompts[DEFAULT_FEEDBACK_CATEGORY]
 
   function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -92,11 +93,7 @@ export function FeedbackForm({
           </div>
         ) : (
           <>
-            <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
-              {category === 'bug'
-                ? 'Ran into something broken or confusing? Let us know what happened and where. The more specific, the faster we can fix it.'
-                : 'Have a concern, suggestion, or something else to share? Send it here and the admin team will follow up.'}
-            </p>
+            <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">{prompts.intro}</p>
             <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Category</label>
             <select
               value={category}
@@ -113,16 +110,16 @@ export function FeedbackForm({
             <input
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
-              placeholder="e.g. Can't upload a document on the Requirements page"
+              placeholder={prompts.subjectPlaceholder}
               maxLength={150}
               className="mb-4 w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
             />
-            <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">What happened?</label>
+            <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">{prompts.messageLabel}</label>
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               rows={5}
-              placeholder="What were you trying to do, what happened instead, and on which page?"
+              placeholder={prompts.messagePlaceholder}
               className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
             />
 
