@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { X, User as UserIcon } from 'lucide-react'
-import { calculateAge, formatCurrency, formatDateLong } from '@/lib/format'
-import { classroomAgeRangeLabel, FEE_SCHEDULE_EDITABLE } from '@/lib/classrooms'
+import { calculateAge, formatCurrency } from '@/lib/format'
+import { classroomAgeRangeLabel, feeDueDateBounds, validateFeeDueDate } from '@/lib/classrooms'
 import { Modal } from '@/components/ui/modal'
 import { SearchableSelect, type SearchableOption } from '@/components/ui/searchable-select'
 import {
@@ -12,7 +12,7 @@ import {
   removeLeadTeacher,
   addAssistantTeacher,
   removeAssistantTeacher,
-  updateFeeSchedule,
+  updateFeeDueDates,
 } from '@/app/admin/classrooms/actions'
 import type { ClassroomRow } from '@/components/admin/classrooms-grid'
 
@@ -35,13 +35,13 @@ export function ClassroomModal({
   const [teacherError, setTeacherError] = useState('')
   const [isSavingTeacher, setIsSavingTeacher] = useState(false)
 
-  const [tuitionFee, setTuitionFee] = useState(String(classroom.tuition_fee))
-  const [activityFee, setActivityFee] = useState(String(classroom.activity_fee))
   const [tuitionDue, setTuitionDue] = useState(classroom.tuition_due_date ?? '')
   const [activityDue, setActivityDue] = useState(classroom.activity_due_date ?? '')
   const [feeError, setFeeError] = useState('')
   const [isSavingFees, setIsSavingFees] = useState(false)
   const [feeSaved, setFeeSaved] = useState(false)
+
+  const bounds = feeDueDateBounds()
 
   const assignedTeacherIds = new Set([
     ...(classroom.lead_teacher_id ? [classroom.lead_teacher_id] : []),
@@ -125,11 +125,23 @@ export function ClassroomModal({
   async function handleSaveFees() {
     setFeeError('')
     setFeeSaved(false)
+    // Same check the server action runs, but only for a date being changed,
+    // so a typo is flagged instantly.
+    for (const [value, stored] of [
+      [tuitionDue, classroom.tuition_due_date ?? ''],
+      [activityDue, classroom.activity_due_date ?? ''],
+    ]) {
+      if (value && value !== stored) {
+        const message = validateFeeDueDate(value)
+        if (message) {
+          setFeeError(message)
+          return
+        }
+      }
+    }
     setIsSavingFees(true)
     try {
-      const result = await updateFeeSchedule(classroom.id, {
-        tuition_fee: Number(tuitionFee) || 0,
-        activity_fee: Number(activityFee) || 0,
+      const result = await updateFeeDueDates(classroom.id, {
         tuition_due_date: tuitionDue || null,
         activity_due_date: activityDue || null,
       })
@@ -290,75 +302,41 @@ export function ClassroomModal({
           </div>
         )}
 
-        {tab === 'fees' && !FEE_SCHEDULE_EDITABLE && (
+        {tab === 'fees' && (
           <div className="space-y-4">
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Program fees and due dates are locked and can&apos;t be changed right now.
-            </p>
-            <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {[
-                { label: 'Tuition Fee', value: formatCurrency(classroom.tuition_fee) },
-                {
-                  label: 'Tuition Due Date',
-                  value: classroom.tuition_due_date ? formatDateLong(classroom.tuition_due_date) : 'Not set',
-                },
-                { label: 'Activity Fee', value: formatCurrency(classroom.activity_fee) },
-                {
-                  label: 'Activity Fee Due Date',
-                  value: classroom.activity_due_date ? formatDateLong(classroom.activity_due_date) : 'Not set',
-                },
-              ].map((row) => (
-                <div key={row.label} className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 px-3 py-2">
-                  <dt className="text-xs font-semibold text-[#0b1b62] dark:text-indigo-300">{row.label}</dt>
-                  <dd className="mt-0.5 text-sm text-gray-900 dark:text-gray-100">{row.value}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-        )}
-
-        {tab === 'fees' && FEE_SCHEDULE_EDITABLE && (
-          <div className="space-y-4">
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Changes here only apply to students assigned to this classroom from now on. Fees already generated for
-              currently-assigned students are not retroactively changed.
+              Only the due dates can be changed, from today through December 31, {bounds.max.slice(0, 4)}. Fee amounts are
+              fixed. A new due date applies to students assigned to this program from now on; fees already generated for
+              currently-assigned students keep their existing due dates.
             </p>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Tuition Fee (₱)</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={tuitionFee}
-                  onChange={(e) => setTuitionFee(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
-                />
+                <p className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Tuition Fee</p>
+                <p className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 px-3 py-2 text-sm text-gray-900 dark:text-gray-100">{formatCurrency(classroom.tuition_fee)}</p>
               </div>
               <div>
-                <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Tuition Due Date</label>
+                <label htmlFor="tuition-due" className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Tuition Due Date</label>
                 <input
+                  id="tuition-due"
                   type="date"
+                  min={bounds.min}
+                  max={bounds.max}
                   value={tuitionDue}
                   onChange={(e) => setTuitionDue(e.target.value)}
                   className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Activity Fee (₱)</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={activityFee}
-                  onChange={(e) => setActivityFee(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
-                />
+                <p className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Activity Fee</p>
+                <p className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 px-3 py-2 text-sm text-gray-900 dark:text-gray-100">{formatCurrency(classroom.activity_fee)}</p>
               </div>
               <div>
-                <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Activity Fee Due Date</label>
+                <label htmlFor="activity-due" className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Activity Fee Due Date</label>
                 <input
+                  id="activity-due"
                   type="date"
+                  min={bounds.min}
+                  max={bounds.max}
                   value={activityDue}
                   onChange={(e) => setActivityDue(e.target.value)}
                   className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
@@ -371,7 +349,7 @@ export function ClassroomModal({
             )}
             {feeSaved && !feeError && (
               <p className="rounded-lg bg-green-50 dark:bg-green-950/30 px-3 py-2 text-sm text-green-700 dark:text-green-400">
-                Fee schedule saved.
+                Due dates saved.
               </p>
             )}
 
@@ -380,7 +358,7 @@ export function ClassroomModal({
               disabled={isSavingFees}
               className="w-full rounded-lg bg-[#0b1b62] py-2.5 text-sm font-semibold text-white hover:bg-[#08154d] disabled:opacity-60"
             >
-              {isSavingFees ? 'Saving…' : 'Save Fee Schedule'}
+              {isSavingFees ? 'Saving…' : 'Save Due Dates'}
             </button>
           </div>
         )}

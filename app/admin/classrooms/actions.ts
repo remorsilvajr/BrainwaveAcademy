@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { logActivity } from '@/lib/activity-log'
-import { FEE_SCHEDULE_EDITABLE } from '@/lib/classrooms'
+import { validateFeeDueDate } from '@/lib/classrooms'
 
 // All four teacher-assignment actions below rely on admins_manage_classrooms
 // / admins_manage_classroom_assistants (both `for all`, admin-only) for the
@@ -162,41 +162,49 @@ export async function removeAssistantTeacher(classroomId: string, teacherId: str
   revalidatePath('/admin/classrooms')
 }
 
-// Only affects students assigned to this classroom *after* the change —
-// see the Classrooms & fee schedule note in CLAUDE.md for why this
-// deliberately never touches fee rows already generated for
-// already-assigned students.
-export async function updateFeeSchedule(
+// Due dates only: the fee amounts are deliberately not writable from here.
+// Only affects students assigned to this classroom *after* the change, and
+// never touches fee rows already generated for already-assigned students (see
+// the Classrooms note in CLAUDE.md). A date is only range-checked when it's
+// being changed, so a stored date that has since drifted into the past doesn't
+// block saving the other one.
+export async function updateFeeDueDates(
   classroomId: string,
-  updates: {
-    tuition_fee: number
-    activity_fee: number
-    tuition_due_date: string | null
-    activity_due_date: string | null
-  }
+  dates: { tuition_due_date: string | null; activity_due_date: string | null }
 ): Promise<{ error: string } | undefined> {
-  if (!FEE_SCHEDULE_EDITABLE) {
-    return { error: 'Program fees and due dates are locked and cannot be changed right now.' }
-  }
-
   const supabase = await createClient()
 
-  if (updates.tuition_fee < 0 || updates.activity_fee < 0) {
-    return { error: 'Fee amounts cannot be negative.' }
+  const { data: existing } = await supabase
+    .from('classrooms')
+    .select('tuition_due_date, activity_due_date')
+    .eq('id', classroomId)
+    .maybeSingle()
+  if (!existing) {
+    return { error: 'This program could not be found.' }
   }
 
-  const { error } = await supabase
-    .from('classrooms')
-    .update({
-      tuition_fee: updates.tuition_fee,
-      activity_fee: updates.activity_fee,
-      tuition_due_date: updates.tuition_due_date || null,
-      activity_due_date: updates.activity_due_date || null,
-    })
-    .eq('id', classroomId)
+  const tuition = dates.tuition_due_date || null
+  const activity = dates.activity_due_date || null
+  for (const [value, stored] of [
+    [tuition, existing.tuition_due_date],
+    [activity, existing.activity_due_date],
+  ] as const) {
+    if (value && value !== stored) {
+      const message = validateFeeDueDate(value)
+      if (message) return { error: message }
+    }
+  }
 
+  const { data: updated, error } = await supabase
+    .from('classrooms')
+    .update({ tuition_due_date: tuition, activity_due_date: activity })
+    .eq('id', classroomId)
+    .select('id')
   if (error) {
     return { error: error.message }
+  }
+  if (!updated || updated.length === 0) {
+    return { error: 'You do not have permission to change this program.' }
   }
 
   const {
@@ -204,7 +212,7 @@ export async function updateFeeSchedule(
   } = await supabase.auth.getUser()
   await logActivity(supabase, {
     actorId: actingAdmin?.id ?? null,
-    action: 'Updated classroom fee schedule',
+    action: 'Updated classroom fee due dates',
     targetTable: 'classrooms',
     targetId: classroomId,
   })

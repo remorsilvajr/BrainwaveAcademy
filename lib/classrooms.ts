@@ -1,4 +1,5 @@
 import { isValidDob, MAX_AGE } from '@/lib/dob'
+import { todayIso } from '@/lib/format'
 
 // A classroom's age bounds are null when the program has no age
 // restriction (Nursery, Kinder, and both support programs — see CLAUDE.md's
@@ -23,7 +24,25 @@ export function classroomAgeRangeLabel(classroom: { min_age_years: number | null
   return `Ages ${classroom.min_age_years}-${classroom.max_age_years}`
 }
 
-// Programs' tuition/activity fees and due dates are locked for now: the Fee
-// Schedule tab is read-only and updateFeeSchedule rejects any change. Flip to
-// true to bring editing back (the form is still in classroom-modal.tsx).
-export const FEE_SCHEDULE_EDITABLE = false
+// Fee amounts are fixed (no UI or action changes them); only the two due dates
+// are editable, and only within a realistic window: from today (Manila) through
+// the end of next year. A past date would make every newly assigned student's
+// fee overdue on day one, and a date years out is almost certainly a typo.
+export function feeDueDateBounds() {
+  const today = todayIso()
+  return { min: today, max: `${Number(today.slice(0, 4)) + 1}-12-31` }
+}
+
+// Returns an error message, or null when `value` (YYYY-MM-DD) is a real calendar
+// date inside the allowed window. Run server-side too: a date input's min/max
+// is UX only.
+export function validateFeeDueDate(value: string): string | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return 'Enter a valid date.'
+  const parsed = new Date(`${value}T00:00:00Z`)
+  if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== value) return 'Enter a valid date.'
+  const { min, max } = feeDueDateBounds()
+  if (value < min || value > max) {
+    return `Due dates must be between today and December 31, ${max.slice(0, 4)}.`
+  }
+  return null
+}
