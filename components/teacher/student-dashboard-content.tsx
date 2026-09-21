@@ -36,6 +36,7 @@ export function StudentDashboardContent({
   milestones,
   avatarEditor,
   readOnly = false,
+  attendanceReadOnly = false,
   attendanceTracked = true,
   health,
 }: {
@@ -59,6 +60,9 @@ export function StudentDashboardContent({
   // mutations would fail anyway. Teacher/admin both omit this (default
   // false) since they hold the only write access to these tables.
   readOnly?: boolean
+  // Admin: attendance is shown but not editable (teachers record student attendance), while
+  // assessments and the avatar stay editable. Unlike readOnly, this hides only the check-in.
+  attendanceReadOnly?: boolean
   // False for a student in Tutorial or Quiz Bee & Competitions, which
   // don't run daily: the attendance controls and history are replaced by a note.
   attendanceTracked?: boolean
@@ -229,7 +233,10 @@ export function StudentDashboardContent({
             <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">Not marked for today.</p>
           )}
           {attendanceTracked && attendanceError && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{attendanceError}</p>}
-          {attendanceTracked && !readOnly && (
+          {attendanceTracked && !readOnly && attendanceReadOnly && (
+            <p className="mt-3 text-xs text-gray-400 dark:text-gray-500">Student attendance is recorded by the teachers.</p>
+          )}
+          {attendanceTracked && !readOnly && !attendanceReadOnly && (
             <div className="mt-4 flex gap-2">
               {['present', 'late', 'absent'].map((status) => (
                 <button

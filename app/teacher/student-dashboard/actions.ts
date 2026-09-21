@@ -44,12 +44,14 @@ export async function recordAttendance(input: {
   if (input.date > today) {
     return { error: 'Attendance cannot be recorded for a future date.' }
   }
+  // Student attendance is recorded by teachers only. The admin records attendance for the
+  // teachers themselves (app/admin/attendance/actions.ts) and can view students' records.
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  if (profile?.role !== 'teacher' && profile?.role !== 'admin') {
-    return { error: 'Only teachers and admins can record attendance.' }
+  if (profile?.role !== 'teacher') {
+    return { error: 'Only teachers can record student attendance.' }
   }
-  if (profile.role === 'teacher' && input.date !== today) {
-    return { error: 'Teachers can only record attendance for today. Ask an admin to correct a past date.' }
+  if (input.date !== today) {
+    return { error: 'Student attendance can only be recorded for today.' }
   }
 
   // Tutorial and Quiz Bee & Competitions aren't daily, so their

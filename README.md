@@ -54,7 +54,8 @@ A school admin / enrollment portal for Brainwave Preschool Academy, built with N
 - **Unenrollment Requests**: approve or decline a withdrawal, choosing whether unpaid fees are kept or waived; the parent is emailed
 - **Year-End Promotion**: review every child with a suggested next program, apply all at once, and keep a per-school-year history
 - Students (with an Outstanding balance column and a Balance tab), Teachers, and Classrooms directories, with student list and fee-due-date management
-- Student Dashboard with full edit rights and avatar upload; **Health** tab on each student record
+- **Teacher Attendance**: record each teacher present, late or absent for any date up to today (students' attendance is recorded by their teachers)
+- Student Dashboard with milestone edit rights and avatar upload (attendance is view-only for admin); **Health** tab on each student record
 - **Do-Not-Release list**: people who must never be handed a child, shown in Pickup Verification
 - Export Progress Reports: printable per-student milestone, attendance and program-history report
 - Pickup Verification, School Calendar (create/edit/publish events, RSVP headcounts), and Photo Album (view and delete)

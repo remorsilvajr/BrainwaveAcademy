@@ -45,7 +45,7 @@ export default async function TeacherAttendancePage({
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Attendance</h1>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Mark today&apos;s attendance, or look back at a past date.</p>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Mark today&apos;s student attendance, or look back at a past date.</p>
       </div>
 
       <RosterCheckin
