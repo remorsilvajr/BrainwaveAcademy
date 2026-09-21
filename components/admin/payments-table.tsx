@@ -58,6 +58,7 @@ const statusBadgeClasses: Record<string, string> = {
   deducted: 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400',
   added: 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400',
   paid: 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400',
+  waived: 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400',
   pending: 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300',
   overdue: 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400',
 }
@@ -208,6 +209,7 @@ export function PaymentsTable({
               <option value="pending">Pending</option>
               <option value="overdue">Overdue</option>
               <option value="paid">Paid</option>
+              <option value="waived">Waived</option>
               <option value="deducted">Wallet Deductions</option>
               <option value="added">Wallet Additions</option>
             </select>
@@ -311,6 +313,8 @@ export function PaymentsTable({
                           >
                             View Receipt
                           </Link>
+                        ) : p.status === 'waived' ? (
+                          <span className="text-gray-400 dark:text-gray-500">-</span>
                         ) : (
                           <MarkPaidControl paymentId={p.id} />
                         )}

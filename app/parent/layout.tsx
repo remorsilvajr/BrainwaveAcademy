@@ -19,6 +19,7 @@ const sections: NavSection[] = [
       { label: 'Requirements', href: '/parent/requirements', icon: 'checklist' },
       { label: 'Payments', href: '/parent/payments', icon: 'wallet' },
       { label: 'Enrollment Status', href: '/parent/enrollment-status', icon: 'file' },
+      { label: 'Unenroll A Student', href: '/parent/unenrollment', icon: 'userMinus' },
     ],
   },
   {

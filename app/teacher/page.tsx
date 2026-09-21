@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { TERMINAL_STATUS_FILTER } from '@/lib/student-status'
 import { createClient } from '@/lib/supabase/server'
 import { ClassroomAnnouncements } from '@/components/teacher/classroom-announcements'
 import { milestoneCategoryOrder } from '@/lib/milestones'
@@ -22,7 +23,7 @@ export default async function TeacherDashboardPage() {
   const [{ data: profile }, { data: students }, { data: todayAttendance }, { data: milestones }, { data: announcementRows }, { data: classrooms }] =
     await Promise.all([
       supabase.from('profiles').select('first_name, last_name').eq('id', user?.id ?? '').single(),
-      supabase.from('students').select('id, first_name, last_name, classroom_id'),
+      supabase.from('students').select('id, first_name, last_name, classroom_id').not('enrollment_status', 'in', TERMINAL_STATUS_FILTER),
       supabase.from('attendance').select('student_id, status').eq('date', todayIso()),
       supabase.from('milestones').select('student_id, category'),
       supabase

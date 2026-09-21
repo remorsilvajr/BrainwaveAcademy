@@ -21,6 +21,7 @@ export default async function AdminDashboardPage() {
     { data: recentPayments },
     { data: pendingWalletRequests },
     { data: pendingFees },
+    { count: pendingUnenrollmentCount },
   ] = await Promise.all([
     supabase.from('applications').select('status, created_student_id'),
     supabase.from('students').select('enrollment_status'),
@@ -48,6 +49,7 @@ export default async function AdminDashboardPage() {
     // Every unpaid fee, uncapped like the stats above: this feeds a sum, so it
     // can't come from a display-limited list.
     supabase.from('payments').select('amount, status, due_date').eq('status', 'pending'),
+    supabase.from('unenrollment_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
   ])
 
   // Uncapped, separate from the 8-row display list above for the same
@@ -126,6 +128,14 @@ export default async function AdminDashboardPage() {
           <p className="text-sm text-gray-500 dark:text-gray-400">Active Student Enrollment</p>
           <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">{activeEnrollmentCount}</p>
           <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Currently active students</p>
+        </Link>
+        <Link
+          href="/admin/unenrollment"
+          className="rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-slate-400 dark:border-l-slate-500 bg-white dark:bg-gray-900 p-4 shadow-sm transition hover:border-slate-300 dark:hover:border-slate-500"
+        >
+          <p className="text-sm text-gray-500 dark:text-gray-400">Unenrollment Requests</p>
+          <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">{pendingUnenrollmentCount ?? 0}</p>
+          <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Parents asking to withdraw a child</p>
         </Link>
         <Link
           href="/admin/feedback"

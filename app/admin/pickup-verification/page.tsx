@@ -1,4 +1,5 @@
 import { Users } from 'lucide-react'
+import { TERMINAL_STATUS_FILTER } from '@/lib/student-status'
 import { createClient } from '@/lib/supabase/server'
 import { PickupVerificationPanel } from '@/components/teacher/pickup-verification-panel'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -8,9 +9,16 @@ export default async function AdminPickupVerificationPage() {
   const supabase = await createClient()
 
   const [{ data: students }, pickups] = await Promise.all([
-    supabase.from('students').select('id, first_name, last_name').order('first_name', { ascending: true }),
+    supabase
+      .from('students')
+      .select('id, first_name, last_name')
+      .not('enrollment_status', 'in', TERMINAL_STATUS_FILTER)
+      .order('first_name', { ascending: true }),
     loadAllPickupsWithPhotos(supabase),
   ])
+
+  // A withdrawn or graduated child's pickup people aren't on the verification list.
+  const enrolledIds = new Set((students ?? []).map((s) => s.id))
 
   return (
     <div className="space-y-6">
@@ -24,7 +32,7 @@ export default async function AdminPickupVerificationPage() {
       {(students ?? []).length === 0 ? (
         <EmptyState icon={Users} title="No Students on File Yet" description="Once students are enrolled, their authorized pickup lists appear here." />
       ) : (
-        <PickupVerificationPanel students={students ?? []} pickups={pickups} />
+        <PickupVerificationPanel students={students ?? []} pickups={pickups.filter((p) => enrolledIds.has(p.student_id))} />
       )}
     </div>
   )

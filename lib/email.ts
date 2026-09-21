@@ -25,3 +25,13 @@ export async function sendEmail({
     html,
   })
 }
+
+// For user-typed text (a reason, an admin's note) placed inside an email body.
+export function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}

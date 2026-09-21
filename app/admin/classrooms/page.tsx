@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { TERMINAL_STATUS_FILTER } from '@/lib/student-status'
 import { ClassroomsGrid } from '@/components/admin/classrooms-grid'
 
 export default async function ClassroomsPage() {
@@ -15,7 +16,8 @@ export default async function ClassroomsPage() {
     supabase
       .from('students')
       .select('id, first_name, last_name, student_id, avatar_url, classroom_id, date_of_birth, program_options')
-      .not('classroom_id', 'is', null),
+      .not('classroom_id', 'is', null)
+      .not('enrollment_status', 'in', TERMINAL_STATUS_FILTER),
   ])
 
   const teacherOptions = (teachers ?? []).map((t) => ({ value: t.id, label: `${t.first_name} ${t.last_name}` }))

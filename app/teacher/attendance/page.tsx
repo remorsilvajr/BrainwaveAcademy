@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { TERMINAL_STATUS_FILTER } from '@/lib/student-status'
 import { RosterCheckin } from '@/components/teacher/roster-checkin'
 import { todayIso } from '@/lib/format'
 import { attendanceDateFromParam } from '@/lib/date-params'
@@ -16,7 +17,11 @@ export default async function TeacherAttendancePage({
   const supabase = await createClient()
 
   const [{ data: students }, { data: attendance }, { data: classrooms }] = await Promise.all([
-    supabase.from('students').select('id, first_name, last_name, classroom_id').order('first_name', { ascending: true }),
+    supabase
+      .from('students')
+      .select('id, first_name, last_name, classroom_id')
+      .not('enrollment_status', 'in', TERMINAL_STATUS_FILTER)
+      .order('first_name', { ascending: true }),
     supabase.from('attendance').select('student_id, status').eq('date', selectedDate),
     supabase.from('classrooms').select('id, name, slug').order('created_at', { ascending: true }),
   ])

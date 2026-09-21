@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { TERMINAL_STATUS_FILTER } from '@/lib/student-status'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
@@ -29,7 +30,13 @@ async function syncLinkedStudentsStatus(
 
   const studentIds = (links ?? []).map((l) => l.student_id)
   if (studentIds.length > 0) {
-    await supabase.from('students').update({ enrollment_status: studentStatus }).in('id', studentIds)
+    // Only students still in the active/inactive cycle: a withdrawn or graduated child
+    // must stay that way when the parent's account is re-activated.
+    await supabase
+      .from('students')
+      .update({ enrollment_status: studentStatus })
+      .in('id', studentIds)
+      .not('enrollment_status', 'in', TERMINAL_STATUS_FILTER)
   }
 }
 

@@ -1,4 +1,5 @@
 import { ShieldCheck } from 'lucide-react'
+import { TERMINAL_STATUS_FILTER } from '@/lib/student-status'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -16,7 +17,12 @@ export default async function AuthorizedPickupPage() {
 
   const [{ data: students }, { data: pickups }] = await Promise.all([
     studentIds.length > 0
-      ? supabase.from('students').select('id, first_name, last_name').in('id', studentIds).order('first_name', { ascending: true })
+      ? supabase
+          .from('students')
+          .select('id, first_name, last_name')
+          .in('id', studentIds)
+          .not('enrollment_status', 'in', TERMINAL_STATUS_FILTER)
+          .order('first_name', { ascending: true })
       : Promise.resolve({ data: [] }),
     studentIds.length > 0
       ? supabase
