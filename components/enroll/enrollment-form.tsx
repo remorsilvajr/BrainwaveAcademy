@@ -535,12 +535,6 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
         </div>
 
         <div>
-          <h2 className="mb-1 border-b border-[#00a3e0] pb-2 text-xl font-semibold text-[#0b1b62] dark:text-indigo-300">
-            Password
-          </h2>
-          <p className="mb-4 mt-2 text-sm text-[#454650] dark:text-slate-300">
-            Use this email and password to log in.
-          </p>
           <PasswordFields
             password={password}
             confirm={confirmPassword}
