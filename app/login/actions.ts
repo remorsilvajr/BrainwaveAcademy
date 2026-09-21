@@ -20,6 +20,8 @@ const LOGIN_ATTEMPT_WINDOW_MINUTES = 5
 // as noise.
 const LOGIN_ATTEMPT_WARNING_THRESHOLD = 3
 
+const BLOCKED_ACCOUNT_MESSAGE = 'This account has been blocked. Contact the school.'
+
 export async function login(formData: FormData) {
   // Normalized the same way profiles.email is stored elsewhere in this app
   // (see e.g. app/enroll/actions.ts) — without this, "User@x.com" and
@@ -77,6 +79,26 @@ export async function login(formData: FormData) {
   })
 
   if (error) {
+    // Blocking sets a real Supabase Auth ban, so a blocked account fails right
+    // here with `user_banned` (for a right or wrong password alike) and never
+    // reaches the profile check below. Without this it read as a plain
+    // "Incorrect email or password". `user_banned` also covers the brief 15s
+    // ban "Log Out" uses and soft-deleted accounts, so the message is only
+    // shown when profiles really says 'blocked'; anything else falls through
+    // to the generic error. Not counted as a failed attempt: the password was
+    // never the problem, and guessing can't succeed against a banned account.
+    if (error.code === 'user_banned') {
+      const { data: bannedProfile } = await admin
+        .from('profiles')
+        .select('account_status')
+        .eq('email', email)
+        .is('deleted_at', null)
+        .maybeSingle()
+      if (bannedProfile?.account_status === 'blocked') {
+        redirect(`/login?error=${encodeURIComponent(BLOCKED_ACCOUNT_MESSAGE)}`)
+      }
+    }
+
     await admin.from('login_attempts').insert({ email })
 
     // recentFailures was counted *before* this attempt, so this attempt is
@@ -98,7 +120,7 @@ export async function login(formData: FormData) {
 
   if (profile?.account_status === 'blocked') {
     await supabase.auth.signOut()
-    redirect(`/login?error=${encodeURIComponent('This account has been blocked. Contact the school.')}`)
+    redirect(`/login?error=${encodeURIComponent(BLOCKED_ACCOUNT_MESSAGE)}`)
   }
 
   const role = profile?.role ?? 'parent'
