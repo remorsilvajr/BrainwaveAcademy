@@ -30,6 +30,7 @@ export function ProgramSelector({
   error,
   optionsError,
   onOptionsChange,
+  initialSelection,
 }: {
   classrooms: SelectableClassroom[]
   studentDob: string
@@ -40,6 +41,9 @@ export function ProgramSelector({
   // Lets the parent form clear a stale "choose at least one" error as soon as
   // the visitor ticks a box.
   onOptionsChange?: () => void
+  // Editing an existing request: the program (and named options) it already has, so
+  // they start ticked. Only applies while that same program is the selected one.
+  initialSelection?: { classroomId: string; options: string[] }
 }) {
   // Eligibility can only be judged once a DOB exists — with nothing entered
   // yet, no card is disabled. Resetting the selection when a DOB edit makes
@@ -112,7 +116,13 @@ export function ProgramSelector({
       {selectedClassroom && programOptionConfig(selectedClassroom.slug) ? (
         <div className="mt-4">
           {/* key: choosing a different program starts a fresh, empty selection. */}
-          <EnrollmentOptions key={selectedClassroom.id} slug={selectedClassroom.slug} error={optionsError} onChange={onOptionsChange} />
+          <EnrollmentOptions
+            key={selectedClassroom.id}
+            slug={selectedClassroom.slug}
+            error={optionsError}
+            onChange={onOptionsChange}
+            initial={initialSelection?.classroomId === selectedClassroom.id ? initialSelection.options : []}
+          />
         </div>
       ) : (
         selectedClassroom && (
@@ -128,8 +138,8 @@ export function ProgramSelector({
 
 // The wizard's checkboxes post as `requested_program_options` (one value per
 // checked box). State lives here, remounted per program via `key` above.
-function EnrollmentOptions({ slug, error, onChange }: { slug: string; error?: string; onChange?: () => void }) {
-  const [selected, setSelected] = useState<string[]>([])
+function EnrollmentOptions({ slug, error, onChange, initial }: { slug: string; error?: string; onChange?: () => void; initial: string[] }) {
+  const [selected, setSelected] = useState<string[]>(initial)
   return (
     <ProgramOptionsPicker
       slug={slug}

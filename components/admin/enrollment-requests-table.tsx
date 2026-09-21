@@ -18,6 +18,7 @@ type Application = {
   application_ref: string
   submitted_at: string
   status: string
+  created_parent_id: string | null
   reviewed_at: string | null
   archived: boolean
   student_first_name: string
@@ -45,7 +46,7 @@ type Application = {
 // components/parent/remove-application-button.tsx) — a parent removing a
 // rejected application from their own portal has no effect here, and
 // archiving here has no effect on what a parent sees.
-type Tab = 'all' | 'pending_review' | 'approved' | 'rejected' | 'archived'
+type Tab = 'all' | 'pending_review' | 'needs_correction' | 'approved' | 'rejected' | 'archived'
 
 export function EnrollmentRequestsTable({ applications }: { applications: Application[] }) {
   // See students-table.tsx for why this is derived rather than its own
@@ -66,6 +67,7 @@ export function EnrollmentRequestsTable({ applications }: { applications: Applic
   const counts = {
     all: nonArchived.length,
     pending_review: nonArchived.filter((a) => a.status === 'pending_review').length,
+    needs_correction: nonArchived.filter((a) => a.status === 'needs_correction').length,
     approved: nonArchived.filter((a) => a.status === 'approved').length,
     rejected: nonArchived.filter((a) => a.status === 'rejected').length,
     archived: applications.filter((a) => a.archived).length,
@@ -108,6 +110,7 @@ export function EnrollmentRequestsTable({ applications }: { applications: Applic
   const tabs: { key: Tab; label: string; count: number }[] = [
     { key: 'all', label: 'All', count: counts.all },
     { key: 'pending_review', label: 'Pending', count: counts.pending_review },
+    { key: 'needs_correction', label: 'Needs Correction', count: counts.needs_correction },
     { key: 'approved', label: 'Approved', count: counts.approved },
     { key: 'rejected', label: 'Rejected', count: counts.rejected },
     { key: 'archived', label: 'Archived', count: counts.archived },
@@ -290,7 +293,7 @@ export function EnrollmentRequestsTable({ applications }: { applications: Applic
                       >
                         View Submission
                       </button>
-                      {app.status !== 'pending_review' && (
+                      {app.status !== 'pending_review' && app.status !== 'needs_correction' && (
                         <button
                           onClick={() => handleArchiveToggle(app)}
                           disabled={archivingId === app.id}

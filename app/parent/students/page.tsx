@@ -86,7 +86,9 @@ export default async function StudentProfilePage({
     ? 'Enrolled'
     : (documents ?? []).some((d) => d.verification_status === 'needs_correction')
       ? 'Needs Correction'
-      : application.status === 'rejected'
+      : application.status === 'needs_correction'
+        ? 'Needs Correction'
+        : application.status === 'rejected'
         ? 'Rejected'
         : application.status !== 'approved'
           ? 'Pending Review'

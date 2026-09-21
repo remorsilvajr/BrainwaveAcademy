@@ -14,6 +14,7 @@ type DeletedApplication = {
   id: string
   application_ref: string
   status: string
+  created_parent_id: string | null
   reviewed_at: string | null
   student_first_name: string
   student_middle_name: string | null

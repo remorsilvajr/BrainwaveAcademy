@@ -7,11 +7,12 @@ import { parentApplicationsFilter } from '@/lib/parent-applications'
 import { RemoveApplicationButton } from '@/components/parent/remove-application-button'
 import { withStudent } from '@/lib/parent-links'
 
-type Stage = 'submitted' | 'approved' | 'documents' | 'enrolled' | 'rejected'
+type Stage = 'submitted' | 'correction' | 'approved' | 'documents' | 'enrolled' | 'rejected'
 
 function stageOf(app: { status: string; created_student_id: string | null }, hasCorrections: boolean, hasDocs: boolean): Stage {
   if (app.status === 'rejected') return 'rejected'
   if (app.created_student_id) return 'enrolled'
+  if (app.status === 'needs_correction') return 'correction'
   if (app.status !== 'approved') return 'submitted'
   if (hasCorrections || hasDocs) return 'documents'
   return 'approved'
@@ -26,6 +27,8 @@ const steps: { key: Stage; label: string }[] = [
 
 function stepStatus(stepIndex: number, currentStage: Stage) {
   if (currentStage === 'rejected') return stepIndex === 0 ? 'done' : 'skipped'
+  // Waiting on the parent to fix something: the first step is still open.
+  if (currentStage === 'correction') return stepIndex === 0 ? 'current' : 'upcoming'
   const order: Stage[] = ['submitted', 'approved', 'documents', 'enrolled']
   const currentIndex = order.indexOf(currentStage)
   if (stepIndex < currentIndex) return 'done'
@@ -39,9 +42,9 @@ function stepStatus(stepIndex: number, currentStage: Stage) {
 export default async function EnrollmentStatusPage({
   searchParams,
 }: {
-  searchParams: Promise<{ student?: string; welcome?: string }>
+  searchParams: Promise<{ student?: string; welcome?: string; resubmitted?: string }>
 }) {
-  const { student: studentParam, welcome } = await searchParams
+  const { student: studentParam, welcome, resubmitted } = await searchParams
   const supabase = await createClient()
   const {
     data: { user },
@@ -90,6 +93,35 @@ export default async function EnrollmentStatusPage({
         <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Enrollment Status</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Track your child&apos;s enrollment progress.</p>
       </div>
+
+      {resubmitted === '1' && (
+        <div className="flex items-start gap-3 rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-950/30">
+          <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-green-600 dark:text-green-400" />
+          <p className="text-sm font-semibold text-green-800 dark:text-green-300">
+            Thanks, your updated request was sent back to the school. We&apos;ll email you once it is decided.
+          </p>
+        </div>
+      )}
+
+      {stage === 'correction' && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-800 dark:bg-amber-950/30">
+          <div className="flex items-start gap-3">
+            <FileWarning className="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">The school asked for a correction</p>
+              {application.review_notes && (
+                <p className="mt-1 text-sm text-amber-800 dark:text-amber-300">{application.review_notes}</p>
+              )}
+              <Link
+                href={`/parent/enrollment-status/edit?student=${application.id}`}
+                className="mt-3 inline-block rounded-lg bg-[#e6007e] px-4 py-2 text-sm font-semibold text-white hover:bg-[#c9006e]"
+              >
+                Update &amp; Resubmit
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {welcome === '1' && (
         <div className="flex items-start gap-3 rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-950/30">
