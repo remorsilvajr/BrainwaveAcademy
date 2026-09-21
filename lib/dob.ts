@@ -6,10 +6,11 @@ import { todayIso } from '@/lib/format'
 // slip through on any one surface while being caught on the others —
 // found via retro pen-testing that these were previously unvalidated.
 export const MIN_STUDENT_AGE = 2
-// A student here is preschool through elementary (the tutorial and quiz bee
-// programs run to about grade 6), so a student older than this is almost
-// certainly a typo in the date of birth.
-export const MAX_STUDENT_AGE = 12
+// The oldest a student can be: Academic Tutorials and Quiz Bee & Exam Prep are
+// set to ages 5-18, so the cap can't be lower than 18 or those programs could
+// never take an older student. Anything beyond is almost certainly a typo in the
+// date of birth. Keep this at or above every program's max_age_years.
+export const MAX_STUDENT_AGE = 18
 export const MIN_ADULT_AGE = 18
 export const MAX_AGE = 100
 
