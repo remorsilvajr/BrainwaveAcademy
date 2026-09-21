@@ -154,8 +154,8 @@ export function AcademyOverview() {
         className="relative flex w-full flex-col items-center gap-6 overflow-hidden px-6 pt-12 pb-16 text-center"
         aria-labelledby="academy-heading"
       >
-        {/* Photo behind the hero copy, faded to the page background at the
-            edges so it blends in rather than hard-cutting off. Centered
+        {/* Photo behind the hero copy, kept faint with opacity (no gradients
+            anywhere on the site, by request). Centered
             crop (the default) shows the kids' faces, which is the look
             that was actually asked for — resist the urge to "improve" this
             further with a color tint or a different crop without being
@@ -171,7 +171,6 @@ export function AcademyOverview() {
             sizes="100vw"
             className="object-cover opacity-30 dark:opacity-20"
           />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,white_90%)] dark:bg-[radial-gradient(ellipse_at_center,transparent_20%,#030712_90%)]" />
         </div>
 
         <div className="relative flex w-full max-w-[592px] flex-col items-center gap-6">

@@ -81,7 +81,7 @@ export function FolderView({ photos }: { photos: AlbumPhoto[] }) {
                 loading="lazy"
                 className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
               />
-              <span className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 transition group-hover:opacity-100" />
+              <span className="absolute inset-0 bg-black/25 opacity-0 transition group-hover:opacity-100" />
             </button>
             {photo.classroomName && (
               <span className="pointer-events-none absolute bottom-2 left-2 max-w-[85%] truncate rounded-full bg-black/55 px-2 py-0.5 text-[11px] font-medium text-white backdrop-blur">

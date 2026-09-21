@@ -162,7 +162,7 @@ export function UploadPanel({ classrooms }: { classrooms: { id: string; name: st
 
   return (
     <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
-      <div className="bg-gradient-to-r from-[#0b1b62] to-[#e6007e] px-6 py-4 text-white">
+      <div className="bg-[#0b1b62] px-6 py-4 text-white">
         <h2 className="flex items-center gap-2 text-lg font-bold">
           <UploadCloud className="h-5 w-5" />
           Add photos

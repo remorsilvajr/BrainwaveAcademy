@@ -59,7 +59,7 @@ export default async function FaqPage() {
   const auth = await getPortalAuth()
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-gradient-to-b from-white to-slate-50 dark:from-gray-950 dark:to-gray-900">
+    <div className="flex min-h-screen w-full flex-col bg-white dark:bg-gray-950">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}

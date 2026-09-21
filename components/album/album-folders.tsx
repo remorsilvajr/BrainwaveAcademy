@@ -26,7 +26,7 @@ function FolderCard({ folder, href }: { folder: AlbumFolder; href: string }) {
         aria-hidden
         className="absolute inset-x-3 top-1 bottom-1 -rotate-1 rounded-2xl bg-slate-300 transition-transform group-hover:-rotate-2 dark:bg-slate-600/60"
       />
-      <span className="relative block aspect-[4/3] overflow-hidden rounded-2xl border border-white/60 bg-gradient-to-br from-[#0b1b62] to-[#e6007e] shadow-md transition group-hover:-translate-y-0.5 group-hover:shadow-xl dark:border-white/10">
+      <span className="relative block aspect-[4/3] overflow-hidden rounded-2xl border border-white/60 bg-[#0b1b62] shadow-md transition group-hover:-translate-y-0.5 group-hover:shadow-xl dark:border-white/10">
         {folder.coverUrl ? (
           // eslint-disable-next-line @next/next/no-img-element -- a freshly-signed private-bucket URL, not a Next-optimizable static asset
           <img
@@ -40,8 +40,6 @@ function FolderCard({ folder, href }: { folder: AlbumFolder; href: string }) {
             <Camera className="h-10 w-10" />
           </span>
         )}
-        <span className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-
         {folder.isToday && (
           <span className="absolute left-3 top-3 rounded-full bg-[#e6007e] px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white shadow">
             Today
@@ -52,7 +50,7 @@ function FolderCard({ folder, href }: { folder: AlbumFolder; href: string }) {
           {folder.count}
         </span>
 
-        <span className="absolute inset-x-0 bottom-0 p-4 text-white">
+        <span className="absolute inset-x-0 bottom-0 bg-black/55 p-4 text-white">
           <span className="block text-2xl font-extrabold leading-none drop-shadow">
             {formatAlbumDate(folder.date, { month: 'short', day: 'numeric' })}
           </span>

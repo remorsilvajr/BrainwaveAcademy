@@ -75,7 +75,7 @@ export async function AlbumFolderPage({ role, date: dateParam }: { role: AlbumRo
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl bg-gradient-to-r from-[#0b1b62] via-[#3b2a8f] to-[#e6007e] p-6 text-white shadow-md">
+      <div className="rounded-2xl bg-[#0b1b62] p-6 text-white shadow-md">
         <Link href={backHref} className="inline-flex items-center gap-1.5 text-sm font-medium text-white/85 hover:text-white">
           <ArrowLeft className="h-4 w-4" />
           All folders

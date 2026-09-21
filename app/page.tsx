@@ -8,7 +8,7 @@ export default async function HomePage() {
   const auth = await getPortalAuth()
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-gradient-to-b from-white to-slate-50 dark:from-gray-950 dark:to-gray-900 pb-16 lg:pb-0">
+    <div className="flex min-h-screen w-full flex-col bg-white dark:bg-gray-950 pb-16 lg:pb-0">
       <SiteHeader auth={auth} />
       <AcademyOverview />
       <SiteFooter />
