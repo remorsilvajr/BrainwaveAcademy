@@ -125,6 +125,7 @@ export default async function AdminStudentDashboardPage({
           student={{ ...student, classroomName: student.classroom_id ? (classroomById.get(student.classroom_id) ?? null) : null }}
           attendance={attendance ?? []}
           attendanceTracked={tracksDailyAttendance((classrooms ?? []).find((c) => c.id === student.classroom_id))}
+          attendanceReadOnly
           milestones={milestones ?? []}
           avatarEditor={{
             onFileSelected: updateStudentAvatar.bind(null, selectedId),

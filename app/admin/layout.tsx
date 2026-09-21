@@ -30,7 +30,6 @@ const baseSections: NavSection[] = [
     title: 'Student',
     items: [
       { label: 'Students', href: '/admin/students', icon: 'user' },
-      { label: 'Attendance', href: '/admin/attendance', icon: 'checklist' },
       { label: 'Student Dashboard', href: '/admin/student-dashboard', icon: 'graduationCap' },
       { label: 'Year-End Promotion', href: '/admin/year-end', icon: 'yearEnd' },
       { label: 'Pickup Verification', href: '/admin/pickup-verification', icon: 'pickup' },
@@ -41,6 +40,7 @@ const baseSections: NavSection[] = [
     title: 'Teacher',
     items: [
       { label: 'Teachers', href: '/admin/teachers', icon: 'teacher' },
+      { label: 'Teacher Attendance', href: '/admin/attendance', icon: 'checklist' },
       { label: 'Classrooms', href: '/admin/classrooms', icon: 'classroom' },
     ],
   },
