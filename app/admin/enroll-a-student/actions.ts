@@ -12,7 +12,7 @@ import { getSiteUrl } from '@/lib/site-url'
 import { genderFromParentRelationship } from '@/lib/gender'
 import { requireAdmin } from '@/lib/require-admin'
 import { normalizeEmail } from '@/lib/email-validation'
-import { enrollmentApprovedEmail, enrollmentRejectedEmail } from '@/lib/notification-emails'
+import { enrollmentApprovedEmail, enrollmentCorrectionEmail, enrollmentRejectedEmail } from '@/lib/notification-emails'
 
 // Approves an enrollment request. Since the public form now creates the parent's
 // account (with the password they chose) at the moment they submit, there is nothing
@@ -234,6 +234,74 @@ export async function dismissApplication(applicationId: string, reason: string):
   })
 
   revalidatePath('/admin/enroll-a-student')
+}
+
+// Asks the parent to fix details on the request itself (a document correction is a
+// separate step in Applications). The request moves to needs_correction and waits for the
+// parent to edit and resubmit it (app/parent/enrollment-status/edit), which puts it back in
+// the pending queue. A written note is required: it is emailed, shown on their Enrollment
+// Status page and sent as an in-portal notification. Only possible for a request that
+// belongs to an account, since only that parent can edit it.
+export async function requestApplicationCorrection(applicationId: string, note: string): Promise<{ error: string } | undefined> {
+  await requireAdmin()
+
+  const trimmedNote = note.trim()
+  if (trimmedNote.length < 5) return { error: 'Please explain what needs to be corrected, so the parent knows.' }
+  if (trimmedNote.length > 1000) return { error: 'The note must be 1000 characters or fewer.' }
+
+  const supabase = await createClient()
+  const { data: application, error: fetchError } = await supabase
+    .from('applications')
+    .select('id, status, created_parent_id, parent_email, parent_first_name, student_first_name, student_last_name')
+    .eq('id', applicationId)
+    .single()
+  if (fetchError || !application) return { error: 'Application not found.' }
+  if (application.status !== 'pending_review') return { error: 'This request has already been handled.' }
+  if (!application.created_parent_id) {
+    return { error: 'This older request has no parent account to edit it. Approve or reject it instead.' }
+  }
+
+  const { data: updated, error } = await supabase
+    .from('applications')
+    .update({ status: 'needs_correction', review_notes: trimmedNote, reviewed_at: new Date().toISOString() })
+    .eq('id', applicationId)
+    .eq('status', 'pending_review')
+    .select('id')
+  if (error) return { error: error.message }
+  if (!updated || updated.length === 0) return { error: 'This request has already been handled.' }
+
+  const studentName = `${application.student_first_name} ${application.student_last_name}`
+  try {
+    const mail = enrollmentCorrectionEmail({
+      parentFirstName: application.parent_first_name,
+      studentName,
+      note: trimmedNote,
+      siteUrl: getSiteUrl(),
+    })
+    await sendEmail({ to: application.parent_email, subject: mail.subject, html: mail.html })
+  } catch (err) {
+    console.error('sendEmail failed for the enrollment correction request:', err)
+  }
+
+  await notifyUsers([application.created_parent_id], {
+    kind: 'request',
+    title: 'A correction is needed on your enrollment request',
+    body: `${studentName}: ${trimmedNote}`.slice(0, 200),
+    href: `/parent/enrollment-status?student=${application.id}`,
+  })
+
+  const {
+    data: { user: actingAdmin },
+  } = await supabase.auth.getUser()
+  await logActivity(supabase, {
+    actorId: actingAdmin?.id ?? null,
+    action: `Requested a correction on the enrollment request for ${studentName}`,
+    targetTable: 'applications',
+    targetId: applicationId,
+  })
+
+  revalidatePath('/admin/enroll-a-student')
+  revalidatePath('/parent/enrollment-status')
 }
 
 // Archiving is orthogonal to status (an approved or rejected request can be

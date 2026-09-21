@@ -85,7 +85,7 @@ export function isToday(dateString: string) {
 
 const statusLabels: Record<string, string> = {
   pending_review: 'Pending',
-  needs_correction: 'Pending',
+  needs_correction: 'Needs correction',
   approved: 'Approved',
   rejected: 'Rejected',
 }

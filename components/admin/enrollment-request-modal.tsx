@@ -2,14 +2,15 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Mail, ShieldCheck, Send, X, AlertTriangle } from 'lucide-react'
-import { approveApplication, dismissApplication } from '@/app/admin/enroll-a-student/actions'
+import { Mail, ShieldCheck, Send, X, AlertTriangle, Pencil } from 'lucide-react'
+import { approveApplication, dismissApplication, requestApplicationCorrection } from '@/app/admin/enroll-a-student/actions'
 import { calculateAge, formatDateLong, formatStatus } from '@/lib/format'
 import { Modal } from '@/components/ui/modal'
 
 type Application = {
   id: string
   status: string
+  created_parent_id: string | null
   reviewed_at: string | null
   student_first_name: string
   student_middle_name: string | null
@@ -27,7 +28,7 @@ type Application = {
   review_notes: string | null
 }
 
-type PendingAction = 'approve' | 'dismiss' | null
+type PendingAction = 'approve' | 'dismiss' | 'correct' | null
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
@@ -50,9 +51,10 @@ export function EnrollmentRequestModal({
   const router = useRouter()
   const [pendingAction, setPendingAction] = useState<PendingAction>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [result, setResult] = useState<'approved' | 'dismissed' | null>(null)
+  const [result, setResult] = useState<'approved' | 'dismissed' | 'corrected' | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
   const [rejectReason, setRejectReason] = useState('')
+  const [correctionNote, setCorrectionNote] = useState('')
 
   const studentName = `${application.student_first_name} ${application.student_last_name}`
   const alreadyDecided = application.status !== 'pending_review'
@@ -97,6 +99,28 @@ export function EnrollmentRequestModal({
     }
   }
 
+  async function handleConfirmedCorrect() {
+    setIsSubmitting(true)
+    setErrorMessage('')
+    try {
+      const actionResult = await requestApplicationCorrection(application.id, correctionNote)
+      if (actionResult?.error) {
+        setErrorMessage(actionResult.error)
+        setPendingAction(null)
+        return
+      }
+      setResult('corrected')
+      router.refresh()
+    } catch {
+      setErrorMessage('Something went wrong. Please try again.')
+      setPendingAction(null)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const canRequestCorrection = !!application.created_parent_id
+
   return (
     <Modal onClose={onClose} maxWidth="md">
       <div className="flex items-start justify-between border-b border-gray-100 dark:border-gray-800 p-6">
@@ -115,7 +139,9 @@ export function EnrollmentRequestModal({
               <p className="font-medium text-green-800">
                 {result === 'approved'
                   ? `Approved! ${application.parent_first_name} has been notified by email.`
-                  : 'Request dismissed.'}
+                  : result === 'corrected'
+                    ? `Correction requested. ${application.parent_first_name} has been emailed and notified, and can update the request from their portal.`
+                    : 'Request dismissed. The parent has been emailed the reason.'}
               </p>
             </div>
           ) : (
@@ -125,11 +151,17 @@ export function EnrollmentRequestModal({
                   className={`mb-4 rounded-lg p-3 text-sm font-medium ${
                     application.status === 'approved'
                       ? 'bg-green-50 dark:bg-green-950/30 text-green-700'
-                      : 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400'
+                      : application.status === 'needs_correction'
+                        ? 'bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-200'
+                        : 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400'
                   }`}
                 >
-                  This request was {formatStatus(application.status).toLowerCase()}
-                  {application.reviewed_at ? ` on ${formatDateLong(application.reviewed_at)}` : ''}.
+                  {application.status === 'needs_correction'
+                    ? `Waiting for ${application.parent_first_name} to update this request${application.reviewed_at ? ` (correction requested ${formatDateLong(application.reviewed_at)})` : ''}. It returns to the pending list when they resubmit.`
+                    : `This request was ${formatStatus(application.status).toLowerCase()}${application.reviewed_at ? ` on ${formatDateLong(application.reviewed_at)}` : ''}.`}
+                  {application.status === 'needs_correction' && application.review_notes && (
+                    <p className="mt-1 font-normal text-amber-900 dark:text-amber-100">Your note: {application.review_notes}</p>
+                  )}
                   {application.status === 'rejected' && application.review_notes && (
                     <p className="mt-1 font-normal text-red-800 dark:text-red-300">
                       Reason: {application.review_notes}
@@ -181,14 +213,18 @@ export function EnrollmentRequestModal({
                   <ul className="space-y-2 text-sm text-sky-800">
                     <li className="flex items-start gap-2">
                       <Mail className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                      Create a parent account for {application.parent_email} with a temporary
-                      password (skipped if this parent already has an account for a sibling).
+                      Email {application.parent_email} that the request was approved and point them to Requirements.
                     </li>
                     <li className="flex items-start gap-2">
                       <Send className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                      Send an automated email with login details to {application.parent_email}.
+                      Notify them in their portal.
                     </li>
                   </ul>
+                  {!application.created_parent_id && (
+                    <p className="mt-2 text-xs text-sky-700 dark:text-sky-300">
+                      This is an older request with no account yet: approving also creates one and emails a link for them to choose their own password.
+                    </p>
+                  )}
                   <p className="mt-2 text-xs text-sky-700 dark:text-sky-300">
                     The student record isn&apos;t created yet; that happens in Applications, once
                     the parent uploads documents and they&apos;re verified.
@@ -204,9 +240,29 @@ export function EnrollmentRequestModal({
                   </div>
                   <p className="text-sm text-amber-800 dark:text-amber-200">
                     {pendingAction === 'approve'
-                      ? `Are you sure you want to approve this request? This will create a parent account and email ${application.parent_email} immediately.`
-                      : 'Are you sure you want to reject this request? This cannot be undone from here.'}
+                      ? `Are you sure you want to approve this request? ${application.parent_email} will be emailed and notified immediately.`
+                      : pendingAction === 'correct'
+                        ? `Ask ${application.parent_first_name} to fix something on this request. They are emailed and notified, and can edit and resubmit it.`
+                        : 'Are you sure you want to reject this request? This cannot be undone from here.'}
                   </p>
+                  {pendingAction === 'correct' && (
+                    <div className="mt-3">
+                      <label className="mb-1 block text-xs font-semibold text-amber-900 dark:text-amber-200">
+                        What needs to be corrected <span className="text-red-600">*</span>
+                      </label>
+                      <textarea
+                        value={correctionNote}
+                        onChange={(e) => setCorrectionNote(e.target.value)}
+                        rows={3}
+                        maxLength={1000}
+                        placeholder="e.g. The student's date of birth doesn't match the birth certificate. Please check it."
+                        className="w-full rounded-lg border border-amber-300 dark:border-amber-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+                      />
+                      <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                        Shown to {application.parent_first_name} in their Enrollment Status page and emailed to them.
+                      </p>
+                    </div>
+                  )}
                   {pendingAction === 'dismiss' && (
                     <div className="mt-3">
                       <label className="mb-1 block text-xs font-semibold text-amber-900 dark:text-amber-200">
@@ -270,6 +326,27 @@ export function EnrollmentRequestModal({
                 {isSubmitting ? 'Working…' : 'Yes, Reject Request'}
               </button>
             </>
+          ) : pendingAction === 'correct' ? (
+            <>
+              <button
+                onClick={() => {
+                  setPendingAction(null)
+                  setCorrectionNote('')
+                }}
+                disabled={isSubmitting}
+                className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmedCorrect}
+                disabled={isSubmitting || correctionNote.trim().length < 5}
+                title={correctionNote.trim().length < 5 ? 'Add a note about what needs correcting first' : undefined}
+                className="flex-1 rounded-lg bg-amber-600 py-3 text-sm font-semibold text-white hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {isSubmitting ? 'Working…' : 'Send Correction Request'}
+              </button>
+            </>
           ) : pendingAction === 'approve' ? (
             <>
               <button
@@ -294,6 +371,15 @@ export function EnrollmentRequestModal({
                 className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
               >
                 Dismiss Request
+              </button>
+              <button
+                onClick={() => setPendingAction('correct')}
+                disabled={!canRequestCorrection}
+                title={!canRequestCorrection ? 'This older request has no parent account, so the parent cannot edit it' : undefined}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-amber-300 dark:border-amber-700 py-3 text-sm font-semibold text-amber-800 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/30 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                Request Correction
               </button>
               <button
                 onClick={() => setPendingAction('approve')}
