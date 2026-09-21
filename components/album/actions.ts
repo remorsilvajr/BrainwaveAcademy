@@ -21,7 +21,7 @@ function revalidateAlbum() {
 // Manila and RLS pins it, so an upload can only ever land in today's folder.
 export async function recordAlbumPhotos(
   paths: string[],
-  classroomId: string | null
+  classroomId: string
 ): Promise<{ error: string } | { count: number }> {
   const supabase = await createClient()
   const {
@@ -48,13 +48,16 @@ export async function recordAlbumPhotos(
     return { error: 'One of the photos could not be added. Please try again.' }
   }
 
-  // Same rule as classroom-targeted announcements: a teacher can only aim a
-  // photo at a classroom they lead or assist. `null` means every classroom.
-  if (classroomId) {
-    const assigned = await getTeacherAssignedClassrooms(supabase, user.id)
-    if (!assigned.some((c) => c.id === classroomId)) {
-      return { error: "You can only share photos with a classroom you're assigned to." }
-    }
+  // Every photo belongs to exactly one class, and a parent only ever sees the
+  // classes their own (active) child is in, so a photo can't go to "everyone".
+  // A teacher can only pick a classroom they lead or assist, the same rule as
+  // classroom announcements (also enforced by the insert policy).
+  if (!classroomId) {
+    return { error: 'Choose which class these photos are for.' }
+  }
+  const assigned = await getTeacherAssignedClassrooms(supabase, user.id)
+  if (!assigned.some((c) => c.id === classroomId)) {
+    return { error: "You can only share photos with a classroom you're assigned to." }
   }
 
   const { error } = await supabase

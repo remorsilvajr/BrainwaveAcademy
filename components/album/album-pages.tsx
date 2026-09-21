@@ -13,8 +13,8 @@ import { todayIso } from '@/lib/format'
 type AlbumRole = 'parent' | 'teacher' | 'admin'
 
 const subtitles: Record<AlbumRole, string> = {
-  parent: "Photos your child's teachers have shared, one folder for each day.",
-  teacher: "Share the day's photos with parents. Each day's photos live in a folder named for that date.",
+  parent: "Photos from your child's class, one folder for each day. You only see photos shared with a class your child is in.",
+  teacher: "Share the day's photos with the parents of one of your classes. Each day's photos live in a folder named for that date.",
   admin: 'Every photo teachers have shared, one folder for each day. You can remove any photo.',
 }
 
@@ -49,7 +49,7 @@ export async function AlbumIndexPage({ role }: { role: AlbumRole }) {
             role === 'teacher'
               ? "Photos you add will appear here, in a folder for each day. A day only gets a folder once you've uploaded photos to it."
               : role === 'parent'
-                ? "When a teacher shares photos, they'll show up here in a folder for that day."
+                ? "When a teacher shares photos from your child's class, they'll show up here in a folder for that day."
                 : 'Once a teacher shares photos, each day gets its own folder here.'
           }
         />

@@ -39,7 +39,8 @@ export function UploadPanel({ classrooms }: { classrooms: { id: string; name: st
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
   const [picked, setPicked] = useState<Picked[]>([])
-  const [classroomId, setClassroomId] = useState('')
+  // A teacher with exactly one class doesn't need to pick; otherwise they must.
+  const [classroomId, setClassroomId] = useState(classrooms.length === 1 ? classrooms[0].id : '')
   const [dragging, setDragging] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [progress, setProgress] = useState(0)
@@ -94,6 +95,10 @@ export function UploadPanel({ classrooms }: { classrooms: { id: string; name: st
 
   async function handleUpload() {
     if (picked.length === 0 || isUploading) return
+    if (!classroomId) {
+      setError('Choose which class these photos are for.')
+      return
+    }
     setError('')
     setDoneCount(null)
     setIsUploading(true)
@@ -135,7 +140,7 @@ export function UploadPanel({ classrooms }: { classrooms: { id: string; name: st
         return
       }
 
-      const result = await recordAlbumPhotos(uploadedPaths, classroomId || null)
+      const result = await recordAlbumPhotos(uploadedPaths, classroomId)
       if ('error' in result) {
         // Nothing was recorded, so don't leave the just-uploaded files orphaned.
         await supabase.storage.from(ALBUM_BUCKET).remove(uploadedPaths)
@@ -168,6 +173,12 @@ export function UploadPanel({ classrooms }: { classrooms: { id: string; name: st
         </p>
       </div>
 
+      {classrooms.length === 0 ? (
+        <p className="m-6 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
+          You aren&apos;t assigned to a class yet, so you can&apos;t add photos. Ask an admin to assign you as a lead or
+          assistant teacher of a class.
+        </p>
+      ) : (
       <div className="space-y-4 p-6">
         <div
           onDragOver={(e) => {
@@ -241,7 +252,7 @@ export function UploadPanel({ classrooms }: { classrooms: { id: string; name: st
         <div className="grid grid-cols-1 items-end gap-3 sm:grid-cols-[1fr_auto]">
           <div>
             <label htmlFor="album-classroom" className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
-              Share with
+              Class <span className="text-red-500">*</span>
             </label>
             <select
               id="album-classroom"
@@ -250,10 +261,10 @@ export function UploadPanel({ classrooms }: { classrooms: { id: string; name: st
               disabled={isUploading}
               className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-[#0b1b62] focus:outline-none dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 dark:focus:border-indigo-400"
             >
-              <option value="">All classrooms (every parent with an enrolled child)</option>
+              {classrooms.length !== 1 && <option value="">Choose a class</option>}
               {classrooms.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.name} only
+                  {c.name}
                 </option>
               ))}
             </select>
@@ -261,7 +272,7 @@ export function UploadPanel({ classrooms }: { classrooms: { id: string; name: st
           <button
             type="button"
             onClick={handleUpload}
-            disabled={picked.length === 0 || isUploading}
+            disabled={picked.length === 0 || !classroomId || isUploading}
             className="flex items-center justify-center gap-2 rounded-lg bg-[#e6007e] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#c9006e] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isUploading ? (
@@ -288,6 +299,7 @@ export function UploadPanel({ classrooms }: { classrooms: { id: string; name: st
           </p>
         )}
       </div>
+      )}
     </section>
   )
 }
