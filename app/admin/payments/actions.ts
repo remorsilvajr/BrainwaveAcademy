@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { logActivity } from '@/lib/activity-log'
+import { emailReceiptFor } from '@/lib/send-receipt'
 import { formatCurrency, formatDateShort, roundToCents } from '@/lib/format'
 import { requireAdmin } from '@/lib/require-admin'
 import { notifyParentsOfStudent, notifyUsers } from '@/lib/notify'
@@ -298,19 +299,23 @@ export async function recordManualPayment(
     data: { user: actingAdmin },
   } = await supabase.auth.getUser()
 
-  const { error } = await supabase.from('payments').insert({
-    student_id: studentId,
-    classroom_id: student.classroom_id,
-    fee_type: input.feeType,
-    description,
-    amount: input.amount,
-    status: 'paid',
-    payment_method: input.method,
-    transaction_date: new Date().toISOString(),
-    recorded_by: actingAdmin?.id ?? null,
-  })
-  if (error) {
-    return { error: error.message }
+  const { data: recorded, error } = await supabase
+    .from('payments')
+    .insert({
+      student_id: studentId,
+      classroom_id: student.classroom_id,
+      fee_type: input.feeType,
+      description,
+      amount: input.amount,
+      status: 'paid',
+      payment_method: input.method,
+      transaction_date: new Date().toISOString(),
+      recorded_by: actingAdmin?.id ?? null,
+    })
+    .select('id')
+    .single()
+  if (error || !recorded) {
+    return { error: error?.message ?? 'Could not record the payment.' }
   }
 
   await logActivity(supabase, {
@@ -319,6 +324,9 @@ export async function recordManualPayment(
     targetTable: 'payments',
     targetId: studentId,
   })
+
+  // The receipt, by email, to the child's guardians (those who haven't turned emails off).
+  await emailReceiptFor(recorded.id)
 
   revalidateAll()
 }
@@ -364,6 +372,8 @@ export async function markPaymentPaidManually(paymentId: string, method: string,
     targetTable: 'payments',
     targetId: paymentId,
   })
+
+  await emailReceiptFor(data.id)
 
   revalidateAll()
 }
