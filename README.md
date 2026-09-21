@@ -30,10 +30,10 @@ A school admin / enrollment portal for Brainwave Preschool Academy, built with N
 
 ### Teacher portal
 
-- Dashboard with attendance summary, interactive roster check-in, milestone summary, and classroom announcements — every card links to its full page
+- Dashboard with attendance summary, interactive student check-in, milestone summary, and classroom announcements — every card links to its full page
 - Announcements scoped to the teacher's assigned classroom(s), or all parents
 - Student directory with classroom column and filter
-- Attendance — date-selectable roster, editable for today only
+- Attendance — date-selectable student attendance, editable for today only
 - Student Dashboard — attendance and 6-domain milestone assessments (edit-in-place)
 - Pickup Verification — look up a child's authorized pickup list and confirm a match by name
 - School Calendar — view holidays/events
@@ -46,7 +46,7 @@ A school admin / enrollment portal for Brainwave Preschool Academy, built with N
 - Enrollment Requests and Applications — the two-stage review pipeline from a submitted request to a verified, enrolled student
 - Create New Account (manual account provisioning)
 - Payments — tabbed Payments / Parent Wallets / Payment Requests (with a pending-count badge), manual cash/check recording, and wallet fund request review
-- Students, Teachers, and Classrooms directories, with roster/fee-schedule management
+- Students, Teachers, and Classrooms directories, with student list and fee-schedule management
 - Student Dashboard with full edit rights and avatar upload
 - Export Progress Reports — printable per-student milestone + attendance report
 - Pickup Verification — same lookup tool as teacher

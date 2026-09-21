@@ -35,7 +35,7 @@ export default async function ClassroomsPage() {
       <div>
         <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Classrooms</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Assign lead and assistant teachers to each program, manage its fee schedule, and view its student roster.
+          Assign lead and assistant teachers to each program, manage its fee schedule, and view its students.
           Students are assigned to a classroom from their record in Students.
         </p>
       </div>

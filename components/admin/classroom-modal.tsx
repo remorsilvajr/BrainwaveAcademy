@@ -159,7 +159,7 @@ export function ClassroomModal({
   }
 
   const tabs: { key: Tab; label: string }[] = [
-    { key: 'roster', label: `Roster (${classroom.roster.length})` },
+    { key: 'roster', label: `Students (${classroom.roster.length})` },
     { key: 'teachers', label: 'Teachers' },
     { key: 'fees', label: 'Fee Schedule' },
   ]

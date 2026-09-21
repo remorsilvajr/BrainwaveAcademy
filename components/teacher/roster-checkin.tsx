@@ -96,7 +96,7 @@ export function RosterCheckin({
     <div id="roster" className="mx-auto max-w-lg rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-base font-bold text-gray-900 dark:text-gray-100">
-          {isToday ? "Today's Roster Check-In" : 'Roster Attendance'}
+          {isToday ? "Today's Student Check-In" : 'Student Attendance'}
         </h2>
         <DateSelector date={date} basePath={basePath} />
       </div>
