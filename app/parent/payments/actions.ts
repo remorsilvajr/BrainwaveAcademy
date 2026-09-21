@@ -5,6 +5,7 @@ import { formatCurrency } from '@/lib/format'
 import { notifyAdmins } from '@/lib/notify'
 import { createClient } from '@/lib/supabase/server'
 import { logActivity } from '@/lib/activity-log'
+import { emailReceiptFor } from '@/lib/send-receipt'
 
 const ERROR_MESSAGES: Record<string, string> = {
   NOT_AUTHENTICATED: 'Please log in and try again.',
@@ -43,6 +44,9 @@ export async function payFeeWithWallet(paymentId: string): Promise<{ error: stri
     targetTable: 'payments',
     targetId: paymentId,
   })
+
+  // The receipt, by email (to the parent who paid, unless they turned emails off).
+  await emailReceiptFor(paymentId)
 
   revalidatePath('/parent/payments')
   revalidatePath('/parent', 'layout')

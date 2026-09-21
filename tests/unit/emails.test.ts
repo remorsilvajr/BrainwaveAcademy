@@ -6,6 +6,7 @@ import {
   enrollmentCorrectionEmail,
   enrollmentRejectedEmail,
   passwordChangedByAdminEmail,
+  paymentReceiptEmail,
   setPasswordEmail,
   feeReminderEmail,
   walletDecisionEmail,
@@ -93,5 +94,44 @@ describe('fee reminder subject', () => {
     expect(feeReminderEmail({ parentFirstName: 'A', siteUrl: SITE, fees: [fee(true)] }).subject).toContain('past due')
     expect(feeReminderEmail({ parentFirstName: 'A', siteUrl: SITE, fees: [fee(false)] }).subject).toContain('due soon')
     expect(feeReminderEmail({ parentFirstName: 'A', siteUrl: SITE, fees: [fee(false), fee(true)] }).subject).toContain('past due')
+  })
+})
+
+describe('payment receipt email', () => {
+  const base = {
+    parentFirstName: 'Ana',
+    studentName: 'Bo Lee',
+    receiptRef: 'RCT-2026-0007',
+    description: 'Smart Explorers: Tuition',
+    amount: 4200,
+    method: 'wallet',
+    paidAt: '2026-09-21T02:00:00Z',
+    paymentId: 'pay-123',
+    siteUrl: SITE,
+  }
+
+  it('shows the receipt number, amount, method and date with a link to the printable receipt', () => {
+    const m = paymentReceiptEmail(base)
+    expect(m.subject).toBe('Payment receipt RCT-2026-0007 for Bo Lee')
+    expect(m.html).toContain('RCT-2026-0007')
+    expect(m.html).toContain('₱4,200.00')
+    expect(m.html).toContain('Wallet')
+    expect(m.html).toContain('September 21, 2026')
+    expect(m.html).toContain('https://school.test/parent/payments/pay-123/receipt')
+  })
+
+  it('labels cash, and copes with a missing receipt number and date', () => {
+    const m = paymentReceiptEmail({ ...base, method: 'cash', receiptRef: null, paidAt: null })
+    expect(m.subject).toBe('Payment receipt for Bo Lee')
+    expect(m.html).toContain('Cash')
+    expect(m.html).not.toContain('Receipt no.')
+  })
+
+  it('escapes the fee description and names', () => {
+    const m = paymentReceiptEmail({ ...base, description: '<script>alert(1)</script>', studentName: 'A <b>B</b>', parentFirstName: '<i>Ana</i>' })
+    expect(m.html).not.toContain('<script>')
+    expect(m.html).not.toContain('<b>B')
+    expect(m.html).not.toContain('<i>Ana')
+    expect(m.html).toContain('&lt;script&gt;')
   })
 })
