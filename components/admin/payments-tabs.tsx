@@ -24,6 +24,7 @@ export function PaymentsTabs({
   studentOptions,
   parents,
   requests,
+  mode = 'admin',
 }: {
   payments: PaymentRow[]
   walletTransactions: WalletTxRow[]
@@ -31,6 +32,8 @@ export function PaymentsTabs({
   studentOptions: SearchableOption[]
   parents: ParentWallet[]
   requests: WalletRequest[]
+  // The cashier portal shows the same tabs without the admin-only corrections.
+  mode?: 'admin' | 'cashier'
 }) {
   // Supports deep-linking from the dashboard's "Pending Fund Requests" card
   // (`/admin/payments?tab=requests`) — read once on mount as the initial
@@ -89,9 +92,11 @@ export function PaymentsTabs({
             adjustmentsByPayment={adjustmentsByPayment}
             studentOptions={studentOptions}
             initialStatus={tab === 'fees' ? initialStatus : 'all'}
+            canCorrect={mode === 'admin'}
+            receiptBasePath={mode === 'admin' ? '/admin/payments' : '/cashier/payments'}
           />
         )}
-        {tab === 'wallets' && <ParentWalletsTable parents={parents} />}
+        {tab === 'wallets' && <ParentWalletsTable parents={parents} canAdjust={mode === 'admin'} />}
         {tab === 'requests' && <WalletRequestsPanel requests={requests} />}
       </div>
     </div>

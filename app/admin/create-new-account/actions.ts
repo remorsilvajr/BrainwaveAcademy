@@ -18,7 +18,7 @@ export type CreateSystemUserState = {
   values?: Record<string, string>
 }
 
-const roles = ['parent', 'teacher', 'admin']
+const roles = ['parent', 'teacher', 'cashier', 'admin']
 
 export async function createSystemUser(
   _prevState: CreateSystemUserState,

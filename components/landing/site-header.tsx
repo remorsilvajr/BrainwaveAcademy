@@ -76,7 +76,7 @@ export function SiteHeader({ auth = null }: { auth?: PortalAuth }) {
                 // Admin has no self-service My Profile page — account
                 // editing for any user, including an admin's own, already
                 // lives in User Management (see CLAUDE.md).
-                myProfileHref={auth.role === 'admin' ? undefined : `/${auth.role}/my-profile`}
+                myProfileHref={auth.role === 'admin' || auth.role === 'cashier' ? undefined : `/${auth.role}/my-profile`}
                 settingsHref={`/${auth.role}/settings`}
                 triggerClassName="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full text-[#0b1b62] hover:bg-black/5 dark:text-slate-200 dark:hover:bg-white/10"
               >

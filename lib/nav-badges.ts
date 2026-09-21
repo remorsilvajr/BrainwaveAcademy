@@ -13,7 +13,7 @@ import { documentOrder } from '@/lib/documents'
 export type NavBadges = Record<string, number>
 
 // A tab, not the portal's own dashboard ("/parent" is a prefix of every path).
-const SECTION_HREF = /^\/(parent|teacher|admin)\/[a-z0-9-]+$/
+const SECTION_HREF = /^\/(parent|teacher|admin|cashier)\/[a-z0-9-]+$/
 export function isSectionHref(href: string): boolean {
   return SECTION_HREF.test(href)
 }
@@ -135,6 +135,12 @@ export async function loadStateBadges(supabase: SupabaseClient, role: string, us
         supabase.from('wallet_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending')
       )
     }
+  }
+
+  // The cashier's only tab is Payments: pending fund requests, the same count the admin sees.
+  if (role === 'cashier' && wants('/cashier/payments')) {
+    out['/cashier/payments'] =
+      (await supabase.from('wallet_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending')).count ?? 0
   }
 
   return out

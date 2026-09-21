@@ -10,7 +10,8 @@ import { useSort, compareStrings, type SortOption } from '@/lib/use-sort'
 
 export type ParentWallet = { id: string; name: string; email: string; balance: number; outstanding: number }
 
-export function ParentWalletsTable({ parents }: { parents: ParentWallet[] }) {
+// `canAdjust` is admin only: the cashier portal sees balances but cannot change them.
+export function ParentWalletsTable({ parents, canAdjust = true }: { parents: ParentWallet[]; canAdjust?: boolean }) {
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<ParentWallet | null>(null)
 
@@ -76,12 +77,14 @@ export function ParentWalletsTable({ parents }: { parents: ParentWallet[] }) {
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">Outstanding</p>
                 </div>
-                <button
-                  onClick={() => setSelected(p)}
-                  className="rounded-full border border-[#0b1b62] dark:border-indigo-300 px-3 py-1.5 text-xs font-semibold text-[#0b1b62] dark:text-indigo-300 hover:bg-[#0b1b62] hover:text-white"
-                >
-                  Adjust
-                </button>
+                {canAdjust && (
+                  <button
+                    onClick={() => setSelected(p)}
+                    className="rounded-full border border-[#0b1b62] dark:border-indigo-300 px-3 py-1.5 text-xs font-semibold text-[#0b1b62] dark:text-indigo-300 hover:bg-[#0b1b62] hover:text-white"
+                  >
+                    Adjust
+                  </button>
+                )}
               </div>
             </div>
           ))
