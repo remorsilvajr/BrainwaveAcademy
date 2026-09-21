@@ -330,7 +330,6 @@ Tables: `profiles`, `applications` (`requested_classroom_id`, `requested_program
 - **Wallets start at a fixed ₱2,500; more only arrives via an approved top-up request or an admin Adjust** (no real gateway, by design). Worth a design conversation if recurring monthly tuition is ever needed.
 - **Smart Explorers and Curious Adventurers have no numeric age range** (deliberate; the user plans to set them: follow the age-range runbook).
 - **Some real `students` may have no `classroom_id`** (last checked earlier in the project), hence no fee rows. Assign from the Student Record modal, which needs a real "which program is this family in" answer; don't guess from age.
-- **Set `CRON_SECRET` in Vercel** or the daily job returns 500.
 - **A backup file-restore against a real second project** is not done yet. Also uncovered by tests: the admin approve/decline unenrollment actions themselves and the daily job's 90-day cleanup (see Tests).
 
 ## Development workflow
