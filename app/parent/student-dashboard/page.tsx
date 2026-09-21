@@ -5,6 +5,7 @@ import { StudentDashboardContent } from '@/components/teacher/student-dashboard-
 import { tracksDailyAttendance } from '@/lib/classrooms'
 import { EmptyState } from '@/components/ui/empty-state'
 import { parentApplicationsFilter } from '@/lib/parent-applications'
+import { withStudent } from '@/lib/parent-links'
 
 export default async function ParentStudentDashboardPage({
   searchParams,
@@ -67,7 +68,7 @@ export default async function ParentStudentDashboardPage({
           tone="warning"
           title="Not Enrolled Yet"
           description={`${application.student_first_name} ${application.student_last_name}'s enrollment is still in progress. Attendance and milestone tracking begin once it's complete.`}
-          action={{ href: '/parent/enrollment-status', label: 'Check Enrollment Status' }}
+          action={{ href: withStudent('/parent/enrollment-status', studentParam), label: 'Check Enrollment Status' }}
         />
       </div>
     )

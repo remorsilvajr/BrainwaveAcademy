@@ -5,6 +5,7 @@ import { documentOrder } from '@/lib/documents'
 import { formatCurrency, formatRelativeTime } from '@/lib/format'
 import { parentApplicationsFilter } from '@/lib/parent-applications'
 import { classroomVisibilityFilter } from '@/lib/parent-classrooms'
+import { withStudent } from '@/lib/parent-links'
 
 type AnnouncementRow = {
   id: string
@@ -113,7 +114,7 @@ export default async function ParentDashboardPage({
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Link
-          href={selectedApplication ? '/parent/requirements' : '/parent/enroll-a-student'}
+          href={selectedApplication ? withStudent('/parent/requirements', studentParam) : '/parent/enroll-a-student'}
           className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6 transition hover:border-sky-300 dark:hover:border-sky-500"
         >
           <div className="flex items-center justify-between">
@@ -152,7 +153,7 @@ export default async function ParentDashboardPage({
         </Link>
 
         <Link
-          href="/parent/payments"
+          href={withStudent('/parent/payments', studentParam)}
           className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6 transition hover:border-sky-300 dark:hover:border-sky-500"
         >
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Due Balance</h2>
@@ -165,7 +166,7 @@ export default async function ParentDashboardPage({
         </Link>
 
         <Link
-          href="/parent/payments"
+          href={withStudent('/parent/payments', studentParam)}
           className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6 transition hover:border-sky-300 dark:hover:border-sky-500"
         >
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Wallet Balance</h2>

@@ -4,6 +4,7 @@ import { parentApplicationsFilter } from '@/lib/parent-applications'
 import { EmptyState } from '@/components/ui/empty-state'
 import { FeeBreakdown } from '@/components/parent/fee-breakdown'
 import { WalletPanel } from '@/components/parent/wallet-panel'
+import { withStudent } from '@/lib/parent-links'
 
 export default async function ParentPaymentsPage({
   searchParams,
@@ -75,7 +76,7 @@ export default async function ParentPaymentsPage({
           title="Not Enrolled Yet"
           tone="warning"
           description={`${studentName} hasn't been enrolled and assigned to a classroom yet, so there are no fees to show. Check Enrollment Status for the latest update.`}
-          action={{ href: '/parent/enrollment-status', label: 'View Enrollment Status' }}
+          action={{ href: withStudent('/parent/enrollment-status', studentParam), label: 'View Enrollment Status' }}
         />
       </div>
     )

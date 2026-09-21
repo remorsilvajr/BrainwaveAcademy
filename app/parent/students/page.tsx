@@ -7,6 +7,7 @@ import { StudentAvatarEditor } from '@/components/parent/student-avatar-editor'
 import { EmptyState } from '@/components/ui/empty-state'
 import { parentApplicationsFilter } from '@/lib/parent-applications'
 import { RemoveApplicationButton } from '@/components/parent/remove-application-button'
+import { withStudent } from '@/lib/parent-links'
 
 export default async function StudentProfilePage({
   searchParams,
@@ -224,7 +225,7 @@ export default async function StudentProfilePage({
             })}
           </div>
           <Link
-            href="/parent/requirements"
+            href={withStudent('/parent/requirements', studentParam)}
             className="mt-4 inline-block text-sm font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline"
           >
             Manage Requirements →
