@@ -7,7 +7,7 @@ import { documentOrder, documentShortLabels, documentDescriptions } from '@/lib/
 import { DocumentPreviewModal } from '@/components/ui/document-preview-modal'
 import { EmptyState } from '@/components/ui/empty-state'
 
-type DocRow = { id: string; document_type: string; verification_status: string }
+type DocRow = { id: string; document_type: string; verification_status: string; correction_note?: string | null }
 type EnrollmentRecord = {
   applicationId: string
   studentFirstName: string
@@ -213,6 +213,12 @@ export function RequirementsChecklist({
                     <StatusIcon className="h-3.5 w-3.5" />
                     {meta.label}
                   </p>
+                  {statusKey === 'needs_correction' && getDoc(type)?.correction_note && (
+                    <p className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950/30 dark:text-red-300">
+                      <span className="font-semibold">From the school: </span>
+                      {getDoc(type)?.correction_note}
+                    </p>
+                  )}
                 </div>
               </div>
 
