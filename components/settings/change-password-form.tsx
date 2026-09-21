@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { logPasswordChanged } from './actions'
+import { changePassword } from './actions'
 
 export function ChangePasswordForm() {
   const [currentPassword, setCurrentPassword] = useState('')
@@ -16,9 +15,11 @@ export function ChangePasswordForm() {
     event.preventDefault()
     setMessage('')
 
-    if (newPassword.length < 8) {
+    // Quick, friendly checks only; the server enforces every rule again
+    // (changePassword in ./actions).
+    if (!currentPassword) {
       setIsError(true)
-      setMessage('Password must be at least 8 characters.')
+      setMessage('Enter your current password.')
       return
     }
     if (newPassword !== confirmPassword) {
@@ -26,58 +27,26 @@ export function ChangePasswordForm() {
       setMessage('Passwords do not match.')
       return
     }
-    if (!currentPassword) {
-      setIsError(true)
-      setMessage('Enter your current password.')
-      return
-    }
 
     setIsSubmitting(true)
-    const supabase = createClient()
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user?.email) {
+    try {
+      const result = await changePassword(currentPassword, newPassword, confirmPassword)
+      if (result?.error) {
+        setIsError(true)
+        setMessage(result.error)
+        return
+      }
+      setIsError(false)
+      setMessage('Password updated successfully.')
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+    } catch {
+      setIsError(true)
+      setMessage('Something went wrong. Please try again.')
+    } finally {
       setIsSubmitting(false)
-      setIsError(true)
-      setMessage('Your session has expired. Please log in again.')
-      return
     }
-
-    // Verifies the current password is actually correct before allowing a
-    // change, rather than letting anyone with an unlocked, still-logged-in
-    // session change the password outright.
-    const { error: reauthError } = await supabase.auth.signInWithPassword({
-      email: user.email,
-      password: currentPassword,
-    })
-
-    if (reauthError) {
-      setIsSubmitting(false)
-      setIsError(true)
-      setMessage('Current password is incorrect.')
-      return
-    }
-
-    const { error } = await supabase.auth.updateUser({ password: newPassword })
-    setIsSubmitting(false)
-
-    if (error) {
-      setIsError(true)
-      setMessage(error.message)
-      return
-    }
-
-    setIsError(false)
-    setMessage('Password updated successfully.')
-    setCurrentPassword('')
-    setNewPassword('')
-    setConfirmPassword('')
-    // Awaited so a quick subsequent navigation can't cancel the in-flight
-    // request before the audit-log write lands.
-    await logPasswordChanged().catch(() => {})
   }
 
   return (
@@ -86,6 +55,7 @@ export function ChangePasswordForm() {
         <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Current Password</label>
         <input
           type="password"
+          autoComplete="current-password"
           value={currentPassword}
           onChange={(e) => setCurrentPassword(e.target.value)}
           className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
@@ -95,16 +65,21 @@ export function ChangePasswordForm() {
         <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">New Password</label>
         <input
           type="password"
+          autoComplete="new-password"
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
           required
           className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
         />
+        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          At least 8 characters, with an uppercase letter and a number or special character. Not your name or email.
+        </p>
       </div>
       <div>
         <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Confirm New Password</label>
         <input
           type="password"
+          autoComplete="new-password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           required

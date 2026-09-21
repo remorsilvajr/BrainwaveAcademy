@@ -70,6 +70,7 @@ if (ids.length) {
   const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } })
   for (const id of ids) await admin.auth.admin.deleteUser(id)
 }
+await db.query(`delete from public.applications where parent_email like 'zz-test-%@example.test'`)
 await db.query(`delete from public.login_attempts where email like 'zz-test-%@example.test'`)
 await db.end()
 console.log('Done.')

@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     'How Brainwave Preschool Academy collects, uses, stores, and protects personal information submitted through this site and portal.',
 }
 
-const LAST_UPDATED = 'September 13, 2026'
+const LAST_UPDATED = 'September 21, 2026'
 
 function H2({ id, children }: { id: string; children: React.ReactNode }) {
   return (
@@ -121,8 +121,8 @@ export default async function PrivacyPolicyPage() {
             <li>
               <strong>Parent/guardian information:</strong> first, middle, and last name; date of
               birth; relationship to the student; contact number; email address; profile photo;
-              and, once an account exists, login credentials (your password is never stored in
-              readable form; see Section 6).
+              and, from the moment you submit the enrollment form, a parent account with the password
+              you choose (your password is never stored in readable form; see Section 6).
             </li>
             <li>
               <strong>Enrollment documents:</strong> when uploading enrollment requirements, we
@@ -167,11 +167,11 @@ export default async function PrivacyPolicyPage() {
           <H2 id="how-we-use-it">3. How we use your information</H2>
           <Ul>
             <li>To process and review enrollment applications and admission decisions.</li>
-            <li>To create and manage parent, teacher, and admin portal accounts.</li>
+            <li>To create and manage parent, teacher, and admin portal accounts. A parent account is created when a parent submits the enrollment form; teacher and admin accounts are created by the School.</li>
             <li>To record attendance and track developmental milestones for enrolled students.</li>
             <li>To keep children safe: acting on allergy and medical information, contacting emergency contacts, and checking who may collect a child.</li>
             <li>To track tuition and other fees owed, and to record payments made via the in-app wallet or received directly by School staff.</li>
-            <li>To communicate with parents/guardians about admission decisions, account credentials, requests to correct or resubmit a document, password resets, and school announcements.</li>
+            <li>To communicate with parents/guardians about admission decisions, requests to correct an enrollment request or resubmit a document, links to set or reset a password, and school announcements.</li>
             <li>To verify identity and eligibility documents submitted as part of enrollment.</li>
             <li>To maintain an internal audit trail of who changed what record and when, for accountability and security.</li>
             <li>To keep the Service secure: detecting misuse, enforcing account status (e.g. blocking a compromised or misused account), and troubleshooting technical issues.</li>
@@ -209,7 +209,8 @@ export default async function PrivacyPolicyPage() {
               <ul className="mt-2 list-[circle] space-y-1 pl-5">
                 <li><strong>Supabase</strong>: hosts our database, authentication, and private file storage.</li>
                 <li><strong>Vercel</strong>: hosts the website/portal application itself, and provides privacy-respecting, cookie-free traffic analytics and performance monitoring.</li>
-                <li><strong>Brevo</strong> and <strong>Postmark</strong>: send transactional emails on our behalf (account credentials, password resets, correction requests, announcements). We do not use either to send marketing email.</li>
+                <li><strong>Brevo</strong> and <strong>Postmark</strong>: send transactional emails on our behalf (admission decisions, password links, correction requests, announcements). We do not use either to send marketing email.</li>
+                <li><strong>Have I Been Pwned (Pwned Passwords)</strong>: when you choose a password, we check it against a public list of passwords exposed in data breaches. Only the first five characters of a one-way hash of the password are sent, never the password itself, your email, or any other information about you.</li>
               </ul>
             </li>
             <li>
@@ -228,7 +229,7 @@ export default async function PrivacyPolicyPage() {
               family&apos;s records).
             </li>
             <li>Enrollment documents (birth certificates, IDs, proof of address) are stored in a private file bucket, never publicly accessible, and only readable via short-lived, signed links generated for an authorized reviewer.</li>
-            <li>Passwords are hashed by our authentication provider and are never stored or visible in plain text to School staff, including administrators.</li>
+            <li>Passwords are hashed by our authentication provider and are never stored, logged, or emailed by us, and are never visible in plain text to School staff, including administrators. We send a one-time link to choose a password, never the password itself. If an account owner is locked out, a super administrator can set a new password for them; that signs the account out on every device and notifies the owner by email, and the new password is never emailed.</li>
             <li>Administrative actions that create, block, or delete an account or record are logged to an internal activity log for accountability.</li>
             <li>Access to the admin and teacher portals requires authentication, and each role only sees the sections and records relevant to it.</li>
           </Ul>

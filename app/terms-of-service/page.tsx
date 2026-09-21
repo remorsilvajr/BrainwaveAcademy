@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     'The terms that govern use of the Brainwave Preschool Academy website, enrollment form, and portal.',
 }
 
-const LAST_UPDATED = 'September 13, 2026'
+const LAST_UPDATED = 'September 21, 2026'
 
 function H2({ id, children }: { id: string; children: React.ReactNode }) {
   return (
@@ -81,11 +81,13 @@ export default async function TermsOfServicePage() {
           <H2 id="accounts">2. Accounts and account security</H2>
           <Ul>
             <li>
-              Parent accounts are created by the School after an enrollment application is
-              approved; teacher and admin accounts are created directly by an administrator. There
-              is no public self-registration.
+              A parent account is created when a parent submits the enrollment form, using the email
+              address and password they provide, so please use your own email address and accurate
+              details. The School reviews the enrollment request separately and may approve it,
+              decline it, or ask for a correction; having an account does not mean a request has
+              been approved. Teacher and admin accounts are created directly by an administrator.
             </li>
-            <li>You are responsible for keeping your login credentials confidential and for all activity that occurs under your account.</li>
+            <li>You are responsible for keeping your login credentials confidential and for all activity that occurs under your account. Choose a password you do not use elsewhere; the School will never ask you for it.</li>
             <li>Notify the School immediately if you suspect unauthorized access to your account.</li>
             <li>
               We may suspend (&quot;block&quot;) or terminate an account that violates these Terms,

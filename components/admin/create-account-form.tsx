@@ -2,9 +2,8 @@
 
 import { useActionState, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Camera, Eye, EyeOff } from 'lucide-react'
+import { Camera } from 'lucide-react'
 import { createSystemUser, type CreateSystemUserState } from '@/app/admin/create-new-account/actions'
-import { Toggle } from '@/components/ui/toggle'
 
 const initialState: CreateSystemUserState = {}
 
@@ -60,8 +59,6 @@ export function CreateAccountForm() {
   const [role, setRole] = useState(values.role || 'parent')
   const [relationship, setRelationship] = useState(values.relationship_to_student ?? '')
   const [gender, setGender] = useState(values.gender ?? '')
-  const [autoGenerate, setAutoGenerate] = useState(true)
-  const [showPassword, setShowPassword] = useState(false)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [photoError, setPhotoError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -255,52 +252,13 @@ export function CreateAccountForm() {
               </div>
             )}
 
-            <div className="mt-4 flex items-center justify-between gap-4 rounded-xl bg-gray-50 dark:bg-gray-800/60 px-4 py-3">
-              <div>
-                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Auto-generate Password</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {autoGenerate
-                    ? "A temporary password will be emailed to the user's address."
-                    : 'Set a password yourself below; nothing will be emailed automatically.'}
-                </p>
-              </div>
-              <Toggle checked={autoGenerate} onChange={setAutoGenerate} label="Auto-generate password" />
-              <input type="hidden" name="auto_generate" value={autoGenerate ? 'on' : 'off'} />
+            <div className="mt-4 rounded-xl bg-gray-50 dark:bg-gray-800/60 px-4 py-3">
+              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Password</p>
+              <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                The new user gets an email with a one-time link to choose their own password. You never see or
+                send a password.
+              </p>
             </div>
-
-            {!autoGenerate && (
-              <div className="mt-4">
-                <label htmlFor="manual_password" className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
-                  Password <span className="text-[#e6007e]">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    id="manual_password"
-                    name="manual_password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="At least 8 characters"
-                    required
-                    className={`w-full rounded-lg border px-3 py-2.5 pr-10 text-sm text-gray-700 dark:text-gray-300 placeholder:text-gray-400 focus:outline-none ${
-                      fieldErrors.manual_password
-                        ? 'border-red-400 focus:border-red-500'
-                        : 'border-slate-200 dark:border-slate-700 focus:border-[#0b1b62] dark:focus:border-indigo-400'
-                    }`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    aria-pressed={showPassword}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                {fieldErrors.manual_password && (
-                  <p className="mt-1 text-xs text-red-600 dark:text-red-400">{fieldErrors.manual_password}</p>
-                )}
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -317,7 +275,7 @@ export function CreateAccountForm() {
           disabled={isPending}
           className="flex-1 rounded-lg bg-[#e6007e] py-3 text-sm font-semibold text-white hover:bg-[#c9006e] disabled:opacity-60"
         >
-          {isPending ? 'Creating…' : 'Create & Issue Credentials'}
+          {isPending ? 'Creating…' : 'Create & Send Password Link'}
         </button>
       </div>
     </form>

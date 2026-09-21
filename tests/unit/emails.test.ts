@@ -2,8 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { escapeHtml } from '@/lib/email'
 import {
   albumDigestEmail,
-  enrollmentApprovedExistingParentEmail,
+  enrollmentApprovedEmail,
+  enrollmentCorrectionEmail,
   enrollmentRejectedEmail,
+  passwordChangedByAdminEmail,
+  setPasswordEmail,
   feeReminderEmail,
   walletDecisionEmail,
 } from '@/lib/notification-emails'
@@ -53,9 +56,34 @@ describe('notification emails escape everything a person typed', () => {
     expect(m.html).toContain('2 photos')
     expect(m.html).toContain('/parent/album/2026-09-21')
   })
-  it('approved for an existing parent points to Requirements', () => {
-    const m = enrollmentApprovedExistingParentEmail({ parentFirstName: 'Ana', studentName: 'Bo Lee', siteUrl: SITE })
+  it('approved points to Requirements and escapes the admin note', () => {
+    const m = enrollmentApprovedEmail({ parentFirstName: 'Ana', studentName: 'Bo Lee', note: evil, siteUrl: SITE })
     expect(m.html).toContain('Requirements')
+    expect(m.html).not.toContain('<script>')
+    expect(enrollmentApprovedEmail({ parentFirstName: 'Ana', studentName: 'Bo Lee', siteUrl: SITE }).html).not.toContain('Note from the school')
+  })
+  it('correction request shows the note (escaped) and points to Enrollment Status', () => {
+    const m = enrollmentCorrectionEmail({ parentFirstName: 'Ana', studentName: 'Bo Lee', note: evil, siteUrl: SITE })
+    expect(m.html).not.toContain('<script>')
+    expect(m.html).toContain('&lt;script&gt;')
+    expect(m.html).toContain('/parent/enrollment-status')
+    expect(m.subject).toContain('Bo Lee')
+  })
+  it('the set-password email carries only the link, never a password', () => {
+    const url = 'https://school.test/auth/set-password?token_hash=abc123&type=recovery'
+    const welcome = setPasswordEmail({ firstName: 'Ana', url, kind: 'welcome' })
+    expect(welcome.html).toContain(url)
+    expect(welcome.html.toLowerCase()).not.toContain('temporary password')
+    expect(welcome.html.toLowerCase()).not.toContain('your password is')
+    const reset = setPasswordEmail({ firstName: '<b>Ana</b>', url, kind: 'reset', forAccount: 'A <i>Admin</i>' })
+    expect(reset.html).not.toContain('<b>Ana')
+    expect(reset.html).not.toContain('<i>Admin')
+    expect(reset.subject).toContain('Reset')
+  })
+  it('the admin-changed-password notice never contains a password', () => {
+    const m = passwordChangedByAdminEmail({ firstName: 'Ana', siteUrl: SITE })
+    expect(m.html).toContain('signed out')
+    expect(m.html.toLowerCase()).not.toContain('new password:')
   })
 })
 

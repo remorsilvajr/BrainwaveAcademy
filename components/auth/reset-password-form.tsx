@@ -3,25 +3,8 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, Check, X, Send } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
-
-const passwordRequirements = [
-  {
-    id: 'length',
-    label: 'At least 8 characters long',
-    test: (password: string) => password.length >= 8,
-  },
-  {
-    id: 'uppercase',
-    label: 'Includes at least one uppercase letter',
-    test: (password: string) => /[A-Z]/.test(password),
-  },
-  {
-    id: 'special',
-    label: 'Includes at least one number or special character',
-    test: (password: string) => /[\d\W_]/.test(password),
-  },
-]
+import { resetPassword } from '@/components/settings/actions'
+import { passwordRequirements } from '@/lib/password-rules'
 
 export function ResetPasswordForm() {
   const router = useRouter()
@@ -51,13 +34,19 @@ export function ResetPasswordForm() {
       return
     }
 
+    // The requirement checklist above is only a hint; the server applies the real
+    // rules (and rejects common or breached passwords) in resetPassword.
     setIsSubmitting(true)
-    const supabase = createClient()
-    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    let result: { error: string } | undefined
+    try {
+      result = await resetPassword(newPassword, confirmPassword)
+    } catch {
+      result = { error: 'Something went wrong. Please try again.' }
+    }
     setIsSubmitting(false)
 
-    if (error) {
-      setFormMessage(error.message)
+    if (result?.error) {
+      setFormMessage(result.error)
       return
     }
 

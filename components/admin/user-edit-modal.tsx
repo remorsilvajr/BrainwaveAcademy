@@ -7,6 +7,7 @@ import { dobInputMin, dobInputMax, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
 import { AvatarEditor } from '@/components/ui/avatar-editor'
 import { DobSelect } from '@/components/ui/dob-select'
 import { Modal } from '@/components/ui/modal'
+import { SetUserPasswordSection } from '@/components/admin/set-user-password-section'
 
 type LinkedStudent = {
   id: string
@@ -42,10 +43,14 @@ export function UserEditModal({
   user,
   onClose,
   readOnly = false,
+  canSetPassword = false,
 }: {
   user: Profile
   onClose: () => void
   readOnly?: boolean
+  // Computed on the server for the acting admin (see app/admin/user-management/page.tsx),
+  // never derived from anything about the account's tier in the browser.
+  canSetPassword?: boolean
 }) {
   const [avatarUrl, setAvatarUrl] = useState(user.avatar_url)
   const [isSavingAvatar, setIsSavingAvatar] = useState(false)
@@ -364,6 +369,10 @@ export function UserEditModal({
             )}
           </div>
         </form>
+
+        {canSetPassword && !readOnly && (
+          <SetUserPasswordSection userId={user.id} name={`${user.first_name} ${user.last_name}`} />
+        )}
       </div>
     </Modal>
   )

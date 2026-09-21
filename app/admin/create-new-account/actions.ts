@@ -4,13 +4,12 @@ import { redirect } from 'next/navigation'
 import { isValidEmail, EMAIL_VALIDATION_MESSAGE } from '@/lib/email-validation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { sendEmail } from '@/lib/email'
-import { generateTempPassword } from '@/lib/password'
+import { generateUnknownPassword } from '@/lib/password'
+import { sendSetPasswordEmail } from '@/lib/set-password-link'
 import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
 import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
 import { genderFromParentRelationship } from '@/lib/gender'
 import { logActivity } from '@/lib/activity-log'
-import { getSiteUrl } from '@/lib/site-url'
 import { requireAdmin } from '@/lib/require-admin'
 
 export type CreateSystemUserState = {
@@ -41,8 +40,6 @@ export async function createSystemUser(
     relationship_to_student: ((formData.get('relationship_to_student') as string) ?? '').trim(),
     gender: ((formData.get('gender') as string) ?? '').trim(),
   }
-  const autoGenerate = formData.get('auto_generate') === 'on'
-  const manualPassword = ((formData.get('manual_password') as string) ?? '').trim()
   const photo = formData.get('profile_photo') as File | null
 
   const fieldErrors: Record<string, string> = {}
@@ -72,10 +69,6 @@ export async function createSystemUser(
     fieldErrors.phone_number = 'Enter a valid PH mobile number, e.g. 0917 123 4567 or +63 917 123 4567.'
   }
 
-  if (!autoGenerate && manualPassword.length < 8) {
-    fieldErrors.manual_password = 'Password must be at least 8 characters.'
-  }
-
   if (Object.keys(fieldErrors).length > 0) {
     return { error: 'Please fix the highlighted fields below.', fieldErrors, values }
   }
@@ -96,11 +89,11 @@ export async function createSystemUser(
     }
   }
 
-  const password = autoGenerate ? generateTempPassword() : manualPassword
-
+  // Nobody ever chooses, sees or emails this password: the account starts with a
+  // random one and the owner sets their own from the link emailed below.
   const { data: created, error: createError } = await admin.auth.admin.createUser({
     email: values.email,
-    password,
+    password: generateUnknownPassword(),
     email_confirm: true,
   })
 
@@ -162,6 +155,21 @@ export async function createSystemUser(
     }
   }
 
+  // The owner chooses their own password from a one-time link. If the email can't
+  // be sent, undo the account: one nobody can sign in to would just be a stranded
+  // row (the admin can simply try again).
+  const emailFailure = await sendSetPasswordEmail({
+    email: values.email,
+    firstName: toTitleCase(values.first_name),
+    kind: 'welcome',
+  })
+  if (emailFailure) {
+    if (values.role === 'parent') await admin.from('wallets').delete().eq('parent_id', userId)
+    await admin.from('profiles').delete().eq('id', userId)
+    await admin.auth.admin.deleteUser(userId)
+    return { error: `${emailFailure.error} The account was not created.`, values }
+  }
+
   const supabase = await createClient()
   const {
     data: { user: actingAdmin },
@@ -172,29 +180,6 @@ export async function createSystemUser(
     targetTable: 'profiles',
     targetId: userId,
   })
-
-  if (autoGenerate) {
-    const siteUrl = getSiteUrl()
-    // Best-effort, like logActivity above — the account itself is already
-    // created successfully at this point, so a failed welcome email (e.g.
-    // no internet, or Brevo unreachable) shouldn't fail the whole action.
-    try {
-      await sendEmail({
-        to: values.email,
-        subject: 'Your Brainwave Preschool Academy Account',
-        html: `
-          <h2>Welcome to Brainwave Preschool Academy!</h2>
-          <p>An account has been created for you.</p>
-          <p><strong>Email:</strong> ${values.email}<br/>
-          <strong>Temporary Password:</strong> ${password}</p>
-          <p>For your security, please change this password after logging in.</p>
-          <p><a href="${siteUrl}/login">Log in</a></p>
-        `,
-      })
-    } catch (err) {
-      console.error('sendEmail failed for createSystemUser:', err)
-    }
-  }
 
   redirect('/admin/user-management')
 }

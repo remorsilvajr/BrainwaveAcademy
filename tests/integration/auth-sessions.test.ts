@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { revokeAllSessions } from '@/lib/revoke-sessions'
 import { Fixture, type TestUser } from './helpers'
 
 // One account signed in on two devices (two browsers, or two lab PCs sharing a
@@ -49,5 +50,46 @@ describe('signing out', () => {
     await first.auth.signOut()
 
     expect(await stillSignedIn(second)).toBe(false)
+  })
+
+  it("changing the password with scope 'others' ends the other devices but keeps this one signed in", async () => {
+    const other = await secondDevice()
+    const thisDevice = await secondDevice()
+
+    const { error } = await thisDevice.auth.updateUser({ password: `Changed-${Date.now()}-Pw!` })
+    expect(error).toBeNull()
+    await thisDevice.auth.signOut({ scope: 'others' })
+
+    expect(await stillSignedIn(thisDevice)).toBe(true)
+    expect(await stillSignedIn(other)).toBe(false)
+
+    // Put the original password back so later tests can still sign in.
+    await f.admin.auth.admin.updateUserById(user.id, { password: user.password })
+  })
+
+  it('requesting a reset link (no password change) signs nobody out', async () => {
+    // What "Request Password Reset Link" does is only email a one-time link; it
+    // never touches sessions. generateLink creates the same link without changing anything.
+    const device = await secondDevice()
+    const { error } = await f.admin.auth.admin.generateLink({ type: 'recovery', email: user.email })
+    expect(error).toBeNull()
+    expect(await stillSignedIn(device)).toBe(true)
+  })
+
+  it('setting a password for someone and revoking their sessions signs out every device, and the new password works', async () => {
+    const a = await secondDevice()
+    const b = await secondDevice()
+    const newPassword = `Reset-${Date.now()}-Pw!`
+
+    const { error } = await f.admin.auth.admin.updateUserById(user.id, { password: newPassword })
+    expect(error).toBeNull()
+    await revokeAllSessions({ userId: user.id, email: user.email, password: newPassword })
+
+    expect(await stillSignedIn(a)).toBe(false)
+    expect(await stillSignedIn(b)).toBe(false)
+
+    const fresh = anon()
+    expect((await fresh.auth.signInWithPassword({ email: user.email, password: newPassword })).error).toBeNull()
+    expect((await anon().auth.signInWithPassword({ email: user.email, password: user.password })).error).not.toBeNull()
   })
 })

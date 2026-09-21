@@ -10,6 +10,13 @@ import { isValidDob, dobRangeMessage, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
 import { genderFromParentRelationship } from '@/lib/gender'
 import { logActivity } from '@/lib/activity-log'
 import { canModerateAccount } from '@/lib/permissions'
+import { requireAdmin } from '@/lib/require-admin'
+import { sendEmail } from '@/lib/email'
+import { getSiteUrl } from '@/lib/site-url'
+import { validateNewPassword } from '@/lib/password'
+import { revokeAllSessions } from '@/lib/revoke-sessions'
+import { notifyUsers } from '@/lib/notify'
+import { passwordChangedByAdminEmail } from '@/lib/notification-emails'
 
 // A parent account that isn't active (inactive or blocked) shouldn't leave
 // their linked students showing as actively enrolled — keeps the Students
@@ -317,6 +324,10 @@ export async function removeUserAvatar(userId: string): Promise<{ error: string 
 // though their password is fine — an accepted rough edge given how narrow
 // the window is, not worth a special-cased error message for.
 export async function forceLogoutUser(userId: string): Promise<{ error: string } | undefined> {
+  // Uses the service role below, so the caller has to be verified here: without this
+  // anyone could POST this action with a user id (ids are not secret, they are in
+  // public avatar URLs) and sign that account out.
+  await requireAdmin()
   const admin = createAdminClient()
   const { error } = await admin.auth.admin.updateUserById(userId, { ban_duration: '15s' })
   if (error) {
@@ -446,4 +457,78 @@ export async function restoreUserAccounts(userIds: string[]): Promise<{ error: s
 
   revalidatePath('/admin/user-management')
   revalidatePath('/admin/deleted-items')
+}
+
+// A super admin sets another account's password (for someone who is locked out and
+// can't use the emailed reset link). Super-admin-only, checked here on the server:
+// the button is only rendered for them, but a Server Action can be called directly.
+//
+// The password is chosen by the super admin, so they have to pass it to the person
+// themselves; the app never emails, logs or stores it (Supabase keeps a bcrypt hash).
+// It has to satisfy the same rules as any other password. Every session of the account
+// is then ended, the account holder gets a bell notification and an email saying a
+// school administrator changed it (never containing the password), and the change is
+// written to the activity log without the password.
+export async function setUserPassword(
+  userId: string,
+  newPassword: string,
+  confirmPassword: string
+): Promise<{ error: string } | undefined> {
+  const actor = await requireAdmin()
+  const supabase = await createClient()
+
+  const { data: actorProfile } = await supabase.from('profiles').select('is_super_admin').eq('id', actor.id).single()
+  if (!actorProfile?.is_super_admin) {
+    return { error: 'You do not have permission to do this.' }
+  }
+  if (userId === actor.id) {
+    return { error: 'Change your own password from Settings.' }
+  }
+
+  const admin = createAdminClient()
+  const { data: target } = await admin
+    .from('profiles')
+    .select('id, email, first_name, last_name, account_status, deleted_at')
+    .eq('id', userId)
+    .maybeSingle()
+  if (!target || target.deleted_at) return { error: 'That account could not be found.' }
+
+  const problem = await validateNewPassword(newPassword, confirmPassword, {
+    email: target.email,
+    names: [target.first_name, target.last_name],
+  })
+  if (problem) return { error: problem }
+
+  const { error: updateError } = await admin.auth.admin.updateUserById(userId, { password: newPassword })
+  if (updateError) return { error: 'Could not update the password. Please try again.' }
+
+  // The password did change, so every open session ends (best-effort: a failure here
+  // must not hide that the password changed).
+  try {
+    await revokeAllSessions({ userId, email: target.email, password: newPassword })
+  } catch (err) {
+    console.error('revokeAllSessions failed after an admin password change:', err instanceof Error ? err.message : err)
+  }
+  await admin.from('profiles').update({ last_seen_at: null }).eq('id', userId)
+
+  await logActivity(supabase, {
+    actorId: actor.id,
+    action: 'Set a new password for an account',
+    targetTable: 'profiles',
+    targetId: userId,
+  })
+
+  await notifyUsers([userId], {
+    kind: 'message',
+    title: 'Your password was changed',
+    body: 'A school administrator set a new password for your account.',
+  })
+  try {
+    const mail = passwordChangedByAdminEmail({ firstName: target.first_name, siteUrl: getSiteUrl() })
+    await sendEmail({ to: target.email, subject: mail.subject, html: mail.html })
+  } catch (err) {
+    console.error('sendEmail failed for the admin password change notice:', err instanceof Error ? err.message : err)
+  }
+
+  revalidatePath('/admin/user-management')
 }

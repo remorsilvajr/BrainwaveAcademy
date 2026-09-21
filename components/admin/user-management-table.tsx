@@ -48,6 +48,8 @@ type Profile = {
   // Computed server-side (lib/permissions.ts); the raw is_super_admin flag is
   // deliberately never sent to the client.
   canModerate: boolean
+  // Also computed server-side: only a super admin viewing someone else's account.
+  canSetPassword: boolean
   parent_student?: { relationship: string; students: LinkedStudent | null }[]
   applicants?: Applicant[]
 }
@@ -395,7 +397,7 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
       </div>
 
       {editingUser && (
-        <UserEditModal user={editingUser} onClose={() => setEditingUserId(null)} />
+        <UserEditModal user={editingUser} onClose={() => setEditingUserId(null)} canSetPassword={editingUser.canSetPassword} />
       )}
 
       {confirmingBlockUser && (
