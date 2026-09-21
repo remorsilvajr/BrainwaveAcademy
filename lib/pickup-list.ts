@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { pickupIdCode, pickupIdLabel } from '@/lib/pickup-id'
 
 // Pickup Verification is a front-desk page that tends to stay open all day, so
 // photo links live for an hour rather than minutes. PickupAvatar also falls
@@ -32,5 +33,7 @@ export async function loadAllPickupsWithPhotos(supabase: SupabaseClient) {
   return rows.map(({ photo_path, ...rest }) => ({
     ...rest,
     photoUrl: photo_path ? (urlByPath.get(photo_path) ?? null) : null,
+    idCode: pickupIdCode(rest.id),
+    idLabel: pickupIdLabel(rest.id),
   }))
 }

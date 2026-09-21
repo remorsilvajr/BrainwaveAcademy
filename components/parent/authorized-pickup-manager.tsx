@@ -15,6 +15,7 @@ import { PlainSelect } from '@/components/ui/plain-select'
 import { PICKUP_RELATIONSHIPS, PICKUP_RELATIONSHIP_MESSAGE } from '@/lib/pickup-relationships'
 import { pickupDisplayName } from '@/lib/pickup-names'
 import { PickupAvatar } from '@/components/pickup/pickup-avatar'
+import { PickupCardModal } from '@/components/pickup/pickup-card-modal'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 const MAX_PHOTO_BYTES = 2 * 1024 * 1024
@@ -29,6 +30,8 @@ type Pickup = {
   relationship: string | null
   phone_number: string | null
   photoUrl: string | null
+  idCode: string
+  idLabel: string
 }
 
 const emptyInput: PickupPersonInput = { firstName: '', middleName: '', lastName: '', relationship: '', phoneNumber: '' }
@@ -300,6 +303,7 @@ export function AuthorizedPickupManager({ students, pickups }: { students: Stude
   const router = useRouter()
   const [formFor, setFormFor] = useState<{ studentId: string; editing: Pickup | null } | null>(null)
   const [removing, setRemoving] = useState<Pickup | null>(null)
+  const [cardFor, setCardFor] = useState<{ pickup: Pickup; studentName: string } | null>(null)
   const [isRemoving, setIsRemoving] = useState(false)
   const [error, setError] = useState('')
 
@@ -356,12 +360,19 @@ export function AuthorizedPickupManager({ students, pickups }: { students: Stude
                       sizeClassName="h-12 w-12"
                       iconClassName="h-5 w-5"
                       fallbackClassName="bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300"
+                      onClick={() => setCardFor({ pickup: p, studentName: `${student.first_name} ${student.last_name}` })}
                     />
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-gray-900 dark:text-gray-100">{pickupDisplayName(p)}</p>
                       {p.relationship && <p className="text-xs text-gray-500 dark:text-gray-400">{p.relationship}</p>}
                       {p.phone_number && <p className="text-xs text-gray-500 dark:text-gray-400">{p.phone_number}</p>}
                       <div className="-mx-2 mt-0.5 flex gap-1">
+                        <button
+                          onClick={() => setCardFor({ pickup: p, studentName: `${student.first_name} ${student.last_name}` })}
+                          className="my-1 mr-1 rounded-full border border-[#0b1b62] px-3 py-1 text-xs font-semibold text-[#0b1b62] hover:bg-[#0b1b62] hover:text-white dark:border-indigo-300 dark:text-indigo-300 dark:hover:bg-indigo-300 dark:hover:text-gray-900"
+                        >
+                          View Card
+                        </button>
                         <button
                           onClick={() => setFormFor({ studentId: student.id, editing: p })}
                           className="rounded px-2 py-2 text-xs font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline"
@@ -383,6 +394,8 @@ export function AuthorizedPickupManager({ students, pickups }: { students: Stude
           </div>
         )
       })}
+
+      {cardFor && <PickupCardModal person={cardFor.pickup} studentName={cardFor.studentName} onClose={() => setCardFor(null)} />}
 
       {formFor && (
         <PickupFormModal studentId={formFor.studentId} editing={formFor.editing} onClose={() => setFormFor(null)} />
