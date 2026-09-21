@@ -1,6 +1,6 @@
 # Brainwave Preschool Academy
 
-A school admin / enrollment portal for Brainwave Preschool Academy, built with Next.js and Supabase. Public marketing site plus a public enrollment form live outside auth; everything else is gated behind one of three roles: **admin**, **teacher**, **parent**, each with its own dashboard, sidebar, and set of pages. A super-admin tier also exists on top of `admin` (a `profiles.is_super_admin` flag, not a fourth role) for a small set of irreversible protections. See `CLAUDE.md` for how it works and why it's deliberately not exposed anywhere in the UI.
+A school admin / enrollment portal for Brainwave Preschool Academy, built with Next.js and Supabase. Public marketing site plus a public enrollment form live outside auth; everything else is gated behind one of four roles: **admin**, **teacher**, **cashier**, **parent**, each with its own dashboard, sidebar, and set of pages. A super-admin tier also exists on top of `admin` (a `profiles.is_super_admin` flag, not another role) for a small set of irreversible protections. See `CLAUDE.md` for how it works and why it's deliberately not exposed anywhere in the UI.
 
 **Live**: https://brainwave-academy-phi.vercel.app/
 
@@ -55,11 +55,13 @@ A school admin / enrollment portal for Brainwave Preschool Academy, built with N
 - Create New Account (manual account provisioning): the new user gets a one-time link to choose their own password; nobody at the school ever sees or sends one
 - **Payments (five tabs)**: Fees / Received / Wallet Activity / Parent Wallets / Fund Requests. A **receipt email** goes to the parent when a fee is paid. Manual cash recording, mark-paid, and **fee corrections** (edit, waive, void, and reverse a payment with an automatic wallet refund), each with a written reason and an audit trail
 - **Unenrollment Requests**: approve or decline a withdrawal, choosing whether unpaid fees are kept or waived; the parent is emailed
-- **Year-End Promotion**: review every child with a suggested next program, apply all at once, and keep a per-school-year history
+- **Attendance Records** tab (Attendance): every student attendance record for teachers and admin, and every teacher record for admin, filterable by date range, status and program
 - Students (with an Outstanding balance column and a Balance tab), Teachers, and Classrooms directories, with student list and fee-due-date management
 - **Teacher Attendance**: record each teacher present, late or absent for any date up to today (students' attendance is recorded by their teachers)
 - Student Dashboard with milestone edit rights and avatar upload (attendance is view-only for admin); **Health** tab on each student record
-- **Do-Not-Release list**: people who must never be handed a child, shown in Pickup Verification
+- **Hidden Features (super admin only)**: Year-End Promotion and the Do-Not-Release list are built but parked until they are reworked
+- **Authorized pickup cards**: a printable View Card with photo and a QR Pickup ID that staff scan in Pickup Verification
+- **Cashier portal**: a fourth role whose only area is Payments (record cash, mark paid, decide top-ups)
 - Export Progress Reports: printable per-student milestone, attendance and program-history report
 - Pickup Verification, School Calendar (create/edit/publish events, RSVP headcounts), and Photo Album (view and delete)
 - Feedback inbox: categorize and reply to every submission, with a submitter-visible response
