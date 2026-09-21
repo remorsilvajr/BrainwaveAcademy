@@ -37,7 +37,9 @@ export function PasswordFields({
   // Change it to remount the visible inputs (see above).
   resetKey?: number
 }) {
+  // Each field has its own eye, like the reset-password form.
   const [show, setShow] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
   const met = passwordRequirements.map((r) => ({ ...r, isMet: r.test(password) }))
   const matches = confirm.length > 0 && password === confirm
 
@@ -70,7 +72,7 @@ export function PasswordFields({
           <button
             type="button"
             onClick={() => setShow((v) => !v)}
-            aria-label={show ? 'Hide passwords' : 'Show passwords'}
+            aria-label={show ? 'Hide password' : 'Show password'}
             aria-pressed={show}
             className="absolute right-0 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-[#454650] dark:text-slate-300"
           >
@@ -84,18 +86,29 @@ export function PasswordFields({
         <label htmlFor="confirm_password" className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
           Confirm Password{required && <span className="text-red-500"> *</span>}
         </label>
-        <input type="hidden" name="confirm_password" value={confirm} />
-        <input
-          key={`confirm-${resetKey}`}
-          id="confirm_password"
-          type={show ? 'text' : 'password'}
-          autoComplete="new-password"
-          value={confirm}
-          onChange={(e) => onConfirmChange(e.target.value)}
-          onBlur={onConfirmBlur}
-          required={required}
-          className={inputClass(confirmError)}
-        />
+        <div className="relative">
+          <input type="hidden" name="confirm_password" value={confirm} />
+          <input
+            key={`confirm-${resetKey}`}
+            id="confirm_password"
+            type={showConfirm ? 'text' : 'password'}
+            autoComplete="new-password"
+            value={confirm}
+            onChange={(e) => onConfirmChange(e.target.value)}
+            onBlur={onConfirmBlur}
+            required={required}
+            className={inputClass(confirmError)}
+          />
+          <button
+            type="button"
+            onClick={() => setShowConfirm((v) => !v)}
+            aria-label={showConfirm ? 'Hide confirm password' : 'Show confirm password'}
+            aria-pressed={showConfirm}
+            className="absolute right-0 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-[#454650] dark:text-slate-300"
+          >
+            {showConfirm ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+          </button>
+        </div>
         {confirmError && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{confirmError}</p>}
         {!confirmError && confirm.length > 0 && (
           <p
