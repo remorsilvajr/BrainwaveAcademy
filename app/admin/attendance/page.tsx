@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { RosterCheckin } from '@/components/teacher/roster-checkin'
-import { todayIso } from '@/lib/format'
+import { attendanceDateFromParam } from '@/lib/date-params'
+import { nonDailyClassroomIds } from '@/lib/classrooms'
 
 export default async function AdminAttendancePage({
   searchParams,
@@ -8,15 +9,21 @@ export default async function AdminAttendancePage({
   searchParams: Promise<{ date?: string }>
 }) {
   const { date: dateParam } = await searchParams
-  const selectedDate = dateParam ?? todayIso()
+  const selectedDate = attendanceDateFromParam(dateParam)
 
   const supabase = await createClient()
 
   const [{ data: students }, { data: attendance }, { data: classrooms }] = await Promise.all([
     supabase.from('students').select('id, first_name, last_name, classroom_id').order('first_name', { ascending: true }),
     supabase.from('attendance').select('student_id, status').eq('date', selectedDate),
-    supabase.from('classrooms').select('id, name').order('created_at', { ascending: true }),
+    supabase.from('classrooms').select('id, name, slug').order('created_at', { ascending: true }),
   ])
+
+  // Academic Tutorials and Quiz Bee & Exam Prep aren't daily, so their students
+  // (and those programs in the filter) are left out of the attendance roster.
+  const nonDaily = nonDailyClassroomIds(classrooms ?? [])
+  const rosterStudents = (students ?? []).filter((s) => !s.classroom_id || !nonDaily.has(s.classroom_id))
+  const rosterClassrooms = (classrooms ?? []).filter((c) => !nonDaily.has(c.id))
 
   const statusByStudent: Record<string, string> = {}
   for (const a of attendance ?? []) statusByStudent[a.student_id] = a.status
@@ -31,8 +38,8 @@ export default async function AdminAttendancePage({
       </div>
 
       <RosterCheckin
-        students={students ?? []}
-        classrooms={classrooms ?? []}
+        students={rosterStudents}
+        classrooms={rosterClassrooms}
         statusByStudent={statusByStudent}
         date={selectedDate}
         basePath="/admin/attendance"

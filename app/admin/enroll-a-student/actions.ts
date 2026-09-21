@@ -9,6 +9,7 @@ import { logActivity } from '@/lib/activity-log'
 import { getSiteUrl } from '@/lib/site-url'
 import { genderFromParentRelationship } from '@/lib/gender'
 import { requireAdmin } from '@/lib/require-admin'
+import { normalizeEmail } from '@/lib/email-validation'
 
 // Creates ONLY the parent account. The student record is intentionally NOT
 // created here — it's created later, in app/admin/applications/actions.ts,
@@ -35,11 +36,23 @@ export async function approveApplication(applicationId: string): Promise<{ error
     return { error: 'Application not found.' }
   }
 
+  // An application only ever reuses an existing *parent* account. The email
+  // could have been registered to a teacher/admin (or a since-deleted account)
+  // after the request was submitted, and silently attaching the child to one of
+  // those would link a student to someone who isn't their guardian.
+  const parentEmail = normalizeEmail(application.parent_email)
   const { data: existingProfile } = await supabase
     .from('profiles')
-    .select('id')
-    .eq('email', application.parent_email)
+    .select('id, role, deleted_at')
+    .eq('email', parentEmail)
     .maybeSingle()
+
+  if (existingProfile && existingProfile.role !== 'parent') {
+    return { error: 'This email already belongs to a non-parent account, so the request cannot be approved as is.' }
+  }
+  if (existingProfile?.deleted_at) {
+    return { error: 'The account for this email was deleted. Restore it or reject this request.' }
+  }
 
   let parentId = existingProfile?.id
   let tempPassword: string | null = null
@@ -48,7 +61,7 @@ export async function approveApplication(applicationId: string): Promise<{ error
     tempPassword = generateTempPassword()
 
     const { data: created, error: createError } = await admin.auth.admin.createUser({
-      email: application.parent_email,
+      email: parentEmail,
       password: tempPassword,
       email_confirm: true,
     })
@@ -65,7 +78,7 @@ export async function approveApplication(applicationId: string): Promise<{ error
       first_name: application.parent_first_name,
       middle_name: application.parent_middle_name,
       last_name: application.parent_last_name,
-      email: application.parent_email,
+      email: parentEmail,
       phone_number: application.parent_contact_number,
       date_of_birth: application.parent_dob,
       relationship_to_student: application.parent_relationship,
@@ -108,13 +121,13 @@ export async function approveApplication(applicationId: string): Promise<{ error
     // fail the whole approval.
     try {
       await sendEmail({
-        to: application.parent_email,
+        to: parentEmail,
         subject: 'Your Brainwave Preschool Academy Parent Portal Account',
         html: `
           <h2>Welcome to Brainwave Preschool Academy!</h2>
           <p>Your enrollment request for ${application.student_first_name} ${application.student_last_name} has been approved.</p>
           <p>You can now log in to the Parent Portal with:</p>
-          <p><strong>Email:</strong> ${application.parent_email}<br/>
+          <p><strong>Email:</strong> ${parentEmail}<br/>
           <strong>Temporary Password:</strong> ${tempPassword}</p>
           <p>For your security, please change this password after logging in (Sidebar &gt; Settings).</p>
           <p><strong>Next step:</strong> log in and visit the Requirements page to upload the documents needed to complete enrollment.</p>

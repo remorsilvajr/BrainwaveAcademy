@@ -34,6 +34,7 @@ export function StudentDashboardContent({
   milestones,
   avatarEditor,
   readOnly = false,
+  attendanceTracked = true,
 }: {
   student: Student
   attendance: AttendanceRow[]
@@ -52,6 +53,9 @@ export function StudentDashboardContent({
   // mutations would fail anyway. Teacher/admin both omit this (default
   // false) since they hold the only write access to these tables.
   readOnly?: boolean
+  // False for a student in Academic Tutorials or Quiz Bee & Exam Prep, which
+  // don't run daily: the attendance controls and history are replaced by a note.
+  attendanceTracked?: boolean
 }) {
   const router = useRouter()
   const fullName = `${student.first_name}${student.middle_name ? ' ' + student.middle_name : ''} ${student.last_name}`
@@ -201,7 +205,11 @@ export function StudentDashboardContent({
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Attendance</h2>
-          {todayRecord ? (
+          {!attendanceTracked ? (
+            <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+              Attendance isn&apos;t taken for {student.classroomName ?? 'this program'}, since it doesn&apos;t run daily.
+            </p>
+          ) : todayRecord ? (
             <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">
               Marked{' '}
               <span className={`rounded-full px-2 py-0.5 text-xs font-semibold uppercase ${attendanceStatusMeta[todayRecord.status]}`}>
@@ -212,8 +220,8 @@ export function StudentDashboardContent({
           ) : (
             <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">Not marked for today.</p>
           )}
-          {attendanceError && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{attendanceError}</p>}
-          {!readOnly && (
+          {attendanceTracked && attendanceError && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{attendanceError}</p>}
+          {attendanceTracked && !readOnly && (
             <div className="mt-4 flex gap-2">
               {['present', 'late', 'absent'].map((status) => (
                 <button
@@ -325,6 +333,7 @@ export function StudentDashboardContent({
         </div>
       </div>
 
+      {attendanceTracked && (
       <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
         <div className="flex items-center gap-2">
           <ClipboardList className="h-5 w-5 text-[#e6007e]" />
@@ -348,6 +357,7 @@ export function StudentDashboardContent({
           </div>
         )}
       </div>
+      )}
     </div>
   )
 }

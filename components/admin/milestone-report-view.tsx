@@ -14,6 +14,9 @@ export type MilestoneReportData = {
   enrollmentStatus: string
   milestonesByCategory: Record<string, { assessmentDate: string; notes: string } | undefined>
   attendance: { date: string; status: string }[]
+  // False for Academic Tutorials / Quiz Bee & Exam Prep (not daily): the
+  // attendance section is left out of the report.
+  attendanceTracked: boolean
 }
 
 const attendanceLabels: Record<string, string> = {
@@ -111,6 +114,7 @@ export function MilestoneReportView({ data, backHref }: { data: MilestoneReportD
           </div>
         </div>
 
+        {data.attendanceTracked && (
         <div className="mt-6 border-t border-gray-100 dark:border-gray-800 pt-4">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
             Attendance Summary
@@ -136,9 +140,10 @@ export function MilestoneReportView({ data, backHref }: { data: MilestoneReportD
             </div>
           )}
         </div>
+        )}
 
         <p className="mt-6 text-center text-xs text-gray-400 dark:text-gray-500">
-          Generated on {formatDateLong(todayIso())}. Covers all milestone and attendance records on file to date.
+          Generated on {formatDateLong(todayIso())}. Covers all milestone{data.attendanceTracked ? ' and attendance' : ''} records on file to date.
         </p>
       </div>
     </div>

@@ -3,6 +3,8 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { logActivity } from '@/lib/activity-log'
+import { isRealIsoDate } from '@/lib/dob'
+import { todayIso } from '@/lib/format'
 
 const EVENT_TYPES = ['event', 'holiday'] as const
 
@@ -16,9 +18,27 @@ export type EventInput = {
   eventType: string
 }
 
+const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/
+
+// Server-side, since createEvent/updateEvent are directly callable with any
+// values regardless of what the form's inputs allow. Dates must be real
+// calendar dates in a realistic window (last year through next year: enough to
+// correct a recent event and to plan ahead, not "year 0001" or "9999").
 function validate(input: EventInput): string | null {
   if (!input.title.trim()) return 'Enter a title for this event.'
+  if (input.title.trim().length > 150) return 'The title must be 150 characters or fewer.'
   if (!input.eventDate) return 'Choose a date for this event.'
+  if (!isRealIsoDate(input.eventDate)) return 'Enter a valid event date.'
+  const thisYear = Number(todayIso().slice(0, 4))
+  const eventYear = Number(input.eventDate.slice(0, 4))
+  if (eventYear < thisYear - 1 || eventYear > thisYear + 1) {
+    return `Event dates must fall between ${thisYear - 1} and ${thisYear + 1}.`
+  }
+  if (input.startTime && !TIME_PATTERN.test(input.startTime)) return 'Enter a valid start time.'
+  if (input.endTime && !TIME_PATTERN.test(input.endTime)) return 'Enter a valid end time.'
+  if (input.startTime && input.endTime && input.endTime <= input.startTime) {
+    return 'The end time must be after the start time.'
+  }
   if (!(EVENT_TYPES as readonly string[]).includes(input.eventType)) return 'Choose a valid event type.'
   return null
 }

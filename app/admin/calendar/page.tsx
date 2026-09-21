@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { todayIso } from '@/lib/format'
+import { monthFromParam } from '@/lib/date-params'
 import { AdminCalendarView } from '@/components/admin/admin-calendar-view'
 
 export default async function AdminCalendarPage({
@@ -8,7 +8,7 @@ export default async function AdminCalendarPage({
   searchParams: Promise<{ month?: string }>
 }) {
   const { month: monthParam } = await searchParams
-  const month = monthParam ?? todayIso().slice(0, 7)
+  const month = monthFromParam(monthParam)
   const supabase = await createClient()
 
   const rangeStart = `${month}-01`

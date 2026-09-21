@@ -1,6 +1,7 @@
 import { ClipboardList, Clock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { StudentDashboardContent } from '@/components/teacher/student-dashboard-content'
+import { tracksDailyAttendance } from '@/lib/classrooms'
 import { EmptyState } from '@/components/ui/empty-state'
 import { parentApplicationsFilter } from '@/lib/parent-applications'
 
@@ -91,7 +92,7 @@ export default async function ParentStudentDashboardPage({
       .eq('student_id', studentId)
       .order('assessment_date', { ascending: false })
       .order('created_at', { ascending: false }),
-    supabase.from('classrooms').select('id, name'),
+    supabase.from('classrooms').select('id, name, slug'),
   ])
 
   const classroomById = new Map((classrooms ?? []).map((c) => [c.id, c.name]))
@@ -109,6 +110,7 @@ export default async function ParentStudentDashboardPage({
         <StudentDashboardContent
           student={{ ...student, classroomName: student.classroom_id ? (classroomById.get(student.classroom_id) ?? null) : null }}
           attendance={attendance ?? []}
+          attendanceTracked={tracksDailyAttendance((classrooms ?? []).find((c) => c.id === student.classroom_id))}
           milestones={milestones ?? []}
           readOnly
         />

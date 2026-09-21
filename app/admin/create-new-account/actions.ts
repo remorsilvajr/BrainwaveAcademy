@@ -1,6 +1,7 @@
 'use server'
 
 import { redirect } from 'next/navigation'
+import { isValidEmail, EMAIL_VALIDATION_MESSAGE } from '@/lib/email-validation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email'
@@ -61,11 +62,10 @@ export async function createSystemUser(
   }
   if (!roles.includes(values.role)) fieldErrors.role = 'Select a role.'
 
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (!values.email) {
     fieldErrors.email = 'Email address is required.'
-  } else if (!emailPattern.test(values.email)) {
-    fieldErrors.email = 'Please enter a valid email address.'
+  } else if (!isValidEmail(values.email)) {
+    fieldErrors.email = EMAIL_VALIDATION_MESSAGE
   }
 
   if (values.phone_number && !isValidPhilippineMobile(values.phone_number)) {

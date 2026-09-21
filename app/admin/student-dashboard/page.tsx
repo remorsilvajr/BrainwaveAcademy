@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Users } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { StudentDashboardContent } from '@/components/teacher/student-dashboard-content'
+import { tracksDailyAttendance } from '@/lib/classrooms'
 import { StudentSelector } from '@/components/teacher/student-selector'
 import { updateStudentAvatar, removeStudentAvatar } from '@/app/admin/students/actions'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -25,7 +26,7 @@ export default async function AdminStudentDashboardPage({
     .from('students')
     .select('id, first_name, last_name, classroom_id')
     .order('first_name', { ascending: true })
-  const classroomsQuery = supabase.from('classrooms').select('id, name').order('created_at', { ascending: true })
+  const classroomsQuery = supabase.from('classrooms').select('id, name, slug').order('created_at', { ascending: true })
 
   function detailQueries(id: string) {
     return Promise.all([
@@ -120,6 +121,7 @@ export default async function AdminStudentDashboardPage({
         <StudentDashboardContent
           student={{ ...student, classroomName: student.classroom_id ? (classroomById.get(student.classroom_id) ?? null) : null }}
           attendance={attendance ?? []}
+          attendanceTracked={tracksDailyAttendance((classrooms ?? []).find((c) => c.id === student.classroom_id))}
           milestones={milestones ?? []}
           avatarEditor={{
             onFileSelected: updateStudentAvatar.bind(null, selectedId),

@@ -5,7 +5,8 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
 import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
-import { isValidDob, dobRangeMessage, MIN_STUDENT_AGE, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
+import { isValidDob, dobRangeMessage, MIN_STUDENT_AGE, MAX_STUDENT_AGE, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
+import { isValidEmail, EMAIL_VALIDATION_MESSAGE, normalizeEmail } from '@/lib/email-validation'
 import { genderFromParentRelationship } from '@/lib/gender'
 import { isAgeEligibleForClassroom } from '@/lib/classrooms'
 import { logActivity } from '@/lib/activity-log'
@@ -73,9 +74,8 @@ export async function submitApplication(
     }
   }
 
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (values.parent_email && !emailPattern.test(values.parent_email)) {
-    fieldErrors.parent_email = 'Please enter a valid email address.'
+  if (values.parent_email && !isValidEmail(values.parent_email)) {
+    fieldErrors.parent_email = EMAIL_VALIDATION_MESSAGE
   }
 
   if (values.parent_contact_number && !isValidPhilippineMobile(values.parent_contact_number)) {
@@ -84,8 +84,8 @@ export async function submitApplication(
   }
 
   if (values.student_dob && !fieldErrors.student_dob) {
-    if (!isValidDob(values.student_dob, { minAge: MIN_STUDENT_AGE, maxAge: MAX_AGE })) {
-      fieldErrors.student_dob = dobRangeMessage('Student', MIN_STUDENT_AGE, MAX_AGE)
+    if (!isValidDob(values.student_dob, { minAge: MIN_STUDENT_AGE, maxAge: MAX_STUDENT_AGE })) {
+      fieldErrors.student_dob = dobRangeMessage('Student', MIN_STUDENT_AGE, MAX_STUDENT_AGE)
     }
   }
 
@@ -158,7 +158,7 @@ export async function submitApplication(
   const { data: existingProfile } = await admin
     .from('profiles')
     .select('id')
-    .eq('email', values.parent_email.toLowerCase())
+    .eq('email', normalizeEmail(values.parent_email))
     .maybeSingle()
 
   if (existingProfile) {
@@ -188,7 +188,7 @@ export async function submitApplication(
     parent_relationship: values.parent_relationship,
     parent_gender: genderFromParentRelationship(values.parent_relationship, values.parent_gender),
     parent_contact_number: normalizePhilippineMobile(values.parent_contact_number),
-    parent_email: values.parent_email.toLowerCase(),
+    parent_email: normalizeEmail(values.parent_email),
     requested_classroom_id: values.requested_classroom_id || null,
   })
 

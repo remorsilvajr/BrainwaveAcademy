@@ -3,6 +3,9 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { logActivity } from '@/lib/activity-log'
+import { isRealIsoDate } from '@/lib/dob'
+import { todayIso } from '@/lib/format'
+import { tracksDailyAttendance } from '@/lib/classrooms'
 
 const ATTENDANCE_STATUSES = ['present', 'absent', 'late'] as const
 const MILESTONE_CATEGORIES = [
@@ -29,6 +32,37 @@ export async function recordAttendance(input: {
   }
   if (!(ATTENDANCE_STATUSES as readonly string[]).includes(input.status)) {
     return { error: 'Invalid attendance status.' }
+  }
+
+  // Every rule below is enforced here, not just in the UI: a Server Action is
+  // directly callable with any arguments, and the date picker's `max` and the
+  // read-only past dates on /teacher/attendance are only front-end niceties.
+  if (!isRealIsoDate(input.date)) {
+    return { error: 'Enter a valid date.' }
+  }
+  const today = todayIso()
+  if (input.date > today) {
+    return { error: 'Attendance cannot be recorded for a future date.' }
+  }
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (profile?.role !== 'teacher' && profile?.role !== 'admin') {
+    return { error: 'Only teachers and admins can record attendance.' }
+  }
+  if (profile.role === 'teacher' && input.date !== today) {
+    return { error: 'Teachers can only record attendance for today. Ask an admin to correct a past date.' }
+  }
+
+  // Academic Tutorials and Quiz Bee & Exam Prep aren't daily, so their
+  // students don't get attendance at all.
+  const { data: student } = await supabase.from('students').select('classroom_id').eq('id', input.student_id).maybeSingle()
+  if (!student) {
+    return { error: 'Student not found.' }
+  }
+  if (student.classroom_id) {
+    const { data: classroom } = await supabase.from('classrooms').select('name, slug').eq('id', student.classroom_id).maybeSingle()
+    if (classroom && !tracksDailyAttendance(classroom)) {
+      return { error: `Attendance is not taken for ${classroom.name}, since it does not run daily.` }
+    }
   }
 
   // No DB-level uniqueness on (student_id, date) to rely on for an upsert,
@@ -130,6 +164,10 @@ export async function submitMilestoneAssessment(input: {
     revalidatePath('/teacher')
     revalidatePath('/parent/student-dashboard')
     return
+  }
+
+  if (!isRealIsoDate(input.assessment_date) || input.assessment_date > todayIso()) {
+    return { error: 'Enter a valid assessment date that is not in the future.' }
   }
 
   const { error } = existing

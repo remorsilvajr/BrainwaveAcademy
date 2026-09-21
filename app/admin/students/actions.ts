@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
-import { isValidDob, dobRangeMessage, MIN_STUDENT_AGE, MAX_AGE } from '@/lib/dob'
+import { isValidDob, dobRangeMessage, MIN_STUDENT_AGE, MAX_STUDENT_AGE } from '@/lib/dob'
 import { applyClassroomToStudent } from '@/lib/classroom-assignment'
 import { logActivity } from '@/lib/activity-log'
 
@@ -34,8 +34,8 @@ export async function updateStudentRecord(
   if (!isValidName(firstName) || !isValidName(lastName) || (middleName && !isValidName(middleName))) {
     return { error: NAME_VALIDATION_MESSAGE }
   }
-  if (!isValidDob(updates.date_of_birth, { minAge: MIN_STUDENT_AGE, maxAge: MAX_AGE })) {
-    return { error: dobRangeMessage('Student', MIN_STUDENT_AGE, MAX_AGE) }
+  if (!isValidDob(updates.date_of_birth, { minAge: MIN_STUDENT_AGE, maxAge: MAX_STUDENT_AGE })) {
+    return { error: dobRangeMessage('Student', MIN_STUDENT_AGE, MAX_STUDENT_AGE) }
   }
 
   const { error } = await supabase

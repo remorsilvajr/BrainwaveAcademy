@@ -4,6 +4,7 @@ import { ClassroomAnnouncements } from '@/components/teacher/classroom-announcem
 import { milestoneCategoryOrder } from '@/lib/milestones'
 import { todayIso, manilaHour } from '@/lib/format'
 import { getTeacherAssignedClassrooms } from '@/lib/teacher-classrooms'
+import { nonDailyClassroomIds } from '@/lib/classrooms'
 
 function greeting() {
   const hour = manilaHour()
@@ -21,7 +22,7 @@ export default async function TeacherDashboardPage() {
   const [{ data: profile }, { data: students }, { data: todayAttendance }, { data: milestones }, { data: announcementRows }, { data: classrooms }] =
     await Promise.all([
       supabase.from('profiles').select('first_name, last_name').eq('id', user?.id ?? '').single(),
-      supabase.from('students').select('id, first_name, last_name'),
+      supabase.from('students').select('id, first_name, last_name, classroom_id'),
       supabase.from('attendance').select('student_id, status').eq('date', todayIso()),
       supabase.from('milestones').select('student_id, category'),
       supabase
@@ -40,15 +41,23 @@ export default async function TeacherDashboardPage() {
             profiles: { first_name: string; last_name: string } | null
           }[]
         >(),
-      supabase.from('classrooms').select('id, name').order('created_at', { ascending: true }),
+      supabase.from('classrooms').select('id, name, slug').order('created_at', { ascending: true }),
     ])
 
   const classroomNameById = new Map((classrooms ?? []).map((c) => [c.id, c.name]))
   const assignableClassrooms = await getTeacherAssignedClassrooms(supabase, user?.id ?? '')
 
   const roster = students ?? []
+  // Attendance is daily-only: Academic Tutorials and Quiz Bee & Exam Prep
+  // students are left out of the check-in list and its counts (milestones
+  // below still use the full roster).
+  const nonDaily = nonDailyClassroomIds(classrooms ?? [])
+  const attendanceRoster = roster.filter((s) => !s.classroom_id || !nonDaily.has(s.classroom_id))
+  const attendanceRosterIds = new Set(attendanceRoster.map((s) => s.id))
   const todayStatusByStudent: Record<string, string> = {}
-  for (const a of todayAttendance ?? []) todayStatusByStudent[a.student_id] = a.status
+  for (const a of todayAttendance ?? []) {
+    if (attendanceRosterIds.has(a.student_id)) todayStatusByStudent[a.student_id] = a.status
+  }
 
   const presentCount = Object.values(todayStatusByStudent).filter((s) => s === 'present').length
   const absentCount = Object.values(todayStatusByStudent).filter((s) => s === 'absent').length
@@ -88,11 +97,11 @@ export default async function TeacherDashboardPage() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Attendance</h2>
             <span className="rounded-full bg-indigo-50 dark:bg-indigo-950/40 px-3 py-1 text-sm font-medium text-indigo-700 dark:text-indigo-300">
-              {roster.length > 0 ? Math.round((presentCount / roster.length) * 100) : 0}%
+              {attendanceRoster.length > 0 ? Math.round((presentCount / attendanceRoster.length) * 100) : 0}%
             </span>
           </div>
           <p className="mt-3 text-3xl font-bold text-gray-900 dark:text-gray-100">
-            {presentCount} <span className="text-base font-normal text-gray-500 dark:text-gray-400">/ {roster.length} Present</span>
+            {presentCount} <span className="text-base font-normal text-gray-500 dark:text-gray-400">/ {attendanceRoster.length} Present</span>
           </p>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             {absentCount} Absent, {lateCount} Late
@@ -127,7 +136,7 @@ export default async function TeacherDashboardPage() {
       <div id="assessments" className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
         <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Pending Student Assessments (6 Domains of Learning)</h2>
         <div className="mt-4 divide-y divide-gray-100 dark:divide-gray-800">
-          {roster.map((s) => {
+          {attendanceRoster.map((s) => {
             const domains = domainsByStudent.get(s.id)?.size ?? 0
             return (
               <div key={s.id} className="flex items-center justify-between gap-4 py-3">
@@ -146,7 +155,7 @@ export default async function TeacherDashboardPage() {
               </div>
             )
           })}
-          {roster.length === 0 && <p className="py-6 text-center text-sm text-gray-500 dark:text-gray-400">No students on file yet.</p>}
+          {attendanceRoster.length === 0 && <p className="py-6 text-center text-sm text-gray-500 dark:text-gray-400">No students on file yet.</p>}
         </div>
       </div>
     </div>

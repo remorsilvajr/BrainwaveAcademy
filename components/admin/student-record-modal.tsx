@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { X } from 'lucide-react'
 import { calculateAge, formatCurrency, formatDateLong } from '@/lib/format'
 import { isOverdue, type UnpaidFee } from '@/lib/payments'
-import { dobInputMin, dobInputMax, MIN_STUDENT_AGE, MAX_AGE } from '@/lib/dob'
+import { dobInputMin, dobInputMax, MIN_STUDENT_AGE, MAX_STUDENT_AGE } from '@/lib/dob'
 import { isAgeEligibleForClassroom, classroomAgeRangeLabel } from '@/lib/classrooms'
 import { documentLabels, documentOrder } from '@/lib/documents'
 import { getSignedDocumentUrl } from '@/app/admin/applications/actions'
@@ -344,7 +344,7 @@ export function StudentRecordModal({
                   required
                   defaultValue={dob}
                   onChange={setDob}
-                  min={dobInputMin(MAX_AGE)}
+                  min={dobInputMin(MAX_STUDENT_AGE)}
                   max={dobInputMax(MIN_STUDENT_AGE)}
                 />
                 <div>

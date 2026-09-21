@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from 'react'
 import { submitApplication, type SubmitApplicationState } from '@/app/enroll/actions'
-import { dobInputMin, dobInputMax, MIN_STUDENT_AGE, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
+import { dobInputMin, dobInputMax, MIN_STUDENT_AGE, MAX_STUDENT_AGE, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
 import { isAgeEligibleForClassroom } from '@/lib/classrooms'
 import { DobSelect } from '@/components/ui/dob-select'
 import { PlainSelect } from '@/components/ui/plain-select'
@@ -243,7 +243,7 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
               required
               defaultValue={values.student_dob}
               error={liveErrors.student_dob}
-              min={dobInputMin(MAX_AGE)}
+              min={dobInputMin(MAX_STUDENT_AGE)}
               max={dobInputMax(MIN_STUDENT_AGE)}
               onChange={(v) => {
                 setStudentDob(v)

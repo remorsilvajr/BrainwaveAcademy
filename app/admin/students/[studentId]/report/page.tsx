@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { tracksDailyAttendance } from '@/lib/classrooms'
 import { createClient } from '@/lib/supabase/server'
 import { MilestoneReportView } from '@/components/admin/milestone-report-view'
 
@@ -23,7 +24,7 @@ export default async function StudentMilestoneReportPage({
   // cover everything on file, not just a recent-activity preview.
   const [{ data: classroom }, { data: attendance }, { data: milestones }] = await Promise.all([
     student.classroom_id
-      ? supabase.from('classrooms').select('name').eq('id', student.classroom_id).maybeSingle()
+      ? supabase.from('classrooms').select('name, slug').eq('id', student.classroom_id).maybeSingle()
       : Promise.resolve({ data: null }),
     supabase.from('attendance').select('date, status').eq('student_id', studentId).order('date', { ascending: false }),
     supabase
@@ -58,6 +59,7 @@ export default async function StudentMilestoneReportPage({
         enrollmentStatus: student.enrollment_status,
         milestonesByCategory,
         attendance: attendance ?? [],
+        attendanceTracked: tracksDailyAttendance(classroom),
       }}
     />
   )

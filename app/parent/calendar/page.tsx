@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { todayIso } from '@/lib/format'
+import { monthFromParam } from '@/lib/date-params'
 import { ParentCalendarView } from '@/components/parent/parent-calendar-view'
 
 export default async function ParentCalendarPage({
@@ -8,7 +8,7 @@ export default async function ParentCalendarPage({
   searchParams: Promise<{ month?: string }>
 }) {
   const { month: monthParam } = await searchParams
-  const month = monthParam ?? todayIso().slice(0, 7)
+  const month = monthFromParam(monthParam)
   const supabase = await createClient()
   const {
     data: { user },

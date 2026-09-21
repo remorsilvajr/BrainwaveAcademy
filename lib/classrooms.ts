@@ -19,6 +19,22 @@ export function isAgeEligibleForClassroom(
   })
 }
 
+// The two support programs are sessions, not a school day, so they have no
+// daily attendance: their students are left out of the attendance roster and
+// its counts, and recordAttendance refuses them. A student's regular program
+// (or having no program yet) is unaffected. Keyed by the seeded `slug`, not the
+// display name, so renaming a program can't silently turn attendance back on.
+export const NON_DAILY_ATTENDANCE_SLUGS: readonly string[] = ['academic-tutorials', 'quiz-bee-exam-prep']
+
+export function tracksDailyAttendance(classroom: { slug: string } | null | undefined): boolean {
+  return !classroom || !NON_DAILY_ATTENDANCE_SLUGS.includes(classroom.slug)
+}
+
+// IDs of the programs above, from a classrooms list that includes `slug`.
+export function nonDailyClassroomIds(classrooms: { id: string; slug: string }[]): Set<string> {
+  return new Set(classrooms.filter((c) => !tracksDailyAttendance(c)).map((c) => c.id))
+}
+
 export function classroomAgeRangeLabel(classroom: { min_age_years: number | null; max_age_years: number | null }): string {
   if (classroom.min_age_years == null && classroom.max_age_years == null) return 'All ages'
   return `Ages ${classroom.min_age_years}-${classroom.max_age_years}`
