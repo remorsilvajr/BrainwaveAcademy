@@ -361,16 +361,16 @@ export function AuthorizedPickupManager({ students, pickups }: { students: Stude
                       <p className="font-medium text-gray-900 dark:text-gray-100">{pickupDisplayName(p)}</p>
                       {p.relationship && <p className="text-xs text-gray-500 dark:text-gray-400">{p.relationship}</p>}
                       {p.phone_number && <p className="text-xs text-gray-500 dark:text-gray-400">{p.phone_number}</p>}
-                      <div className="mt-2 flex gap-3">
+                      <div className="-mx-2 mt-0.5 flex gap-1">
                         <button
                           onClick={() => setFormFor({ studentId: student.id, editing: p })}
-                          className="text-xs font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline"
+                          className="rounded px-2 py-2 text-xs font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => setRemoving(p)}
-                          className="text-xs font-semibold text-red-600 dark:text-red-400 hover:underline"
+                          className="rounded px-2 py-2 text-xs font-semibold text-red-600 dark:text-red-400 hover:underline"
                         >
                           Remove
                         </button>
