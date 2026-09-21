@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { formatCurrency, formatDateLong } from '@/lib/format'
 import { payFeeWithWallet } from '@/app/parent/payments/actions'
+import { isOverdue } from '@/lib/payments'
 
 type Payment = {
   id: string
@@ -15,10 +16,6 @@ type Payment = {
   status: string
   payment_method: string | null
   transaction_date: string | null
-}
-
-function isOverdue(p: Payment) {
-  return p.status === 'pending' && !!p.due_date && p.due_date < new Date().toISOString().slice(0, 10)
 }
 
 function PayRow({ payment, walletBalance }: { payment: Payment; walletBalance: number }) {

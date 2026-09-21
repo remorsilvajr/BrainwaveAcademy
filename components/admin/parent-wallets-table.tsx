@@ -8,7 +8,7 @@ import { usePagination } from '@/lib/use-pagination'
 import { SortSelect } from '@/components/ui/sort-select'
 import { useSort, compareStrings, type SortOption } from '@/lib/use-sort'
 
-export type ParentWallet = { id: string; name: string; email: string; balance: number }
+export type ParentWallet = { id: string; name: string; email: string; balance: number; outstanding: number }
 
 export function ParentWalletsTable({ parents }: { parents: ParentWallet[] }) {
   const [search, setSearch] = useState('')
@@ -26,6 +26,7 @@ export function ParentWalletsTable({ parents }: { parents: ParentWallet[] }) {
       { value: 'name_desc', label: 'Name (Z-A)', compare: (a, b) => compareStrings(b.name, a.name) },
       { value: 'balance_desc', label: 'Balance (High-Low)', compare: (a, b) => b.balance - a.balance },
       { value: 'balance_asc', label: 'Balance (Low-High)', compare: (a, b) => a.balance - b.balance },
+      { value: 'outstanding_desc', label: 'Outstanding (High-Low)', compare: (a, b) => b.outstanding - a.outstanding },
     ],
     []
   )
@@ -34,7 +35,7 @@ export function ParentWalletsTable({ parents }: { parents: ParentWallet[] }) {
   const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(sorted, `${search}|${sortKey}`)
 
   return (
-    <div className="mx-auto max-w-2xl rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
+    <div className="mx-auto max-w-3xl rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
       <div className="flex items-center justify-between">
         <h2 className="font-semibold text-[#0b1b62] dark:text-indigo-300">Parent Wallets</h2>
       </div>
@@ -61,7 +62,20 @@ export function ParentWalletsTable({ parents }: { parents: ParentWallet[] }) {
                 <p className="text-xs text-gray-500 dark:text-gray-400">{p.email}</p>
               </div>
               <div className="flex items-center gap-3">
-                <span className="font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(p.balance)}</span>
+                <div className="text-right">
+                  <p className="font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(p.balance)}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Wallet</p>
+                </div>
+                <div className="min-w-[5.5rem] text-right">
+                  <p
+                    className={`font-semibold ${
+                      p.outstanding > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'
+                    }`}
+                  >
+                    {formatCurrency(p.outstanding)}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Outstanding</p>
+                </div>
                 <button
                   onClick={() => setSelected(p)}
                   className="rounded-full border border-[#0b1b62] dark:border-indigo-300 px-3 py-1.5 text-xs font-semibold text-[#0b1b62] dark:text-indigo-300 hover:bg-[#0b1b62] hover:text-white"

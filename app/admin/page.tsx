@@ -3,6 +3,7 @@ import { Wallet } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { formatCurrency, formatDateShort, isToday, nowMs } from '@/lib/format'
 import { PriorityFeedbackLog } from '@/components/admin/priority-feedback-log'
+import { summarizeOutstanding } from '@/lib/payments'
 
 type FeedbackRow = {
   id: string
@@ -19,6 +20,7 @@ export default async function AdminDashboardPage() {
     { count: unresolvedFeedbackCount },
     { data: recentPayments },
     { data: pendingWalletRequests },
+    { data: pendingFees },
   ] = await Promise.all([
     supabase.from('applications').select('status, created_student_id'),
     supabase.from('students').select('enrollment_status'),
@@ -43,6 +45,9 @@ export default async function AdminDashboardPage() {
     // above — this feeds both a count and a sum, so it can't be derived from
     // a display-capped list.
     supabase.from('wallet_requests').select('requested_amount').eq('status', 'pending'),
+    // Every unpaid fee, uncapped like the stats above: this feeds a sum, so it
+    // can't come from a display-limited list.
+    supabase.from('payments').select('amount, status, due_date').eq('status', 'pending'),
   ])
 
   // Uncapped, separate from the 8-row display list above for the same
@@ -82,6 +87,8 @@ export default async function AdminDashboardPage() {
 
   const pendingWalletRequestCount = pendingWalletRequests?.length ?? 0
   const pendingWalletRequestTotal = (pendingWalletRequests ?? []).reduce((sum, r) => sum + r.requested_amount, 0)
+
+  const outstanding = summarizeOutstanding(pendingFees ?? [])
 
   const feedbackItems = feedbackRows ?? []
 
@@ -136,6 +143,20 @@ export default async function AdminDashboardPage() {
           <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">{formatCurrency(totalCollectedToday)}</p>
           <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
             {totalCollectedToday > 0 ? 'Paid today, wallet + cash' : 'No transactions yet'}
+          </p>
+        </Link>
+        <Link
+          href="/admin/payments?status=pending"
+          className="rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-rose-400 dark:border-l-rose-600 bg-white dark:bg-gray-900 p-4 shadow-sm transition hover:border-rose-300 dark:hover:border-rose-500"
+        >
+          <p className="text-sm text-gray-500 dark:text-gray-400">Outstanding Balance</p>
+          <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">{formatCurrency(outstanding.outstanding)}</p>
+          <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+            {outstanding.outstandingCount === 0
+              ? 'No unpaid fees'
+              : `${outstanding.outstandingCount} unpaid ${outstanding.outstandingCount === 1 ? 'fee' : 'fees'}${
+                  outstanding.overdueCount > 0 ? `, ${formatCurrency(outstanding.overdue)} overdue` : ''
+                }`}
           </p>
         </Link>
         <Link

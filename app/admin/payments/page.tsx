@@ -1,10 +1,18 @@
 import { createClient } from '@/lib/supabase/server'
 import { PaymentsTabs } from '@/components/admin/payments-tabs'
+import { roundToCents } from '@/lib/format'
 
 export default async function AdminPaymentsPage() {
   const supabase = await createClient()
 
-  const [{ data: payments }, { data: students }, { data: walletRequests }, { data: parents }, { data: wallets }] =
+  const [
+    { data: payments },
+    { data: students },
+    { data: walletRequests },
+    { data: parents },
+    { data: wallets },
+    { data: parentStudentLinks },
+  ] =
     await Promise.all([
       supabase.from('payments').select('*').order('created_at', { ascending: false }),
       supabase
@@ -14,6 +22,7 @@ export default async function AdminPaymentsPage() {
       supabase.from('wallet_requests').select('*').order('created_at', { ascending: false }),
       supabase.from('profiles').select('id, first_name, last_name, email').eq('role', 'parent').order('first_name', { ascending: true }),
       supabase.from('wallets').select('parent_id, balance'),
+      supabase.from('parent_student').select('parent_id, student_id'),
     ])
 
   const studentById = new Map((students ?? []).map((s) => [s.id, s]))
@@ -44,11 +53,25 @@ export default async function AdminPaymentsPage() {
   })
 
   const balanceByParentId = new Map((wallets ?? []).map((w) => [w.parent_id, w.balance]))
+  // A parent's outstanding balance is every pending fee across their linked
+  // children, the same sum the parent's own dashboard shows as Due Balance.
+  const pendingByStudentId = new Map<string, number>()
+  for (const p of payments ?? []) {
+    if (p.status === 'pending') pendingByStudentId.set(p.student_id, (pendingByStudentId.get(p.student_id) ?? 0) + p.amount)
+  }
+  const outstandingByParentId = new Map<string, number>()
+  for (const link of parentStudentLinks ?? []) {
+    outstandingByParentId.set(
+      link.parent_id,
+      (outstandingByParentId.get(link.parent_id) ?? 0) + (pendingByStudentId.get(link.student_id) ?? 0)
+    )
+  }
   const parentWalletRows = (parents ?? []).map((p) => ({
     id: p.id,
     name: `${p.first_name} ${p.last_name}`,
     email: p.email,
     balance: balanceByParentId.get(p.id) ?? 0,
+    outstanding: roundToCents(outstandingByParentId.get(p.id) ?? 0),
   }))
 
   return (

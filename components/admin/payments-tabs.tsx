@@ -10,6 +10,7 @@ import type { SearchableOption } from '@/components/ui/searchable-select'
 type Tab = 'payments' | 'wallets' | 'requests'
 
 const VALID_TABS: Tab[] = ['payments', 'wallets', 'requests']
+const VALID_STATUSES = ['pending', 'overdue', 'paid']
 
 export function PaymentsTabs({
   payments,
@@ -31,6 +32,10 @@ export function PaymentsTabs({
   const [tab, setTab] = useState<Tab>(
     initialTab && (VALID_TABS as string[]).includes(initialTab) ? (initialTab as Tab) : 'payments'
   )
+  // Same deep-link idea for the dashboard's Outstanding Balance card
+  // (`/admin/payments?status=pending`): only seeds the table's initial filter.
+  const statusParam = searchParams.get('status')
+  const initialStatus = statusParam && VALID_STATUSES.includes(statusParam) ? statusParam : 'all'
   const pendingCount = requests.filter((r) => r.status === 'pending').length
 
   const tabs: { key: Tab; label: string }[] = [
@@ -64,7 +69,7 @@ export function PaymentsTabs({
       </div>
 
       <div className="mt-4">
-        {tab === 'payments' && <PaymentsTable payments={payments} studentOptions={studentOptions} />}
+        {tab === 'payments' && <PaymentsTable payments={payments} studentOptions={studentOptions} initialStatus={initialStatus} />}
         {tab === 'wallets' && <ParentWalletsTable parents={parents} />}
         {tab === 'requests' && <WalletRequestsPanel requests={requests} />}
       </div>

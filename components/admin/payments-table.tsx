@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { formatCurrency, formatDateShort } from '@/lib/format'
+import { isOverdue, summarizeOutstanding } from '@/lib/payments'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
 import { SortSelect } from '@/components/ui/sort-select'
@@ -37,21 +38,20 @@ const statusBadgeClasses: Record<string, string> = {
 // renders with this label/color instead of a real distinct DB state. See
 // the Payments & wallet note in CLAUDE.md.
 function displayStatus(row: PaymentRow) {
-  if (row.status === 'pending' && row.due_date && row.due_date < new Date().toISOString().slice(0, 10)) {
-    return 'overdue'
-  }
-  return row.status
+  return isOverdue(row) ? 'overdue' : row.status
 }
 
 export function PaymentsTable({
   payments,
   studentOptions,
+  initialStatus = 'all',
 }: {
   payments: PaymentRow[]
   studentOptions: SearchableOption[]
+  initialStatus?: string
 }) {
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState(initialStatus)
   const [showRecordModal, setShowRecordModal] = useState(false)
 
   const filtered = payments.filter((p) => {
@@ -65,6 +65,13 @@ export function PaymentsTable({
       (p.receipt_ref ?? '').toLowerCase().includes(term)
     )
   })
+
+  // Overall figures ignore the search/status filters on purpose (they're the
+  // school's real outstanding balance); the third tile follows the filters, so
+  // searching a student's name answers "how much does this family still owe".
+  const overall = summarizeOutstanding(payments)
+  const inView = summarizeOutstanding(filtered)
+  const isFiltered = statusFilter !== 'all' || search.trim() !== ''
 
   const sortOptions: SortOption<PaymentRow>[] = useMemo(
     () => [
@@ -85,6 +92,32 @@ export function PaymentsTable({
 
   return (
     <>
+      <div className={`mb-4 grid grid-cols-1 gap-4 ${isFiltered ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-rose-400 dark:border-l-rose-600 bg-white dark:bg-gray-900 p-4 shadow-sm">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Total Outstanding Balance</p>
+          <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">{formatCurrency(overall.outstanding)}</p>
+          <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+            {overall.outstandingCount} unpaid fee {overall.outstandingCount === 1 ? 'item' : 'items'}
+          </p>
+        </div>
+        <div className="rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-red-500 bg-white dark:bg-gray-900 p-4 shadow-sm">
+          <p className="text-sm text-gray-500 dark:text-gray-400">Overdue</p>
+          <p className="mt-1 text-2xl font-bold text-red-600 dark:text-red-400">{formatCurrency(overall.overdue)}</p>
+          <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+            {overall.overdueCount} past-due {overall.overdueCount === 1 ? 'item' : 'items'}, included in the total
+          </p>
+        </div>
+        {isFiltered && (
+          <div className="rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-indigo-400 bg-white dark:bg-gray-900 p-4 shadow-sm">
+            <p className="text-sm text-gray-500 dark:text-gray-400">Outstanding in These Results</p>
+            <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">{formatCurrency(inView.outstanding)}</p>
+            <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+              {inView.outstandingCount} unpaid fee {inView.outstandingCount === 1 ? 'item' : 'items'} matching your filters
+            </p>
+          </div>
+        )}
+      </div>
+
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_180px_260px_auto]">
           <div>
