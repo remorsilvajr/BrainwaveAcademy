@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { isValidEmail, normalizeEmail } from '@/lib/email-validation'
 import { isValidPhilippineMobile, isValidPhoneInput, normalizePhilippineMobile } from '@/lib/phone'
-import { isValidName, toTitleCase } from '@/lib/name'
+import { isValidName, toTitleCase, NAME_HTML_PATTERN } from '@/lib/name'
 import { validateFeeAmount, validateFeeDueDate, validateFeeReason } from '@/lib/fees'
 import { isPickupRelationship, PICKUP_RELATIONSHIPS } from '@/lib/pickup-relationships'
 import { pickupDisplayName } from '@/lib/pickup-names'
@@ -38,6 +38,16 @@ describe('Philippine phone numbers', () => {
 describe('names', () => {
   it.each(['Ana', "O'Brien", 'Mary-Jane', 'Núñez', 'De la Cruz'])('accepts %s', (n) => expect(isValidName(n)).toBe(true))
   it.each(['A', '---', "''", '1234', 'Ana 2', '', '   '])('rejects %j', (n) => expect(isValidName(n)).toBe(false))
+  it.each(["D'Angelo", "Mary-Jane O'Brien", 'Jo Ann', 'Ma Cristina Santos'])('accepts %s', (n) => expect(isValidName(n)).toBe(true))
+  it.each(['Ana  Maria', "a'", "'a", 'a-', '-a', "Ana' Maria", 'a--b', "a-'b", "a'-b", "O''Brien", 'Ana - Maria', "Ana '", 'Ana- Maria'])(
+    'rejects malformed %j',
+    (n) => expect(isValidName(n)).toBe(false)
+  )
+  it('the HTML pattern agrees with isValidName', () => {
+    const re = new RegExp(`^(?:${NAME_HTML_PATTERN})$`, 'v')
+    for (const n of ['Ana', "O'Brien", 'Mary-Jane', 'De la Cruz', 'Núñez']) expect(re.test(n)).toBe(true)
+    for (const n of ['Ana  Maria', "a'", "'a", 'a--b', "a-'b", 'Ana 2']) expect(re.test(n)).toBe(false)
+  })
   it('title-cases across spaces, hyphens and apostrophes', () => {
     expect(toTitleCase("mary-jane o'brien")).toBe("Mary-Jane O'Brien")
     expect(toTitleCase('JUAN DELA CRUZ')).toBe('Juan Dela Cruz')

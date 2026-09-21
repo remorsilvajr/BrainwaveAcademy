@@ -12,10 +12,9 @@ import { Field } from '@/components/enroll/enroll-field'
 import { StepTab } from '@/components/enroll/step-tab'
 import { ProgramSelector, type SelectableClassroom } from '@/components/enroll/program-selector'
 import { validateEnrollField, validateEnrollFields, STUDENT_KEYS, PROGRAM_KEYS } from '@/lib/enroll-validation'
+import { NAME_HTML_PATTERN, NAME_HTML_TITLE } from '@/lib/name'
 
 const initialState: SubmitStudentState = {}
-const NAME_PATTERN = "[A-Za-zÀ-ÖØ-öø-ÿ' -]+"
-const NAME_TITLE = 'Only letters, spaces, hyphens, and apostrophes are allowed.'
 
 const STUDENT_FIELD_KEYS = ['student_first_name', 'student_middle_name', 'student_last_name', 'student_dob', 'student_gender']
 
@@ -161,8 +160,8 @@ export function EnrollStudentForm({
               // validation just because a hidden (display:none) ancestor
               // step made it invisible.
               required={step === 1}
-              pattern={NAME_PATTERN}
-              title={NAME_TITLE}
+              pattern={NAME_HTML_PATTERN}
+              title={NAME_HTML_TITLE}
               minLength={2}
               defaultValue={values.student_first_name}
               error={liveErrors.student_first_name}
@@ -176,8 +175,8 @@ export function EnrollStudentForm({
               label="Middle Name"
               name="student_middle_name"
               placeholder="Optional"
-              pattern={NAME_PATTERN}
-              title={NAME_TITLE}
+              pattern={NAME_HTML_PATTERN}
+              title={NAME_HTML_TITLE}
               minLength={2}
               defaultValue={values.student_middle_name}
               error={liveErrors.student_middle_name}
@@ -192,8 +191,8 @@ export function EnrollStudentForm({
               name="student_last_name"
               placeholder="e.g. Santos"
               required={step === 1}
-              pattern={NAME_PATTERN}
-              title={NAME_TITLE}
+              pattern={NAME_HTML_PATTERN}
+              title={NAME_HTML_TITLE}
               minLength={2}
               defaultValue={values.student_last_name}
               error={liveErrors.student_last_name}

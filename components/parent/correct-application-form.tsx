@@ -10,10 +10,9 @@ import { DobSelect } from '@/components/ui/dob-select'
 import { PlainSelect } from '@/components/ui/plain-select'
 import { Field } from '@/components/enroll/enroll-field'
 import { ProgramSelector, type SelectableClassroom } from '@/components/enroll/program-selector'
+import { NAME_HTML_PATTERN, NAME_HTML_TITLE } from '@/lib/name'
 
 const initialState: ResubmitState = {}
-const NAME_PATTERN = "[A-Za-zÀ-ÖØ-öø-ÿ' -]+"
-const NAME_TITLE = 'Only letters, spaces, hyphens, and apostrophes are allowed.'
 
 export type CorrectableApplication = {
   id: string
@@ -129,8 +128,8 @@ export function CorrectApplicationForm({
             label="First Name"
             name="student_first_name"
             required
-            pattern={NAME_PATTERN}
-            title={NAME_TITLE}
+            pattern={NAME_HTML_PATTERN}
+            title={NAME_HTML_TITLE}
             minLength={2}
             defaultValue={values.student_first_name}
             error={liveErrors.student_first_name}
@@ -140,8 +139,8 @@ export function CorrectApplicationForm({
             label="Middle Name"
             name="student_middle_name"
             placeholder="Optional"
-            pattern={NAME_PATTERN}
-            title={NAME_TITLE}
+            pattern={NAME_HTML_PATTERN}
+            title={NAME_HTML_TITLE}
             minLength={2}
             defaultValue={values.student_middle_name}
             error={liveErrors.student_middle_name}
@@ -151,8 +150,8 @@ export function CorrectApplicationForm({
             label="Last Name"
             name="student_last_name"
             required
-            pattern={NAME_PATTERN}
-            title={NAME_TITLE}
+            pattern={NAME_HTML_PATTERN}
+            title={NAME_HTML_TITLE}
             minLength={2}
             defaultValue={values.student_last_name}
             error={liveErrors.student_last_name}
@@ -222,8 +221,8 @@ export function CorrectApplicationForm({
             label="First Name"
             name="parent_first_name"
             required
-            pattern={NAME_PATTERN}
-            title={NAME_TITLE}
+            pattern={NAME_HTML_PATTERN}
+            title={NAME_HTML_TITLE}
             minLength={2}
             defaultValue={values.parent_first_name}
             error={liveErrors.parent_first_name}
@@ -233,8 +232,8 @@ export function CorrectApplicationForm({
             label="Middle Name"
             name="parent_middle_name"
             placeholder="Optional"
-            pattern={NAME_PATTERN}
-            title={NAME_TITLE}
+            pattern={NAME_HTML_PATTERN}
+            title={NAME_HTML_TITLE}
             minLength={2}
             defaultValue={values.parent_middle_name}
             error={liveErrors.parent_middle_name}
@@ -244,8 +243,8 @@ export function CorrectApplicationForm({
             label="Last Name"
             name="parent_last_name"
             required
-            pattern={NAME_PATTERN}
-            title={NAME_TITLE}
+            pattern={NAME_HTML_PATTERN}
+            title={NAME_HTML_TITLE}
             minLength={2}
             defaultValue={values.parent_last_name}
             error={liveErrors.parent_last_name}
