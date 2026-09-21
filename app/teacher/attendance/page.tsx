@@ -5,17 +5,39 @@ import { RosterCheckin } from '@/components/teacher/roster-checkin'
 import { todayIso } from '@/lib/format'
 import { attendanceDateFromParam } from '@/lib/date-params'
 import { nonDailyClassroomIds } from '@/lib/classrooms'
+import { AttendanceRecords } from '@/components/attendance/attendance-records'
+import { AttendanceTabLinks } from '@/components/attendance/attendance-tab-links'
+import { loadStudentAttendanceRecords } from '@/lib/attendance-records'
+
+const TABS = [
+  { key: 'checkin', label: 'Check-in' },
+  { key: 'records', label: 'Records' },
+]
 
 export default async function TeacherAttendancePage({
   searchParams,
 }: {
-  searchParams: Promise<{ date?: string }>
+  searchParams: Promise<{ date?: string; tab?: string }>
 }) {
-  const { date: dateParam } = await searchParams
+  const { date: dateParam, tab: tabParam } = await searchParams
   const today = todayIso()
   const selectedDate = attendanceDateFromParam(dateParam)
 
   const supabase = await createClient()
+
+  if (tabParam === 'records') {
+    const { rows, capped } = await loadStudentAttendanceRecords(supabase)
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Attendance</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Every student attendance record on file.</p>
+        </div>
+        <AttendanceTabLinks basePath="/teacher/attendance" active="records" tabs={TABS} />
+        <AttendanceRecords rows={rows} subject="student" groupLabel="Program" capped={capped} />
+      </div>
+    )
+  }
 
   const [{ data: students }, { data: attendance }, { data: classrooms }] = await Promise.all([
     supabase
@@ -47,6 +69,8 @@ export default async function TeacherAttendancePage({
         <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Attendance</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Mark today&apos;s student attendance, or look back at a past date.</p>
       </div>
+
+      <AttendanceTabLinks basePath="/teacher/attendance" active="checkin" tabs={TABS} />
 
       <RosterCheckin
         students={rosterStudents}
