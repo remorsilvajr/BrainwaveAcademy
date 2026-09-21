@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { SUPPORT_BRANCH } from '@/lib/school-locations'
 
 // Missing program photos (see the two entries below with no matching file
 // in public/images/landing/ — those are the user's own real photos to add,
@@ -367,6 +368,9 @@ export function AcademyOverview() {
               </h3>
               <p className="mt-1 text-base leading-6 text-[#454650] dark:text-slate-300">
                 {program.description}
+              </p>
+              <p className="mt-3 text-sm font-medium leading-5 text-[#0b1b62] dark:text-indigo-300">
+                {SUPPORT_BRANCH.name}: {SUPPORT_BRANCH.address}
               </p>
             </article>
           ))}

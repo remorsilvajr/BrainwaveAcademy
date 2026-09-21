@@ -3,6 +3,7 @@ import { SiteHeader } from '@/components/landing/site-header'
 import { SiteFooter } from '@/components/landing/site-footer'
 import { Breadcrumbs } from '@/components/ui/breadcrumbs'
 import { getPortalAuth } from '@/lib/get-portal-auth'
+import { MAIN_BRANCH, SUPPORT_BRANCH, SCHOOL_PROVINCE_COUNTRY } from '@/lib/school-locations'
 
 export const metadata: Metadata = {
   title: 'Privacy Policy | Brainwave Preschool Academy',
@@ -319,7 +320,8 @@ export default async function PrivacyPolicyPage() {
             be directed to the School office:
           </P>
           <Ul>
-            <li>Brainwave Preschool Academy, Tagum City, Davao del Norte, Philippines</li>
+            <li>{MAIN_BRANCH.name}: {MAIN_BRANCH.address}, {SCHOOL_PROVINCE_COUNTRY}</li>
+            <li>{SUPPORT_BRANCH.name}: {SUPPORT_BRANCH.address}, {SCHOOL_PROVINCE_COUNTRY}</li>
             <li>Email: <a href="mailto:rsilva1@addu.edu.ph" className="text-[#0b1b62] underline hover:no-underline dark:text-indigo-300">rsilva1@addu.edu.ph</a></li>
           </Ul>
           <p className="mt-2 text-xs italic text-[#454650] dark:text-slate-400">
