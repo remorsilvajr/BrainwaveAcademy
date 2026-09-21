@@ -12,7 +12,7 @@ import { FeedbackForm } from '@/components/feedback/feedback-form'
 // used to be two separate dropdown entries opening this same modal with a
 // different initialCategory — merged into one "Send Feedback" entry since
 // having two buttons for one form was redundant; the Category dropdown
-// inside FeedbackForm (bug listed first) is what actually distinguishes a
+// inside FeedbackForm (order in lib/feedback.ts) is what actually distinguishes a
 // bug report from a general concern now.
 export function BugReportModal({ onClose }: { onClose: () => void }) {
   return (
@@ -27,7 +27,7 @@ export function BugReportModal({ onClose }: { onClose: () => void }) {
         </button>
       </div>
 
-      <FeedbackForm initialCategory="bug" onCancel={onClose} />
+      <FeedbackForm onCancel={onClose} />
     </Modal>
   )
 }
