@@ -41,7 +41,7 @@ export function PlainSelect({
         {label}
         {required && <span className="text-red-500"> *</span>}
       </label>
-      {extraLabelRow && <span aria-hidden className="mb-1 block text-xs font-medium invisible">{label}</span>}
+      {extraLabelRow && <span aria-hidden className="mb-1 hidden text-xs font-medium invisible sm:block">{label}</span>}
       <DropdownField
         value={value}
         options={options}

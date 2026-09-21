@@ -19,10 +19,10 @@ export function TeacherTopBar({ sections, teacher }: { sections: NavSection[]; t
 
   return (
     <header className="sticky top-14 z-20 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-4 sm:px-8 lg:top-0">
-      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-        <h1 className="text-lg font-bold text-[#0b1b62] dark:text-indigo-300 sm:text-xl">{title}</h1>
+      <div className="flex items-center gap-x-3">
+        <h1 className="min-w-0 flex-1 truncate text-lg font-bold text-[#0b1b62] dark:text-indigo-300 sm:text-xl">{title}</h1>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <NotificationBell />
 
           <ThemeToggle className="text-[#0b1b62] hover:bg-black/5 dark:text-slate-200 dark:hover:bg-white/10" />
@@ -41,7 +41,7 @@ export function TeacherTopBar({ sections, teacher }: { sections: NavSection[]; t
                 <UserIcon className="h-5 w-5" />
               </span>
             )}
-            <div className="leading-tight text-left">
+            <div className="hidden leading-tight text-left sm:block">
               <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                 {teacher.last_name}, {teacher.first_name.charAt(0)}.
               </p>

@@ -76,6 +76,11 @@ export function CalendarGrid({
     eventsByDate.set(e.event_date, list)
   }
 
+  const monthPrefix = `${year}-${pad(month)}-`
+  const monthEvents = events
+    .filter((e) => e.event_date.startsWith(monthPrefix))
+    .sort((a, b) => a.event_date.localeCompare(b.event_date))
+
   const leading = firstWeekday(year, month)
   const total = daysInMonth(year, month)
   const cellCount = Math.ceil((leading + total) / 7) * 7
@@ -174,26 +179,53 @@ export function CalendarGrid({
               <p className={`text-xs font-medium ${isToday ? 'text-[#0b1b62] dark:text-indigo-300' : 'text-gray-500 dark:text-gray-400'}`}>
                 {day}
               </p>
-              <div className="mt-1 space-y-0.5">
+              {/* On a phone the cells are too narrow for a title, so an event is
+                  just a dot here (the list under the grid names it); from `sm`
+                  up it is the usual labelled chip. */}
+              <div className="mt-1 flex flex-wrap gap-0.5 sm:block sm:space-y-0.5">
                 {dayEvents.slice(0, 3).map((e) => (
                   <button
                     key={e.id}
                     type="button"
                     onClick={() => onSelectEvent(e)}
-                    className="flex w-full items-center gap-1 rounded px-1 py-0.5 text-left text-[10px] font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    aria-label={e.title}
+                    className="flex items-center gap-1 rounded p-0.5 text-left text-[10px] font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 sm:w-full sm:px-1 sm:py-0.5"
                   >
-                    <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${eventTypeDot[e.event_type] ?? 'bg-gray-400'}`} />
-                    <span className="truncate">{e.title}</span>
+                    <span className={`h-2 w-2 shrink-0 rounded-full sm:h-1.5 sm:w-1.5 ${eventTypeDot[e.event_type] ?? 'bg-gray-400'}`} />
+                    <span className="hidden truncate sm:block">{e.title}</span>
                   </button>
                 ))}
                 {dayEvents.length > 3 && (
-                  <p className="px-1 text-[10px] text-gray-400 dark:text-gray-500">+{dayEvents.length - 3} more</p>
+                  <p className="px-1 text-[10px] text-gray-400 dark:text-gray-500">
+                    +{dayEvents.length - 3}
+                    <span className="hidden sm:inline"> more</span>
+                  </p>
                 )}
               </div>
             </div>
           )
         })}
       </div>
+
+      {monthEvents.length > 0 && (
+        <ul className="mt-4 space-y-1 border-t border-gray-100 pt-3 dark:border-gray-800 sm:hidden">
+          {monthEvents.map((e) => (
+            <li key={e.id}>
+              <button
+                type="button"
+                onClick={() => onSelectEvent(e)}
+                className="flex min-h-[44px] w-full items-center gap-3 rounded-lg px-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-800"
+              >
+                <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${eventTypeDot[e.event_type] ?? 'bg-gray-400'}`} />
+                <span className="w-14 shrink-0 text-xs font-semibold text-gray-500 dark:text-gray-400">
+                  {MONTH_NAMES[month - 1].slice(0, 3)} {Number(e.event_date.slice(8, 10))}
+                </span>
+                <span className="font-medium text-gray-900 dark:text-gray-100">{e.title}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }

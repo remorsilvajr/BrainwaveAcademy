@@ -79,7 +79,7 @@ export function LoginForm({ error }: { error?: string }) {
               onClick={() => setShowPassword((v) => !v)}
               aria-label={showPassword ? 'Hide password' : 'Show password'}
               aria-pressed={showPassword}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#454650] dark:text-slate-300"
+              className="absolute right-0 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-[#454650] dark:text-slate-300"
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
@@ -87,7 +87,7 @@ export function LoginForm({ error }: { error?: string }) {
         </div>
 
         <div className="flex items-center justify-between pb-2">
-          <label className="flex items-center gap-2 text-xs font-medium text-[#454650] dark:text-slate-300">
+          <label className="-my-2 flex items-center gap-2 py-2 text-xs font-medium text-[#454650] dark:text-slate-300">
             <input
               type="checkbox"
               name="remember-me"
@@ -97,7 +97,7 @@ export function LoginForm({ error }: { error?: string }) {
           </label>
           <a
             href="/forgot-password"
-            className="text-xs font-medium text-[#00a3e0] dark:text-sky-400 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00a3e0]"
+            className="-my-2 py-2 text-xs font-medium text-[#00a3e0] dark:text-sky-400 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00a3e0]"
           >
             Forgot Password?
           </a>
