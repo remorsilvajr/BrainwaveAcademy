@@ -19,8 +19,9 @@ A school admin / enrollment portal for Brainwave Preschool Academy, built with N
 
 - Dashboard with enrollment progress, due balance, wallet balance, and recent announcements. Every card links to its full page
 - Enroll a Student (in-portal wizard for a second/subsequent child)
-- Requirements checklist with document upload
-- Enrollment Status tracker, with a way to remove a rejected application
+- **Create your own account when you enroll**: type your password twice on the enroll form, and you are signed in straight away and can upload requirements right after submitting
+- Requirements checklist with document upload, a live count of what is still missing or needs correcting, and the school's note on each document that needs correcting
+- Enrollment Status tracker, with a way to remove a rejected application, and **Update & Resubmit** when the school asks for a correction
 - **Unenroll a Student**: ask the school to withdraw a child, and see the decision (with the admin's note)
 - Enrollment/Student Profile (read-only record + editable photo once enrolled)
 - Student Dashboard: read-only attendance and 6-domain milestone tracker
@@ -30,7 +31,8 @@ A school admin / enrollment portal for Brainwave Preschool Academy, built with N
 - **Photo Album**: photos teachers upload, by date, only for the child's own class
 - School Calendar: view holidays/events and RSVP Going/Not Going
 - Feedback: Send Feedback / My Feedback, in its own sidebar section
-- **Notification bell** in the top bar, plus email for important decisions and (optionally) fee reminders
+- **Notification bell** in the top bar and **numbers beside sidebar tabs** (new announcements, events, album photos, replies; they clear when you open the tab), plus email for important decisions and, optionally, fee reminders and payment receipts
+- A "Showing information for [child]" banner on every page that depends on the selected child
 
 ### Teacher portal
 
@@ -42,15 +44,16 @@ A school admin / enrollment portal for Brainwave Preschool Academy, built with N
 - Pickup Verification: type a name, get "authorized" or "not on file", with a loud **DO NOT RELEASE** warning for barred people
 - **Photo Album**: upload photos into today's folder for a class the teacher leads or assists
 - School Calendar: view holidays/events
-- Feedback and the notification bell, same as parent
+- Feedback, the notification bell and sidebar badges, same as parent
 
 ### Admin portal
 
 - Dashboard with real, live stats (pending applications, active enrollment, unresolved feedback, today's collections, outstanding balance, pending fund requests, pending unenrollments). Every card links to its full page
-- User Management: edit, block, and role management, with a hidden super-admin protection tier
-- Enrollment Requests and Applications: the two-stage review pipeline from a submitted request to a verified, enrolled student
-- Create New Account (manual account provisioning)
-- **Payments (five tabs)**: Fees / Received / Wallet Activity / Parent Wallets / Fund Requests. Manual cash recording, mark-paid, and **fee corrections** (edit, waive, void, and reverse a payment with an automatic wallet refund), each with a written reason and an audit trail
+- User Management: edit, block, and role management, with a hidden super-admin protection tier. **A super admin can set another account's password** (never emailed; signs that account out everywhere and notifies the owner)
+- Enrollment Requests and Applications: the two-stage review pipeline from a submitted request to a verified, enrolled student. **Approve, Reject or Request Correction** (each with an admin note where it matters) emails and notifies the parent automatically; a **note is required on every document marked Needs Correction**
+- **Numbers beside sidebar tabs** show what is waiting: enrollment requests, applications to review, unenrollment requests, unresolved feedback, fund requests
+- Create New Account (manual account provisioning): the new user gets a one-time link to choose their own password; nobody at the school ever sees or sends one
+- **Payments (five tabs)**: Fees / Received / Wallet Activity / Parent Wallets / Fund Requests. A **receipt email** goes to the parent when a fee is paid. Manual cash recording, mark-paid, and **fee corrections** (edit, waive, void, and reverse a payment with an automatic wallet refund), each with a written reason and an audit trail
 - **Unenrollment Requests**: approve or decline a withdrawal, choosing whether unpaid fees are kept or waived; the parent is emailed
 - **Year-End Promotion**: review every child with a suggested next program, apply all at once, and keep a per-school-year history
 - Students (with an Outstanding balance column and a Balance tab), Teachers, and Classrooms directories, with student list and fee-due-date management
