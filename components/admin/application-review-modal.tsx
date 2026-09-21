@@ -10,7 +10,7 @@ import {
   approveAndCreateStudentRecord,
 } from '@/app/admin/applications/actions'
 import { calculateAge, formatDateLong } from '@/lib/format'
-import { documentLabels, documentShortLabels, documentOrder } from '@/lib/documents'
+import { documentLabels, documentShortLabels, documentOrder, validateCorrectionNotes, CORRECTION_NOTE_MAX } from '@/lib/documents'
 import { isAgeEligibleForClassroom, classroomAgeRangeLabel } from '@/lib/classrooms'
 import { DocumentPreviewModal } from '@/components/ui/document-preview-modal'
 import { Modal } from '@/components/ui/modal'
@@ -18,7 +18,7 @@ import { ProgramOptionsPicker } from '@/components/enroll/program-options-picker
 import { isHourlyProgram } from '@/lib/program-options'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
-type DocRow = { document_type: string; file_url: string; verification_status: string }
+type DocRow = { document_type: string; file_url: string; verification_status: string; correction_note?: string | null }
 
 type Classroom = {
   id: string
@@ -81,6 +81,13 @@ export function ApplicationReviewModal({
     return initial
   })
   const [notes, setNotes] = useState(application.review_notes ?? '')
+  // What the parent will read for each document marked Needs Correction (starts from any
+  // note already saved on the document).
+  const [correctionNotes, setCorrectionNotes] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {}
+    for (const doc of application.documents) initial[doc.document_type] = doc.correction_note ?? ''
+    return initial
+  })
   const [classroomPick, setClassroomPick] = useState(application.requested_classroom_id ?? '')
   // The options the family asked for come pre-ticked, but only while the program is still the one they requested.
   const [optionPicks, setOptionPicks] = useState<string[]>(application.requested_program_options ?? [])
@@ -97,6 +104,8 @@ export function ApplicationReviewModal({
   const allValid = documentOrder.every((type) => statuses[type] === 'valid')
   const needsCorrectionTypes = documentOrder.filter((type) => statuses[type] === 'needs_correction')
   const hasParentAccount = !!application.created_parent_id
+  // Asking for corrections needs a note on every document marked as needing one.
+  const correctionNoteProblem = validateCorrectionNotes(statuses, correctionNotes, true)
   // Local `result` state, not just the (possibly stale, until the parent
   // Server Component re-renders after router.refresh()) `application` prop —
   // otherwise the "Approve & Create Student Record" button stays visible
@@ -134,11 +143,15 @@ export function ApplicationReviewModal({
     setIsSubmitting(true)
     setErrorMessage('')
     try {
-      await saveDocumentReview(application.id, statuses, notes)
+      const saved = await saveDocumentReview(application.id, statuses, notes, correctionNotes)
+      if (saved?.error) {
+        setErrorMessage(saved.error)
+        return
+      }
       showResult('saved')
       router.refresh()
-    } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : 'Something went wrong.')
+    } catch {
+      setErrorMessage('Something went wrong.')
     } finally {
       setIsSubmitting(false)
     }
@@ -148,16 +161,20 @@ export function ApplicationReviewModal({
     setIsSubmitting(true)
     setErrorMessage('')
     try {
-      await requestCorrections(application.id, statuses, notes)
-      setConfirmingCorrections(false)
-      showResult('corrections')
-      router.refresh()
-    } catch (err) {
+      const requested = await requestCorrections(application.id, statuses, notes, correctionNotes)
       // Closed on error too, not just success — ConfirmDialog has no error
       // slot of its own, so the errorMessage banner below (rendered in the
       // main modal body) would otherwise be invisible behind it.
       setConfirmingCorrections(false)
-      setErrorMessage(err instanceof Error ? err.message : 'Something went wrong.')
+      if (requested?.error) {
+        setErrorMessage(requested.error)
+        return
+      }
+      showResult('corrections')
+      router.refresh()
+    } catch {
+      setConfirmingCorrections(false)
+      setErrorMessage('Something went wrong.')
     } finally {
       setIsSubmitting(false)
     }
@@ -167,7 +184,11 @@ export function ApplicationReviewModal({
     setIsSubmitting(true)
     setErrorMessage('')
     try {
-      await saveDocumentReview(application.id, statuses, notes)
+      const saved = await saveDocumentReview(application.id, statuses, notes, correctionNotes)
+      if (saved?.error) {
+        setErrorMessage(saved.error)
+        return
+      }
       const result = await approveAndCreateStudentRecord(application.id, classroomPick || null, optionPicks)
       if (result?.error) {
         setErrorMessage(result.error)
@@ -342,6 +363,25 @@ export function ApplicationReviewModal({
                       </button>
                     </div>
                   )}
+                  {doc && statuses[type] === 'needs_correction' && (
+                    <div className="mt-3">
+                      <label htmlFor={`correction-note-${type}`} className="mb-1 block text-xs font-semibold text-red-700 dark:text-red-400">
+                        What needs to be corrected <span className="text-red-600">*</span>
+                      </label>
+                      <textarea
+                        id={`correction-note-${type}`}
+                        value={correctionNotes[type] ?? ''}
+                        onChange={(e) => setCorrectionNotes((prev) => ({ ...prev, [type]: e.target.value }))}
+                        rows={2}
+                        maxLength={CORRECTION_NOTE_MAX}
+                        placeholder="e.g. The photo is blurry. Please upload a clearer scan."
+                        className="w-full rounded-lg border border-red-200 dark:border-red-900 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+                      />
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        The parent sees this next to the document and in the email.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )
             })}
@@ -380,8 +420,12 @@ export function ApplicationReviewModal({
           <div className="flex gap-2">
             <button
               onClick={() => setConfirmingCorrections(true)}
-              disabled={isSubmitting || !hasUploadedDocs || needsCorrectionTypes.length === 0}
-              title={needsCorrectionTypes.length === 0 ? 'Mark at least one document as Needs Correction first' : undefined}
+              disabled={isSubmitting || !hasUploadedDocs || needsCorrectionTypes.length === 0 || !!correctionNoteProblem}
+              title={
+                needsCorrectionTypes.length === 0
+                  ? 'Mark at least one document as Needs Correction first'
+                  : (correctionNoteProblem ?? undefined)
+              }
               className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
               Request Corrections
@@ -407,7 +451,7 @@ export function ApplicationReviewModal({
         <ConfirmDialog
           tone="neutral"
           title="Request corrections from the parent?"
-          description={`This emails ${application.parent_first_name} at ${application.parent_email} asking them to resubmit: ${needsCorrectionTypes.map((type) => documentShortLabels[type] ?? type).join(', ')}.`}
+          description={`This emails ${application.parent_first_name} at ${application.parent_email} asking them to resubmit: ${needsCorrectionTypes.map((type) => documentShortLabels[type] ?? type).join(', ')}. Each document's note is included.`}
           confirmLabel="Yes, Send Request"
           isPending={isSubmitting}
           onConfirm={handleRequestCorrections}

@@ -178,6 +178,31 @@ export function albumDigestEmail(input: { parentFirstName: string; date: string;
   }
 }
 
+export type DocumentCorrection = { label: string; note: string }
+
+// Admin asked the parent to re-upload specific documents, with a note on each saying what
+// is wrong. Notes are typed by an admin, so they go through escapeHtml.
+export function documentCorrectionEmail(input: {
+  parentFirstName: string
+  studentName: string
+  items: DocumentCorrection[]
+  siteUrl: string
+}): Mail {
+  return {
+    subject: `Action needed: documents for ${input.studentName}`,
+    html: shell(
+      'Documents need to be resubmitted',
+      `<p>Hi ${escapeHtml(input.parentFirstName)}, a few documents for <strong>${escapeHtml(input.studentName)}</strong>'s enrollment need to be resubmitted:</p>
+       <ul>${input.items
+         .map((i) => `<li><strong>${escapeHtml(i.label)}</strong>${i.note ? `: ${escapeHtml(i.note)}` : ''}</li>`)
+         .join('')}</ul>
+       <p>Please log in, open <strong>Requirements</strong> and upload corrected copies.</p>`,
+      input.siteUrl,
+      { label: 'Open Requirements', path: '/parent/requirements' }
+    ),
+  }
+}
+
 const paymentMethodLabels: Record<string, string> = { wallet: 'Wallet', cash: 'Cash', check: 'Check' }
 
 // Sent when a fee is paid (from the parent's wallet, or recorded by the school as cash). It

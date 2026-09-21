@@ -4,29 +4,42 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email'
-import { documentShortLabels } from '@/lib/documents'
+import { documentShortLabels, validateCorrectionNotes } from '@/lib/documents'
 import { logActivity } from '@/lib/activity-log'
 import { getSiteUrl } from '@/lib/site-url'
 import { requireAdmin } from '@/lib/require-admin'
 import { applyClassroomToStudent } from '@/lib/classroom-assignment'
 import { validateProgramOptionsForClassroom } from '@/lib/program-options'
 import { notifyUsers } from '@/lib/notify'
+import { documentCorrectionEmail } from '@/lib/notification-emails'
 
 type DocumentStatuses = Record<string, 'valid' | 'needs_correction' | 'pending'>
+// What the admin wrote for each document marked needs_correction, keyed by document type.
+type CorrectionNotes = Record<string, string>
 
+// Saves the review: each document's status, the note the parent will see for a document that
+// needs correcting (cleared when it no longer does), and the internal notes. Returns
+// `{ error }` instead of throwing (a thrown Server Function error is redacted in a
+// production build).
 export async function saveDocumentReview(
   applicationId: string,
   documentStatuses: DocumentStatuses,
-  notes: string
-) {
+  notes: string,
+  correctionNotes: CorrectionNotes = {}
+): Promise<{ error: string } | undefined> {
+  const invalid = validateCorrectionNotes(documentStatuses, correctionNotes, false)
+  if (invalid) return { error: invalid }
+
   const supabase = await createClient()
 
   for (const [documentType, status] of Object.entries(documentStatuses)) {
-    await supabase
+    const note = status === 'needs_correction' ? (correctionNotes[documentType] ?? '').trim() : ''
+    const { error } = await supabase
       .from('application_documents')
-      .update({ verification_status: status })
+      .update({ verification_status: status, correction_note: note || null })
       .eq('application_id', applicationId)
       .eq('document_type', documentType)
+    if (error) return { error: error.message }
   }
 
   await supabase.from('applications').update({ review_notes: notes }).eq('id', applicationId)
@@ -45,18 +58,26 @@ export async function saveDocumentReview(
   revalidatePath('/parent/requirements')
 }
 
+// Asks the parent to re-upload the documents marked needs_correction. Every one needs a note
+// saying what is wrong with it; the parent gets an email listing each document with its
+// note, an in-portal notification, and sees the note next to the document on Requirements.
 export async function requestCorrections(
   applicationId: string,
   documentStatuses: DocumentStatuses,
-  notes: string
-) {
-  await saveDocumentReview(applicationId, documentStatuses, notes)
+  notes: string,
+  correctionNotes: CorrectionNotes = {}
+): Promise<{ error: string } | undefined> {
+  const invalid = validateCorrectionNotes(documentStatuses, correctionNotes, true)
+  if (invalid) return { error: invalid }
 
-  const needsCorrection = Object.entries(documentStatuses)
+  const saved = await saveDocumentReview(applicationId, documentStatuses, notes, correctionNotes)
+  if (saved?.error) return saved
+
+  const items = Object.entries(documentStatuses)
     .filter(([, status]) => status === 'needs_correction')
-    .map(([type]) => documentShortLabels[type] ?? type)
+    .map(([type]) => ({ label: documentShortLabels[type] ?? type, note: (correctionNotes[type] ?? '').trim() }))
 
-  if (needsCorrection.length > 0) {
+  if (items.length > 0) {
     const supabase = await createClient()
     const { data: application } = await supabase
       .from('applications')
@@ -70,28 +91,21 @@ export async function requestCorrections(
       await notifyUsers([application.created_parent_id], {
         kind: 'request',
         title: 'Corrections needed on documents',
-        body: `${application.student_first_name} ${application.student_last_name}: ${needsCorrection.join(', ')}`,
+        body: `${application.student_first_name} ${application.student_last_name}: ${items.map((i) => `${i.label} (${i.note})`).join('; ')}`.slice(0, 200),
         href: `/parent/requirements?student=${application.id}`,
       })
     }
 
     if (application) {
-      const siteUrl = getSiteUrl()
-      // Best-effort — the document-status update above is already
-      // committed, so a failed notification email shouldn't fail the
-      // whole corrections request.
+      // Best-effort: the review is already saved, so a failed email shouldn't fail it.
       try {
-        await sendEmail({
-          to: application.parent_email,
-          subject: `Action needed: documents for ${application.student_first_name} ${application.student_last_name}`,
-          html: `
-            <p>Hi ${application.parent_first_name},</p>
-            <p>A few documents for ${application.student_first_name} ${application.student_last_name}'s enrollment need to be resubmitted:</p>
-            <ul>${needsCorrection.map((label) => `<li>${label}</li>`).join('')}</ul>
-            <p>Please log in to the Parent Portal and visit Requirements to upload corrected copies.</p>
-            <p><a href="${siteUrl}/login">Log in to the Parent Portal</a></p>
-          `,
+        const mail = documentCorrectionEmail({
+          parentFirstName: application.parent_first_name,
+          studentName: `${application.student_first_name} ${application.student_last_name}`,
+          items,
+          siteUrl: getSiteUrl(),
         })
+        await sendEmail({ to: application.parent_email, subject: mail.subject, html: mail.html })
       } catch (err) {
         console.error('sendEmail failed for requestCorrections:', err)
       }
