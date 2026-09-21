@@ -26,6 +26,7 @@ import {
   MessageSquare,
   Images,
   UserMinus,
+  ArrowUpCircle,
   type LucideIcon,
 } from 'lucide-react'
 import { LogoutButton } from './logout-button'
@@ -55,6 +56,7 @@ export const iconMap = {
   feedback: MessageSquare,
   album: Images,
   userMinus: UserMinus,
+  yearEnd: ArrowUpCircle,
 } satisfies Record<string, LucideIcon>
 
 export type IconName = keyof typeof iconMap

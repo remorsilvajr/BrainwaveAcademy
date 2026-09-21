@@ -110,7 +110,7 @@ A `classrooms` concept now exists (see the Classrooms, teacher assignment & prog
 
 ### Admin portal (`/admin`)
 
-Sidebar (grouped, `app/admin/layout.tsx`'s `baseSections`): Dashboard/Announcement/Calendar (ungrouped), **Accounts & Enrollment** (User Management, Create New Account, Enrollment Requests, Unenrollment Requests, Applications, Payments — everything about who has an account plus the admissions/billing pipeline around them), Student (Students, Attendance, Student Dashboard, Pickup Verification), Teacher (Teachers, Classrooms), Admin (Activity Log, Feedback, (Deleted Items — super admin only), Settings, Log Out). Admin has no self-service My Profile — User Management already covers editing any account.
+Sidebar (grouped, `app/admin/layout.tsx`'s `baseSections`): Dashboard/Announcement/Calendar (ungrouped), **Accounts & Enrollment** (User Management, Create New Account, Enrollment Requests, Unenrollment Requests, Applications, Payments — everything about who has an account plus the admissions/billing pipeline around them), Student (Students, Attendance, Student Dashboard, Year-End Promotion, Pickup Verification), Teacher (Teachers, Classrooms), Admin (Activity Log, Feedback, (Deleted Items — super admin only), Settings, Log Out). Admin has no self-service My Profile — User Management already covers editing any account.
 
 **"Enrollment Requests" (`/admin/enroll-a-student`) and "Applications" (`/admin/applications`) are two separate, easily-confused steps — do not merge them:**
 
@@ -315,6 +315,17 @@ A parent can ask to withdraw a child; admin approves or declines. First of a pla
 - The admin dashboard has an Unenrollment Requests card (pending count).
 
 
+### Year-end promotion (`/admin/year-end`)
+
+Second of the planned lifecycle series (after unenrollment). Admin closes a school year: each active child is moved up the ladder, kept where they are, or graduated. Nothing happens automatically; the admin reviews every row and applies them all at once.
+
+- **The ladder** (`lib/promotion.ts`, keyed by classroom `slug`): Little Explorers, Advanced Toddler, Smart Explorers, Curious Adventurers, then graduate. Tutorial and Quiz Bee & Competitions are not on it: they default to **Stay** and are only graduated by hand in the review. To change the order edit `PROMOTION_LADDER`. `suggestChoice` proposes the next step, or Graduate from the last one, or Stay with an amber note when the child isn't age-eligible for the next program (`isAgeEligibleForClassroom`, so it follows whatever ranges are set on the classroom rows).
+- **School year** (`lib/school-year.ts`): "2026-2027" style (second year must be first + 1). A new one starts in **July** (`currentSchoolYear`), so June still counts as the year that is ending, which is when the review normally happens; the picker offers last/current/next (`?year=`, validated, falls back to current). The year recorded is the one just **completed**.
+- **`student_promotions`** (`student_id`, `school_year`, `action` promoted/stayed/graduated, `from_classroom_id`, `to_classroom_id`, `created_by`; **`unique (student_id, school_year)`**, admin-only RLS): one row per child per school year. That unique row is the guard against moving anyone twice, so re-running or double-submitting is safe, and the review page only lists children with no row for the selected year. "Stayed" is recorded too, so the history says which year a child was in which program. The printable Export Report has a **Program History** section built from it.
+- **`applyYearEnd(schoolYear, decisions)`** (admin only) handles each child on their own, so one failure (e.g. no longer age-eligible) is reported and the rest still apply; failed children stay listed. **Promote** reuses `applyClassroomToStudent` (same age check and classroom write, and it generates the new program's tuition/activity fees once per (student, program); **old fees, attendance, albums and unpaid balances stay as history**). **Graduate** sets `enrollment_status = 'graduated'` (terminal, see the student statuses note) and keeps `classroom_id` as their last program; unpaid fees stay collectible and the review warns with the total. Only children with status `active` are eligible. Applies at most 1000 at once; the destination must be one of the four ladder programs, never Tutorial/Quiz Bee (those need chosen options).
+- Not built: undoing a year-end (a wrong promotion is corrected from the Student Record's Program dropdown), and a per-student "graduate now" outside this page.
+
+
 ### Photo album (`/parent/album`, `/teacher/album`, `/admin/album`, each with `/[date]`)
 
 A "Photo Album" sidebar tab in all three portals (`iconMap.album`, `components/album/*`, one shared implementation in `album-pages.tsx` with thin per-role `page.tsx` wrappers). Teachers upload; parents view; admin views and can delete any photo.
@@ -349,6 +360,7 @@ A "Photo Album" sidebar tab in all three portals (`iconMap.album`, `components/a
 | `/parent/pickup` | Fully built (register/edit/remove authorized pickup persons per child, with photo) |
 | `/parent/feedback`, `/teacher/feedback` | Fully built (Send Feedback / My Feedback tabs, moved out of the profile dropdown) |
 | `/parent/calendar`, `/teacher/calendar` | Fully built, view-only (parent also gets RSVP) |
+| `/admin/year-end` | Fully built (review with suggestions, apply all, history per school year) |
 | `/parent/unenrollment`, `/admin/unenrollment` | Fully built (parent requests, admin approves/declines, fee decision, emails) |
 | `/parent/album`, `/teacher/album`, `/admin/album` | Fully built (teacher uploads into today's date folder, parents view, admin can delete) |
 | `/parent` dashboard | Fully real, including Due Balance (real sum of pending fees) |
@@ -363,7 +375,7 @@ A "Photo Album" sidebar tab in all three portals (`iconMap.album`, `components/a
 
 No migrations are checked into the repo — schema lives in Supabase directly, evolved via one-off SQL run manually in the Supabase SQL Editor. Consider formalizing into a `supabase/migrations` folder if this project continues past the retro.
 
-Tables: `profiles`, `applications` (has a `requested_program_options text[]` for Tutorial / Quiz Bee & Competitions, see the Classrooms note, and a `requested_classroom_id` FK to `classrooms`, nullable — the parent's Program-step pick at enrollment; see the Classrooms note), `application_documents`, `students` (has a `classroom_id` FK and a `program_options text[]`), `parent_student`, `attendance`, `milestones`, `announcements`, `payments` (extended with `fee_type`, `description`, `payment_method`, `recorded_by`, `classroom_id`, `receipt_ref` — see the Payments & wallet system note), `feedback` (extended with `category`, `admin_response`, `responded_by`, `responded_at` — see the Feedback categorization & reply note; has two FKs into `profiles`, so any embed must be qualified `profiles!submitted_by(...)` or `profiles!responded_by(...)`), `activity_log`, `ref_counters`, `classrooms`, `classroom_assistants`, `wallets`, `login_attempts` (email + timestamp, RLS enabled with zero policies — see the Login note), `authorized_pickups`, `events`, `event_rsvps`, `wallet_transactions`, `unenrollment_requests`, `album_photos` (see their dedicated notes above).
+Tables: `profiles`, `applications` (has a `requested_program_options text[]` for Tutorial / Quiz Bee & Competitions, see the Classrooms note, and a `requested_classroom_id` FK to `classrooms`, nullable — the parent's Program-step pick at enrollment; see the Classrooms note), `application_documents`, `students` (has a `classroom_id` FK and a `program_options text[]`), `parent_student`, `attendance`, `milestones`, `announcements`, `payments` (extended with `fee_type`, `description`, `payment_method`, `recorded_by`, `classroom_id`, `receipt_ref` — see the Payments & wallet system note), `feedback` (extended with `category`, `admin_response`, `responded_by`, `responded_at` — see the Feedback categorization & reply note; has two FKs into `profiles`, so any embed must be qualified `profiles!submitted_by(...)` or `profiles!responded_by(...)`), `activity_log`, `ref_counters`, `classrooms`, `classroom_assistants`, `wallets`, `login_attempts` (email + timestamp, RLS enabled with zero policies — see the Login note), `authorized_pickups`, `events`, `event_rsvps`, `wallet_transactions`, `unenrollment_requests`, `student_promotions`, `album_photos` (see their dedicated notes above).
 
 Enums: `user_role`, `account_status`, `application_status`, `document_type`, `document_status`, `attendance_status`, `milestone_category`, `payment_status`, `gender_type`.
 

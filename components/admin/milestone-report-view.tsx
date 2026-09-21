@@ -14,6 +14,8 @@ export type MilestoneReportData = {
   enrollmentStatus: string
   milestonesByCategory: Record<string, { assessmentDate: string; notes: string } | undefined>
   attendance: { date: string; status: string }[]
+  // One line per year-end decision, newest school year first.
+  programHistory: { schoolYear: string; label: string }[]
   // False for Tutorial / Quiz Bee & Competitions (not daily): the
   // attendance section is left out of the report.
   attendanceTracked: boolean
@@ -113,6 +115,20 @@ export function MilestoneReportView({ data, backHref }: { data: MilestoneReportD
             })}
           </div>
         </div>
+
+        {data.programHistory.length > 0 && (
+          <div className="mt-6 border-t border-gray-100 dark:border-gray-800 pt-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Program History</h2>
+            <div className="mt-2 divide-y divide-gray-100 dark:divide-gray-800 text-sm">
+              {data.programHistory.map((h) => (
+                <div key={h.schoolYear} className="flex items-center justify-between py-1.5">
+                  <span className="font-medium text-gray-900 dark:text-gray-100">{h.schoolYear}</span>
+                  <span className="text-gray-600 dark:text-gray-400">{h.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {data.attendanceTracked && (
         <div className="mt-6 border-t border-gray-100 dark:border-gray-800 pt-4">

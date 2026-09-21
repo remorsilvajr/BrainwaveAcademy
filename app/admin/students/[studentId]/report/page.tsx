@@ -22,7 +22,7 @@ export default async function StudentMilestoneReportPage({
 
   // Unbounded, unlike the dashboard widget's `.limit(14)` — a report should
   // cover everything on file, not just a recent-activity preview.
-  const [{ data: classroom }, { data: attendance }, { data: milestones }] = await Promise.all([
+  const [{ data: classroom }, { data: attendance }, { data: milestones }, { data: promotions }, { data: allClassrooms }] = await Promise.all([
     student.classroom_id
       ? supabase.from('classrooms').select('name, slug').eq('id', student.classroom_id).maybeSingle()
       : Promise.resolve({ data: null }),
@@ -33,6 +33,12 @@ export default async function StudentMilestoneReportPage({
       .eq('student_id', studentId)
       .order('assessment_date', { ascending: false })
       .order('created_at', { ascending: false }),
+    supabase
+      .from('student_promotions')
+      .select('school_year, action, from_classroom_id, to_classroom_id')
+      .eq('student_id', studentId)
+      .order('school_year', { ascending: false }),
+    supabase.from('classrooms').select('id, name'),
   ])
 
   // One row per category — first match wins since milestones are ordered
@@ -44,6 +50,8 @@ export default async function StudentMilestoneReportPage({
       milestonesByCategory[m.category] = { assessmentDate: m.assessment_date, notes: m.notes }
     }
   }
+
+  const classroomNameById = new Map((allClassrooms ?? []).map((c) => [c.id, c.name]))
 
   const studentName = `${student.first_name}${student.middle_name ? ' ' + student.middle_name : ''} ${student.last_name}`
 
@@ -59,6 +67,16 @@ export default async function StudentMilestoneReportPage({
         enrollmentStatus: student.enrollment_status,
         milestonesByCategory,
         attendance: attendance ?? [],
+        programHistory: (promotions ?? []).map((p) => {
+          const nameOf = (id: string | null) => (id ? (classroomNameById.get(id) ?? 'a program') : 'no program')
+          const label =
+            p.action === 'promoted'
+              ? `Promoted from ${nameOf(p.from_classroom_id)} to ${nameOf(p.to_classroom_id)}`
+              : p.action === 'graduated'
+                ? `Graduated from ${nameOf(p.from_classroom_id)}`
+                : `Stayed in ${nameOf(p.from_classroom_id)}`
+          return { schoolYear: p.school_year, label }
+        }),
         attendanceTracked: tracksDailyAttendance(classroom),
       }}
     />
