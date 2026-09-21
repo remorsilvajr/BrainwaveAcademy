@@ -8,6 +8,7 @@ const baseSections: NavSection[] = [
       { label: 'Dashboard', href: '/admin', icon: 'dashboard' },
       { label: 'Announcement', href: '/admin/announcement', icon: 'announcement' },
       { label: 'Calendar', href: '/admin/calendar', icon: 'calendar' },
+      { label: 'Photo Album', href: '/admin/album', icon: 'album' },
     ],
   },
   {

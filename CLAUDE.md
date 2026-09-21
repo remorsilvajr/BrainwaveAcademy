@@ -302,6 +302,18 @@ Extends the pre-existing bug-report system (`feedback` table) rather than buildi
 - **Admin's `/admin/calendar` is one page serving both viewing and managing** (create/edit/delete plus the same grid everyone else sees), not a separate "Events" management route — same "one page, not two" precedent as the Classrooms page's student-list-plus-management design. `createEvent`/`updateEvent` validate server-side: a real date within last year through next year, `HH:MM` times, end after start, title at most 150 characters.
 - **A parent's RSVP is a plain `.upsert(..., { onConflict: 'event_id,parent_id' })`** through the regular RLS-scoped client, not a `.rpc()` — unlike `pay_fee_with_wallet`, there's no second write that needs to succeed atomically alongside it, so the ordinary upsert-under-RLS pattern is enough (and `parents_manage_own_rsvps`'s `for all` policy already covers the insert-or-update either way).
 
+### Photo album (`/parent/album`, `/teacher/album`, `/admin/album`, each with `/[date]`)
+
+A "Photo Album" sidebar tab in all three portals (`iconMap.album`, `components/album/*`, one shared implementation in `album-pages.tsx` with thin per-role `page.tsx` wrappers). Teachers upload; parents view; admin views and can delete any photo.
+
+- **Folders aren't stored.** A folder is just the set of `album_photos` rows sharing an `album_date`, so a date with no photos has no folder, a folder appears the moment a teacher uploads into it, and one whose last photo is deleted disappears.
+- **`album_date` can't be chosen.** It defaults in the database to today in Manila (`timezone('Asia/Manila', now())::date`) and the teacher INSERT policy pins it to that, so an upload can only ever land in today's folder and nothing can be backdated. `recordAlbumPhotos` never sends it.
+- **Upload flow**: the browser scales each photo down (longest edge 1600px, JPEG 0.82, EXIF rotation applied) and uploads it straight to the private `album-photos` bucket, because a Server Action body is capped at 4.5MB on Vercel (same reason as the 2MB avatar limit); path `${teacherId}/${uuid}.jpg`, up to 20 per batch. Then `recordAlbumPhotos(paths, classroomId)` inserts the rows after checking the caller is a teacher, every path is exactly their own folder plus a UUID filename, and (if a classroom is chosen) it's one they lead or assist, the same rule as classroom announcements. If recording fails the just-uploaded files are removed again.
+- **Who sees what is enforced by RLS, not by an app-query filter** (children's photos warrant a real boundary, unlike announcements): teachers and admin see everything; a parent sees a photo only if its `classroom_id` is null and they have at least one linked student, or it's for a classroom one of their children is in.
+- **Photos are shown through 1-hour signed URLs** minted with the service-role client right after the rows were read through the caller's own RLS-scoped client (bucket has no SELECT policy), same shape as `pickup-photos`. **Delete** removes the row through the caller's client (RLS: a teacher their own, admin any), and only then the file with the service-role client.
+- Deliberately not built: notifications to parents, captions, per-child tagging, and a download button (the lightbox links to the original). `loadAlbumFolders` reads at most 5000 rows, which is years of a small school's photos.
+
+
 ## Route status (as of last working session)
 
 | Route | Status |
@@ -324,6 +336,7 @@ Extends the pre-existing bug-report system (`feedback` table) rather than buildi
 | `/parent/pickup` | Fully built (register/edit/remove authorized pickup persons per child, with photo) |
 | `/parent/feedback`, `/teacher/feedback` | Fully built (Send Feedback / My Feedback tabs, moved out of the profile dropdown) |
 | `/parent/calendar`, `/teacher/calendar` | Fully built, view-only (parent also gets RSVP) |
+| `/parent/album`, `/teacher/album`, `/admin/album` | Fully built (teacher uploads into today's date folder, parents view, admin can delete) |
 | `/parent` dashboard | Fully real, including Due Balance (real sum of pending fees) |
 | `/parent/announcement`, `/teacher/announcement`, `/admin/announcement` | Fully built |
 | `/parent/student-dashboard` | Fully built, read-only |
@@ -336,7 +349,7 @@ Extends the pre-existing bug-report system (`feedback` table) rather than buildi
 
 No migrations are checked into the repo — schema lives in Supabase directly, evolved via one-off SQL run manually in the Supabase SQL Editor. Consider formalizing into a `supabase/migrations` folder if this project continues past the retro.
 
-Tables: `profiles`, `applications` (has a `requested_program_options text[]` for Tutorial / Quiz Bee & Competitions, see the Classrooms note, and a `requested_classroom_id` FK to `classrooms`, nullable — the parent's Program-step pick at enrollment; see the Classrooms note), `application_documents`, `students` (has a `classroom_id` FK and a `program_options text[]`), `parent_student`, `attendance`, `milestones`, `announcements`, `payments` (extended with `fee_type`, `description`, `payment_method`, `recorded_by`, `classroom_id`, `receipt_ref` — see the Payments & wallet system note), `feedback` (extended with `category`, `admin_response`, `responded_by`, `responded_at` — see the Feedback categorization & reply note; has two FKs into `profiles`, so any embed must be qualified `profiles!submitted_by(...)` or `profiles!responded_by(...)`), `activity_log`, `ref_counters`, `classrooms`, `classroom_assistants`, `wallets`, `login_attempts` (email + timestamp, RLS enabled with zero policies — see the Login note), `authorized_pickups`, `events`, `event_rsvps` (see their dedicated notes above).
+Tables: `profiles`, `applications` (has a `requested_program_options text[]` for Tutorial / Quiz Bee & Competitions, see the Classrooms note, and a `requested_classroom_id` FK to `classrooms`, nullable — the parent's Program-step pick at enrollment; see the Classrooms note), `application_documents`, `students` (has a `classroom_id` FK and a `program_options text[]`), `parent_student`, `attendance`, `milestones`, `announcements`, `payments` (extended with `fee_type`, `description`, `payment_method`, `recorded_by`, `classroom_id`, `receipt_ref` — see the Payments & wallet system note), `feedback` (extended with `category`, `admin_response`, `responded_by`, `responded_at` — see the Feedback categorization & reply note; has two FKs into `profiles`, so any embed must be qualified `profiles!submitted_by(...)` or `profiles!responded_by(...)`), `activity_log`, `ref_counters`, `classrooms`, `classroom_assistants`, `wallets`, `login_attempts` (email + timestamp, RLS enabled with zero policies — see the Login note), `authorized_pickups`, `events`, `event_rsvps`, `album_photos` (see their dedicated notes above).
 
 Enums: `user_role`, `account_status`, `application_status`, `document_type`, `document_status`, `attendance_status`, `milestone_category`, `payment_status`, `gender_type`.
 

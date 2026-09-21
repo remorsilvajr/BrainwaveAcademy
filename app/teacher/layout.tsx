@@ -8,6 +8,7 @@ const sections: NavSection[] = [
       { label: 'Dashboard', href: '/teacher', icon: 'dashboard' },
       { label: 'Announcement', href: '/teacher/announcement', icon: 'announcement' },
       { label: 'Calendar', href: '/teacher/calendar', icon: 'calendar' },
+      { label: 'Photo Album', href: '/teacher/album', icon: 'album' },
     ],
   },
   {
