@@ -71,7 +71,7 @@ export function TeacherAttendanceRoster({
   const marked = teachers.filter((t) => statusByTeacher[t.id]).length
 
   return (
-    <div id="roster" className="mx-auto max-w-lg rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
+    <div id="roster" className="mx-auto max-w-2xl rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-base font-bold text-gray-900 dark:text-gray-100">{isToday ? "Today's Teacher Check-In" : 'Teacher Attendance'}</h2>
         <DateSelector date={date} basePath={basePath} />
@@ -96,13 +96,15 @@ export function TeacherAttendanceRoster({
           const status = statusByTeacher[t.id]
           return (
             <div key={t.id} className="flex flex-col gap-2 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-              <div>
+              <div className="min-w-0 sm:flex-1">
                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                   {t.first_name} {t.last_name}
                 </p>
                 {t.subtitle && <p className="text-xs text-gray-400 dark:text-gray-500">{t.subtitle}</p>}
               </div>
-              <div className="flex flex-wrap items-center gap-1.5">
+              {/* One row of buttons at every width from sm up, so a long label beside them can't
+                  push "Absent" onto its own line (it wraps in its own column instead). */}
+              <div className="flex flex-wrap items-center gap-1.5 sm:shrink-0 sm:flex-nowrap">
                 {['present', 'late', 'absent'].map((option) => (
                   <button
                     key={option}
