@@ -1,4 +1,5 @@
 import { navigationItems } from './nav-items'
+import { MAIN_BRANCH, SUPPORT_BRANCH } from '@/lib/school-locations'
 
 export function SiteFooter() {
   return (
@@ -30,10 +31,13 @@ export function SiteFooter() {
             >
               Contact Us
             </h2>
-            <address className="not-italic">
-              <p className="text-base leading-6 text-[#bac3ff]">
-                Tagum City, Davao del Norte, Philippines
-              </p>
+            <address className="flex flex-col gap-4 not-italic">
+              {[MAIN_BRANCH, SUPPORT_BRANCH].map((branch) => (
+                <p key={branch.name} className="text-base leading-6 text-[#bac3ff]">
+                  <span className="block font-semibold text-white">{branch.name}</span>
+                  {branch.address}
+                </p>
+              ))}
             </address>
           </section>
 

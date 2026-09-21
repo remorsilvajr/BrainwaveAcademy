@@ -1,9 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { SUPPORT_BRANCH } from '@/lib/school-locations'
 
 // The two support programs run differently from the age-graded ones: they're
 // billed by the hour (shown only, no fixed fee is generated) and a student
 // signs up for one or more named options inside the program (a subject, or a
-// competition). They're held at a separate branch, in one shared classroom
+// competition). They're held at the separate Tutorial and Quiz Bee branch (lib/school-locations.ts), in one shared classroom
 // with a section per option, so an option is a section of the one classroom,
 // not a separate classroom.
 //
@@ -39,8 +40,7 @@ export const PROGRAM_OPTION_CONFIG: Record<string, ProgramOptionConfig> = {
   },
 }
 
-export const PROGRAM_BRANCH_NOTE =
-  'Held at a separate branch, in one shared classroom with a section for each option.'
+export const PROGRAM_BRANCH_NOTE = `Held at our branch on ${SUPPORT_BRANCH.address}, in one shared classroom with a section for each option.`
 
 export function programOptionConfig(slug: string | null | undefined): ProgramOptionConfig | null {
   return slug ? (PROGRAM_OPTION_CONFIG[slug] ?? null) : null
