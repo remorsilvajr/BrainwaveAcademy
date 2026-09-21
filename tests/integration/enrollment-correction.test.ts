@@ -28,7 +28,6 @@ const application = () => ({
 })
 
 const stored = async () => (await f.admin.from('applications').select('*').eq('id', applicationId).single()).data!
-const setStatus = (status: string) => f.admin.from('applications').update({ status }).eq('id', applicationId)
 
 beforeAll(async () => {
   admin = await f.user('admin', 'correction')
@@ -100,7 +99,10 @@ describe('resubmitting', () => {
   })
 
   it('a request that was never sent back for correction cannot be edited by the parent', async () => {
-    await setStatus('approved')
+    // Approved by a signed-in admin, as in the app (the lock trigger refuses a service-role write).
+    const approved = await admin.client.from('applications').update({ status: 'approved' }).eq('id', applicationId)
+    expect(approved.error).toBeNull()
+    expect((await stored()).status).toBe('approved')
     await parent.client.from('applications').update({ status: 'pending_review', student_first_name: 'Sneaky' }).eq('id', applicationId)
     const row = await stored()
     expect(row.status).toBe('approved')
