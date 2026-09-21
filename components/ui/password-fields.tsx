@@ -5,9 +5,13 @@ import { Check, Eye, EyeOff, X } from 'lucide-react'
 import { passwordRequirements } from '@/lib/password-rules'
 
 // Two password inputs (type it twice) with the live rules and a match indicator. The
-// values live in the parent form so it can clear them after a failed submit; nothing
-// here stores or sends them. The checklist is a hint only: the Server Action applies
-// the real rules (lib/password.ts), including common and breached passwords.
+// values live in the parent form's state. The visible inputs have no `name`: what is
+// submitted is a pair of hidden inputs mirroring that state, so a form reset after a
+// failed submit (React resets forms when an action finishes) can never blank what was
+// typed, and `resetKey` remounts the visible inputs after each server response so they
+// show it again. Nothing here stores or logs the values. The checklist is a hint only:
+// the Server Action applies the real rules (lib/password.ts), including common and
+// breached passwords.
 export function PasswordFields({
   password,
   confirm,
@@ -16,6 +20,7 @@ export function PasswordFields({
   required,
   passwordError,
   confirmError,
+  resetKey = 0,
 }: {
   password: string
   confirm: string
@@ -24,6 +29,8 @@ export function PasswordFields({
   required: boolean
   passwordError?: string
   confirmError?: string
+  // Change it to remount the visible inputs (see above).
+  resetKey?: number
 }) {
   const [show, setShow] = useState(false)
   const met = passwordRequirements.map((r) => ({ ...r, isMet: r.test(password) }))
@@ -43,9 +50,10 @@ export function PasswordFields({
           Password{required && <span className="text-red-500"> *</span>}
         </label>
         <div className="relative">
+          <input type="hidden" name="password" value={password} />
           <input
+            key={`password-${resetKey}`}
             id="password"
-            name="password"
             type={show ? 'text' : 'password'}
             autoComplete="new-password"
             value={password}
@@ -70,9 +78,10 @@ export function PasswordFields({
         <label htmlFor="confirm_password" className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
           Confirm Password{required && <span className="text-red-500"> *</span>}
         </label>
+        <input type="hidden" name="confirm_password" value={confirm} />
         <input
+          key={`confirm-${resetKey}`}
           id="confirm_password"
-          name="confirm_password"
           type={show ? 'text' : 'password'}
           autoComplete="new-password"
           value={confirm}
