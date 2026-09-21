@@ -94,3 +94,20 @@ export async function notifyParentsOfStudent(studentId: string, input: Notificat
     console.error('notifyParentsOfStudent failed:', err)
   }
 }
+
+// Every active, non-deleted account with a role (a new announcement or calendar
+// event concerns everyone of that role). At school scale this is a few hundred rows
+// at most; dedupeKey makes a repeat harmless.
+export async function notifyRole(role: 'parent' | 'teacher', input: NotificationInput): Promise<void> {
+  try {
+    const { data } = await createAdminClient()
+      .from('profiles')
+      .select('id')
+      .eq('role', role)
+      .eq('account_status', 'active')
+      .is('deleted_at', null)
+    await notifyUsers((data ?? []).map((p) => p.id), input)
+  } catch (err) {
+    console.error(`notifyRole(${role}) failed:`, err)
+  }
+}

@@ -49,11 +49,15 @@ export function NotificationBell() {
     function onVisible() {
       if (document.visibilityState === 'visible') void refresh()
     }
+    // The sidebar clears a tab's notifications when it is opened; refresh straight away.
+    const onChanged = () => void refresh()
     document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('notifications-changed', onChanged)
     return () => {
       alive.current = false
       clearInterval(timer)
       document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('notifications-changed', onChanged)
     }
   }, [refresh])
 

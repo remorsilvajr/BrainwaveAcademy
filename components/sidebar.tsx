@@ -1,8 +1,10 @@
 'use client'
 
-import { Suspense, useEffect, useState, useTransition } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { getNavBadges, markSectionSeen } from '@/components/notifications/nav-badges-actions'
+import { isSectionHref, type NavBadges } from '@/lib/nav-badges'
 import {
   LayoutGrid,
   Megaphone,
@@ -147,10 +149,12 @@ function TopProgressBar({ active }: { active: boolean }) {
 // ?student= param at all) — everything else in Sidebar stays prerenderable.
 function NavLinks({
   sections,
+  badges,
   onNavigate,
   onLinkClick,
 }: {
   sections: NavSection[]
+  badges: NavBadges
   onNavigate?: () => void
   onLinkClick: (href: string, e: React.MouseEvent) => void
 }) {
@@ -187,11 +191,13 @@ function NavLinks({
 
               const Icon = item.icon ? iconMap[item.icon] : undefined
               const active = pathname === item.href
+              const badge = badges[item.href!] ?? 0
 
               return (
                 <li key={item.href}>
                   <Link
                     href={hrefWithStudent(item.href!)}
+                    aria-label={badge > 0 ? `${item.label}, ${badge} new` : undefined}
                     onClick={(e) => {
                       onLinkClick(hrefWithStudent(item.href!), e)
                       onNavigate?.()
@@ -204,6 +210,15 @@ function NavLinks({
                   >
                     {Icon && <Icon className="h-4 w-4 shrink-0" />}
                     {item.label}
+                    {badge > 0 && (
+                      <span
+                        className={`ml-auto flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-bold leading-none ${
+                          active ? 'bg-white text-[#e6007e]' : 'bg-[#e6007e] text-white'
+                        }`}
+                      >
+                        {badge > 99 ? '99+' : badge}
+                      </span>
+                    )}
                   </Link>
                 </li>
               )
@@ -232,7 +247,54 @@ export function Sidebar({
   // for the matching `top-14 lg:top-0` so nothing sticks underneath this.
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const router = useRouter()
+  const pathname = usePathname()
   const [isPending, startTransition] = useTransition()
+
+  // The numbers beside tabs (see lib/nav-badges.ts). Kept here, once, and handed to
+  // both copies of the links (desktop aside and mobile drawer). Refreshed on load,
+  // every 30s, when the tab regains focus, and when something else says they changed
+  // (a requirement upload, opening a tab).
+  const tabHrefs = useMemo(
+    () => sections.flatMap((section) => section.items).map((item) => item.href ?? '').filter((href) => isSectionHref(href)),
+    [sections]
+  )
+  const [badges, setBadges] = useState<NavBadges>({})
+  const refreshBadges = useCallback(async () => {
+    try {
+      setBadges(await getNavBadges(tabHrefs))
+    } catch {
+      // keep the previous numbers
+    }
+  }, [tabHrefs])
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- an initial fetch from an external system (the server), not derived state
+    void refreshBadges()
+    const timer = setInterval(() => void refreshBadges(), 30_000)
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void refreshBadges()
+    }
+    const onChanged = () => void refreshBadges()
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('nav-badges-changed', onChanged)
+    return () => {
+      clearInterval(timer)
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('nav-badges-changed', onChanged)
+    }
+  }, [refreshBadges])
+
+  // Opening a tab (or anything under it, e.g. an album day) clears what was new in
+  // it, then the numbers and the bell are refreshed.
+  const openedTab = tabHrefs.find((href) => pathname === href || pathname.startsWith(`${href}/`))
+  useEffect(() => {
+    if (!openedTab) return
+    void (async () => {
+      await markSectionSeen(openedTab)
+      window.dispatchEvent(new Event('notifications-changed'))
+      await refreshBadges()
+    })()
+  }, [openedTab, refreshBadges])
 
   // The drawer itself is position:fixed (doesn't move with scroll), but
   // nothing was stopping the page underneath it from scrolling — on mobile,
@@ -322,6 +384,7 @@ export function Sidebar({
               <Suspense fallback={<NavLinksFallback sections={sections} />}>
                 <NavLinks
                   sections={sections}
+                  badges={badges}
                   onNavigate={() => setIsMobileOpen(false)}
                   onLinkClick={handleLinkClick}
                 />
@@ -345,7 +408,7 @@ export function Sidebar({
 
         <nav className="flex-1 space-y-6">
           <Suspense fallback={<NavLinksFallback sections={sections} />}>
-            <NavLinks sections={sections} onLinkClick={handleLinkClick} />
+            <NavLinks sections={sections} badges={badges} onLinkClick={handleLinkClick} />
           </Suspense>
         </nav>
       </aside>

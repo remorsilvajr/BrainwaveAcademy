@@ -10,6 +10,7 @@ import { getSiteUrl } from '@/lib/site-url'
 import { requireAdmin } from '@/lib/require-admin'
 import { applyClassroomToStudent } from '@/lib/classroom-assignment'
 import { validateProgramOptionsForClassroom } from '@/lib/program-options'
+import { notifyUsers } from '@/lib/notify'
 
 type DocumentStatuses = Record<string, 'valid' | 'needs_correction' | 'pending'>
 
@@ -59,9 +60,20 @@ export async function requestCorrections(
     const supabase = await createClient()
     const { data: application } = await supabase
       .from('applications')
-      .select('parent_email, parent_first_name, student_first_name, student_last_name')
+      .select('id, created_parent_id, parent_email, parent_first_name, student_first_name, student_last_name')
       .eq('id', applicationId)
       .single()
+
+    if (application?.created_parent_id) {
+      // In-portal notice (bell + the Requirements badge grows by one per document);
+      // the email below still goes out.
+      await notifyUsers([application.created_parent_id], {
+        kind: 'request',
+        title: 'Corrections needed on documents',
+        body: `${application.student_first_name} ${application.student_last_name}: ${needsCorrection.join(', ')}`,
+        href: `/parent/requirements?student=${application.id}`,
+      })
+    }
 
     if (application) {
       const siteUrl = getSiteUrl()
@@ -140,6 +152,11 @@ export async function approveAndCreateStudentRecord(
     return { error: 'Application not found.' }
   }
 
+  // Every request now has a parent account from the moment it is submitted, so the
+  // account no longer proves it was approved: check the status itself.
+  if (application.status !== 'approved') {
+    return { error: 'Approve this enrollment request in Enrollment Requests first.' }
+  }
   if (!application.created_parent_id) {
     return { error: 'This application has no parent account yet. Approve it via Enrollment Requests first.' }
   }

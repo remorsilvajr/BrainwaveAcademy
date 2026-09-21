@@ -135,6 +135,9 @@ export function RequirementsChecklist({
         const result = await uploadRequirementDocument(applicationId, type, formData)
         if (result?.error) {
           setErrorMessage(result.error)
+        } else {
+          // One fewer thing to do: the sidebar's Requirements number updates now.
+          window.dispatchEvent(new Event('nav-badges-changed'))
         }
       } catch {
         setErrorMessage('Upload failed. Please try again.')

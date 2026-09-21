@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { logActivity } from '@/lib/activity-log'
+import { notifyClassroomParents, notifyRole } from '@/lib/notify'
 
 export async function postAnnouncement(input: {
   title: string
@@ -45,7 +46,9 @@ export async function postAnnouncement(input: {
     }
   }
 
-  const { error } = await supabase.from('announcements').insert({
+  const { data: posted, error } = await supabase
+    .from('announcements')
+    .insert({
     title: input.title.trim(),
     body: input.body.trim(),
     posted_by: user.id,
@@ -56,10 +59,12 @@ export async function postAnnouncement(input: {
     // existed. A set classroom_id only reaches a parent with a child
     // actually in that classroom (see lib/parent-classrooms.ts).
     classroom_id: input.classroomId || null,
-  })
+    })
+    .select('id')
+    .single()
 
-  if (error) {
-    return { error: error.message }
+  if (error || !posted) {
+    return { error: error?.message ?? 'Could not post the announcement.' }
   }
 
   await logActivity(supabase, {
@@ -67,6 +72,16 @@ export async function postAnnouncement(input: {
     action: 'Posted classroom announcement',
     targetTable: 'announcements',
   })
+
+  const forParents = {
+    kind: 'message',
+    title: `New announcement: ${input.title.trim()}`.slice(0, 120),
+    body: input.body.trim().slice(0, 140),
+    href: '/parent/announcement',
+    dedupeKey: `announcement:${posted.id}`,
+  }
+  if (input.classroomId) await notifyClassroomParents(input.classroomId, forParents)
+  else await notifyRole('parent', forParents)
 
   revalidatePath('/teacher')
   revalidatePath('/parent/announcement')
