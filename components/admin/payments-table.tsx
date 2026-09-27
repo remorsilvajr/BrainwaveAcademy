@@ -189,6 +189,7 @@ export function PaymentsTable({
   const paid = payments.filter((p) => p.status === 'paid')
   const collectedTotal = roundToCents(paid.reduce((sum, p) => sum + p.amount, 0))
   const collectedViaWallet = roundToCents(paid.filter((p) => p.payment_method === 'wallet').reduce((sum, p) => sum + p.amount, 0))
+  const collectedViaPaymongo = roundToCents(paid.filter((p) => p.payment_method === 'paymongo').reduce((sum, p) => sum + p.amount, 0))
   const collectedInView = roundToCents(filtered.reduce((sum, item) => sum + (item.payment?.amount ?? 0), 0))
 
   const deductedTotal = roundToCents(walletTransactions.filter((t) => t.amount < 0).reduce((sum, t) => sum - t.amount, 0))
@@ -249,7 +250,7 @@ export function PaymentsTable({
             <Tile
               label="Total Collected"
               value={formatCurrency(collectedTotal)}
-              sub={`${paid.length} paid fee ${paid.length === 1 ? 'item' : 'items'}: ${formatCurrency(collectedViaWallet)} wallet, ${formatCurrency(roundToCents(collectedTotal - collectedViaWallet))} cash`}
+              sub={`${paid.length} paid fee ${paid.length === 1 ? 'item' : 'items'}: ${formatCurrency(collectedViaWallet)} wallet, ${formatCurrency(collectedViaPaymongo)} online, ${formatCurrency(roundToCents(collectedTotal - collectedViaWallet - collectedViaPaymongo))} cash`}
               accent="border-l-green-400 dark:border-l-green-600"
             />
             {isFiltered && (

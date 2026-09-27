@@ -203,7 +203,7 @@ export function documentCorrectionEmail(input: {
   }
 }
 
-const paymentMethodLabels: Record<string, string> = { wallet: 'Wallet', cash: 'Cash', check: 'Check' }
+const paymentMethodLabels: Record<string, string> = { wallet: 'Wallet', cash: 'Cash', check: 'Check', paymongo: 'GCash/Card (PayMongo)' }
 
 // Sent when a fee is paid (from the parent's wallet, or recorded by the school as cash). It
 // is the receipt itself in text, plus a link to the printable one in the portal. Everything

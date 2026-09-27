@@ -25,7 +25,7 @@ A school admin / enrollment portal for Brainwave Preschool Academy, built with N
 - **Unenroll a Student**: ask the school to withdraw a child, and see the decision (with the admin's note)
 - Enrollment/Student Profile (read-only record + editable photo once enrolled)
 - Student Dashboard: read-only attendance and 6-domain milestone tracker
-- Payments: wallet balance with Add Funds, then two tabs: Fees & Payments (itemized fees, pay-with-wallet, payment history, printable receipts) and Request History (every wallet top-up request and the school's decision)
+- Payments: wallet balance with Add Funds, then two tabs: Fees & Payments (itemized fees, pay-with-wallet, **or pay online via PayMongo test-mode checkout**, payment history, printable receipts) and Request History (every wallet top-up request and the school's decision)
 - Authorized Pickup: register the people allowed to pick up each child (first/middle/last name, relationship, phone, photo)
 - **Health & Emergency**: allergies, conditions, medications, doctor/hospital, and up to 3 emergency contacts per child
 - **Photo Album**: photos teachers upload, by date, only for the child's own class
@@ -141,6 +141,8 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 `NEXT_PUBLIC_SITE_URL` must be the real deployed URL (no trailing slash) in Vercel's own env var settings; it's only `http://localhost:3000` locally. Supabase's own Auth SMTP integration (used for password-reset emails) is configured separately, in the Supabase dashboard rather than here. See `CLAUDE.md` for details.
 
 Also needed in **Vercel** (not locally): `CRON_SECRET`, any long random string. The daily reminder job (`/api/cron/daily`, 18:00 Manila) refuses to run without it.
+
+Optional, only for the "Pay Online" fee-payment path: `PAYMONGO_SECRET_KEY` and `PAYMONGO_WEBHOOK_SECRET` (test mode keys from the PayMongo dashboard). Without these, the rest of the app works normally; the online-payment button just shows a friendly "not configured" message instead of a checkout link.
 
 Optional: `DATABASE_URL`, a direct Postgres connection string (pooler string) used by the scripts (`db:verify`, `backup`, `restore`, `test:sweep`) and one-off debugging; the app itself doesn't read it.
 

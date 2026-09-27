@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { formatCurrency, formatDateLong } from '@/lib/format'
-import { payFeeWithWallet } from '@/app/parent/payments/actions'
+import { payFeeWithWallet, createPaymongoCheckout } from '@/app/parent/payments/actions'
 import { isOverdue } from '@/lib/payments'
 
 type Payment = {
@@ -21,6 +21,7 @@ type Payment = {
 function PayRow({ payment, walletBalance }: { payment: Payment; walletBalance: number }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const [isRedirecting, startRedirectTransition] = useTransition()
   const [error, setError] = useState('')
 
   const overdue = isOverdue(payment)
@@ -42,6 +43,24 @@ function PayRow({ payment, walletBalance }: { payment: Payment; walletBalance: n
     })
   }
 
+  function handlePayOnline() {
+    setError('')
+    startRedirectTransition(async () => {
+      try {
+        const result = await createPaymongoCheckout(payment.id)
+        if ('error' in result) {
+          setError(result.error)
+          return
+        }
+        // A real navigation away from the app to PayMongo's hosted
+        // checkout, not a client-side route change.
+        window.location.href = result.url
+      } catch {
+        setError('Something went wrong.')
+      }
+    })
+  }
+
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-gray-200 dark:border-gray-700 p-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
@@ -55,11 +74,18 @@ function PayRow({ payment, walletBalance }: { payment: Payment; walletBalance: n
         <span className="text-lg font-bold text-gray-900 dark:text-gray-100">{formatCurrency(payment.amount)}</span>
         <button
           onClick={handlePay}
-          disabled={isPending || !canAfford}
+          disabled={isPending || isRedirecting || !canAfford}
           title={!canAfford ? 'Insufficient wallet balance' : undefined}
           className="rounded-full bg-[#0b1b62] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#08154d] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isPending ? 'Paying…' : 'Pay with Wallet'}
+        </button>
+        <button
+          onClick={handlePayOnline}
+          disabled={isPending || isRedirecting}
+          className="rounded-full border border-[#0b1b62] px-4 py-1.5 text-xs font-semibold text-[#0b1b62] hover:bg-[#0b1b62] hover:text-white disabled:cursor-not-allowed disabled:opacity-50 dark:border-indigo-300 dark:text-indigo-300 dark:hover:bg-indigo-300 dark:hover:text-gray-900"
+        >
+          {isRedirecting ? 'Redirecting…' : 'Pay Online (GCash/Card)'}
         </button>
       </div>
       {error && <p className="w-full text-xs text-red-600 dark:text-red-400">{error}</p>}

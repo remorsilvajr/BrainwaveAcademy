@@ -5,6 +5,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { FeeBreakdown } from '@/components/parent/fee-breakdown'
 import { WalletPanel } from '@/components/parent/wallet-panel'
 import { PaymentsTabs } from '@/components/parent/payments-tabs'
+import { PaymongoStatusBanner } from '@/components/parent/paymongo-status-banner'
 import { withStudent } from '@/lib/parent-links'
 
 export default async function ParentPaymentsPage({
@@ -51,6 +52,7 @@ export default async function ParentPaymentsPage({
           <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Payments</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">View billing history and pay outstanding fees.</p>
         </div>
+        <PaymongoStatusBanner />
         <WalletPanel balance={walletBalance} />
         <PaymentsTabs
           requests={walletRequests ?? []}
@@ -76,6 +78,7 @@ export default async function ParentPaymentsPage({
           <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Payments</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">View billing history and pay outstanding fees.</p>
         </div>
+        <PaymongoStatusBanner />
         <WalletPanel balance={walletBalance} />
         <PaymentsTabs
           requests={walletRequests ?? []}
@@ -114,6 +117,7 @@ export default async function ParentPaymentsPage({
         <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Payments</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">View billing history and pay outstanding fees.</p>
       </div>
+      <PaymongoStatusBanner />
       <WalletPanel balance={walletBalance} />
       <PaymentsTabs
         requests={walletRequests ?? []}

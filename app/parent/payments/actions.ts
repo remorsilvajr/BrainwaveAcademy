@@ -4,8 +4,11 @@ import { revalidatePath } from 'next/cache'
 import { formatCurrency } from '@/lib/format'
 import { notifyAdmins } from '@/lib/notify'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { logActivity } from '@/lib/activity-log'
 import { emailReceiptFor } from '@/lib/send-receipt'
+import { createCheckoutSession } from '@/lib/paymongo'
+import { getSiteUrl } from '@/lib/site-url'
 
 const ERROR_MESSAGES: Record<string, string> = {
   NOT_AUTHENTICATED: 'Please log in and try again.',
@@ -50,6 +53,69 @@ export async function payFeeWithWallet(paymentId: string): Promise<{ error: stri
 
   revalidatePath('/parent/payments')
   revalidatePath('/parent', 'layout')
+}
+
+// PayMongo test mode (see CLAUDE.md): creates a hosted Checkout Session and
+// hands back its URL for the browser to navigate to. This action never
+// marks the fee paid — only the webhook (app/api/webhooks/paymongo/route.ts)
+// does that, once PayMongo confirms the payment actually happened. Reading
+// the payment through the parent's own RLS-scoped client is the
+// authorization check here (parents_view_child_payments already restricts
+// this to their own children, same trust-RLS pattern the receipt page uses).
+export async function createPaymongoCheckout(paymentId: string): Promise<{ url: string } | { error: string }> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'Please log in and try again.' }
+
+  const { data: payment } = await supabase
+    .from('payments')
+    .select('id, status, amount, description, fee_type, receipt_ref')
+    .eq('id', paymentId)
+    .maybeSingle()
+
+  if (!payment) return { error: 'This fee does not belong to one of your children.' }
+  if (payment.status !== 'pending') return { error: 'This fee has already been paid.' }
+
+  const secretKey = process.env.PAYMONGO_SECRET_KEY
+  if (!secretKey) return { error: 'Online payment is not configured yet. Please try Pay with Wallet instead.' }
+
+  const admin = createAdminClient()
+  const { error: sessionInsertError } = await admin.from('payment_gateway_sessions').insert({
+    payment_id: payment.id,
+    provider: 'paymongo',
+    provider_session_id: `pending-${payment.id}-${Date.now()}`,
+    status: 'pending',
+    parent_id: user.id,
+  })
+  if (sessionInsertError) {
+    return { error: 'Something went wrong starting the online payment. Please try again.' }
+  }
+
+  const description = payment.description || `${payment.fee_type.charAt(0).toUpperCase()}${payment.fee_type.slice(1)} fee`
+  const siteUrl = getSiteUrl()
+  const result = await createCheckoutSession(secretKey, {
+    amount: payment.amount,
+    description,
+    referenceNumber: payment.receipt_ref ?? payment.id,
+    successUrl: `${siteUrl}/parent/payments?paymongo=success`,
+    cancelUrl: `${siteUrl}/parent/payments?paymongo=cancelled`,
+    metadata: { payment_id: payment.id, parent_id: user.id },
+  })
+
+  if ('error' in result) {
+    return { error: result.error }
+  }
+
+  // Replace the placeholder provider_session_id with PayMongo's real one, now that we have it.
+  await admin
+    .from('payment_gateway_sessions')
+    .update({ provider_session_id: result.id })
+    .eq('payment_id', payment.id)
+    .eq('status', 'pending')
+
+  return { url: result.checkoutUrl }
 }
 
 // Parents can't credit their own wallet directly (wallets has no parent

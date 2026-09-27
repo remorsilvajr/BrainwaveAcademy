@@ -10,8 +10,8 @@ import { getSiteUrl } from '@/lib/site-url'
 // throws, because the payment it describes has already happened and must not be reported as
 // failed because an email was.
 //
-// Who gets it: a wallet payment goes to the parent who paid (payments.recorded_by) when
-// they are one of the child's guardians; anything else (cash recorded by the school) goes
+// Who gets it: a wallet or PayMongo payment goes to the parent who paid (payments.recorded_by)
+// when they are one of the child's guardians; anything else (cash recorded by the school) goes
 // to every active guardian. A guardian who switched email notifications off in Settings
 // gets none: that toggle promises "billing receipts", and the receipt is still in their
 // portal.
@@ -43,7 +43,8 @@ export async function sendPaymentReceipt(deps: ReceiptDeps, paymentId: string): 
 
     const guardianIds = (links ?? []).map((l) => l.parent_id)
     if (guardianIds.length === 0) return summary
-    const recipientIds = payment.payment_method === 'wallet' && payment.recorded_by && guardianIds.includes(payment.recorded_by) ? [payment.recorded_by] : guardianIds
+    const paidByOneGuardian = payment.payment_method === 'wallet' || payment.payment_method === 'paymongo'
+    const recipientIds = paidByOneGuardian && payment.recorded_by && guardianIds.includes(payment.recorded_by) ? [payment.recorded_by] : guardianIds
 
     const { data: parents } = await admin
       .from('profiles')

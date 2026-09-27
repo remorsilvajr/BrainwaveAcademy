@@ -20,6 +20,7 @@ const methodLabels: Record<string, string> = {
   wallet: 'Wallet',
   cash: 'Cash',
   check: 'Check',
+  paymongo: 'GCash/Card (PayMongo)',
 }
 
 // Deliberately a plain printable page, not a generated PDF file — the
