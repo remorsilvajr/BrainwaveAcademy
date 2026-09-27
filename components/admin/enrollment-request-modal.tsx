@@ -361,7 +361,7 @@ export function EnrollmentRequestModal({
                 disabled={isSubmitting}
                 className="flex-1 rounded-lg bg-[#e6007e] py-3 text-sm font-semibold text-white hover:bg-[#c9006e] disabled:opacity-60"
               >
-                {isSubmitting ? 'Working…' : 'Send Email'}
+                {isSubmitting ? 'Working…' : 'Confirm'}
               </button>
             </>
           ) : (
