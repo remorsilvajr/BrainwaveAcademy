@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { Printer } from 'lucide-react'
-import { formatCurrency, formatDateLong } from '@/lib/format'
+import { formatCurrency, formatDateLong, roundToCents } from '@/lib/format'
 
 export type ReceiptData = {
   receiptRef: string | null
@@ -10,6 +10,10 @@ export type ReceiptData = {
   paymentMethod: string | null
   description: string | null
   amount: number
+  // The fee's full amount and how much of it was paid up to and including
+  // this payment; a part payment shows what was still owed after it.
+  feeTotal?: number
+  paidSoFar?: number
   studentName: string
   studentAccountId: string | null
   parentName: string | null
@@ -96,6 +100,22 @@ export function ReceiptView({ data, backHref }: { data: ReceiptData; backHref: s
           <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Amount Paid</span>
           <span className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">{formatCurrency(data.amount)}</span>
         </div>
+        {data.feeTotal != null && data.paidSoFar != null && data.paidSoFar < data.feeTotal && (
+          <div className="mt-3 space-y-1 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-500 dark:text-gray-400">Fee Total</span>
+              <span className="font-medium text-gray-900 dark:text-gray-100">{formatCurrency(data.feeTotal)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500 dark:text-gray-400">Paid So Far</span>
+              <span className="font-medium text-gray-900 dark:text-gray-100">{formatCurrency(data.paidSoFar)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500 dark:text-gray-400">Balance Remaining</span>
+              <span className="font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(roundToCents(data.feeTotal - data.paidSoFar))}</span>
+            </div>
+          </div>
+        )}
 
         <p className="mt-6 text-center text-xs text-gray-400 dark:text-gray-500">
           This receipt was generated electronically and is valid without a signature.

@@ -1,13 +1,21 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { ReceiptView } from '@/components/payments/receipt-view'
+import { loadReceiptTransaction } from '@/lib/receipt-load'
 
 // No explicit ownership check here — parents_view_child_payments RLS
 // already scopes this select to the caller's own linked children, so a
 // payment id belonging to someone else's child simply comes back null,
 // same "trust RLS" pattern as the rest of this app's parent-facing pages.
-export default async function ParentReceiptPage({ params }: { params: Promise<{ paymentId: string }> }) {
+export default async function ParentReceiptPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ paymentId: string }>
+  searchParams: Promise<{ tx?: string }>
+}) {
   const { paymentId } = await params
+  const { tx } = await searchParams
   const supabase = await createClient()
 
   const { data: payment } = await supabase.from('payments').select('*').eq('id', paymentId).maybeSingle()
@@ -15,16 +23,12 @@ export default async function ParentReceiptPage({ params }: { params: Promise<{ 
     notFound()
   }
 
-  // A fee can now be paid in installments; the receipt shows the most
-  // recent one. Falls back to the fee's own flat fields defensively (should
-  // not happen once every paid fee has a backfilled transaction row).
-  const { data: latestTransaction } = await supabase
-    .from('payment_transactions')
-    .select('receipt_ref, transaction_date, payment_method, amount')
-    .eq('payment_id', paymentId)
-    .order('transaction_date', { ascending: false })
-    .limit(1)
-    .maybeSingle()
+  // One receipt per payment: the one named by ?tx=, or the fee's latest.
+  const receipt = await loadReceiptTransaction(supabase, paymentId, tx)
+  if (!receipt) {
+    notFound()
+  }
+  const { transaction, paidSoFar } = receipt
 
   const [{ data: student }, { data: classroom }, { data: parentProfile }] = await Promise.all([
     supabase.from('students').select('first_name, last_name, student_id').eq('id', payment.student_id).maybeSingle(),
@@ -40,11 +44,13 @@ export default async function ParentReceiptPage({ params }: { params: Promise<{ 
     <ReceiptView
       backHref="/parent/payments"
       data={{
-        receiptRef: latestTransaction?.receipt_ref ?? payment.receipt_ref,
-        transactionDate: latestTransaction?.transaction_date ?? payment.transaction_date,
-        paymentMethod: latestTransaction?.payment_method ?? payment.payment_method,
+        receiptRef: transaction.receipt_ref,
+        transactionDate: transaction.transaction_date,
+        paymentMethod: transaction.payment_method,
         description: payment.description,
-        amount: latestTransaction?.amount ?? payment.amount,
+        amount: transaction.amount,
+        feeTotal: payment.amount,
+        paidSoFar,
         studentName: student ? `${student.first_name} ${student.last_name}` : 'Unknown student',
         studentAccountId: student?.student_id ?? null,
         parentName: parentProfile ? `${parentProfile.first_name} ${parentProfile.last_name}` : null,

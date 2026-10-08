@@ -16,6 +16,7 @@ export async function PaymentsPageContent({ mode }: { mode: 'admin' | 'cashier' 
     { data: parentStudentLinks },
     { data: walletTransactions },
     { data: adjustments },
+    { data: paymentTransactions },
   ] =
     await Promise.all([
       supabase.from('payments').select('*').order('created_at', { ascending: false }),
@@ -29,6 +30,13 @@ export async function PaymentsPageContent({ mode }: { mode: 'admin' | 'cashier' 
       supabase.from('parent_student').select('parent_id, student_id'),
       supabase.from('wallet_transactions').select('*').order('created_at', { ascending: false }),
       supabase.from('payment_adjustments').select('id, payment_id, action, reason, created_at').order('created_at', { ascending: false }),
+      // Money received, one row per payment (a fee can be paid in installments).
+      // A reversed payment is kept as history but no longer counts.
+      supabase
+        .from('payment_transactions')
+        .select('id, payment_id, amount, payment_method, transaction_date, receipt_ref')
+        .is('reversed_at', null)
+        .order('transaction_date', { ascending: false }),
     ])
 
   const studentById = new Map((students ?? []).map((s) => [s.id, s]))
@@ -107,7 +115,7 @@ export async function PaymentsPageContent({ mode }: { mode: 'admin' | 'cashier' 
           Record cash payments, review every fee item and payment, and manage parent wallets.
         </p>
       </div>
-      <PaymentsTabs payments={rows} walletTransactions={walletTransactionRows} adjustmentsByPayment={adjustmentsByPayment} studentOptions={studentOptions} parents={parentWalletRows} requests={walletRequestRows} mode={mode} />
+      <PaymentsTabs payments={rows} received={paymentTransactions ?? []} walletTransactions={walletTransactionRows} adjustmentsByPayment={adjustmentsByPayment} studentOptions={studentOptions} parents={parentWalletRows} requests={walletRequestRows} mode={mode} />
     </div>
   )
 }

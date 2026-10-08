@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { formatCurrency, formatDateLong } from '@/lib/format'
+import { formatCurrency, formatDateLong, roundToCents } from '@/lib/format'
 import { payAmountWithWallet } from '@/app/parent/payments/actions'
 import { isOverdue, remainingBalance } from '@/lib/payments'
 
@@ -69,29 +69,35 @@ export function FeeBreakdown({
   const router = useRouter()
   // Waived and voided fees (cancelled at withdrawal, or corrected by admin) are neither owed nor paid, so they are in neither list.
   const outstanding = payments.filter((p) => p.status === 'pending')
-  const totalDue = outstanding.reduce((sum, p) => sum + remainingBalance(p), 0)
+  const totalDue = roundToCents(outstanding.reduce((sum, p) => sum + remainingBalance(p), 0))
   const canAfford = walletBalance > 0
 
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState('')
   const [payAmount, setPayAmount] = useState(String(totalDue))
 
-  // Resets the input to the new total whenever it actually changes (e.g.
-  // after a successful payment reduces it) without clobbering an in-progress
-  // edit the parent is still typing.
-  useEffect(() => {
+  // When the total changes (a payment just went through), start the box at the
+  // new total. Adjusted during render, the same pattern as the enroll forms,
+  // rather than in an effect.
+  const [lastTotal, setLastTotal] = useState(totalDue)
+  if (totalDue !== lastTotal) {
+    setLastTotal(totalDue)
     setPayAmount(String(totalDue))
-  }, [totalDue])
+  }
 
   function handlePay() {
     setError('')
-    const amount = Number(payAmount)
+    const amount = roundToCents(Number(payAmount))
     if (!Number.isFinite(amount) || amount <= 0) {
       setError('Enter a valid amount greater than zero.')
       return
     }
     if (amount > totalDue) {
       setError("That's more than your total outstanding balance for this child.")
+      return
+    }
+    if (amount > walletBalance) {
+      setError(`Your wallet balance (${formatCurrency(walletBalance)}) is not enough for that amount.`)
       return
     }
     startTransition(async () => {
@@ -192,7 +198,7 @@ export function FeeBreakdown({
                 <div className="flex items-center gap-3">
                   <span className="font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(t.amount)}</span>
                   <Link
-                    href={`/parent/payments/${t.payment_id}/receipt`}
+                    href={`/parent/payments/${t.payment_id}/receipt?tx=${t.id}`}
                     className="rounded-full border border-[#0b1b62] dark:border-indigo-300 px-3 py-1.5 text-xs font-semibold text-[#0b1b62] dark:text-indigo-300 hover:bg-[#0b1b62] hover:text-white"
                   >
                     View Receipt

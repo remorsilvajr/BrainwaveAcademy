@@ -16,8 +16,13 @@ export type ReversibleFee = {
   description: string | null
   fee_type: string
   amount: number
+  amount_paid: number
   payment_method: string | null
   receipt_ref: string | null
+  // What was paid toward the fee by each method (from its payment history);
+  // the wallet part is refunded, the cash part is handled outside the app.
+  walletPaid: number
+  cashPaid: number
 }
 
 // Undo a payment that was recorded by mistake. A wallet payment is refunded to
@@ -37,7 +42,8 @@ export function ReversePaymentModal({
   const [confirming, setConfirming] = useState(false)
   const [isWorking, setIsWorking] = useState(false)
   const [error, setError] = useState('')
-  const isWallet = fee.payment_method === 'wallet'
+  const isWallet = fee.walletPaid > 0
+  const methods = [fee.walletPaid > 0 ? 'wallet' : null, fee.cashPaid > 0 ? 'cash' : null].filter(Boolean).join(' and ')
   const title = fee.description || `${fee.fee_type.charAt(0).toUpperCase()}${fee.fee_type.slice(1)} fee`
 
   function askConfirm() {
@@ -91,21 +97,30 @@ export function ReversePaymentModal({
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-800/60">
               <p className="text-xs text-gray-400 dark:text-gray-500">Amount paid</p>
-              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(fee.amount)}</p>
+              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                {formatCurrency(fee.amount_paid)}
+                {fee.amount_paid < fee.amount && (
+                  <span className="ml-1 text-xs font-normal text-gray-400">of {formatCurrency(fee.amount)}</span>
+                )}
+              </p>
             </div>
             <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-800/60">
               <p className="text-xs text-gray-400 dark:text-gray-500">Paid by</p>
               <p className="text-sm font-semibold capitalize text-gray-900 dark:text-gray-100">
-                {fee.payment_method ?? 'unknown'}
+                {methods || fee.payment_method || 'unknown'}
                 {fee.receipt_ref ? <span className="ml-2 text-xs font-normal text-gray-400">{fee.receipt_ref}</span> : null}
               </p>
             </div>
           </div>
 
           <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
-            {isWallet
-              ? `The fee goes back to unpaid and ${formatCurrency(fee.amount)} is returned to the parent's wallet, with an entry in Wallet Activity.`
-              : 'The fee goes back to unpaid. The cash itself is not handled here, so return it to the family yourself if that is needed.'}
+            {`Everything paid toward this fee is reversed and the fee goes back to unpaid.${
+              isWallet ? ` ${formatCurrency(fee.walletPaid)} is returned to the parent's wallet, with an entry in Wallet Activity.` : ''
+            }${
+              fee.cashPaid > 0
+                ? ` The cash (${formatCurrency(fee.cashPaid)}) is not handled here, so return it to the family yourself if that is needed.`
+                : ''
+            }`}
           </p>
 
           {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950/30 dark:text-red-400">{error}</p>}
@@ -159,7 +174,9 @@ export function ReversePaymentModal({
       {confirming && (
         <ConfirmDialog
           title="Reverse this payment?"
-          description={`${formatCurrency(fee.amount)} for ${fee.studentName} will be marked unpaid${isWallet ? ' and refunded to the wallet' : ''}.`}
+          description={`${formatCurrency(fee.amount_paid)} paid by ${fee.studentName}'s family will be reversed and the fee marked unpaid${
+            isWallet ? `, with ${formatCurrency(fee.walletPaid)} refunded to the wallet` : ''
+          }.`}
           confirmLabel="Yes, Reverse"
           tone="danger"
           isPending={isWorking}

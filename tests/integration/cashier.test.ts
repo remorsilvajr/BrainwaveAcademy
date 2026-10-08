@@ -30,6 +30,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await f.admin.from('wallet_requests').delete().eq('parent_id', parent.id)
+  await f.admin.from('payment_transactions').delete().eq('payment_id', feeId)
   await f.admin.from('payments').delete().eq('student_id', studentId)
   await f.admin.from('wallets').delete().eq('parent_id', parent.id)
   await f.cleanup()
@@ -62,24 +63,55 @@ describe('recording and marking cash payments', () => {
       .insert({ student_id: studentId, amount: 10, fee_type: 'other', status: 'paid', payment_method: 'wallet' })
     expect(wallet.error).not.toBeNull()
   })
-  it('can record a cash payment and mark an unpaid fee as paid in cash', async () => {
+  it('can record a cash payment already paid in full, but not one that claims paid with nothing paid', async () => {
     const recorded = await cashier.client
       .from('payments')
-      .insert({ student_id: studentId, amount: 50, fee_type: 'other', description: 'Uniform', status: 'paid', payment_method: 'cash', recorded_by: cashier.id })
+      .insert({ student_id: studentId, amount: 50, amount_paid: 50, fee_type: 'other', description: 'Uniform', status: 'paid', payment_method: 'cash', recorded_by: cashier.id })
     expect(recorded.error).toBeNull()
+    const hollow = await cashier.client
+      .from('payments')
+      .insert({ student_id: studentId, amount: 50, fee_type: 'other', description: 'Uniform', status: 'paid', payment_method: 'cash', recorded_by: cashier.id })
+    expect(hollow.error).not.toBeNull()
+  })
+  it('can take part of a fee in cash, which leaves it unpaid until it is paid in full', async () => {
+    const part = await cashier.client
+      .from('payments')
+      .update({ amount_paid: 200, payment_method: 'cash', transaction_date: new Date().toISOString(), recorded_by: cashier.id })
+      .eq('id', feeId)
+      .select('id')
+    expect(part.error).toBeNull()
+    expect(await feeRow(feeId)).toMatchObject({ status: 'pending', amount_paid: 200 })
+    // A partly paid fee can't be marked paid, and the paid amount can't go down.
+    const early = await cashier.client.from('payments').update({ status: 'paid', amount_paid: 300, payment_method: 'cash' }).eq('id', feeId)
+    expect(early.error).not.toBeNull()
+    const down = await cashier.client.from('payments').update({ amount_paid: 100, payment_method: 'cash' }).eq('id', feeId)
+    expect(down.error).not.toBeNull()
+    expect((await feeRow(feeId)).amount_paid).toBe(200)
+  })
+  it('records each cash payment in the history as themselves, never as wallet or as someone else', async () => {
+    const own = await cashier.client.from('payment_transactions').insert({ payment_id: feeId, amount: 200, payment_method: 'cash', recorded_by: cashier.id })
+    expect(own.error).toBeNull()
+    const wallet = await cashier.client.from('payment_transactions').insert({ payment_id: feeId, amount: 1, payment_method: 'wallet', recorded_by: cashier.id })
+    expect(wallet.error).not.toBeNull()
+    const forged = await cashier.client.from('payment_transactions').insert({ payment_id: feeId, amount: 1, payment_method: 'cash', recorded_by: parent.id })
+    expect(forged.error).not.toBeNull()
+  })
+  it('can mark the rest paid in cash', async () => {
     const paid = await cashier.client
       .from('payments')
-      .update({ status: 'paid', payment_method: 'cash', transaction_date: new Date().toISOString(), recorded_by: cashier.id })
+      .update({ status: 'paid', amount_paid: 500, payment_method: 'cash', transaction_date: new Date().toISOString(), recorded_by: cashier.id })
       .eq('id', feeId)
       .select('id')
     expect(paid.error).toBeNull()
-    expect((await feeRow(feeId)).status).toBe('paid')
+    expect(await feeRow(feeId)).toMatchObject({ status: 'paid', amount_paid: 500 })
   })
   it('cannot reverse a payment or delete a row', async () => {
     await cashier.client.from('payments').update({ status: 'pending', payment_method: null }).eq('id', feeId)
     expect((await feeRow(feeId)).status).toBe('paid')
     await cashier.client.from('payments').delete().eq('id', feeId)
     expect((await feeRow(feeId)).id).toBe(feeId)
+    await cashier.client.from('payment_transactions').delete().eq('payment_id', feeId)
+    expect((await f.admin.from('payment_transactions').select('id').eq('payment_id', feeId)).data).toHaveLength(1)
   })
   it('cannot write the corrections history or the wallet ledger', async () => {
     const adjustment = await cashier.client.from('payment_adjustments').insert({ payment_id: feeId, action: 'waived', reason: 'not allowed', created_by: cashier.id })

@@ -32,7 +32,7 @@ begin
     from public.payment_transactions
     where payment_id = p_payment_id and payment_method = 'wallet' and reversed_at is null;
 
-  if v_wallet_total > 0 then
+    if v_wallet_total > 0 then
     select ps.parent_id into v_parent from public.parent_student ps
       where ps.student_id = v_payment.student_id and ps.parent_id = v_payment.recorded_by limit 1;
     if v_parent is null then

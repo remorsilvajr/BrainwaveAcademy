@@ -1,5 +1,6 @@
 'use server'
 
+import { roundToCents } from '@/lib/format'
 import { revalidatePath } from 'next/cache'
 import { formatCurrency } from '@/lib/format'
 import { notifyAdmins } from '@/lib/notify'
@@ -28,7 +29,12 @@ const ERROR_MESSAGES: Record<string, string> = {
 // see CLAUDE.md for why this replaced the old one-fee-at-a-time
 // payFeeWithWallet. The RPC returns the id of every payment_transactions row
 // it created, one per fee it touched, so a receipt goes out for each.
-export async function payAmountWithWallet(studentId: string, amount: number): Promise<{ error: string } | undefined> {
+export async function payAmountWithWallet(studentId: string, rawAmount: number): Promise<{ error: string } | undefined> {
+  // The database re-checks everything; this only turns a bad input into a clear message.
+  const amount = roundToCents(Number(rawAmount))
+  if (typeof studentId !== 'string' || !Number.isFinite(amount) || amount <= 0) {
+    return { error: ERROR_MESSAGES.INVALID_AMOUNT }
+  }
   const supabase = await createClient()
 
   const { data: transactionIds, error } = await supabase.rpc('pay_amount_with_wallet', {

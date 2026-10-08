@@ -85,6 +85,7 @@ export async function sendPaymentReceipt(deps: ReceiptDeps, transactionId: strin
             method: transaction.payment_method,
             paidAt: transaction.transaction_date,
             paymentId: payment.id,
+            transactionId: transaction.id,
             siteUrl,
           })
         )

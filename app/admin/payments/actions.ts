@@ -593,9 +593,16 @@ export async function reversePayment(paymentId: string, reason: string): Promise
   const supabase = await createClient()
   const { data: before } = await supabase
     .from('payments')
-    .select('student_id, amount, description, fee_type, payment_method')
+    .select('student_id, amount, amount_paid, description, fee_type, payment_method')
     .eq('id', paymentId)
     .maybeSingle()
+  const { data: walletRows } = await supabase
+    .from('payment_transactions')
+    .select('amount')
+    .eq('payment_id', paymentId)
+    .eq('payment_method', 'wallet')
+    .is('reversed_at', null)
+  const walletRefund = roundToCents((walletRows ?? []).reduce((sum, r) => sum + Number(r.amount), 0))
 
   const { error } = await supabase.rpc('reverse_payment', { p_payment_id: paymentId, p_reason: reason.trim() })
   if (error) {
@@ -603,7 +610,7 @@ export async function reversePayment(paymentId: string, reason: string): Promise
       NOT_ADMIN: 'Only an admin can reverse a payment.',
       REASON_REQUIRED: 'Add a short reason so there is a record of why.',
       PAYMENT_NOT_FOUND: 'That payment could not be found.',
-      PAYMENT_NOT_PAID: 'This payment is not marked as paid, so there is nothing to reverse.',
+      PAYMENT_NOT_PAID: 'Nothing has been paid toward this fee, so there is nothing to reverse.',
       WALLET_NOT_FOUND: "The paying parent's wallet could not be found, so it could not be refunded.",
       PAYER_UNKNOWN:
         'This wallet payment cannot be refunded automatically because more than one parent is linked to the child and it is not recorded who paid. Refund the right parent with Adjust in Parent Wallets, then reverse the payment as cash.',
@@ -614,7 +621,7 @@ export async function reversePayment(paymentId: string, reason: string): Promise
 
   await logActivity(supabase, {
     actorId: admin.id,
-    action: `Reversed a payment${before ? ` (${formatCurrency(before.amount)}, ${before.payment_method ?? 'no method'})` : ''}: ${reason.trim()}`,
+    action: `Reversed a payment${before ? ` (${formatCurrency(before.amount_paid)} of ${formatCurrency(before.amount)})` : ''}: ${reason.trim()}`,
     targetTable: 'payments',
     targetId: paymentId,
   })
@@ -623,7 +630,7 @@ export async function reversePayment(paymentId: string, reason: string): Promise
       kind: 'money',
       title: 'A payment was reversed',
       body: `${feeLabel(before)} (${formatCurrency(before.amount)}) is unpaid again${
-        before.payment_method === 'wallet' ? ', and the amount was returned to your wallet' : ''
+        walletRefund > 0 ? `, and ${formatCurrency(walletRefund)} was returned to your wallet` : ''
       }.`,
       href: '/parent/payments',
     })

@@ -117,6 +117,7 @@ export default async function ParentPaymentsPage({
           .from('payment_transactions')
           .select('id, payment_id, amount, payment_method, transaction_date')
           .in('payment_id', paymentIds)
+          .is('reversed_at', null)
           .order('transaction_date', { ascending: false })
       : { data: [] }
 

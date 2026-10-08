@@ -31,6 +31,17 @@ export type PaymentRow = {
   receipt_ref: string | null
 }
 
+// One payment received toward a fee (a payment_transactions row). A fee can be
+// paid in installments, so money collected is counted from these, not from fees.
+export type ReceivedRow = {
+  id: string
+  payment_id: string
+  amount: number
+  payment_method: string
+  transaction_date: string
+  receipt_ref: string | null
+}
+
 // One admin wallet adjustment (the Adjust button in Parent Wallets). `amount` is
 // signed: negative is a deduction, positive an addition. It's parent-level (no
 // student) and isn't a fee, so it never counts toward Outstanding or Collected.
@@ -47,7 +58,8 @@ export type WalletTxRow = {
 // The Payments page is split so each tab has one job:
 // - fees: what is (or was) owed and not yet paid: unpaid, overdue, waived, voided.
 //   This is where fees get corrected (edit, waive, void) and cash gets recorded.
-// - received: money that came in (paid fees) with receipts and reversals.
+// - received: money that came in, one row per payment (installments included),
+//   with receipts and reversals.
 // - activity: the ledger of admin wallet adjustments.
 export type PaymentsView = 'fees' | 'received' | 'activity'
 
@@ -63,6 +75,7 @@ type Item = {
   searchText: string
   payment: PaymentRow | null
   tx: WalletTxRow | null
+  received: ReceivedRow | null
 }
 
 const statusBadgeClasses: Record<string, string> = {
@@ -120,6 +133,7 @@ function Tile({ label, value, sub, accent, valueClass }: { label: string; value:
 export function PaymentsTable({
   view,
   payments,
+  received,
   walletTransactions,
   adjustmentsByPayment,
   studentOptions,
@@ -129,6 +143,7 @@ export function PaymentsTable({
 }: {
   view: PaymentsView
   payments: PaymentRow[]
+  received: ReceivedRow[]
   walletTransactions: WalletTxRow[]
   adjustmentsByPayment: Record<string, FeeAdjustment[]>
   studentOptions: SearchableOption[]
@@ -157,22 +172,46 @@ export function PaymentsTable({
         searchText: [t.parentName, t.parentEmail, t.note].filter(Boolean).join(' ').toLowerCase(),
         payment: null,
         tx: t,
+        received: null,
       }))
     }
+    if (view === 'received') {
+      const feeById = new Map(payments.map((p) => [p.id, p]))
+      return received.flatMap((r) => {
+        const p = feeById.get(r.payment_id)
+        if (!p) return []
+        return [
+          {
+            key: `received-${r.id}`,
+            name: p.studentName,
+            amount: r.amount,
+            due: p.due_date,
+            when: r.transaction_date,
+            status: r.payment_method,
+            searchText: [p.studentName, p.studentAccountId, p.description, r.receipt_ref].filter(Boolean).join(' ').toLowerCase(),
+            payment: p,
+            tx: null,
+            received: r,
+          },
+        ]
+      })
+    }
+    // Fees still owed (a partly paid one included), plus waived and voided.
     return payments
-      .filter((p) => (view === 'received' ? p.status === 'paid' : p.status !== 'paid'))
+      .filter((p) => p.status !== 'paid')
       .map((p) => ({
         key: `payment-${p.id}`,
         name: p.studentName,
-        amount: p.amount,
+        amount: roundToCents(p.amount - p.amount_paid),
         due: p.due_date,
         when: p.transaction_date,
-        status: view === 'received' ? (p.payment_method ?? 'paid') : displayStatus(p),
+        status: displayStatus(p),
         searchText: [p.studentName, p.studentAccountId, p.description, p.receipt_ref].filter(Boolean).join(' ').toLowerCase(),
         payment: p,
         tx: null,
+        received: null,
       }))
-  }, [view, payments, walletTransactions])
+  }, [view, payments, received, walletTransactions])
 
   const filtered = items.filter((item) => {
     if (filter !== 'all' && item.status !== filter) return false
@@ -187,10 +226,9 @@ export function PaymentsTable({
   const overall = summarizeOutstanding(payments)
   const inView = summarizeOutstanding(filtered.flatMap((item) => (item.payment ? [item.payment] : [])))
 
-  const paid = payments.filter((p) => p.status === 'paid')
-  const collectedTotal = roundToCents(paid.reduce((sum, p) => sum + p.amount, 0))
-  const collectedViaWallet = roundToCents(paid.filter((p) => p.payment_method === 'wallet').reduce((sum, p) => sum + p.amount, 0))
-  const collectedInView = roundToCents(filtered.reduce((sum, item) => sum + (item.payment?.amount ?? 0), 0))
+  const collectedTotal = roundToCents(received.reduce((sum, r) => sum + r.amount, 0))
+  const collectedViaWallet = roundToCents(received.filter((r) => r.payment_method === 'wallet').reduce((sum, r) => sum + r.amount, 0))
+  const collectedInView = roundToCents(filtered.reduce((sum, item) => sum + (item.received?.amount ?? 0), 0))
 
   const deductedTotal = roundToCents(walletTransactions.filter((t) => t.amount < 0).reduce((sum, t) => sum - t.amount, 0))
   const addedTotal = roundToCents(walletTransactions.filter((t) => t.amount > 0).reduce((sum, t) => sum + t.amount, 0))
@@ -250,7 +288,7 @@ export function PaymentsTable({
             <Tile
               label="Total Collected"
               value={formatCurrency(collectedTotal)}
-              sub={`${paid.length} paid fee ${paid.length === 1 ? 'item' : 'items'}: ${formatCurrency(collectedViaWallet)} wallet, ${formatCurrency(roundToCents(collectedTotal - collectedViaWallet))} cash`}
+              sub={`${received.length} ${received.length === 1 ? 'payment' : 'payments'}: ${formatCurrency(collectedViaWallet)} wallet, ${formatCurrency(roundToCents(collectedTotal - collectedViaWallet))} cash`}
               accent="border-l-green-400 dark:border-l-green-600"
             />
             {isFiltered && (
@@ -367,6 +405,8 @@ export function PaymentsTable({
                     )
                   }
                   if (!p) return null
+                  const r = item.received
+                  const partlyPaid = p.status === 'pending' && p.amount_paid > 0
                   return (
                     <tr key={item.key}>
                       <td className="p-4">
@@ -375,16 +415,26 @@ export function PaymentsTable({
                       </td>
                       <td className="p-4 text-gray-700 dark:text-gray-300">
                         <p>{p.description ?? p.fee_type}</p>
-                        {view === 'received' && p.receipt_ref && <p className="text-xs text-gray-400 dark:text-gray-500">{p.receipt_ref}</p>}
+                        {r?.receipt_ref && <p className="text-xs text-gray-400 dark:text-gray-500">{r.receipt_ref}</p>}
+                        {r && r.amount < p.amount && (
+                          <p className="text-xs text-gray-400 dark:text-gray-500">Part payment of a {formatCurrency(p.amount)} fee</p>
+                        )}
                       </td>
-                      <td className="p-4 font-medium text-gray-900 dark:text-gray-100">{formatCurrency(p.amount)}</td>
+                      <td className="p-4 font-medium text-gray-900 dark:text-gray-100">
+                        {formatCurrency(item.amount)}
+                        {!r && partlyPaid && (
+                          <p className="text-xs font-normal text-[#00a3e0] dark:text-sky-400">
+                            {formatCurrency(p.amount_paid)} of {formatCurrency(p.amount)} paid
+                          </p>
+                        )}
+                      </td>
                       <td className="p-4 text-gray-700 dark:text-gray-300">
-                        {view === 'fees' ? (p.due_date ? formatDateShort(p.due_date) : '-') : p.transaction_date ? formatDateShort(p.transaction_date) : '-'}
+                        {view === 'fees' ? (p.due_date ? formatDateShort(p.due_date) : '-') : r ? formatDateShort(r.transaction_date) : '-'}
                       </td>
                       <td className="p-4">
                         {view === 'received' ? (
                           <span className="inline-block rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium capitalize text-green-700 dark:bg-green-950/30 dark:text-green-400">
-                            {p.payment_method ?? 'paid'}
+                            {r?.payment_method ?? 'paid'}
                           </span>
                         ) : (
                           <span className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium capitalize ${statusBadgeClasses[item.status]}`}>
@@ -396,7 +446,7 @@ export function PaymentsTable({
                         {view === 'received' ? (
                           <div className="flex flex-wrap items-center gap-2">
                             <Link
-                              href={`${receiptBasePath}/${p.id}/receipt`}
+                              href={`${receiptBasePath}/${p.id}/receipt${r ? `?tx=${r.id}` : ''}`}
                               className="rounded-full border border-[#0b1b62] dark:border-indigo-300 px-4 py-1.5 text-xs font-semibold text-[#0b1b62] dark:text-indigo-300 hover:bg-[#0b1b62] hover:text-white"
                             >
                               View Receipt
@@ -413,7 +463,8 @@ export function PaymentsTable({
                           </div>
                         ) : p.status === 'pending' ? (
                           <div className="flex flex-wrap items-center gap-2">
-                            <MarkPaidControl paymentId={p.id} remainingBalance={roundToCents(p.amount - p.amount_paid)} />
+                            {/* key: a new remaining balance (after a part payment) starts the amount box fresh */}
+                            <MarkPaidControl key={`${p.id}-${item.amount}`} paymentId={p.id} remainingBalance={item.amount} />
                             {canCorrect && (
                               <button
                                 type="button"
@@ -421,6 +472,15 @@ export function PaymentsTable({
                                 className="rounded-full border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-xs font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                               >
                                 Manage
+                              </button>
+                            )}
+                            {canCorrect && partlyPaid && (
+                              <button
+                                type="button"
+                                onClick={() => setReversing(p)}
+                                className="rounded-full border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-xs font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                              >
+                                Reverse
                               </button>
                             )}
                           </div>
@@ -462,7 +522,15 @@ export function PaymentsTable({
       {reversing && (
         <ReversePaymentModal
           key={reversing.id}
-          fee={reversing}
+          fee={{
+            ...reversing,
+            walletPaid: roundToCents(
+              received.filter((r) => r.payment_id === reversing.id && r.payment_method === 'wallet').reduce((sum, r) => sum + r.amount, 0)
+            ),
+            cashPaid: roundToCents(
+              received.filter((r) => r.payment_id === reversing.id && r.payment_method !== 'wallet').reduce((sum, r) => sum + r.amount, 0)
+            ),
+          }}
           adjustments={adjustmentsByPayment[reversing.id] ?? []}
           onClose={() => setReversing(null)}
         />

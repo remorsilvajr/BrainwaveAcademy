@@ -74,13 +74,16 @@ const bestEffort = async (run: PromiseLike<unknown>) => {
 /** Removes the given test users and students and every row that hangs off them. */
 export async function cleanupTestData(admin: SupabaseClient, userIds: string[], studentIds: string[]) {
   if (studentIds.length > 0) {
-    for (const table of ['student_health', 'emergency_contacts', 'do_not_release', 'attendance', 'milestones', 'authorized_pickups', 'payment_adjustments', 'unenrollment_requests', 'student_promotions', 'parent_student']) {
+    for (const table of ['student_health', 'emergency_contacts', 'do_not_release', 'attendance', 'milestones', 'authorized_pickups', 'unenrollment_requests', 'student_promotions', 'parent_student']) {
       await bestEffort(admin.from(table).delete().in('student_id', studentIds))
     }
     // A fee's payment history rows must go before the fee itself (foreign key).
     const { data: feeRows } = await admin.from('payments').select('id').in('student_id', studentIds)
     const feeIds = (feeRows ?? []).map((r) => r.id)
-    if (feeIds.length > 0) await bestEffort(admin.from('payment_transactions').delete().in('payment_id', feeIds))
+    if (feeIds.length > 0) {
+      await bestEffort(admin.from('payment_transactions').delete().in('payment_id', feeIds))
+      await bestEffort(admin.from('payment_adjustments').delete().in('payment_id', feeIds))
+    }
     await bestEffort(admin.from('payments').delete().in('student_id', studentIds))
     await bestEffort(admin.from('students').delete().in('id', studentIds))
   }
