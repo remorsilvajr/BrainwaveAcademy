@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { formatCurrency, formatDateLong, roundToCents } from '@/lib/format'
-import { payAmountWithWallet } from '@/app/parent/payments/actions'
+import { OnlineCheckoutModal } from '@/components/parent/online-checkout-modal'
+import { onlineMethodLabel } from '@/lib/sandbox-checkout'
 import { isOverdue, remainingBalance } from '@/lib/payments'
 
 type Payment = {
@@ -27,7 +28,7 @@ export type Transaction = {
   feeType: string
 }
 
-const methodLabels: Record<string, string> = { wallet: 'Wallet', cash: 'Cash', check: 'Check' }
+const methodLabels: Record<string, string> = { wallet: 'Wallet', cash: 'Cash', check: 'Check', card: 'Card (online)', gcash: 'GCash (online)' }
 
 function FeeRow({ payment }: { payment: Payment }) {
   const overdue = isOverdue(payment)
@@ -55,14 +56,12 @@ export function FeeBreakdown({
   studentId,
   studentName,
   classroomName,
-  walletBalance,
   payments,
   transactions,
 }: {
   studentId: string
   studentName: string
   classroomName: string | null
-  walletBalance: number
   payments: Payment[]
   transactions: Transaction[]
 }) {
@@ -70,9 +69,7 @@ export function FeeBreakdown({
   // Waived and voided fees (cancelled at withdrawal, or corrected by admin) are neither owed nor paid, so they are in neither list.
   const outstanding = payments.filter((p) => p.status === 'pending')
   const totalDue = roundToCents(outstanding.reduce((sum, p) => sum + remainingBalance(p), 0))
-  const canAfford = walletBalance > 0
-
-  const [isPending, startTransition] = useTransition()
+  const [checkoutAmount, setCheckoutAmount] = useState<number | null>(null)
   const [error, setError] = useState('')
   const [payAmount, setPayAmount] = useState(String(totalDue))
 
@@ -96,22 +93,7 @@ export function FeeBreakdown({
       setError("That's more than your total outstanding balance for this child.")
       return
     }
-    if (amount > walletBalance) {
-      setError(`Your wallet balance (${formatCurrency(walletBalance)}) is not enough for that amount.`)
-      return
-    }
-    startTransition(async () => {
-      try {
-        const result = await payAmountWithWallet(studentId, amount)
-        if (result?.error) {
-          setError(result.error)
-          return
-        }
-        router.refresh()
-      } catch {
-        setError('Something went wrong.')
-      }
-    })
+    setCheckoutAmount(amount)
   }
 
   return (
@@ -162,20 +144,28 @@ export function FeeBreakdown({
               </button>
               <button
                 onClick={handlePay}
-                disabled={isPending || !canAfford}
-                title={!canAfford ? 'Your wallet has no balance' : undefined}
-                className="rounded-full bg-[#0b1b62] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#08154d] disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-full bg-[#e6007e] px-5 py-2 text-sm font-semibold text-white hover:bg-[#c9006e]"
               >
-                {isPending ? 'Paying…' : 'Pay with Wallet'}
+                Pay Online
               </button>
             </div>
             <p className="text-xs text-gray-400 dark:text-gray-500">
-              Wallet balance: {formatCurrency(walletBalance)}. Paid toward the fee due soonest first.
+              Pay by card or GCash. The amount goes to the fee due soonest first.
             </p>
             {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
           </div>
         )}
       </div>
+
+      {checkoutAmount !== null && (
+        <OnlineCheckoutModal
+          studentId={studentId}
+          studentName={studentName}
+          amount={checkoutAmount}
+          onClose={() => setCheckoutAmount(null)}
+          onPaid={() => router.refresh()}
+        />
+      )}
 
       <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Payment History</h2>
@@ -192,7 +182,7 @@ export function FeeBreakdown({
                   <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{t.feeDescription ?? t.feeType}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     {t.transaction_date ? formatDateLong(t.transaction_date) : '-'} ·{' '}
-                    {t.payment_method ? (methodLabels[t.payment_method] ?? t.payment_method) : '-'}
+                    {t.payment_method ? (methodLabels[t.payment_method] ?? onlineMethodLabel(t.payment_method) ?? t.payment_method) : '-'}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">

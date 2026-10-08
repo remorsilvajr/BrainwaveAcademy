@@ -101,41 +101,6 @@ export function passwordChangedByAdminEmail(input: { firstName: string; siteUrl:
   }
 }
 
-export function walletDecisionEmail(input: {
-  parentFirstName: string
-  approved: boolean
-  requestedAmount: number
-  approvedAmount: number | null
-  note: string | null
-  siteUrl: string
-}): Mail {
-  if (input.approved) {
-    const different = input.approvedAmount !== null && input.approvedAmount !== input.requestedAmount
-    return {
-      subject: 'Your wallet top-up was approved',
-      html: shell(
-        'Wallet top-up approved',
-        `<p>Hi ${escapeHtml(input.parentFirstName)}, your request for ${formatCurrency(input.requestedAmount)} was approved.</p>
-         <p><strong>${formatCurrency(input.approvedAmount ?? input.requestedAmount)}</strong> has been added to your wallet${different ? ' (the school approved a different amount than requested)' : ''}.</p>
-         ${input.note ? `<p><strong>Note from the school:</strong> ${escapeHtml(input.note)}</p>` : ''}`,
-        input.siteUrl,
-        { label: 'View your wallet', path: '/parent/payments' }
-      ),
-    }
-  }
-  return {
-    subject: 'About your wallet top-up request',
-    html: shell(
-      'Wallet top-up not approved',
-      `<p>Hi ${escapeHtml(input.parentFirstName)}, we weren't able to approve your request for ${formatCurrency(input.requestedAmount)}.</p>
-       ${input.note ? `<p><strong>Note from the school:</strong> ${escapeHtml(input.note)}</p>` : ''}
-       <p>If you have questions, please contact the school office.</p>`,
-      input.siteUrl,
-      { label: 'View your payments', path: '/parent/payments' }
-    ),
-  }
-}
-
 export type DueFee = { studentName: string; description: string; amount: number; dueDate: string; overdue: boolean }
 
 export function feeReminderEmail(input: { parentFirstName: string; fees: DueFee[]; siteUrl: string }): Mail {
@@ -155,7 +120,7 @@ export function feeReminderEmail(input: { parentFirstName: string; fees: DueFee[
       `<p>Hi ${escapeHtml(input.parentFirstName)},</p>
        ${overdue.length > 0 ? `<p><strong>Past due:</strong></p>${list(overdue)}` : ''}
        ${soon.length > 0 ? `<p><strong>Due soon:</strong></p>${list(soon)}` : ''}
-       <p>You can pay from your wallet in the portal. If you've already paid, please ignore this reminder.</p>`,
+       <p>You can pay online by card or GCash in the portal. If you've already paid, please ignore this reminder.</p>`,
       input.siteUrl,
       { label: 'View your payments', path: '/parent/payments' }
     ),
@@ -203,9 +168,9 @@ export function documentCorrectionEmail(input: {
   }
 }
 
-const paymentMethodLabels: Record<string, string> = { wallet: 'Wallet', cash: 'Cash', check: 'Check' }
+const paymentMethodLabels: Record<string, string> = { wallet: 'Wallet', cash: 'Cash', check: 'Check', card: 'Card (online)', gcash: 'GCash (online)' }
 
-// Sent when a fee is paid (from the parent's wallet, or recorded by the school as cash). It
+// Sent when a fee is paid (online by the parent, or recorded by the school as cash). It
 // is the receipt itself in text, plus a link to the printable one in the portal. Everything
 // that is not a fixed label (the fee description, names) goes through escapeHtml.
 export function paymentReceiptEmail(input: {

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { CalendarClock, Camera, Megaphone, Wallet } from 'lucide-react'
+import { CalendarClock, Camera, CreditCard, Megaphone } from 'lucide-react'
 import { isTerminalStudentStatus } from '@/lib/student-status'
 import { createClient } from '@/lib/supabase/server'
 import { documentOrder } from '@/lib/documents'
@@ -47,8 +47,6 @@ export default async function ParentDashboardPage({
     { data: announcementRows },
     { data: pendingFees },
     { data: classrooms },
-    { data: wallet },
-    { data: pendingWalletRequest },
   ] = await Promise.all([
     supabase.from('profiles').select('first_name').eq('id', user?.id ?? '').single(),
     supabase
@@ -69,13 +67,6 @@ export default async function ParentDashboardPage({
       ? supabase.from('payments').select('amount, amount_paid').in('student_id', studentIds).eq('status', 'pending')
       : Promise.resolve({ data: [] }),
     supabase.from('classrooms').select('id, name'),
-    supabase.from('wallets').select('balance').eq('parent_id', user?.id ?? '').maybeSingle(),
-    supabase
-      .from('wallet_requests')
-      .select('requested_amount')
-      .eq('parent_id', user?.id ?? '')
-      .eq('status', 'pending')
-      .maybeSingle(),
   ])
 
   const classroomNameById = new Map((classrooms ?? []).map((c) => [c.id, c.name]))
@@ -190,17 +181,15 @@ export default async function ParentDashboardPage({
           href={withStudent('/parent/payments', studentParam)}
           className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6 transition hover:border-sky-300 dark:hover:border-sky-500"
         >
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Wallet Balance</h2>
-          <p className="mt-4 text-3xl font-bold text-[#0b1b62] dark:text-indigo-300">{formatCurrency(wallet?.balance ?? 0)}</p>
-          <p className="mt-2 flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
-            <Wallet className="h-4 w-4" />
-            {pendingWalletRequest
-              ? `Top-up request of ${formatCurrency(pendingWalletRequest.requested_amount)} pending review.`
-              : 'Available to pay outstanding fees.'}
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Pay Online</h2>
+          <p className="mt-4 flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+            <CreditCard className="h-5 w-5 text-[#e6007e]" />
+            Card or GCash, any amount at a time.
           </p>
-          <p className="mt-3 text-sm font-semibold text-[#00a3e0] dark:text-sky-400">
-            {pendingWalletRequest ? 'View Payments →' : 'Request Funds →'}
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            {dueBalance > 0 ? 'Pay toward what is due and get a receipt right away.' : 'Nothing is due right now.'}
           </p>
+          <p className="mt-3 text-sm font-semibold text-[#00a3e0] dark:text-sky-400">{dueBalance > 0 ? 'Pay Now →' : 'View Payments →'}</p>
         </Link>
       </div>
 

@@ -138,7 +138,7 @@ describe('opening a tab clears what was new in it', () => {
 })
 
 describe('an admin sees real counts, and nobody else gets them', () => {
-  const ADMIN_TABS = ['/admin/enroll-a-student', '/admin/applications', '/admin/unenrollment', '/admin/feedback', '/admin/payments']
+  const ADMIN_TABS = ['/admin/enroll-a-student', '/admin/applications', '/admin/unenrollment', '/admin/feedback']
 
   it('returns a number for every admin tab', async () => {
     const counts = await loadStateBadges(admin.client, 'admin', admin.id, ADMIN_TABS)

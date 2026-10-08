@@ -42,29 +42,14 @@ export type ReceivedRow = {
   receipt_ref: string | null
 }
 
-// One admin wallet adjustment (the Adjust button in Parent Wallets). `amount` is
-// signed: negative is a deduction, positive an addition. It's parent-level (no
-// student) and isn't a fee, so it never counts toward Outstanding or Collected.
-export type WalletTxRow = {
-  id: string
-  parentName: string
-  parentEmail: string | null
-  amount: number
-  balance_after: number | null
-  note: string | null
-  created_at: string
-}
-
 // The Payments page is split so each tab has one job:
 // - fees: what is (or was) owed and not yet paid: unpaid, overdue, waived, voided.
 //   This is where fees get corrected (edit, waive, void) and cash gets recorded.
 // - received: money that came in, one row per payment (installments included),
 //   with receipts and reversals.
-// - activity: the ledger of admin wallet adjustments.
-export type PaymentsView = 'fees' | 'received' | 'activity'
+export type PaymentsView = 'fees' | 'received'
 
-// Everything a view lists, normalized so search/sort/pagination treat a fee and
-// a wallet adjustment the same way.
+// Everything a view lists, normalized so search/sort/pagination treat both views the same way.
 type Item = {
   key: string
   name: string
@@ -73,14 +58,11 @@ type Item = {
   when: string | null
   status: string
   searchText: string
-  payment: PaymentRow | null
-  tx: WalletTxRow | null
+  payment: PaymentRow
   received: ReceivedRow | null
 }
 
 const statusBadgeClasses: Record<string, string> = {
-  deducted: 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400',
-  added: 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400',
   paid: 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400',
   waived: 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400',
   voided: 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-500 line-through',
@@ -104,20 +86,18 @@ const filterOptions: Record<PaymentsView, { value: string; label: string }[]> = 
   ],
   received: [
     { value: 'all', label: 'All methods' },
-    { value: 'wallet', label: 'Wallet' },
+    { value: 'card', label: 'Card (online)' },
+    { value: 'gcash', label: 'GCash (online)' },
     { value: 'cash', label: 'Cash' },
-  ],
-  activity: [
-    { value: 'all', label: 'All' },
-    { value: 'deducted', label: 'Deductions' },
-    { value: 'added', label: 'Additions' },
+    { value: 'wallet', label: 'Wallet (old)' },
   ],
 }
+
+const methodLabels: Record<string, string> = { card: 'Card', gcash: 'GCash', cash: 'Cash', wallet: 'Wallet', check: 'Check' }
 
 const copy: Record<PaymentsView, { search: string; empty: string }> = {
   fees: { search: 'Student name, ID, or description', empty: 'No fees match your search.' },
   received: { search: 'Student name, ID, description, or receipt #', empty: 'No payments match your search.' },
-  activity: { search: 'Parent name, email, or note', empty: 'No wallet activity matches your search.' },
 }
 
 function Tile({ label, value, sub, accent, valueClass }: { label: string; value: string; sub: string; accent: string; valueClass?: string }) {
@@ -134,7 +114,6 @@ export function PaymentsTable({
   view,
   payments,
   received,
-  walletTransactions,
   adjustmentsByPayment,
   studentOptions,
   initialStatus = 'all',
@@ -144,7 +123,6 @@ export function PaymentsTable({
   view: PaymentsView
   payments: PaymentRow[]
   received: ReceivedRow[]
-  walletTransactions: WalletTxRow[]
   adjustmentsByPayment: Record<string, FeeAdjustment[]>
   studentOptions: SearchableOption[]
   initialStatus?: string
@@ -161,20 +139,6 @@ export function PaymentsTable({
   const [reversing, setReversing] = useState<PaymentRow | null>(null)
 
   const items: Item[] = useMemo(() => {
-    if (view === 'activity') {
-      return walletTransactions.map((t) => ({
-        key: `wallet-${t.id}`,
-        name: t.parentName,
-        amount: Math.abs(t.amount),
-        due: null,
-        when: t.created_at,
-        status: t.amount < 0 ? 'deducted' : 'added',
-        searchText: [t.parentName, t.parentEmail, t.note].filter(Boolean).join(' ').toLowerCase(),
-        payment: null,
-        tx: t,
-        received: null,
-      }))
-    }
     if (view === 'received') {
       const feeById = new Map(payments.map((p) => [p.id, p]))
       return received.flatMap((r) => {
@@ -190,7 +154,6 @@ export function PaymentsTable({
             status: r.payment_method,
             searchText: [p.studentName, p.studentAccountId, p.description, r.receipt_ref].filter(Boolean).join(' ').toLowerCase(),
             payment: p,
-            tx: null,
             received: r,
           },
         ]
@@ -208,10 +171,9 @@ export function PaymentsTable({
         status: displayStatus(p),
         searchText: [p.studentName, p.studentAccountId, p.description, p.receipt_ref].filter(Boolean).join(' ').toLowerCase(),
         payment: p,
-        tx: null,
         received: null,
       }))
-  }, [view, payments, received, walletTransactions])
+  }, [view, payments, received])
 
   const filtered = items.filter((item) => {
     if (filter !== 'all' && item.status !== filter) return false
@@ -224,14 +186,15 @@ export function PaymentsTable({
   // Overall figures ignore the search and filter on purpose (they are the
   // school's real totals); the last tile follows them.
   const overall = summarizeOutstanding(payments)
-  const inView = summarizeOutstanding(filtered.flatMap((item) => (item.payment ? [item.payment] : [])))
+  const inView = summarizeOutstanding(filtered.map((item) => item.payment))
 
   const collectedTotal = roundToCents(received.reduce((sum, r) => sum + r.amount, 0))
-  const collectedViaWallet = roundToCents(received.filter((r) => r.payment_method === 'wallet').reduce((sum, r) => sum + r.amount, 0))
+  const collectedBy = (methods: string[]) =>
+    roundToCents(received.filter((r) => methods.includes(r.payment_method)).reduce((sum, r) => sum + r.amount, 0))
+  const collectedOnline = collectedBy(['card', 'gcash'])
+  const collectedCash = collectedBy(['cash', 'check'])
+  const collectedWallet = collectedBy(['wallet'])
   const collectedInView = roundToCents(filtered.reduce((sum, item) => sum + (item.received?.amount ?? 0), 0))
-
-  const deductedTotal = roundToCents(walletTransactions.filter((t) => t.amount < 0).reduce((sum, t) => sum - t.amount, 0))
-  const addedTotal = roundToCents(walletTransactions.filter((t) => t.amount > 0).reduce((sum, t) => sum + t.amount, 0))
 
   const sortOptions: SortOption<Item>[] = useMemo(
     () => [
@@ -251,9 +214,7 @@ export function PaymentsTable({
   const headers =
     view === 'fees'
       ? ['Student', 'Fee', 'Amount', 'Due Date', 'Status', 'Action']
-      : view === 'received'
-        ? ['Student', 'Fee', 'Amount', 'Paid On', 'Method', 'Action']
-        : ['Parent', 'Entry', 'Amount', 'Date', 'Type']
+      : ['Student', 'Fee', 'Amount', 'Paid On', 'Method', 'Action']
 
   return (
     <>
@@ -288,7 +249,9 @@ export function PaymentsTable({
             <Tile
               label="Total Collected"
               value={formatCurrency(collectedTotal)}
-              sub={`${received.length} ${received.length === 1 ? 'payment' : 'payments'}: ${formatCurrency(collectedViaWallet)} wallet, ${formatCurrency(roundToCents(collectedTotal - collectedViaWallet))} cash`}
+              sub={`${received.length} ${received.length === 1 ? 'payment' : 'payments'}: ${formatCurrency(collectedOnline)} online, ${formatCurrency(collectedCash)} cash${
+                collectedWallet > 0 ? `, ${formatCurrency(collectedWallet)} old wallet` : ''
+              }`}
               accent="border-l-green-400 dark:border-l-green-600"
             />
             {isFiltered && (
@@ -299,24 +262,6 @@ export function PaymentsTable({
                 accent="border-l-indigo-400"
               />
             )}
-          </>
-        )}
-        {view === 'activity' && (
-          <>
-            <Tile
-              label="Total Deducted by Admin"
-              value={formatCurrency(deductedTotal)}
-              sub={`${walletTransactions.filter((t) => t.amount < 0).length} deductions`}
-              accent="border-l-red-400"
-              valueClass="text-red-600 dark:text-red-400"
-            />
-            <Tile
-              label="Total Added by Admin"
-              value={formatCurrency(addedTotal)}
-              sub={`${walletTransactions.filter((t) => t.amount > 0).length} additions`}
-              accent="border-l-green-400"
-              valueClass="text-green-600 dark:text-green-400"
-            />
           </>
         )}
       </div>
@@ -334,7 +279,7 @@ export function PaymentsTable({
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">
-              {view === 'received' ? 'Method' : view === 'activity' ? 'Type' : 'Status'}
+              {view === 'received' ? 'Method' : 'Status'}
             </label>
             <select
               value={filter}
@@ -378,33 +323,6 @@ export function PaymentsTable({
               {pageItems.length > 0 ? (
                 pageItems.map((item) => {
                   const p = item.payment
-                  const t = item.tx
-                  if (t) {
-                    const isDeduction = t.amount < 0
-                    return (
-                      <tr key={item.key}>
-                        <td className="p-4">
-                          <p className="font-medium text-[#0b1b62] dark:text-indigo-300">{t.parentName}</p>
-                          <p className="text-xs text-gray-400 dark:text-gray-500">{t.parentEmail ?? 'Parent wallet'}</p>
-                        </td>
-                        <td className="p-4 text-gray-700 dark:text-gray-300">
-                          <p>{isDeduction ? 'Wallet deduction' : 'Wallet addition'}</p>
-                          <p className="text-xs text-gray-400 dark:text-gray-500">
-                            {[t.note, t.balance_after != null ? `Balance after ${formatCurrency(t.balance_after)}` : null].filter(Boolean).join(' · ') || 'By admin'}
-                          </p>
-                        </td>
-                        <td className={`p-4 font-medium ${isDeduction ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
-                          {isDeduction ? '-' : '+'}
-                          {formatCurrency(Math.abs(t.amount))}
-                        </td>
-                        <td className="p-4 text-gray-700 dark:text-gray-300">{formatDateShort(t.created_at)}</td>
-                        <td className="p-4">
-                          <span className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium capitalize ${statusBadgeClasses[item.status]}`}>{item.status}</span>
-                        </td>
-                      </tr>
-                    )
-                  }
-                  if (!p) return null
                   const r = item.received
                   const partlyPaid = p.status === 'pending' && p.amount_paid > 0
                   return (
@@ -434,7 +352,7 @@ export function PaymentsTable({
                       <td className="p-4">
                         {view === 'received' ? (
                           <span className="inline-block rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium capitalize text-green-700 dark:bg-green-950/30 dark:text-green-400">
-                            {r?.payment_method ?? 'paid'}
+                            {r ? (methodLabels[r.payment_method] ?? r.payment_method) : 'paid'}
                           </span>
                         ) : (
                           <span className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium capitalize ${statusBadgeClasses[item.status]}`}>
@@ -528,7 +446,10 @@ export function PaymentsTable({
               received.filter((r) => r.payment_id === reversing.id && r.payment_method === 'wallet').reduce((sum, r) => sum + r.amount, 0)
             ),
             cashPaid: roundToCents(
-              received.filter((r) => r.payment_id === reversing.id && r.payment_method !== 'wallet').reduce((sum, r) => sum + r.amount, 0)
+              received.filter((r) => r.payment_id === reversing.id && (r.payment_method === 'cash' || r.payment_method === 'check')).reduce((sum, r) => sum + r.amount, 0)
+            ),
+            onlinePaid: roundToCents(
+              received.filter((r) => r.payment_id === reversing.id && (r.payment_method === 'card' || r.payment_method === 'gcash')).reduce((sum, r) => sum + r.amount, 0)
             ),
           }}
           adjustments={adjustmentsByPayment[reversing.id] ?? []}

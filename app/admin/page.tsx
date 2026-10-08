@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Wallet } from 'lucide-react'
+import { CreditCard } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { formatCurrency, formatDateShort, isToday, nowMs } from '@/lib/format'
 import { PriorityFeedbackLog } from '@/components/admin/priority-feedback-log'
@@ -19,7 +19,6 @@ export default async function AdminDashboardPage() {
     { data: feedbackRows },
     { count: unresolvedFeedbackCount },
     { data: recentTransactions },
-    { data: pendingWalletRequests },
     { data: pendingFees },
     { count: pendingUnenrollmentCount },
   ] = await Promise.all([
@@ -44,10 +43,6 @@ export default async function AdminDashboardPage() {
       .is('reversed_at', null)
       .order('transaction_date', { ascending: false })
       .limit(8),
-    // Uncapped by design, same reasoning as the feedback/collections stats
-    // above — this feeds both a count and a sum, so it can't be derived from
-    // a display-capped list.
-    supabase.from('wallet_requests').select('requested_amount').eq('status', 'pending'),
     // Every unpaid fee, uncapped like the stats above: this feeds a sum, so it
     // can't come from a display-limited list.
     supabase.from('payments').select('amount, amount_paid, status, due_date').eq('status', 'pending'),
@@ -60,7 +55,7 @@ export default async function AdminDashboardPage() {
   // once more than 8 payments land in a single day.
   const { data: paidTodayAmounts } = await supabase
     .from('payment_transactions')
-    .select('amount, transaction_date')
+    .select('amount, transaction_date, payment_method')
     .is('reversed_at', null)
     .gte('transaction_date', new Date(nowMs() - 24 * 60 * 60 * 1000).toISOString())
 
@@ -89,12 +84,10 @@ export default async function AdminDashboardPage() {
       : { data: [] }
   const paymentStudentById = new Map((paymentStudents ?? []).map((s) => [s.id, `${s.first_name} ${s.last_name}`]))
 
-  const totalCollectedToday = (paidTodayAmounts ?? [])
-    .filter((p) => p.transaction_date && isToday(p.transaction_date))
-    .reduce((sum, p) => sum + Number(p.amount), 0)
-
-  const pendingWalletRequestCount = pendingWalletRequests?.length ?? 0
-  const pendingWalletRequestTotal = (pendingWalletRequests ?? []).reduce((sum, r) => sum + r.requested_amount, 0)
+  const paidToday = (paidTodayAmounts ?? []).filter((p) => p.transaction_date && isToday(p.transaction_date))
+  const totalCollectedToday = paidToday.reduce((sum, p) => sum + Number(p.amount), 0)
+  const paidOnlineToday = paidToday.filter((p) => p.payment_method === 'card' || p.payment_method === 'gcash')
+  const totalOnlineToday = paidOnlineToday.reduce((sum, p) => sum + Number(p.amount), 0)
 
   const outstanding = summarizeOutstanding(pendingFees ?? [])
 
@@ -158,7 +151,7 @@ export default async function AdminDashboardPage() {
           <p className="text-sm text-gray-500 dark:text-gray-400">Total Collections Today</p>
           <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">{formatCurrency(totalCollectedToday)}</p>
           <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
-            {totalCollectedToday > 0 ? 'Paid today, wallet + cash' : 'No transactions yet'}
+            {totalCollectedToday > 0 ? 'Paid today, online + cash' : 'No transactions yet'}
           </p>
         </Link>
         <Link
@@ -176,18 +169,18 @@ export default async function AdminDashboardPage() {
           </p>
         </Link>
         <Link
-          href="/admin/payments?tab=requests"
+          href="/admin/payments?tab=received"
           className="rounded-xl border border-gray-200 dark:border-gray-700 border-l-4 border-l-purple-400 dark:border-l-purple-600 bg-white dark:bg-gray-900 p-4 shadow-sm transition hover:border-purple-300 dark:hover:border-purple-500"
         >
           <p className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
-            <Wallet className="h-4 w-4" />
-            Pending Fund Requests
+            <CreditCard className="h-4 w-4" />
+            Paid Online Today
           </p>
-          <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">{pendingWalletRequestCount}</p>
+          <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">{formatCurrency(totalOnlineToday)}</p>
           <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
-            {pendingWalletRequestCount > 0
-              ? `${formatCurrency(pendingWalletRequestTotal)} requested, review in Payments →`
-              : 'No wallet top-up requests waiting'}
+            {paidOnlineToday.length > 0
+              ? `${paidOnlineToday.length} card or GCash ${paidOnlineToday.length === 1 ? 'payment' : 'payments'}, view in Payments →`
+              : 'No online payments yet today'}
           </p>
         </Link>
       </div>

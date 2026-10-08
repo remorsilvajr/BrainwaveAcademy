@@ -13,7 +13,7 @@ import { getSiteUrl } from '@/lib/site-url'
 // because the payment it describes has already happened and must not be
 // reported as failed because an email was.
 //
-// Who gets it: a wallet payment goes to the parent who paid (the
+// Who gets it: a payment the parent made themselves (online, or the old wallet) goes to the parent who paid (the
 // transaction's own recorded_by) when they are one of the child's
 // guardians; anything else (cash recorded by the school) goes to every
 // active guardian. A guardian who switched email notifications off in
@@ -55,7 +55,7 @@ export async function sendPaymentReceipt(deps: ReceiptDeps, transactionId: strin
     const guardianIds = (links ?? []).map((l) => l.parent_id)
     if (guardianIds.length === 0) return summary
     const recipientIds =
-      transaction.payment_method === 'wallet' && transaction.recorded_by && guardianIds.includes(transaction.recorded_by)
+      ['wallet', 'card', 'gcash'].includes(transaction.payment_method) && transaction.recorded_by && guardianIds.includes(transaction.recorded_by)
         ? [transaction.recorded_by]
         : guardianIds
 

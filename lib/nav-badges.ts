@@ -130,17 +130,6 @@ export async function loadStateBadges(supabase: SupabaseClient, role: string, us
     if (wants('/admin/feedback')) {
       out['/admin/feedback'] = await count(supabase.from('feedback').select('id', { count: 'exact', head: true }).eq('resolved', false))
     }
-    if (wants('/admin/payments')) {
-      out['/admin/payments'] = await count(
-        supabase.from('wallet_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending')
-      )
-    }
-  }
-
-  // The cashier's only tab is Payments: pending fund requests, the same count the admin sees.
-  if (role === 'cashier' && wants('/cashier/payments')) {
-    out['/cashier/payments'] =
-      (await supabase.from('wallet_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending')).count ?? 0
   }
 
   return out
