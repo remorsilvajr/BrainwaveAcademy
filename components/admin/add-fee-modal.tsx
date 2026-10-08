@@ -18,19 +18,24 @@ const inputClass =
 // Creates a new pending (unpaid) fee for a student, tied to a classroom —
 // the one thing admin couldn't do before: every other fee only ever came
 // from auto-generation at classroom assignment, or an already-paid manual
-// cash record. Opened from the Student Record modal's Balance tab, so the
-// student is already fixed; only classroom/type/amount/due date are picked.
+// cash record. Opened from the Student Record modal's Balance tab or a row of
+// Payments > Student Balances, so the student is already fixed; only
+// classroom/type/amount/due date are picked (the student's class preselected).
 export function AddFeeModal({
   studentId,
   classrooms,
   onClose,
+  studentName,
+  defaultClassroomId,
 }: {
   studentId: string
   classrooms: Classroom[]
   onClose: () => void
+  studentName?: string
+  defaultClassroomId?: string | null
 }) {
   const router = useRouter()
-  const [classroomId, setClassroomId] = useState('')
+  const [classroomId, setClassroomId] = useState(defaultClassroomId ?? '')
   const [feeType, setFeeType] = useState('tuition')
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
@@ -90,7 +95,10 @@ export function AddFeeModal({
       <Modal onClose={onClose} maxWidth="md">
         <div className="border-b border-gray-100 dark:border-gray-800 p-6">
           <div className="flex items-start justify-between">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Add Fee</h2>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Add Fee</h2>
+              {studentName && <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">For {studentName}</p>}
+            </div>
             <button onClick={onClose} aria-label="Close" className="text-gray-400 dark:text-gray-500 hover:text-gray-600">
               <X className="h-5 w-5" />
             </button>
