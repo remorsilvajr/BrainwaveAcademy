@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Check } from 'lucide-react'
-import { isAgeEligibleForClassroom, classroomAgeRangeLabel } from '@/lib/classrooms'
+import { isAgeEligibleForClassroom, classroomAgeRangeLabel, ineligibleReason } from '@/lib/classrooms'
 import { formatCurrency } from '@/lib/format'
 import { programOptionConfig, PROGRAM_BRANCH_NOTE } from '@/lib/program-options'
 import { ProgramOptionsPicker } from '@/components/enroll/program-options-picker'
@@ -68,10 +68,9 @@ export function ProgramSelector({
               type="button"
               disabled={!eligible}
               onClick={() => onChange(classroom.id)}
-              title={!eligible ? `Not available for this student's age (${classroomAgeRangeLabel(classroom)})` : undefined}
               className={`relative rounded-xl border p-4 text-left transition ${
                 !eligible
-                  ? 'cursor-not-allowed border-slate-200 bg-slate-50 opacity-50 dark:border-slate-700 dark:bg-gray-800/40'
+                  ? 'cursor-not-allowed border-dashed border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-gray-800/40'
                   : selected
                     ? 'border-[#0b1b62] bg-[#0b1b62]/5 dark:border-indigo-400 dark:bg-indigo-400/10'
                     : 'border-slate-200 hover:border-[#0b1b62]/40 dark:border-slate-700 dark:hover:border-indigo-400/40'
@@ -82,7 +81,7 @@ export function ProgramSelector({
                   <Check className="h-3 w-3" />
                 </span>
               )}
-              <p className="pr-6 text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">{classroom.name}</p>
+              <p className={`pr-6 text-sm font-semibold ${eligible ? 'text-[#0b1b62] dark:text-indigo-300' : 'text-gray-500 dark:text-gray-400'}`}>{classroom.name}</p>
               <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
                 {classroomAgeRangeLabel(classroom)}
               </p>
@@ -105,9 +104,10 @@ export function ProgramSelector({
                   )}
                 </div>
               ) : (
-                <p className="mt-3 text-xs font-medium text-amber-600 dark:text-amber-400">
-                  Not available for this age
-                </p>
+                <div className="mt-3 text-xs">
+                  <p className="font-semibold text-amber-700 dark:text-amber-400">Not available for this age</p>
+                  <p className="mt-0.5 text-gray-600 dark:text-gray-400">{ineligibleReason(studentDob, classroom)}</p>
+                </div>
               )}
             </button>
           )

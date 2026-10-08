@@ -9,7 +9,7 @@ import { getSiteUrl } from '@/lib/site-url'
 
 const inter = Inter({ subsets: ['latin'] })
 
-const title = 'Brainwave Preschool Academy'
+const title = 'Brain Wave Academy'
 const description = 'Nurturing Young Learners in Their Most Formative Years.'
 
 export const metadata: Metadata = {

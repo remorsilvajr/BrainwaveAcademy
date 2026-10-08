@@ -59,6 +59,8 @@ export default async function UserManagementPage() {
     canModerate: canModerateAccount(actor, { role: row.role, is_super_admin: !!is_super_admin }),
     // Setting someone's password is a super-admin-only power, on any account but their own.
     canSetPassword: actor.is_super_admin && row.id !== user?.id,
+    // Only a super admin may give the Admin role; an existing admin row keeps it listed.
+    canAssignAdmin: actor.is_super_admin || row.role === 'admin',
     parent_student: (row.parent_student ?? []).map((ps: {
       relationship: string
       students: { id: string; first_name: string; middle_name: string | null; last_name: string; classroom_id: string | null } | null

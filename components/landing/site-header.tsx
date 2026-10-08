@@ -31,7 +31,7 @@ export function SiteHeader({ auth = null }: { auth?: PortalAuth }) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             className="h-10 w-auto"
-            alt="Brainwave Preschool Academy"
+            alt="Brain Wave Academy"
             src="/images/landing/logo.svg"
           />
         </Link>

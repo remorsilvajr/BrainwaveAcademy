@@ -64,14 +64,14 @@ export default async function AdminAttendancePage({
   // teacher who has since been deactivated can still be seen and corrected).
   const roster = (teachers ?? []).filter((t) => t.account_status === 'active' || statusByTeacher[t.id])
 
-  // "Lead: Little Explorers" / "Assistant: Advanced Toddler" under each name.
+  // The classrooms each teacher teaches, listed under their name.
   const classroomName = new Map((classrooms ?? []).map((c) => [c.id, c.name]))
   const subtitleByTeacher = new Map<string, string[]>()
   const add = (teacherId: string, text: string) => subtitleByTeacher.set(teacherId, [...(subtitleByTeacher.get(teacherId) ?? []), text])
-  for (const c of classrooms ?? []) if (c.lead_teacher_id) add(c.lead_teacher_id, `Lead: ${c.name}`)
+  for (const c of classrooms ?? []) if (c.lead_teacher_id) add(c.lead_teacher_id, c.name)
   for (const a of assistants ?? []) {
     const name = classroomName.get(a.classroom_id)
-    if (name) add(a.teacher_id, `Assistant: ${name}`)
+    if (name) add(a.teacher_id, name)
   }
 
   return (

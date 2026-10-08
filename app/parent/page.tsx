@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { CalendarClock, Megaphone, Wallet } from 'lucide-react'
+import { CalendarClock, Camera, Megaphone, Wallet } from 'lucide-react'
+import { isTerminalStudentStatus } from '@/lib/student-status'
 import { createClient } from '@/lib/supabase/server'
 import { documentOrder } from '@/lib/documents'
 import { formatCurrency, formatRelativeTime } from '@/lib/format'
@@ -35,7 +36,7 @@ export default async function ParentDashboardPage({
   const { data: linkedStudentIds } = await supabase.from('parent_student').select('student_id').eq('parent_id', user?.id ?? '')
   const studentIds = (linkedStudentIds ?? []).map((row) => row.student_id)
   const { data: linkedStudents } =
-    studentIds.length > 0 ? await supabase.from('students').select('classroom_id').in('id', studentIds) : { data: [] }
+    studentIds.length > 0 ? await supabase.from('students').select('classroom_id, first_name, photo_consent, enrollment_status').in('id', studentIds) : { data: [] }
   const classroomIds = Array.from(new Set((linkedStudents ?? []).map((s) => s.classroom_id).filter((id): id is string => !!id)))
 
   // See app/parent/layout.tsx for why this matches on parent_email too, not
@@ -107,11 +108,30 @@ export default async function ParentDashboardPage({
         ? 'Pending Review'
         : 'Under Review'
 
+  // Children whose parent hasn't said yet whether they may appear in class photos.
+  const consentUnanswered = (linkedStudents ?? []).filter(
+    (s) => s.photo_consent === null && !isTerminalStudentStatus(s.enrollment_status)
+  )
+
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold text-[#0b1b62] dark:text-indigo-300">
         Welcome back{profile?.first_name ? `, ${profile.first_name}` : ''}
       </h1>
+
+      {consentUnanswered.length > 0 && (
+        <Link
+          href="/parent/settings#photo-consent"
+          className="flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200 dark:hover:bg-amber-950/50"
+        >
+          <Camera className="mt-0.5 h-5 w-5 shrink-0" />
+          <span>
+            <span className="font-semibold">May {consentUnanswered.map((s) => s.first_name).join(' and ')} appear in class photos?</span>{' '}
+            Until you choose, teachers keep {consentUnanswered.length === 1 ? 'your child' : 'your children'} out of the class
+            photos other parents can see. Choose in Settings.
+          </span>
+        </Link>
+      )}
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Link

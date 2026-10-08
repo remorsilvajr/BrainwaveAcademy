@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { CheckCircle2, ImagePlus, Loader2, UploadCloud, X } from 'lucide-react'
+import { CheckCircle2, ImagePlus, Loader2, UploadCloud, X, CameraOff } from 'lucide-react'
+import type { NoConsentChild } from '@/lib/photo-consent-load'
 import { createClient } from '@/lib/supabase/client'
 import { recordAlbumPhotos } from '@/components/album/actions'
 import { ALBUM_BUCKET, ALBUM_MAX_PHOTOS_PER_UPLOAD, formatAlbumDate } from '@/lib/album'
@@ -35,7 +36,14 @@ async function shrink(file: File): Promise<Blob> {
   return blob
 }
 
-export function UploadPanel({ classrooms }: { classrooms: { id: string; name: string }[] }) {
+export function UploadPanel({
+  classrooms,
+  noConsentByClassroom = {},
+}: {
+  classrooms: { id: string; name: string }[]
+  // Children in each class who must be kept out of photos (no consent, or not answered yet).
+  noConsentByClassroom?: Record<string, NoConsentChild[]>
+}) {
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
   const [picked, setPicked] = useState<Picked[]>([])
@@ -175,8 +183,8 @@ export function UploadPanel({ classrooms }: { classrooms: { id: string; name: st
 
       {classrooms.length === 0 ? (
         <p className="m-6 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
-          You aren&apos;t assigned to a class yet, so you can&apos;t add photos. Ask an admin to assign you as a lead or
-          assistant teacher of a class.
+          You aren&apos;t assigned to a class yet, so you can&apos;t add photos. Ask an admin to assign you as a teacher
+          of a class.
         </p>
       ) : (
       <div className="space-y-4 p-6">
@@ -285,6 +293,36 @@ export function UploadPanel({ classrooms }: { classrooms: { id: string; name: st
             )}
           </button>
         </div>
+
+        {classroomId && (noConsentByClassroom[classroomId] ?? []).length > 0 && (
+          <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/30">
+            <p className="flex items-center gap-2 text-sm font-semibold text-amber-900 dark:text-amber-200">
+              <CameraOff className="h-4 w-4 shrink-0" />
+              Keep these children out of class photos
+            </p>
+            <p className="mt-0.5 text-xs text-amber-800 dark:text-amber-300">
+              Their parents have not allowed them in class photos, or haven&apos;t answered yet. Check every photo before uploading.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-3">
+              {(noConsentByClassroom[classroomId] ?? []).map((c) => (
+                <div key={c.id} className="flex items-center gap-2 rounded-full bg-white py-1 pl-1 pr-3 dark:bg-gray-900">
+                  {c.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- a public avatar URL, same as the rest of the roster views
+                    <img src={c.avatarUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
+                  ) : (
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 text-xs font-semibold text-amber-800 dark:bg-amber-900/50 dark:text-amber-200">
+                      {c.name.charAt(0)}
+                    </span>
+                  )}
+                  <span className="text-sm text-gray-900 dark:text-gray-100">
+                    {c.name}
+                    {!c.answered && <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">(not answered)</span>}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {error && (
           <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950/30 dark:text-red-400">{error}</p>

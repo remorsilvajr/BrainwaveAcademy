@@ -6,9 +6,9 @@ import { getPortalAuth } from '@/lib/get-portal-auth'
 import { MAIN_BRANCH, SUPPORT_BRANCH, SCHOOL_PROVINCE_COUNTRY } from '@/lib/school-locations'
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy | Brainwave Preschool Academy',
+  title: 'Privacy Policy | Brain Wave Academy',
   description:
-    'How Brainwave Preschool Academy collects, uses, stores, and protects personal information submitted through this site and portal.',
+    'How Brain Wave Academy collects, uses, stores, and protects personal information submitted through this site and portal.',
 }
 
 const LAST_UPDATED = 'September 21, 2026'
@@ -54,7 +54,7 @@ export default async function PrivacyPolicyPage() {
           </p>
 
           <P>
-            Brainwave Preschool Academy (&quot;Brainwave,&quot; &quot;the School,&quot; &quot;we,&quot;
+            Brain Wave Academy (&quot;Brain Wave,&quot; &quot;the School,&quot; &quot;we,&quot;
             &quot;us,&quot; or &quot;our&quot;) operates this website and the enrollment/admin
             portal reachable from it (together, the &quot;Service&quot;). This Privacy Policy
             explains what personal information we collect from applicants, parents/guardians,
@@ -101,7 +101,7 @@ export default async function PrivacyPolicyPage() {
 
           <H2 id="who-we-are">1. Who we are</H2>
           <P>
-            Brainwave Preschool Academy is a preschool located in Tagum City, Davao del Norte,
+            Brain Wave Academy is a preschool located in Tagum City, Davao del Norte,
             Philippines. For the purposes of the Data Privacy Act, the School is the{' '}
             <strong>personal information controller</strong> for the data described in this
             Policy. This Service is a school capstone/administrative project built for the
@@ -145,6 +145,12 @@ export default async function PrivacyPolicyPage() {
               School staff on their behalf), visible only to that child&apos;s parents/guardians, the
               child&apos;s teachers and School administrators, and used only to look after the child at
               school and in an emergency.
+            </li>
+            <li>
+              <strong>Class photos:</strong> photos of class activities that teachers share in the
+              portal&apos;s Photo Album, visible to the parents of children in that class. A parent
+              chooses whether their child may appear in them (asked at enrollment and changeable anytime
+              in Settings or the Photo Album); a child whose parent has not said yes is kept out of them.
             </li>
             <li>
               <strong>Pickup safety records:</strong> the names, relationships, phone numbers and

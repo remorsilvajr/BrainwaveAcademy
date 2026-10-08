@@ -2,7 +2,10 @@
 
 import { randomUUID } from 'crypto'
 import { revalidatePath } from 'next/cache'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { notifyParentsOfStudent } from '@/lib/notify'
 import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
 import { isValidPhoneInput, normalizePhilippineMobile, PHONE_VALIDATION_MESSAGE } from '@/lib/phone'
 import { isPickupRelationship, PICKUP_RELATIONSHIP_MESSAGE } from '@/lib/pickup-relationships'
@@ -55,6 +58,31 @@ function normalizedPhone(raw: string) {
   return phone ? normalizePhilippineMobile(phone) : null
 }
 
+// Parents and admins both manage pickup people through these actions. A parent
+// writes through their own RLS-scoped client (parents_manage_own_students_pickups
+// decides what they may touch). An admin has no write policy on the table or the
+// bucket, so for a caller whose profile says admin this hands back the
+// service-role client: the role check here is what authorizes it (a Server
+// Action skips middleware), and every admin change notifies the child's parents.
+async function pickupWriter(): Promise<
+  { userId: string; client: SupabaseClient; isAdmin: boolean } | { error: string }
+> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'You must be logged in.' }
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (profile?.role === 'admin') return { userId: user.id, client: createAdminClient(), isAdmin: true }
+  return { userId: user.id, client: supabase, isAdmin: false }
+}
+
+function revalidatePickupPages() {
+  revalidatePath('/parent/pickup')
+  revalidatePath('/admin/pickup-verification')
+  revalidatePath('/teacher/pickup-verification')
+}
+
 // Ownership of `studentId` is enforced by parents_manage_own_students_pickups'
 // WITH CHECK on the regular RLS-scoped client — no separate parent_student
 // lookup needed here, the insert itself fails closed if the student isn't
@@ -69,12 +97,12 @@ export async function addPickupPerson(
     return { error: validationError }
   }
 
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) {
-    return { error: 'You must be logged in.' }
+  const writer = await pickupWriter()
+  if ('error' in writer) return writer
+  const { client: supabase, userId, isAdmin } = writer
+  if (isAdmin) {
+    const { data: student } = await supabase.from('students').select('id').eq('id', studentId).maybeSingle()
+    if (!student) return { error: 'This student could not be found.' }
   }
 
   // Photo upload happens before the row insert, same reasoning as
@@ -108,7 +136,7 @@ export async function addPickupPerson(
       relationship: input.relationship.trim() || null,
       phone_number: normalizedPhone(input.phoneNumber),
       photo_path: photoPath,
-      created_by: user.id,
+      created_by: userId,
     })
     .select('id')
     .single()
@@ -118,13 +146,21 @@ export async function addPickupPerson(
   }
 
   await logActivity(supabase, {
-    actorId: user.id,
+    actorId: userId,
     action: `Added ${pickupDisplayName(names)} as an authorized pickup person`,
     targetTable: 'authorized_pickups',
     targetId: data.id,
   })
+  if (isAdmin) {
+    await notifyParentsOfStudent(studentId, {
+      kind: 'message',
+      title: 'The school added an authorized pickup person',
+      body: `${pickupDisplayName(names)} was added to your child's pickup list.`,
+      href: '/parent/pickup',
+    })
+  }
 
-  revalidatePath('/parent/pickup')
+  revalidatePickupPages()
   return { id: data.id }
 }
 
@@ -138,10 +174,9 @@ export async function updatePickupPerson(
   formData: FormData,
   removePhoto = false
 ): Promise<{ error: string } | undefined> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const writer = await pickupWriter()
+  if ('error' in writer) return writer
+  const { client: supabase, userId, isAdmin } = writer
 
   const { data: existing } = await supabase
     .from('authorized_pickups')
@@ -190,24 +225,33 @@ export async function updatePickupPerson(
   }
 
   await logActivity(supabase, {
-    actorId: user?.id ?? null,
+    actorId: userId,
     action: `Updated authorized pickup person ${pickupDisplayName(names)}`,
     targetTable: 'authorized_pickups',
     targetId: pickupId,
   })
+  if (isAdmin) {
+    const photoNote =
+      updates.photo_path === undefined ? '' : updates.photo_path === null ? ' Their photo was removed.' : ' Their photo was changed.'
+    await notifyParentsOfStudent(existing.student_id, {
+      kind: 'message',
+      title: 'The school updated an authorized pickup person',
+      body: `${pickupDisplayName(names)}'s pickup details were updated.${photoNote}`,
+      href: '/parent/pickup',
+    })
+  }
 
-  revalidatePath('/parent/pickup')
+  revalidatePickupPages()
 }
 
 export async function removePickupPerson(pickupId: string): Promise<{ error: string } | undefined> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const writer = await pickupWriter()
+  if ('error' in writer) return writer
+  const { client: supabase, userId, isAdmin } = writer
 
   const { data: existing } = await supabase
     .from('authorized_pickups')
-    .select('first_name, middle_name, last_name')
+    .select('student_id, first_name, middle_name, last_name')
     .eq('id', pickupId)
     .maybeSingle()
 
@@ -217,11 +261,19 @@ export async function removePickupPerson(pickupId: string): Promise<{ error: str
   }
 
   await logActivity(supabase, {
-    actorId: user?.id ?? null,
+    actorId: userId,
     action: `Removed authorized pickup person ${existing ? pickupDisplayName(existing) : ''}`.trim(),
     targetTable: 'authorized_pickups',
     targetId: pickupId,
   })
+  if (isAdmin && existing) {
+    await notifyParentsOfStudent(existing.student_id, {
+      kind: 'message',
+      title: 'The school removed an authorized pickup person',
+      body: `${pickupDisplayName(existing)} is no longer authorized to pick up your child.`,
+      href: '/parent/pickup',
+    })
+  }
 
-  revalidatePath('/parent/pickup')
+  revalidatePickupPages()
 }

@@ -1,5 +1,6 @@
 'use client'
 
+import { photoConsentLabel } from '@/lib/photo-consent'
 import { useState } from 'react'
 import { HealthForm } from '@/components/health/health-form'
 import type { HealthInput } from '@/lib/health'
@@ -47,6 +48,7 @@ type Student = {
   classroom_id: string | null
   classroomName: string | null
   program_options: string[]
+  photo_consent?: boolean | null
   health: HealthInput
   guardians: Guardian[]
   documents: DocRow[]
@@ -278,6 +280,7 @@ export function StudentRecordModal({
                   value={`${formatDateLong(student.date_of_birth)} (${calculateAge(student.date_of_birth)}y)`}
                 />
                 <InfoField label="Gender" value={student.gender.charAt(0).toUpperCase() + student.gender.slice(1)} />
+                <InfoField label="Class Photos (set by parent)" value={photoConsentLabel(student.photo_consent)} />
               </div>
               <button
                 onClick={() => setIsEditing(true)}

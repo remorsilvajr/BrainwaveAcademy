@@ -189,6 +189,9 @@ export async function approveAndCreateStudentRecord(
       date_of_birth: application.student_dob,
       gender: application.student_gender,
       enrollment_status: 'active',
+      // The parent's class-photo answer from the enroll form (null if the request predates it).
+      photo_consent: application.photo_consent ?? null,
+      photo_consent_updated_at: application.photo_consent == null ? null : new Date().toISOString(),
     })
     .select()
     .single()

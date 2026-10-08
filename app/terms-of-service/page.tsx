@@ -6,9 +6,9 @@ import { getPortalAuth } from '@/lib/get-portal-auth'
 import { MAIN_BRANCH, SUPPORT_BRANCH, SCHOOL_PROVINCE_COUNTRY } from '@/lib/school-locations'
 
 export const metadata: Metadata = {
-  title: 'Terms of Service | Brainwave Preschool Academy',
+  title: 'Terms of Service | Brain Wave Academy',
   description:
-    'The terms that govern use of the Brainwave Preschool Academy website, enrollment form, and portal.',
+    'The terms that govern use of the Brain Wave Academy website, enrollment form, and portal.',
 }
 
 const LAST_UPDATED = 'September 21, 2026'
@@ -55,9 +55,9 @@ export default async function TermsOfServicePage() {
 
           <P>
             These Terms of Service (&quot;Terms&quot;) govern your access to and use of the
-            Brainwave Preschool Academy website, public enrollment form, and the parent, teacher,
-            and administrator portal (together, the &quot;Service&quot;), operated by Brainwave
-            Preschool Academy (&quot;Brainwave,&quot; &quot;the School,&quot; &quot;we,&quot;
+            Brain Wave Academy website, public enrollment form, and the parent, teacher,
+            and administrator portal (together, the &quot;Service&quot;), operated by Brain Wave
+            Academy (&quot;Brain Wave,&quot; &quot;the School,&quot; &quot;we,&quot;
             &quot;us,&quot; or &quot;our&quot;), located in Tagum City, Davao del Norte,
             Philippines. By submitting the enrollment form, logging into the portal, or otherwise
             using the Service, you agree to be bound by these Terms. If you do not agree, please

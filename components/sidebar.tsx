@@ -236,7 +236,7 @@ function NavLinks({
 
 export function Sidebar({
   sections,
-  schoolName = 'Brainwave Academy',
+  schoolName = 'Brain Wave Academy',
   portalLabel,
 }: {
   sections: NavSection[]

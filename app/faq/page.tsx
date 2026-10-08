@@ -6,9 +6,9 @@ import { Breadcrumbs } from '@/components/ui/breadcrumbs'
 import { getPortalAuth } from '@/lib/get-portal-auth'
 
 export const metadata: Metadata = {
-  title: 'Frequently Asked Questions | Brainwave Preschool Academy',
+  title: 'Frequently Asked Questions | Brain Wave Academy',
   description:
-    'Answers to common questions about enrolling at Brainwave Preschool Academy, including the application process, required documents, our programs, and what happens after you apply.',
+    'Answers to common questions about enrolling at Brain Wave Academy, including the application process, required documents, our programs, and what happens after you apply.',
 }
 
 // Answers only cover our own, already-built process (what the enrollment
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 // response-time commitments the School hasn't actually made.
 const faqs = [
   {
-    question: 'How do I enroll my child at Brainwave Preschool Academy?',
+    question: 'How do I enroll my child at Brain Wave Academy?',
     answer:
       "Start with our online enrollment form. You'll provide your child's basic information along with your own contact details as parent or guardian. Once submitted, our admissions team reviews the application. You'll receive an email with your parent portal login once it's approved, where you can then upload the required documents to complete enrollment.",
   },
@@ -76,7 +76,7 @@ export default async function FaqPage() {
             Frequently Asked Questions
           </h1>
           <p className="mt-3 text-base leading-7 text-[#454650] dark:text-slate-300">
-            Common questions about enrolling at Brainwave Preschool Academy. Have something
+            Common questions about enrolling at Brain Wave Academy. Have something
             else in mind?{' '}
             <Link href="/enroll" className="font-semibold text-[#0b1b62] underline hover:no-underline dark:text-indigo-300">
               Start an application
