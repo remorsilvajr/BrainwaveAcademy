@@ -5,10 +5,19 @@ import { MilestoneReportView } from '@/components/admin/milestone-report-view'
 
 export default async function StudentMilestoneReportPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ studentId: string }>
+  searchParams: Promise<{ from?: string; class?: string }>
 }) {
   const { studentId } = await params
+  const { from, class: classParam } = await searchParams
+  // Back goes where the report was opened from: the Student Dashboard (same
+  // student and class filter) or the Students list.
+  const backHref =
+    from === 'dashboard'
+      ? `/admin/student-dashboard?student=${encodeURIComponent(studentId)}${classParam ? `&class=${encodeURIComponent(classParam)}` : ''}`
+      : '/admin/students'
   const supabase = await createClient()
 
   const { data: student } = await supabase
@@ -57,7 +66,7 @@ export default async function StudentMilestoneReportPage({
 
   return (
     <MilestoneReportView
-      backHref="/admin/students"
+      backHref={backHref}
       data={{
         studentName,
         studentAccountId: student.student_id,

@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { isTerminalStudentStatus } from '@/lib/student-status'
 import { PaymentsTabs } from '@/components/admin/payments-tabs'
 
 // Shared by /admin/payments and /cashier/payments. The cashier sees the same tabs but not
@@ -6,11 +7,11 @@ import { PaymentsTabs } from '@/components/admin/payments-tabs'
 export async function PaymentsPageContent({ mode }: { mode: 'admin' | 'cashier' }) {
   const supabase = await createClient()
 
-  const [{ data: payments }, { data: students }, { data: adjustments }, { data: paymentTransactions }] = await Promise.all([
+  const [{ data: payments }, { data: students }, { data: adjustments }, { data: paymentTransactions }, { data: classrooms }] = await Promise.all([
     supabase.from('payments').select('*').order('created_at', { ascending: false }),
     supabase
       .from('students')
-      .select('id, first_name, last_name, student_id, classroom_id')
+      .select('id, first_name, last_name, student_id, classroom_id, enrollment_status')
       .order('first_name', { ascending: true }),
     supabase.from('payment_adjustments').select('id, payment_id, action, reason, created_at').order('created_at', { ascending: false }),
     // Money received, one row per payment (a fee can be paid in installments).
@@ -20,6 +21,7 @@ export async function PaymentsPageContent({ mode }: { mode: 'admin' | 'cashier' 
       .select('id, payment_id, amount, payment_method, transaction_date, receipt_ref')
       .is('reversed_at', null)
       .order('transaction_date', { ascending: false }),
+    supabase.from('classrooms').select('id, name').order('created_at', { ascending: true }),
   ])
 
   const studentById = new Map((students ?? []).map((s) => [s.id, s]))
@@ -38,6 +40,20 @@ export async function PaymentsPageContent({ mode }: { mode: 'admin' | 'cashier' 
     label: `${s.first_name} ${s.last_name}`,
     sublabel: s.student_id ?? undefined,
   }))
+
+  // Student Balances lists every student still at the school, plus any withdrawn
+  // or graduated child who still has fees on record.
+  const classNameById = new Map((classrooms ?? []).map((c) => [c.id, c.name]))
+  const studentsWithFees = new Set((payments ?? []).map((p) => p.student_id))
+  const balanceStudents = (students ?? [])
+    .filter((s) => !isTerminalStudentStatus(s.enrollment_status) || studentsWithFees.has(s.id))
+    .map((s) => ({
+      id: s.id,
+      name: `${s.first_name} ${s.last_name}`,
+      accountId: s.student_id ?? null,
+      classId: s.classroom_id ?? null,
+      className: s.classroom_id ? (classNameById.get(s.classroom_id) ?? null) : null,
+    }))
 
   // Every fee's own history (waived, voided, edited, reversed), newest first.
   const adjustmentsByPayment: Record<string, { id: string; action: 'waived' | 'voided' | 'edited' | 'reversed'; reason: string; created_at: string }[]> = {}
@@ -58,6 +74,8 @@ export async function PaymentsPageContent({ mode }: { mode: 'admin' | 'cashier' 
         received={paymentTransactions ?? []}
         adjustmentsByPayment={adjustmentsByPayment}
         studentOptions={studentOptions}
+        balanceStudents={balanceStudents}
+        classrooms={classrooms ?? []}
         mode={mode}
       />
     </div>
