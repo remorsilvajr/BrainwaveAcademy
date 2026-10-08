@@ -4,7 +4,10 @@ import { redirect } from 'next/navigation'
 import { isValidEmail, EMAIL_VALIDATION_MESSAGE } from '@/lib/email-validation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { generateUnknownPassword } from '@/lib/password'
+import { generateUnknownPassword, validateNewPassword } from '@/lib/password'
+import { sendEmail } from '@/lib/email'
+import { accountCreatedWithPasswordEmail } from '@/lib/notification-emails'
+import { getSiteUrl } from '@/lib/site-url'
 import { sendSetPasswordEmail } from '@/lib/set-password-link'
 import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
 import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
@@ -39,7 +42,14 @@ export async function createSystemUser(
     role: ((formData.get('role') as string) ?? '').trim(),
     relationship_to_student: ((formData.get('relationship_to_student') as string) ?? '').trim(),
     gender: ((formData.get('gender') as string) ?? '').trim(),
+    // 'link' (default): the owner chooses their own password from an emailed link.
+    // 'set': the admin sets it here and hands it over in person.
+    password_mode: formData.get('password_mode') === 'set' ? 'set' : 'link',
   }
+  // Read straight from the form and never put in `values` (which is echoed back),
+  // logged or stored; Supabase keeps only its hash.
+  const password = values.password_mode === 'set' ? String(formData.get('password') ?? '') : ''
+  const confirmPassword = values.password_mode === 'set' ? String(formData.get('confirm_password') ?? '') : ''
   const photo = formData.get('profile_photo') as File | null
 
   const fieldErrors: Record<string, string> = {}
@@ -75,6 +85,17 @@ export async function createSystemUser(
     fieldErrors.phone_number = 'Enter a valid PH mobile number, e.g. 0917 123 4567 or +63 917 123 4567.'
   }
 
+  if (values.password_mode === 'set') {
+    const problem = await validateNewPassword(password, confirmPassword, {
+      email: values.email,
+      names: [values.first_name, values.middle_name, values.last_name],
+    })
+    if (problem) {
+      if (problem.toLowerCase().includes('match')) fieldErrors.confirm_password = problem
+      else fieldErrors.password = problem
+    }
+  }
+
   if (Object.keys(fieldErrors).length > 0) {
     return { error: 'Please fix the highlighted fields below.', fieldErrors, values }
   }
@@ -95,11 +116,12 @@ export async function createSystemUser(
     }
   }
 
-  // Nobody ever chooses, sees or emails this password: the account starts with a
-  // random one and the owner sets their own from the link emailed below.
+  // With the link (default) nobody chooses, sees or emails this password: the
+  // account starts with a random one and the owner sets their own from the link
+  // emailed below. With 'set', it is the password the admin just typed.
   const { data: created, error: createError } = await admin.auth.admin.createUser({
     email: values.email,
-    password: generateUnknownPassword(),
+    password: values.password_mode === 'set' ? password : generateUnknownPassword(),
     email_confirm: true,
   })
 
@@ -163,12 +185,24 @@ export async function createSystemUser(
 
   // The owner chooses their own password from a one-time link. If the email can't
   // be sent, undo the account: one nobody can sign in to would just be a stranded
-  // row (the admin can simply try again).
-  const emailFailure = await sendSetPasswordEmail({
-    email: values.email,
-    firstName: toTitleCase(values.first_name),
-    kind: 'welcome',
-  })
+  // row (the admin can simply try again). With a password set here the account
+  // works without any email, so the "your account is ready" note is best-effort.
+  if (values.password_mode === 'set') {
+    try {
+      const mail = accountCreatedWithPasswordEmail({ firstName: toTitleCase(values.first_name), email: values.email, siteUrl: getSiteUrl() })
+      await sendEmail({ to: values.email, subject: mail.subject, html: mail.html })
+    } catch (err) {
+      console.error('sendEmail failed for the account-created notice:', err)
+    }
+  }
+  const emailFailure =
+    values.password_mode === 'set'
+      ? null
+      : await sendSetPasswordEmail({
+          email: values.email,
+          firstName: toTitleCase(values.first_name),
+          kind: 'welcome',
+        })
   if (emailFailure) {
     if (values.role === 'parent') await admin.from('wallets').delete().eq('parent_id', userId)
     await admin.from('profiles').delete().eq('id', userId)
@@ -182,7 +216,7 @@ export async function createSystemUser(
   } = await supabase.auth.getUser()
   await logActivity(supabase, {
     actorId: actingAdmin?.id ?? null,
-    action: `Created ${values.role} account for ${values.email}`,
+    action: `Created ${values.role} account for ${values.email}${values.password_mode === 'set' ? ' with a password set by the admin' : ''}`,
     targetTable: 'profiles',
     targetId: userId,
   })
