@@ -19,14 +19,14 @@ export default async function AdminYearEndPage({ searchParams }: { searchParams:
       .order('first_name', { ascending: true }),
     supabase.from('classrooms').select('id, name, slug, min_age_months, max_age_months').order('created_at', { ascending: true }),
     supabase.from('student_promotions').select('student_id, action').eq('school_year', schoolYear),
-    supabase.from('payments').select('student_id, amount, status, due_date').eq('status', 'pending'),
+    supabase.from('payments').select('student_id, amount, amount_paid, status, due_date').eq('status', 'pending'),
   ])
 
   const classroomById = new Map((classrooms ?? []).map((c) => [c.id, c]))
   const doneIds = new Set((done ?? []).map((d) => d.student_id))
   const ladder = ladderClassrooms(classrooms ?? [])
 
-  const feesByStudent = new Map<string, { amount: number; status: string; due_date: string | null }[]>()
+  const feesByStudent = new Map<string, { amount: number; amount_paid: number; status: string; due_date: string | null }[]>()
   for (const fee of pendingFees ?? []) {
     feesByStudent.set(fee.student_id, [...(feesByStudent.get(fee.student_id) ?? []), fee])
   }

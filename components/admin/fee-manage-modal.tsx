@@ -23,6 +23,7 @@ export type ManagedFee = {
   description: string | null
   fee_type: string
   amount: number
+  amount_paid: number
   due_date: string | null
   status: string
 }
@@ -126,11 +127,17 @@ export function FeeManageModal({
         </div>
 
         <div className="flex-1 space-y-5 overflow-y-auto p-6">
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-800/60">
               <p className="text-xs text-gray-400 dark:text-gray-500">Amount</p>
               <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(fee.amount)}</p>
             </div>
+            {fee.amount_paid > 0 && (
+              <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-800/60">
+                <p className="text-xs text-gray-400 dark:text-gray-500">Paid so far</p>
+                <p className="text-sm font-semibold text-[#00a3e0] dark:text-sky-400">{formatCurrency(fee.amount_paid)}</p>
+              </div>
+            )}
             <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-800/60">
               <p className="text-xs text-gray-400 dark:text-gray-500">Due date</p>
               <p className="flex items-center gap-1 text-sm font-semibold text-gray-900 dark:text-gray-100">
@@ -148,26 +155,38 @@ export function FeeManageModal({
 
           {isPending && (
             <>
+              {fee.amount_paid > 0 && (
+                <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
+                  {formatCurrency(fee.amount_paid)} has already been paid toward this fee, so it can only be edited (not waived or
+                  voided) unless that payment is reversed first.
+                </p>
+              )}
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                {modes.map(({ key, label, help, icon: Icon }) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => {
-                      setMode(key)
-                      setError('')
-                    }}
-                    className={`rounded-xl border p-3 text-left transition ${
-                      mode === key
-                        ? 'border-[#0b1b62] bg-[#0b1b62]/5 dark:border-indigo-400 dark:bg-indigo-400/10'
-                        : 'border-gray-200 hover:border-[#0b1b62]/40 dark:border-gray-700'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4 text-[#0b1b62] dark:text-indigo-300" />
-                    <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-gray-100">{label}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{help}</p>
-                  </button>
-                ))}
+                {modes.map(({ key, label, help, icon: Icon }) => {
+                  const disabled = key !== 'edit' && fee.amount_paid > 0
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => {
+                        setMode(key)
+                        setError('')
+                      }}
+                      className={`rounded-xl border p-3 text-left transition ${
+                        disabled
+                          ? 'cursor-not-allowed border-gray-100 opacity-40 dark:border-gray-800'
+                          : mode === key
+                            ? 'border-[#0b1b62] bg-[#0b1b62]/5 dark:border-indigo-400 dark:bg-indigo-400/10'
+                            : 'border-gray-200 hover:border-[#0b1b62]/40 dark:border-gray-700'
+                      }`}
+                    >
+                      <Icon className="h-4 w-4 text-[#0b1b62] dark:text-indigo-300" />
+                      <p className="mt-1 text-sm font-semibold text-gray-900 dark:text-gray-100">{label}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{help}</p>
+                    </button>
+                  )
+                })}
               </div>
 
               {mode && (

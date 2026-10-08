@@ -9,26 +9,32 @@ import { emailReceiptFor } from '@/lib/send-receipt'
 
 const ERROR_MESSAGES: Record<string, string> = {
   NOT_AUTHENTICATED: 'Please log in and try again.',
-  PAYMENT_NOT_FOUND: 'This fee could not be found.',
-  PAYMENT_NOT_PENDING: 'This fee has already been paid.',
-  NOT_AUTHORIZED: 'This fee does not belong to one of your children.',
-  INSUFFICIENT_BALANCE: 'Your wallet balance is not enough to cover this fee.',
+  INVALID_AMOUNT: 'Enter a valid amount greater than zero.',
+  NOT_AUTHORIZED: 'These fees do not belong to one of your children.',
+  AMOUNT_EXCEEDS_OUTSTANDING: "That's more than this child's total outstanding balance.",
+  INSUFFICIENT_BALANCE: 'Your wallet balance is not enough to cover that amount.',
 }
 
-// Calls the pay_fee_with_wallet() Postgres function (SECURITY DEFINER, see
+// Calls the pay_amount_with_wallet() Postgres function (SECURITY DEFINER, see
 // the schema note in CLAUDE.md) via the ordinary RLS-scoped client — this
 // is a deliberate, singular use of .rpc() in an app that otherwise avoids
-// it, because the wallet debit and the payment status flip must succeed or
-// fail together. Two sequential .update() calls through the query builder
-// can't offer that: a failure between them would leave a parent's wallet
-// debited with no payment marked paid. The function derives the caller's
-// identity from auth.uid() internally, not from anything this action
-// passes in, so it can't be used to pay someone else's fee from your own
-// wallet or vice versa.
-export async function payFeeWithWallet(paymentId: string): Promise<{ error: string } | undefined> {
+// it, because the wallet debit and the fee allocation must succeed or fail
+// together. The function derives the caller's identity from auth.uid()
+// internally, not from anything this action passes in, so it can't be used
+// to pay someone else's fees from your own wallet or vice versa.
+//
+// Pays down the given amount across the student's outstanding fees, soonest
+// due first, potentially only partially settling the last one it touches —
+// see CLAUDE.md for why this replaced the old one-fee-at-a-time
+// payFeeWithWallet. The RPC returns the id of every payment_transactions row
+// it created, one per fee it touched, so a receipt goes out for each.
+export async function payAmountWithWallet(studentId: string, amount: number): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
 
-  const { error } = await supabase.rpc('pay_fee_with_wallet', { p_payment_id: paymentId })
+  const { data: transactionIds, error } = await supabase.rpc('pay_amount_with_wallet', {
+    p_student_id: studentId,
+    p_amount: amount,
+  })
 
   if (error) {
     const message = ERROR_MESSAGES[error.message] ?? 'Something went wrong processing this payment.'
@@ -40,13 +46,16 @@ export async function payFeeWithWallet(paymentId: string): Promise<{ error: stri
   } = await supabase.auth.getUser()
   await logActivity(supabase, {
     actorId: user?.id ?? null,
-    action: 'Paid a fee using their wallet balance',
+    action: `Paid ${amount} toward outstanding fees using their wallet balance`,
     targetTable: 'payments',
-    targetId: paymentId,
+    targetId: studentId,
   })
 
-  // The receipt, by email (to the parent who paid, unless they turned emails off).
-  await emailReceiptFor(paymentId)
+  // The receipt, by email, for each fee this payment touched (to the parent
+  // who paid, unless they turned emails off).
+  for (const transactionId of transactionIds ?? []) {
+    await emailReceiptFor(transactionId)
+  }
 
   revalidatePath('/parent/payments')
   revalidatePath('/parent', 'layout')

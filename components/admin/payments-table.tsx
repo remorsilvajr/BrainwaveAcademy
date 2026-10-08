@@ -23,6 +23,7 @@ export type PaymentRow = {
   fee_type: string
   description: string | null
   amount: number
+  amount_paid: number
   due_date: string | null
   status: string
   payment_method: string | null
@@ -412,7 +413,7 @@ export function PaymentsTable({
                           </div>
                         ) : p.status === 'pending' ? (
                           <div className="flex flex-wrap items-center gap-2">
-                            <MarkPaidControl paymentId={p.id} />
+                            <MarkPaidControl paymentId={p.id} remainingBalance={roundToCents(p.amount - p.amount_paid)} />
                             {canCorrect && (
                               <button
                                 type="button"

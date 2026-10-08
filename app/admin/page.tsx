@@ -48,7 +48,7 @@ export default async function AdminDashboardPage() {
     supabase.from('wallet_requests').select('requested_amount').eq('status', 'pending'),
     // Every unpaid fee, uncapped like the stats above: this feeds a sum, so it
     // can't come from a display-limited list.
-    supabase.from('payments').select('amount, status, due_date').eq('status', 'pending'),
+    supabase.from('payments').select('amount, amount_paid, status, due_date').eq('status', 'pending'),
     supabase.from('unenrollment_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
   ])
 

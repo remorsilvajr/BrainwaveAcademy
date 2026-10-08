@@ -82,7 +82,7 @@ export async function PaymentsPageContent({ mode }: { mode: 'admin' | 'cashier' 
   // children, the same sum the parent's own dashboard shows as Due Balance.
   const pendingByStudentId = new Map<string, number>()
   for (const p of payments ?? []) {
-    if (p.status === 'pending') pendingByStudentId.set(p.student_id, (pendingByStudentId.get(p.student_id) ?? 0) + p.amount)
+    if (p.status === 'pending') pendingByStudentId.set(p.student_id, (pendingByStudentId.get(p.student_id) ?? 0) + (p.amount - p.amount_paid))
   }
   const outstandingByParentId = new Map<string, number>()
   for (const link of parentStudentLinks ?? []) {
