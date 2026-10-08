@@ -165,7 +165,6 @@ begin
   ) into v_owns;
   if not v_owns then raise exception 'NOT_AUTHORIZED'; end if;
 
-  -- Lock every outstanding fee for this student up front and total them.
   for v_fee in
     select amount, amount_paid from public.payments
     where student_id = p_student_id and status = 'pending'
@@ -181,7 +180,6 @@ begin
     where parent_id = v_caller and balance >= p_amount;
   if not found then raise exception 'INSUFFICIENT_BALANCE'; end if;
 
-  -- Allocate soonest due first (the order the parent portal shows fees in).
   v_remaining := p_amount;
   for v_fee in
     select id, amount, amount_paid from public.payments
@@ -190,7 +188,7 @@ begin
     for update
   loop
     exit when v_remaining <= 0;
-    v_pay := least(v_fee.amount - v_fee.amount_paid, v_remaining);
+     v_pay := least(v_fee.amount - v_fee.amount_paid, v_remaining);
     if v_pay <= 0 then continue; end if;
 
     v_new_status := case when v_fee.amount_paid + v_pay >= v_fee.amount then 'paid' else 'pending' end;
@@ -232,7 +230,7 @@ declare
   v_count int;
   v_new numeric;
 begin
-  if auth_role() is distinct from 'admin' then raise exception 'NOT_ADMIN'; end if;
+if auth_role() is distinct from 'admin' then raise exception 'NOT_ADMIN'; end if;
   if p_reason is null or char_length(btrim(p_reason)) < 5 then raise exception 'REASON_REQUIRED'; end if;
   select * into v_payment from public.payments where id = p_payment_id for update;
   if v_payment.id is null then raise exception 'PAYMENT_NOT_FOUND'; end if;
