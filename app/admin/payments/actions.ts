@@ -304,6 +304,7 @@ export async function recordManualPayment(
     data: { user: actingAdmin },
   } = await supabase.auth.getUser()
 
+  const roundedAmount = roundToCents(input.amount)
   const { data: recorded, error } = await supabase
     .from('payments')
     .insert({
@@ -311,7 +312,8 @@ export async function recordManualPayment(
       classroom_id: student.classroom_id,
       fee_type: input.feeType,
       description,
-      amount: input.amount,
+      amount: roundedAmount,
+      amount_paid: roundedAmount,
       status: 'paid',
       payment_method: input.method,
       transaction_date: new Date().toISOString(),
@@ -323,6 +325,15 @@ export async function recordManualPayment(
     return { error: error?.message ?? 'Could not record the payment.' }
   }
 
+  const { data: transaction, error: txError } = await supabase
+    .from('payment_transactions')
+    .insert({ payment_id: recorded.id, amount: roundedAmount, payment_method: input.method, recorded_by: actingAdmin?.id ?? null })
+    .select('id')
+    .single()
+  if (txError) {
+    console.error(`payment_transactions insert failed: ${txError.message}`)
+  }
+
   await logActivity(supabase, {
     actorId: actingAdmin?.id ?? null,
     action: `Recorded a manual ${input.method} payment of ${input.amount} for a student`,
@@ -331,21 +342,39 @@ export async function recordManualPayment(
   })
 
   // The receipt, by email, to the child's guardians (those who haven't turned emails off).
-  await emailReceiptFor(recorded.id)
+  if (transaction) await emailReceiptFor(transaction.id)
 
   revalidateAll()
 }
 
 // Marks an already-generated pending fee item (e.g. a classroom's tuition
-// fee) as paid via cash, without touching the wallet — the
-// counterpart to payFeeWithWallet for a payment made outside the app.
-export async function markPaymentPaidManually(paymentId: string, method: string, notes?: string): Promise<ActionResult> {
+// fee) as paid via cash, without touching the wallet — the counterpart to
+// payAmountWithWallet for a payment made outside the app. `amount` defaults
+// to the fee's full remaining balance (its old, whole-fee-only behavior);
+// passing less records a partial cash payment, same idea as the wallet flow.
+export async function markPaymentPaidManually(paymentId: string, method: string, amount?: number, notes?: string): Promise<ActionResult> {
   const supabase = await createClient()
   await requirePaymentsStaff()
 
   if (!METHODS.includes(method as (typeof METHODS)[number])) {
     return { error: 'Only cash payments can be recorded manually.' }
   }
+
+  const { data: fee } = await supabase
+    .from('payments')
+    .select('id, amount, amount_paid, status')
+    .eq('id', paymentId)
+    .maybeSingle()
+  if (!fee) return { error: 'This fee could not be found.' }
+  if (fee.status !== 'pending') return { error: 'This payment could not be updated; it may have already been paid.' }
+
+  const remaining = roundToCents(fee.amount - fee.amount_paid)
+  const pay = amount === undefined ? remaining : roundToCents(amount)
+  if (!Number.isFinite(pay) || pay <= 0) return { error: 'Enter a valid amount greater than zero.' }
+  if (pay > remaining) return { error: `That is more than the ${remaining} still owed on this fee.` }
+
+  const newAmountPaid = roundToCents(fee.amount_paid + pay)
+  const nowPaidInFull = newAmountPaid >= fee.amount
 
   const {
     data: { user: actingAdmin },
@@ -354,7 +383,8 @@ export async function markPaymentPaidManually(paymentId: string, method: string,
   const { data, error } = await supabase
     .from('payments')
     .update({
-      status: 'paid',
+      amount_paid: newAmountPaid,
+      status: nowPaidInFull ? 'paid' : 'pending',
       payment_method: method,
       transaction_date: new Date().toISOString(),
       recorded_by: actingAdmin?.id ?? null,
@@ -372,14 +402,23 @@ export async function markPaymentPaidManually(paymentId: string, method: string,
     return { error: 'This payment could not be updated; it may have already been paid.' }
   }
 
+  const { data: transaction, error: txError } = await supabase
+    .from('payment_transactions')
+    .insert({ payment_id: data.id, amount: pay, payment_method: method, recorded_by: actingAdmin?.id ?? null })
+    .select('id')
+    .single()
+  if (txError) {
+    console.error(`payment_transactions insert failed: ${txError.message}`)
+  }
+
   await logActivity(supabase, {
     actorId: actingAdmin?.id ?? null,
-    action: `Recorded a manual ${method} payment`,
+    action: `Recorded a manual ${method} payment of ${pay}${nowPaidInFull ? '' : ' (partial)'}`,
     targetTable: 'payments',
     targetId: paymentId,
   })
 
-  await emailReceiptFor(data.id)
+  if (transaction) await emailReceiptFor(transaction.id)
 
   revalidateAll()
 }
@@ -391,7 +430,15 @@ export async function markPaymentPaidManually(paymentId: string, method: string,
 // the bell. Waive/void/edit only ever touch a `pending` fee; reversing only a
 // `paid` one.
 
-type FeeRow = { id: string; student_id: string; amount: number; due_date: string | null; description: string | null; fee_type: string }
+type FeeRow = {
+  id: string
+  student_id: string
+  amount: number
+  amount_paid: number
+  due_date: string | null
+  description: string | null
+  fee_type: string
+}
 
 function feeLabel(fee: { description: string | null; fee_type: string }) {
   return fee.description || `${fee.fee_type.charAt(0).toUpperCase()}${fee.fee_type.slice(1)} fee`
@@ -420,7 +467,7 @@ async function loadPendingFee(
 ): Promise<{ fee: FeeRow; error: null } | { fee: null; error: string }> {
   const { data } = await supabase
     .from('payments')
-    .select('id, student_id, amount, due_date, description, fee_type, status')
+    .select('id, student_id, amount, amount_paid, due_date, description, fee_type, status')
     .eq('id', paymentId)
     .maybeSingle()
   if (!data) return { fee: null, error: 'That fee could not be found.' }
@@ -438,6 +485,11 @@ async function settleFee(paymentId: string, reason: string, kind: 'waived' | 'vo
   const supabase = await createClient()
   const { fee, error: loadError } = await loadPendingFee(supabase, paymentId)
   if (!fee) return { error: loadError }
+  if (fee.amount_paid > 0) {
+    return {
+      error: `${formatCurrency(fee.amount_paid)} has already been paid toward this fee, so it can't be ${kind === 'waived' ? 'waived' : 'voided'}. Reverse the payment first if this fee should never have existed.`,
+    }
+  }
 
   const { data: updated, error } = await supabase
     .from('payments')
@@ -486,13 +538,19 @@ export async function editPendingFee(
   const supabase = await createClient()
   const { fee, error: loadError } = await loadPendingFee(supabase, paymentId)
   if (!fee) return { error: loadError }
+  if (amount < fee.amount_paid) {
+    return { error: `Can't set the amount below ${formatCurrency(fee.amount_paid)}, which has already been paid toward this fee.` }
+  }
   if (amount === fee.amount && dueDate === fee.due_date) {
     return { error: 'Nothing was changed.' }
   }
 
+  // Reducing the amount down to exactly what's already been paid closes the
+  // fee out, the same as if that had been the last installment.
+  const nowPaidInFull = amount === fee.amount_paid
   const { data: updated, error } = await supabase
     .from('payments')
-    .update({ amount, due_date: dueDate })
+    .update({ amount, due_date: dueDate, status: nowPaidInFull ? 'paid' : 'pending' })
     .eq('id', paymentId)
     .eq('status', 'pending')
     .select('id')
@@ -535,9 +593,16 @@ export async function reversePayment(paymentId: string, reason: string): Promise
   const supabase = await createClient()
   const { data: before } = await supabase
     .from('payments')
-    .select('student_id, amount, description, fee_type, payment_method')
+    .select('student_id, amount, amount_paid, description, fee_type, payment_method')
     .eq('id', paymentId)
     .maybeSingle()
+  const { data: walletRows } = await supabase
+    .from('payment_transactions')
+    .select('amount')
+    .eq('payment_id', paymentId)
+    .eq('payment_method', 'wallet')
+    .is('reversed_at', null)
+  const walletRefund = roundToCents((walletRows ?? []).reduce((sum, r) => sum + Number(r.amount), 0))
 
   const { error } = await supabase.rpc('reverse_payment', { p_payment_id: paymentId, p_reason: reason.trim() })
   if (error) {
@@ -545,7 +610,7 @@ export async function reversePayment(paymentId: string, reason: string): Promise
       NOT_ADMIN: 'Only an admin can reverse a payment.',
       REASON_REQUIRED: 'Add a short reason so there is a record of why.',
       PAYMENT_NOT_FOUND: 'That payment could not be found.',
-      PAYMENT_NOT_PAID: 'This payment is not marked as paid, so there is nothing to reverse.',
+      PAYMENT_NOT_PAID: 'Nothing has been paid toward this fee, so there is nothing to reverse.',
       WALLET_NOT_FOUND: "The paying parent's wallet could not be found, so it could not be refunded.",
       PAYER_UNKNOWN:
         'This wallet payment cannot be refunded automatically because more than one parent is linked to the child and it is not recorded who paid. Refund the right parent with Adjust in Parent Wallets, then reverse the payment as cash.',
@@ -556,7 +621,7 @@ export async function reversePayment(paymentId: string, reason: string): Promise
 
   await logActivity(supabase, {
     actorId: admin.id,
-    action: `Reversed a payment${before ? ` (${formatCurrency(before.amount)}, ${before.payment_method ?? 'no method'})` : ''}: ${reason.trim()}`,
+    action: `Reversed a payment${before ? ` (${formatCurrency(before.amount_paid)} of ${formatCurrency(before.amount)})` : ''}: ${reason.trim()}`,
     targetTable: 'payments',
     targetId: paymentId,
   })
@@ -565,10 +630,94 @@ export async function reversePayment(paymentId: string, reason: string): Promise
       kind: 'money',
       title: 'A payment was reversed',
       body: `${feeLabel(before)} (${formatCurrency(before.amount)}) is unpaid again${
-        before.payment_method === 'wallet' ? ', and the amount was returned to your wallet' : ''
+        walletRefund > 0 ? `, and ${formatCurrency(walletRefund)} was returned to your wallet` : ''
       }.`,
       href: '/parent/payments',
     })
   }
+  revalidateAll()
+}
+
+// Creates a new unpaid fee for a student, tied to a classroom — the one
+// thing admin couldn't do before: every other fee only ever came from
+// auto-generation at classroom assignment, or an already-paid manual cash
+// record (recordManualPayment, above). Tuition is a one-time payment at
+// this school, so adding a second tuition fee for a (student, classroom)
+// pair that already has one needs an explicit confirm rather than either
+// silently allowing it or silently refusing a legitimate correction.
+export async function addPendingFee(
+  studentId: string,
+  input: {
+    classroomId: string
+    feeType: string
+    description: string
+    amount: number
+    dueDate: string | null
+    confirmed?: boolean
+  }
+): Promise<ActionResult | { warning: string }> {
+  const supabase = await createClient()
+  const admin = await requireAdmin()
+
+  if (!FEE_TYPES.includes(input.feeType as (typeof FEE_TYPES)[number])) {
+    return { error: 'Invalid fee type.' }
+  }
+  const amount = roundToCents(input.amount)
+  const problem = validateFeeAmount(amount) ?? validateFeeDueDate(input.dueDate)
+  if (problem) return { error: problem }
+  const description = input.description.trim()
+  if (!description) return { error: 'Enter a short description for this fee.' }
+
+  const { data: classroom } = await supabase.from('classrooms').select('id, name').eq('id', input.classroomId).maybeSingle()
+  if (!classroom) return { error: 'Select a classroom.' }
+
+  const { data: student } = await supabase.from('students').select('id').eq('id', studentId).maybeSingle()
+  if (!student) return { error: 'Student not found.' }
+
+  if (input.feeType === 'tuition' && !input.confirmed) {
+    const { data: existingTuition } = await supabase
+      .from('payments')
+      .select('id')
+      .eq('student_id', studentId)
+      .eq('classroom_id', classroom.id)
+      .eq('fee_type', 'tuition')
+      .limit(1)
+    if (existingTuition && existingTuition.length > 0) {
+      return { warning: 'This student already has a tuition fee for this classroom.' }
+    }
+  }
+
+  const { data: created, error } = await supabase
+    .from('payments')
+    .insert({
+      student_id: studentId,
+      classroom_id: classroom.id,
+      fee_type: input.feeType,
+      description,
+      amount,
+      amount_paid: 0,
+      status: 'pending',
+      due_date: input.dueDate,
+    })
+    .select('id')
+    .single()
+  if (error || !created) {
+    return { error: error?.message ?? 'Could not add the fee.' }
+  }
+
+  await logActivity(supabase, {
+    actorId: admin.id,
+    action: `Added a fee (${formatCurrency(amount)}) for a student, ${classroom.name}`,
+    targetTable: 'payments',
+    targetId: created.id,
+  })
+
+  await notifyParentsOfStudent(studentId, {
+    kind: 'money',
+    title: 'A new fee was added',
+    body: `${description} (${formatCurrency(amount)}) has been added to your account.`,
+    href: '/parent/payments',
+  })
+
   revalidateAll()
 }

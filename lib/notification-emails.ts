@@ -217,6 +217,8 @@ export function paymentReceiptEmail(input: {
   method: string | null
   paidAt: string | null
   paymentId: string
+  // The specific payment (installment) this receipt is for.
+  transactionId?: string
   siteUrl: string
 }): Mail {
   const row = (label: string, value: string) =>
@@ -235,7 +237,7 @@ export function paymentReceiptEmail(input: {
        </table>
        <p>You can view and print the receipt any time from Payments in your portal.</p>`,
       input.siteUrl,
-      { label: 'View receipt', path: `/parent/payments/${input.paymentId}/receipt` }
+      { label: 'View receipt', path: `/parent/payments/${input.paymentId}/receipt${input.transactionId ? `?tx=${input.transactionId}` : ''}` }
     ),
   }
 }

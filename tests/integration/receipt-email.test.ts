@@ -32,22 +32,33 @@ const run = async (paymentId: string, failFor?: string) => {
   return { sent, summary }
 }
 
-const pay = async (extra: Record<string, unknown>) => {
+// A fee plus, when anything was paid, its payment history row (the receipt is
+// for that row). `paid` is how much this one payment was.
+const pay = async (extra: Record<string, unknown>, paid = 1250.5) => {
+  const isPaid = (extra.status ?? 'paid') !== 'pending'
   const { data, error } = await f.admin
     .from('payments')
     .insert({
       student_id: child,
       amount: 1250.5,
+      amount_paid: isPaid ? paid : 0,
       fee_type: 'tuition',
       description: 'Smart Explorers: Tuition',
-      status: 'paid',
+      status: isPaid && paid >= 1250.5 ? 'paid' : 'pending',
       transaction_date: new Date().toISOString(),
       ...extra,
     })
-    .select('id, receipt_ref')
+    .select('id')
     .single()
   if (error || !data) throw new Error(error?.message)
-  return data
+  if (!isPaid) return { id: data.id, txId: data.id, receipt_ref: null }
+  const { data: tx, error: txError } = await f.admin
+    .from('payment_transactions')
+    .insert({ payment_id: data.id, amount: paid, payment_method: extra.payment_method, recorded_by: extra.recorded_by })
+    .select('id, receipt_ref')
+    .single()
+  if (txError || !tx) throw new Error(txError?.message)
+  return { id: data.id, txId: tx.id, receipt_ref: tx.receipt_ref as string }
 }
 
 beforeAll(async () => {
@@ -71,7 +82,7 @@ afterAll(async () => {
 describe('receipt emails', () => {
   it('a wallet payment goes only to the parent who paid, with the receipt details', async () => {
     const payment = await pay({ payment_method: 'wallet', recorded_by: payer.id })
-    const { sent, summary } = await run(payment.id)
+    const { sent, summary } = await run(payment.txId)
     expect(summary).toMatchObject({ sent: 1, errors: [] })
     expect(sent.map((s) => s.to)).toEqual([payer.email])
     const { mail } = sent[0]
@@ -80,12 +91,12 @@ describe('receipt emails', () => {
     expect(mail.html).toContain('Smart Explorers: Tuition')
     expect(mail.html).toContain('1,250.50')
     expect(mail.html).toContain('Wallet')
-    expect(mail.html).toContain(`/parent/payments/${payment.id}/receipt`)
+    expect(mail.html).toContain(`/parent/payments/${payment.id}/receipt?tx=${payment.txId}`)
   })
 
   it("a cash payment recorded by the school goes to every guardian, except one who turned emails off", async () => {
     const payment = await pay({ payment_method: 'cash', recorded_by: admin.id })
-    const { sent, summary } = await run(payment.id)
+    const { sent, summary } = await run(payment.txId)
     expect(sent.map((s) => s.to).sort()).toEqual([otherGuardian.email, payer.email].sort())
     expect(summary).toMatchObject({ sent: 2, skippedOptOut: 1 })
     expect(sent[0].mail.html).toContain('Cash')
@@ -93,21 +104,29 @@ describe('receipt emails', () => {
 
   it("a wallet payment whose payer isn't a guardian of the child goes to the guardians instead", async () => {
     const payment = await pay({ payment_method: 'wallet', recorded_by: stranger.id })
-    const { sent } = await run(payment.id)
+    const { sent } = await run(payment.txId)
     expect(sent.map((s) => s.to)).not.toContain(stranger.email)
     expect(sent.map((s) => s.to).sort()).toEqual([otherGuardian.email, payer.email].sort())
   })
 
-  it('a fee that is not paid sends nothing', async () => {
+  it('a part payment sends a receipt for just that payment', async () => {
+    const payment = await pay({ payment_method: 'wallet', recorded_by: payer.id }, 500)
+    const { sent } = await run(payment.txId)
+    expect(sent.map((s) => s.to)).toEqual([payer.email])
+    expect(sent[0].mail.html).toContain('500.00')
+    expect(sent[0].mail.html).not.toContain('1,250.50')
+  })
+
+  it('a fee with no payment sends nothing', async () => {
     const payment = await pay({ payment_method: null, status: 'pending', transaction_date: null })
-    const { sent, summary } = await run(payment.id)
+    const { sent, summary } = await run(payment.txId)
     expect(sent).toHaveLength(0)
     expect(summary.sent).toBe(0)
   })
 
   it('a failed email is reported but never thrown, and the others still go out', async () => {
     const payment = await pay({ payment_method: 'cash', recorded_by: admin.id })
-    const { sent, summary } = await run(payment.id, payer.email)
+    const { sent, summary } = await run(payment.txId, payer.email)
     expect(sent.map((s) => s.to)).toEqual([otherGuardian.email])
     expect(summary.sent).toBe(1)
     expect(summary.errors[0]).toContain('mail server down')

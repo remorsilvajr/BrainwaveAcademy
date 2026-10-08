@@ -4,17 +4,21 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email'
 import { getSiteUrl } from '@/lib/site-url'
 
-// Emails the receipt for a fee that has just been paid. Written against injected
-// dependencies (a service-role client, a mailer, the site URL) so it can be run in a test
-// with a fake mailer, like lib/daily-notifications.ts. Best effort by design: it never
-// throws, because the payment it describes has already happened and must not be reported as
-// failed because an email was.
+// Emails the receipt for one payment_transactions row — one installment, not
+// necessarily a fee's full amount, since a fee can now be paid in partial
+// installments (see the Payments & wallet note in CLAUDE.md). Written
+// against injected dependencies (a service-role client, a mailer, the site
+// URL) so it can be run in a test with a fake mailer, like
+// lib/daily-notifications.ts. Best effort by design: it never throws,
+// because the payment it describes has already happened and must not be
+// reported as failed because an email was.
 //
-// Who gets it: a wallet payment goes to the parent who paid (payments.recorded_by) when
-// they are one of the child's guardians; anything else (cash recorded by the school) goes
-// to every active guardian. A guardian who switched email notifications off in Settings
-// gets none: that toggle promises "billing receipts", and the receipt is still in their
-// portal.
+// Who gets it: a wallet payment goes to the parent who paid (the
+// transaction's own recorded_by) when they are one of the child's
+// guardians; anything else (cash recorded by the school) goes to every
+// active guardian. A guardian who switched email notifications off in
+// Settings gets none: that toggle promises "billing receipts", and the
+// receipt is still in their portal.
 export type ReceiptDeps = {
   admin: SupabaseClient
   send: (to: string, mail: Mail) => Promise<void>
@@ -23,17 +27,24 @@ export type ReceiptDeps = {
 
 export type ReceiptSummary = { sent: number; skippedOptOut: number; errors: string[] }
 
-export async function sendPaymentReceipt(deps: ReceiptDeps, paymentId: string): Promise<ReceiptSummary> {
+export async function sendPaymentReceipt(deps: ReceiptDeps, transactionId: string): Promise<ReceiptSummary> {
   const summary: ReceiptSummary = { sent: 0, skippedOptOut: 0, errors: [] }
   try {
     const { admin, send, siteUrl } = deps
 
+    const { data: transaction } = await admin
+      .from('payment_transactions')
+      .select('id, payment_id, amount, payment_method, recorded_by, transaction_date, receipt_ref')
+      .eq('id', transactionId)
+      .maybeSingle()
+    if (!transaction) return summary
+
     const { data: payment } = await admin
       .from('payments')
-      .select('id, student_id, amount, description, fee_type, payment_method, transaction_date, receipt_ref, status, recorded_by')
-      .eq('id', paymentId)
+      .select('id, student_id, description, fee_type')
+      .eq('id', transaction.payment_id)
       .maybeSingle()
-    if (!payment || payment.status !== 'paid') return summary
+    if (!payment) return summary
 
     const [{ data: student }, { data: links }] = await Promise.all([
       admin.from('students').select('first_name, last_name').eq('id', payment.student_id).maybeSingle(),
@@ -43,7 +54,10 @@ export async function sendPaymentReceipt(deps: ReceiptDeps, paymentId: string): 
 
     const guardianIds = (links ?? []).map((l) => l.parent_id)
     if (guardianIds.length === 0) return summary
-    const recipientIds = payment.payment_method === 'wallet' && payment.recorded_by && guardianIds.includes(payment.recorded_by) ? [payment.recorded_by] : guardianIds
+    const recipientIds =
+      transaction.payment_method === 'wallet' && transaction.recorded_by && guardianIds.includes(transaction.recorded_by)
+        ? [transaction.recorded_by]
+        : guardianIds
 
     const { data: parents } = await admin
       .from('profiles')
@@ -65,12 +79,13 @@ export async function sendPaymentReceipt(deps: ReceiptDeps, paymentId: string): 
           paymentReceiptEmail({
             parentFirstName: parent.first_name,
             studentName: `${student.first_name} ${student.last_name}`,
-            receiptRef: payment.receipt_ref,
+            receiptRef: transaction.receipt_ref,
             description: label,
-            amount: payment.amount,
-            method: payment.payment_method,
-            paidAt: payment.transaction_date,
+            amount: transaction.amount,
+            method: transaction.payment_method,
+            paidAt: transaction.transaction_date,
             paymentId: payment.id,
+            transactionId: transaction.id,
             siteUrl,
           })
         )
@@ -87,9 +102,9 @@ export async function sendPaymentReceipt(deps: ReceiptDeps, paymentId: string): 
 }
 
 // What the Server Actions call: the real database and mailer.
-export async function emailReceiptFor(paymentId: string): Promise<ReceiptSummary> {
+export async function emailReceiptFor(transactionId: string): Promise<ReceiptSummary> {
   return sendPaymentReceipt(
     { admin: createAdminClient(), send: (to, mail) => sendEmail({ to, subject: mail.subject, html: mail.html }), siteUrl: getSiteUrl() },
-    paymentId
+    transactionId
   )
 }

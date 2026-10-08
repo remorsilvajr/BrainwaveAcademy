@@ -41,7 +41,7 @@ export default async function StudentsPage() {
     // by child below. Same "pending = outstanding" rule as the dashboard.
     supabase
       .from('payments')
-      .select('id, student_id, fee_type, description, amount, due_date, status')
+      .select('id, student_id, fee_type, description, amount, amount_paid, due_date, status')
       .eq('status', 'pending')
       .order('due_date', { ascending: true, nullsFirst: false }),
     supabase.from('student_health').select('*'),
@@ -59,11 +59,12 @@ export default async function StudentsPage() {
   const rows = ((students ?? []) as StudentRow[]).map((s) => {
     const fees = feesByStudentId.get(s.id) ?? []
     const summary = summarizeOutstanding(fees)
-    const unpaidFees: UnpaidFee[] = fees.map(({ id, fee_type, description, amount, due_date }) => ({
+    const unpaidFees: UnpaidFee[] = fees.map(({ id, fee_type, description, amount, amount_paid, due_date }) => ({
       id,
       fee_type,
       description,
       amount,
+      amount_paid,
       due_date,
     }))
     return {

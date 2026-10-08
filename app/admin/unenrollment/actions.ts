@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { requireAdmin } from '@/lib/require-admin'
 import { logActivity } from '@/lib/activity-log'
 import { escapeHtml, sendEmail } from '@/lib/email'
-import { formatCurrency, formatDateLong } from '@/lib/format'
+import { formatCurrency, formatDateLong, roundToCents } from '@/lib/format'
 import { getSiteUrl } from '@/lib/site-url'
 import { notifyUsers } from '@/lib/notify'
 import { UNENROLLMENT_REASON_MAX, UNENROLLMENT_REASON_MIN, type FeeDecision } from '@/lib/unenrollment'
@@ -77,7 +77,7 @@ export async function approveUnenrollment(
 
   const { data: unpaid } = await supabase
     .from('payments')
-    .select('id, amount')
+    .select('id, amount, amount_paid')
     .eq('student_id', student.id)
     .eq('status', 'pending')
   const unpaidFees = unpaid ?? []
@@ -129,7 +129,8 @@ export async function approveUnenrollment(
     if (waiveError) {
       return { error: `${student.first_name} was withdrawn, but the fees could not be waived: ${waiveError.message}` }
     }
-    waivedTotal = unpaidFees.reduce((sum, p) => sum + p.amount, 0)
+    // Only what was still owed is forgiven; anything already paid stays paid.
+    waivedTotal = roundToCents(unpaidFees.reduce((sum, p) => sum + (p.amount - p.amount_paid), 0))
   }
 
   await logActivity(supabase, {

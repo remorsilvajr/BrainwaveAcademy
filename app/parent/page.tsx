@@ -7,6 +7,7 @@ import { formatCurrency, formatRelativeTime } from '@/lib/format'
 import { parentApplicationsFilter } from '@/lib/parent-applications'
 import { classroomVisibilityFilter } from '@/lib/parent-classrooms'
 import { withStudent } from '@/lib/parent-links'
+import { remainingBalance } from '@/lib/payments'
 
 type AnnouncementRow = {
   id: string
@@ -65,7 +66,7 @@ export default async function ParentDashboardPage({
       .limit(3)
       .returns<AnnouncementRow[]>(),
     studentIds.length > 0
-      ? supabase.from('payments').select('amount').in('student_id', studentIds).eq('status', 'pending')
+      ? supabase.from('payments').select('amount, amount_paid').in('student_id', studentIds).eq('status', 'pending')
       : Promise.resolve({ data: [] }),
     supabase.from('classrooms').select('id, name'),
     supabase.from('wallets').select('balance').eq('parent_id', user?.id ?? '').maybeSingle(),
@@ -83,7 +84,7 @@ export default async function ParentDashboardPage({
     classroomName: a.classroom_id ? (classroomNameById.get(a.classroom_id) ?? null) : null,
   }))
 
-  const dueBalance = (pendingFees ?? []).reduce((sum, p) => sum + p.amount, 0)
+  const dueBalance = (pendingFees ?? []).reduce((sum, p) => sum + remainingBalance(p), 0)
 
   const selectedApplication =
     (applications ?? []).find((a) => a.id === studentParam) ?? applications?.[0] ?? null

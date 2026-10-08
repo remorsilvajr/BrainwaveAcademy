@@ -7,7 +7,8 @@ import type { HealthInput } from '@/lib/health'
 import { useRouter } from 'next/navigation'
 import { X } from 'lucide-react'
 import { calculateAge, formatCurrency, formatDateLong } from '@/lib/format'
-import { isOverdue, type UnpaidFee } from '@/lib/payments'
+import { isOverdue, remainingBalance, type UnpaidFee } from '@/lib/payments'
+import { AddFeeModal } from '@/components/admin/add-fee-modal'
 import { dobInputMin, dobInputMax, MIN_STUDENT_AGE, MAX_STUDENT_AGE } from '@/lib/dob'
 import { isAgeEligibleForClassroom, classroomAgeRangeLabel } from '@/lib/classrooms'
 import { documentLabels, documentOrder } from '@/lib/documents'
@@ -81,6 +82,7 @@ export function StudentRecordModal({
   const router = useRouter()
   const [tab, setTab] = useState<Tab>('personal')
   const [errorMessage, setErrorMessage] = useState('')
+  const [showAddFee, setShowAddFee] = useState(false)
 
   const [classroomPick, setClassroomPick] = useState(student.classroom_id ?? '')
   const [optionPicks, setOptionPicks] = useState<string[]>(student.program_options ?? [])
@@ -445,18 +447,26 @@ export function StudentRecordModal({
 
           {tab === 'balance' && (
             <div className="space-y-3">
-              <div className="rounded-lg bg-gray-50 dark:bg-gray-800/60 p-4">
-                <p className="text-xs text-gray-400 dark:text-gray-500">Outstanding Balance</p>
-                <p
-                  className={`text-2xl font-bold ${
-                    student.outstanding > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'
-                  }`}
+              <div className="flex items-center justify-between gap-3 rounded-lg bg-gray-50 dark:bg-gray-800/60 p-4">
+                <div>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">Outstanding Balance</p>
+                  <p
+                    className={`text-2xl font-bold ${
+                      student.outstanding > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'
+                    }`}
+                  >
+                    {formatCurrency(student.outstanding)}
+                  </p>
+                  {student.overdue > 0 && (
+                    <p className="text-xs text-red-500 dark:text-red-400">{formatCurrency(student.overdue)} of this is overdue</p>
+                  )}
+                </div>
+                <button
+                  onClick={() => setShowAddFee(true)}
+                  className="shrink-0 rounded-full border border-[#0b1b62] dark:border-indigo-300 px-3 py-1.5 text-xs font-semibold text-[#0b1b62] dark:text-indigo-300 hover:bg-[#0b1b62] hover:text-white"
                 >
-                  {formatCurrency(student.outstanding)}
-                </p>
-                {student.overdue > 0 && (
-                  <p className="text-xs text-red-500 dark:text-red-400">{formatCurrency(student.overdue)} of this is overdue</p>
-                )}
+                  Add Fee
+                </button>
               </div>
               {student.unpaidFees.length > 0 ? (
                 student.unpaidFees.map((fee) => {
@@ -473,8 +483,13 @@ export function StudentRecordModal({
                         <p className={`text-xs ${overdue ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}`}>
                           {fee.due_date ? `${overdue ? 'Overdue, was due' : 'Due'} ${formatDateLong(fee.due_date)}` : 'No due date'}
                         </p>
+                        {fee.amount_paid > 0 && (
+                          <p className="mt-1 text-xs text-[#00a3e0] dark:text-sky-400">
+                            {formatCurrency(fee.amount_paid)} of {formatCurrency(fee.amount)} paid
+                          </p>
+                        )}
                       </div>
-                      <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(fee.amount)}</span>
+                      <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(remainingBalance(fee))}</span>
                     </div>
                   )
                 })
@@ -529,6 +544,8 @@ export function StudentRecordModal({
         title={previewTitle}
         onClose={() => setPreviewUrl(null)}
       />
+
+      {showAddFee && <AddFeeModal studentId={student.id} classrooms={classrooms} onClose={() => setShowAddFee(false)} />}
     </>
   )
 }

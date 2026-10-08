@@ -18,7 +18,7 @@ export default async function AdminDashboardPage() {
     { data: students },
     { data: feedbackRows },
     { count: unresolvedFeedbackCount },
-    { data: recentPayments },
+    { data: recentTransactions },
     { data: pendingWalletRequests },
     { data: pendingFees },
     { count: pendingUnenrollmentCount },
@@ -36,10 +36,12 @@ export default async function AdminDashboardPage() {
     // dashboard widget, so feedbackRows.length would silently undercount
     // this stat once there are more than 5 unresolved reports.
     supabase.from('feedback').select('id', { count: 'exact', head: true }).eq('resolved', false),
+    // One row per payment received (a fee can be paid in installments); a
+    // reversed payment no longer counts.
     supabase
-      .from('payments')
-      .select('id, student_id, amount, payment_method, transaction_date, receipt_ref')
-      .eq('status', 'paid')
+      .from('payment_transactions')
+      .select('id, amount, payment_method, transaction_date, receipt_ref, payments(student_id)')
+      .is('reversed_at', null)
       .order('transaction_date', { ascending: false })
       .limit(8),
     // Uncapped by design, same reasoning as the feedback/collections stats
@@ -48,7 +50,7 @@ export default async function AdminDashboardPage() {
     supabase.from('wallet_requests').select('requested_amount').eq('status', 'pending'),
     // Every unpaid fee, uncapped like the stats above: this feeds a sum, so it
     // can't come from a display-limited list.
-    supabase.from('payments').select('amount, status, due_date').eq('status', 'pending'),
+    supabase.from('payments').select('amount, amount_paid, status, due_date').eq('status', 'pending'),
     supabase.from('unenrollment_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
   ])
 
@@ -57,9 +59,9 @@ export default async function AdminDashboardPage() {
   // deriving "today's total" from a capped list would silently undercount
   // once more than 8 payments land in a single day.
   const { data: paidTodayAmounts } = await supabase
-    .from('payments')
+    .from('payment_transactions')
     .select('amount, transaction_date')
-    .eq('status', 'paid')
+    .is('reversed_at', null)
     .gte('transaction_date', new Date(nowMs() - 24 * 60 * 60 * 1000).toISOString())
 
   // Two separate stages of the pipeline, shown as two separate cards (they
@@ -76,7 +78,11 @@ export default async function AdminDashboardPage() {
 
   const activeEnrollmentCount = (students ?? []).filter((s) => s.enrollment_status === 'active').length
 
-  const paymentStudentIds = (recentPayments ?? []).map((p) => p.student_id)
+  const recentPayments = (recentTransactions ?? []).map((t) => ({
+    ...t,
+    student_id: (t.payments as unknown as { student_id: string } | null)?.student_id ?? '',
+  }))
+  const paymentStudentIds = recentPayments.map((p) => p.student_id).filter(Boolean)
   const { data: paymentStudents } =
     paymentStudentIds.length > 0
       ? await supabase.from('students').select('id, first_name, last_name').in('id', paymentStudentIds)
@@ -85,7 +91,7 @@ export default async function AdminDashboardPage() {
 
   const totalCollectedToday = (paidTodayAmounts ?? [])
     .filter((p) => p.transaction_date && isToday(p.transaction_date))
-    .reduce((sum, p) => sum + p.amount, 0)
+    .reduce((sum, p) => sum + Number(p.amount), 0)
 
   const pendingWalletRequestCount = pendingWalletRequests?.length ?? 0
   const pendingWalletRequestTotal = (pendingWalletRequests ?? []).reduce((sum, r) => sum + r.requested_amount, 0)
@@ -205,14 +211,14 @@ export default async function AdminDashboardPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-              {(recentPayments ?? []).length === 0 ? (
+              {recentPayments.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="py-8 text-center text-gray-400 dark:text-gray-500">
                     No transactions recorded yet.
                   </td>
                 </tr>
               ) : (
-                (recentPayments ?? []).map((p) => (
+                recentPayments.map((p) => (
                   <tr key={p.id}>
                     <td className="py-2 text-gray-700 dark:text-gray-300">
                       {p.receipt_ref ?? '-'}

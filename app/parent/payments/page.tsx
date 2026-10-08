@@ -108,6 +108,25 @@ export default async function ParentPaymentsPage({
     ? await supabase.from('classrooms').select('name').eq('id', student.classroom_id).maybeSingle()
     : { data: null }
 
+  // Payment History lists individual payment events, not fees, since a fee
+  // can now be paid in installments — one row per payment_transactions entry.
+  const paymentIds = (payments ?? []).map((p) => p.id)
+  const { data: transactionRows } =
+    paymentIds.length > 0
+      ? await supabase
+          .from('payment_transactions')
+          .select('id, payment_id, amount, payment_method, transaction_date')
+          .in('payment_id', paymentIds)
+          .is('reversed_at', null)
+          .order('transaction_date', { ascending: false })
+      : { data: [] }
+
+  const feeById = new Map((payments ?? []).map((p) => [p.id, p]))
+  const transactions = (transactionRows ?? []).map((t) => {
+    const fee = feeById.get(t.payment_id)
+    return { ...t, feeDescription: fee?.description ?? null, feeType: fee?.fee_type ?? 'other' }
+  })
+
   return (
     <div className="space-y-6">
       <div>
@@ -119,10 +138,12 @@ export default async function ParentPaymentsPage({
         requests={walletRequests ?? []}
         feesContent={
           <FeeBreakdown
+            studentId={application.created_student_id}
             studentName={studentName}
             classroomName={classroom?.name ?? null}
             walletBalance={walletBalance}
             payments={payments ?? []}
+            transactions={transactions}
           />
         }
       />

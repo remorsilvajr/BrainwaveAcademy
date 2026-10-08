@@ -8,7 +8,7 @@ import {
   tracksDailyAttendance,
   validateFeeDueDate as validateProgramDueDate,
 } from '@/lib/classrooms'
-import { isOverdue, summarizeOutstanding } from '@/lib/payments'
+import { isOverdue, remainingBalance, summarizeOutstanding } from '@/lib/payments'
 import { ladderClassrooms, PROMOTION_LADDER, suggestChoice, CHOICE_GRADUATE, CHOICE_STAY, type LadderClassroom } from '@/lib/promotion'
 import { isHourlyProgram, programOptionConfig, validateProgramOptions } from '@/lib/program-options'
 import { isTerminalStudentStatus, TERMINAL_STATUS_FILTER } from '@/lib/student-status'
@@ -145,17 +145,22 @@ describe('outstanding balance and overdue (Manila today = 2026-09-21)', () => {
   })
   it('outstanding = pending only; waived, voided and paid never count', () => {
     const rows = [
-      { amount: 1000, status: 'pending', due_date: '2026-09-01' },
-      { amount: 500.25, status: 'pending', due_date: null },
-      { amount: 700, status: 'paid', due_date: '2026-01-01' },
-      { amount: 300, status: 'waived', due_date: '2026-01-01' },
-      { amount: 200, status: 'voided', due_date: '2026-01-01' },
+      { amount: 1000, amount_paid: 0, status: 'pending', due_date: '2026-09-01' },
+      { amount: 500.25, amount_paid: 0, status: 'pending', due_date: null },
+      { amount: 700, amount_paid: 0, status: 'paid', due_date: '2026-01-01' },
+      { amount: 300, amount_paid: 0, status: 'waived', due_date: '2026-01-01' },
+      { amount: 200, amount_paid: 0, status: 'voided', due_date: '2026-01-01' },
     ]
     expect(summarizeOutstanding(rows)).toEqual({ outstanding: 1500.25, overdue: 1000, outstandingCount: 2, overdueCount: 1 })
   })
   it('sums without float drift', () => {
-    const rows = [0.1, 0.2, 0.3].map((amount) => ({ amount, status: 'pending', due_date: null }))
+    const rows = [0.1, 0.2, 0.3].map((amount) => ({ amount, amount_paid: 0, status: 'pending', due_date: null }))
     expect(summarizeOutstanding(rows).outstanding).toBe(0.6)
+  })
+  it('a partly paid fee counts only what is still owed', () => {
+    const rows = [{ amount: 4500, amount_paid: 1500.5, status: 'pending', due_date: '2026-09-01' }]
+    expect(summarizeOutstanding(rows)).toEqual({ outstanding: 2999.5, overdue: 2999.5, outstandingCount: 1, overdueCount: 1 })
+    expect(remainingBalance(rows[0])).toBe(2999.5)
   })
 })
 

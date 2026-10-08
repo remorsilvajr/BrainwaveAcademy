@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { PaymentsTable, type PaymentRow, type WalletTxRow } from '@/components/admin/payments-table'
+import { PaymentsTable, type PaymentRow, type ReceivedRow, type WalletTxRow } from '@/components/admin/payments-table'
 import { ParentWalletsTable, type ParentWallet } from '@/components/admin/parent-wallets-table'
 import { WalletRequestsPanel, type WalletRequest } from '@/components/admin/wallet-requests-panel'
 import type { SearchableOption } from '@/components/ui/searchable-select'
@@ -19,6 +19,7 @@ const VALID_STATUSES = ['pending', 'overdue', 'waived', 'voided']
 
 export function PaymentsTabs({
   payments,
+  received,
   walletTransactions,
   adjustmentsByPayment,
   studentOptions,
@@ -27,6 +28,7 @@ export function PaymentsTabs({
   mode = 'admin',
 }: {
   payments: PaymentRow[]
+  received: ReceivedRow[]
   walletTransactions: WalletTxRow[]
   adjustmentsByPayment: Record<string, FeeAdjustment[]>
   studentOptions: SearchableOption[]
@@ -88,6 +90,7 @@ export function PaymentsTabs({
             key={tab}
             view={tab}
             payments={payments}
+            received={received}
             walletTransactions={walletTransactions}
             adjustmentsByPayment={adjustmentsByPayment}
             studentOptions={studentOptions}

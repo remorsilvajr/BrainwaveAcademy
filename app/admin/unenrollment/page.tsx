@@ -1,3 +1,4 @@
+import { roundToCents } from '@/lib/format'
 import { createClient } from '@/lib/supabase/server'
 import { UnenrollmentTable, type UnenrollmentAdminRow } from '@/components/admin/unenrollment-table'
 
@@ -25,7 +26,7 @@ export default async function AdminUnenrollmentPage() {
     studentIds.length > 0
       ? supabase
           .from('payments')
-          .select('id, student_id, description, fee_type, amount, due_date')
+          .select('id, student_id, description, fee_type, amount, amount_paid, due_date')
           .in('student_id', studentIds)
           .eq('status', 'pending')
       : Promise.resolve({ data: [] }),
@@ -56,7 +57,7 @@ export default async function AdminUnenrollmentPage() {
       parentPhone: p?.phone_number ?? null,
       unpaidFees: (unpaid ?? [])
         .filter((f) => f.student_id === r.student_id)
-        .map((f) => ({ id: f.id, description: f.description ?? f.fee_type, amount: f.amount, due_date: f.due_date })),
+        .map((f) => ({ id: f.id, description: f.description ?? f.fee_type, amount: roundToCents(f.amount - f.amount_paid), due_date: f.due_date })),
     }
   })
 
