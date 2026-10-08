@@ -6,7 +6,7 @@ import { ImageResponse } from 'next/og'
 // divs/text rather than the logo SVG (ImageResponse's renderer, Satori,
 // doesn't reliably render arbitrary external SVGs), using the same brand
 // colors/copy already established on the landing page hero.
-export const alt = 'Brainwave Preschool Academy: Nurturing Young Learners in Their Most Formative Years'
+export const alt = 'Brain Wave Academy: Nurturing Young Learners in Their Most Formative Years'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
@@ -50,7 +50,7 @@ export default async function Image() {
             lineHeight: 1.15,
           }}
         >
-          Brainwave Preschool Academy
+          Brain Wave Academy
         </div>
         <div
           style={{

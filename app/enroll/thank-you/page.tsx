@@ -8,7 +8,7 @@ import { getPortalAuth } from '@/lib/get-portal-auth'
 // A confirmation page like this has no reason to rank in search — noindex so
 // it never turns up as a landing result for someone who hasn't applied yet.
 export const metadata: Metadata = {
-  title: 'Application Submitted | Brainwave Preschool Academy',
+  title: 'Application Submitted | Brain Wave Academy',
   description: 'Your enrollment application has been submitted for review.',
   robots: { index: false, follow: true },
 }
@@ -33,7 +33,7 @@ export default async function EnrollThankYouPage() {
               Application Submitted!
             </h1>
             <p className="mt-3 text-base leading-7 text-[#454650] dark:text-slate-300">
-              Thank you for applying to Brainwave Preschool Academy. Our admissions team will
+              Thank you for applying to Brain Wave Academy. Our admissions team will
               review your application, and we&apos;ll email your parent portal login details
               once it&apos;s approved.
             </p>

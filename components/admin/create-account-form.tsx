@@ -52,7 +52,8 @@ function Field({
   )
 }
 
-export function CreateAccountForm() {
+// canCreateAdmin is decided on the server (only a super admin may create an admin).
+export function CreateAccountForm({ canCreateAdmin = false }: { canCreateAdmin?: boolean }) {
   const [state, formAction, isPending] = useActionState(createSystemUser, initialState)
   const values = state.values ?? {}
   const fieldErrors = state.fieldErrors ?? {}
@@ -191,7 +192,7 @@ export function CreateAccountForm() {
                 Assigned Role <span className="text-[#e6007e]">*</span>
               </p>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                {roleOptions.map((r) => (
+                {roleOptions.filter((r) => canCreateAdmin || r.value !== 'admin').map((r) => (
                   <label
                     key={r.value}
                     className="flex cursor-pointer items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 has-[:checked]:border-[#00a3e0] has-[:checked]:bg-sky-50 has-[:checked]:text-[#0b1b62]"

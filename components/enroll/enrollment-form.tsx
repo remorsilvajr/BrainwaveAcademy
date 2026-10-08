@@ -588,7 +588,7 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
                 stays in a normal inline formatting context where spacing and
                 line-wrapping behave normally. */}
             <span>
-              I have read and agree to Brainwave Preschool Academy&apos;s{' '}
+              I have read and agree to Brain Wave Academy&apos;s{' '}
               <a href="/privacy-policy" target="_blank" rel="noreferrer" className="text-[#0b1b62] underline hover:no-underline dark:text-indigo-300">
                 Privacy Policy
               </a>{' '}

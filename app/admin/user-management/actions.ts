@@ -191,6 +191,15 @@ export async function updateUserProfile(
     return { error: 'You do not have permission to edit this account.' }
   }
 
+  if (!['parent', 'teacher', 'cashier', 'admin'].includes(updates.role)) {
+    return { error: 'Select a role.' }
+  }
+  // Only a super admin can make an account an admin (an account that already
+  // is one may keep the role while its other details are edited).
+  if (updates.role === 'admin' && targetProfile.role !== 'admin' && !actorProfile.is_super_admin) {
+    return { error: 'You do not have permission to give an account the Admin role.' }
+  }
+
   const firstName = updates.first_name.trim()
   const lastName = updates.last_name.trim()
   const middleName = updates.middle_name.trim()

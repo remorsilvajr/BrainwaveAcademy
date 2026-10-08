@@ -11,7 +11,7 @@ function shell(heading: string, body: string, siteUrl: string, cta: { label: str
     <h2>${escapeHtml(heading)}</h2>
     ${body}
     <p><a href="${siteUrl}${cta.path}">${escapeHtml(cta.label)}</a></p>
-    <p style="color:#666;font-size:12px">Brainwave Preschool Academy</p>
+    <p style="color:#666;font-size:12px">Brain Wave Academy</p>
   `
 }
 
@@ -25,7 +25,7 @@ export function enrollmentRejectedEmail(input: {
     subject: `About your enrollment request for ${input.studentName}`,
     html: shell(
       'Your enrollment request',
-      `<p>Hi ${escapeHtml(input.parentFirstName)}, thank you for applying to Brainwave Preschool Academy for <strong>${escapeHtml(input.studentName)}</strong>.</p>
+      `<p>Hi ${escapeHtml(input.parentFirstName)}, thank you for applying to Brain Wave Academy for <strong>${escapeHtml(input.studentName)}</strong>.</p>
        <p>We're not able to accept this request at this time.</p>
        <p><strong>Reason:</strong> ${escapeHtml(input.reason)}</p>
        <p>If you have questions, or you'd like to apply again, please contact the school office or submit a new request.</p>`,
@@ -74,9 +74,9 @@ export function enrollmentCorrectionEmail(input: { parentFirstName: string; stud
 export function setPasswordEmail(input: { firstName: string; url: string; kind: 'welcome' | 'reset'; forAccount?: string }): Mail {
   const welcome = input.kind === 'welcome'
   return {
-    subject: welcome ? 'Set your password for Brainwave Preschool Academy' : 'Reset your Brainwave Preschool Academy password',
+    subject: welcome ? 'Set your password for Brain Wave Academy' : 'Reset your Brain Wave Academy password',
     html: shell(
-      welcome ? 'Welcome to Brainwave Preschool Academy' : 'Reset your password',
+      welcome ? 'Welcome to Brain Wave Academy' : 'Reset your password',
       `<p>Hi ${escapeHtml(input.firstName)},</p>
        ${input.forAccount ? `<p><strong>For account:</strong> ${escapeHtml(input.forAccount)}</p>` : ''}
        <p>${welcome ? 'An account has been created for you.' : 'You asked to reset your password.'} Use the button below to choose your own password. Nobody at the school ever sees it.</p>
@@ -91,7 +91,7 @@ export function setPasswordEmail(input: { firstName: string; url: string; kind: 
 // change they did not ask for is never silent. Never contains the password.
 export function passwordChangedByAdminEmail(input: { firstName: string; siteUrl: string }): Mail {
   return {
-    subject: 'Your Brainwave Preschool Academy password was changed',
+    subject: 'Your Brain Wave Academy password was changed',
     html: shell(
       'Your password was changed',
       `<p>Hi ${escapeHtml(input.firstName)}, a school administrator has set a new password for your account, and you have been signed out everywhere.</p>

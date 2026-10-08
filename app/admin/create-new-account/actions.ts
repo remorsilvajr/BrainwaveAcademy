@@ -28,7 +28,7 @@ export async function createSystemUser(
   // page being under /admin isn't real protection for a direct call to
   // this Server Action (see lib/require-admin.ts), so without this check
   // any authenticated caller could create themselves an admin account.
-  await requireAdmin()
+  const adminUser = await requireAdmin()
 
   const values: Record<string, string> = {
     first_name: ((formData.get('first_name') as string) ?? '').trim(),
@@ -58,6 +58,12 @@ export async function createSystemUser(
     fieldErrors.middle_name = NAME_VALIDATION_MESSAGE
   }
   if (!roles.includes(values.role)) fieldErrors.role = 'Select a role.'
+  if (values.role === 'admin') {
+    // Only a super admin can create another admin account.
+    const supabase = await createClient()
+    const { data: actor } = await supabase.from('profiles').select('is_super_admin').eq('id', adminUser.id).single()
+    if (!actor?.is_super_admin) fieldErrors.role = 'You do not have permission to create an admin account.'
+  }
 
   if (!values.email) {
     fieldErrors.email = 'Email address is required.'

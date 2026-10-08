@@ -50,6 +50,7 @@ type Profile = {
   canModerate: boolean
   // Also computed server-side: only a super admin viewing someone else's account.
   canSetPassword: boolean
+  canAssignAdmin: boolean
   parent_student?: { relationship: string; students: LinkedStudent | null }[]
   applicants?: Applicant[]
 }
@@ -399,7 +400,7 @@ export function UserManagementTable({ users }: { users: Profile[] }) {
       </div>
 
       {editingUser && (
-        <UserEditModal user={editingUser} onClose={() => setEditingUserId(null)} canSetPassword={editingUser.canSetPassword} />
+        <UserEditModal user={editingUser} onClose={() => setEditingUserId(null)} canSetPassword={editingUser.canSetPassword} canAssignAdmin={editingUser.canAssignAdmin} />
       )}
 
       {confirmingBlockUser && (
