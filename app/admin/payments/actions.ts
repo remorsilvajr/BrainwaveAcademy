@@ -7,7 +7,7 @@ import { emailReceiptFor } from '@/lib/send-receipt'
 import { formatCurrency, formatDateShort, roundToCents } from '@/lib/format'
 import { requireAdmin, requirePaymentsStaff } from '@/lib/require-admin'
 import { notifyParentsOfStudent } from '@/lib/notify'
-import { validateFeeAmount, validateFeeDueDate, validateFeeReason } from '@/lib/fees'
+import { validateFeeAmount, validateFeeDueDate, validateFeeReason, validateNewFeeAmount } from '@/lib/fees'
 
 const FEE_TYPES = ['tuition', 'activity', 'other'] as const
 // Cash only for now: a parent has no way to pay by check anywhere in the app, so
@@ -434,7 +434,7 @@ export async function addPendingFee(
     return { error: 'Invalid fee type.' }
   }
   const amount = roundToCents(input.amount)
-  const problem = validateFeeAmount(amount) ?? validateFeeDueDate(input.dueDate)
+  const problem = validateNewFeeAmount(amount) ?? validateFeeDueDate(input.dueDate)
   if (problem) return { error: problem }
   const description = input.description.trim()
   if (!description) return { error: 'Enter a short description for this fee.' }

@@ -7,7 +7,7 @@ import { Modal } from '@/components/ui/modal'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { DobSelect } from '@/components/ui/dob-select'
 import { addPendingFee } from '@/app/admin/payments/actions'
-import { validateFeeAmount, validateFeeDueDate } from '@/lib/fees'
+import { NEW_FEE_MAX_AMOUNT, validateNewFeeAmount, validateFeeDueDate } from '@/lib/fees'
 import { todayIso } from '@/lib/format'
 
 type Classroom = { id: string; name: string }
@@ -49,7 +49,7 @@ export function AddFeeModal({
   function validate(): string | null {
     if (!classroomId) return 'Select a classroom.'
     if (duePartial) return 'Pick the day, month, and year of the due date, or leave it blank.'
-    return validateFeeAmount(Number(amount)) ?? validateFeeDueDate(dueDate || null)
+    return validateNewFeeAmount(Number(amount)) ?? validateFeeDueDate(dueDate || null)
   }
 
   async function submit(confirmed: boolean) {
@@ -140,11 +140,13 @@ export function AddFeeModal({
                   <input
                     type="number"
                     min="0"
+                    max={NEW_FEE_MAX_AMOUNT}
                     step="0.01"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     className={inputClass}
                   />
+                  <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Up to ₱10,000.00.</p>
                 </div>
               </div>
               <div>

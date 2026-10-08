@@ -33,6 +33,16 @@ export function validateFeeAmount(value: number): string | null {
   return null
 }
 
+// A fee admin adds by hand (Add Fee) is capped lower than the edit limit above.
+export const NEW_FEE_MAX_AMOUNT = 10_000
+
+export function validateNewFeeAmount(value: number): string | null {
+  const problem = validateFeeAmount(value)
+  if (problem) return problem
+  if (value > NEW_FEE_MAX_AMOUNT) return 'A new fee can be at most ₱10,000.00.'
+  return null
+}
+
 // A pending fee's due date may already have passed (that is what "overdue"
 // means), so the window opens at the start of last year and closes at the end of
 // next year. Empty means "no due date".
