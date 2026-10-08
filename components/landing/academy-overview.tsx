@@ -197,8 +197,7 @@ export function AcademyOverview() {
             Years
           </h1>
           <p className="text-base leading-7 text-[#454650] dark:text-slate-300 sm:text-lg">
-            Guided by Directress Dr. Elena C. Lagrimas, Brainwave Preschool
-            Academy provides a holistic, vibrant environment where every
+            Guided by Directress Dr. Elena C. Lagrimas, Brain Wave Academy provides a holistic, vibrant environment where every
             child&apos;s potential is recognized and cultivated.
           </p>
           <nav

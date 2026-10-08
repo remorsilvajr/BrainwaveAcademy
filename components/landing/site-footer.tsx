@@ -8,7 +8,7 @@ export function SiteFooter() {
         <div className="grid w-full grid-cols-1 gap-8 sm:grid-cols-3">
           <section
             className="flex flex-col items-start gap-4"
-            aria-label="Brainwave Preschool Academy"
+            aria-label="Brain Wave Academy"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -68,7 +68,7 @@ export function SiteFooter() {
 
         <div className="flex w-full flex-col items-center gap-3 border-t border-[#ffffff1a] pt-6 text-center">
           <p className="text-xs font-medium tracking-[0.24px] text-[#bac3ff]">
-            © 2024 Brainwave Preschool Academy. All rights reserved.
+            © 2024 Brain Wave Academy. All rights reserved.
           </p>
           <nav aria-label="Legal" className="flex items-center gap-4">
             <a href="/privacy-policy" className="text-xs font-medium text-[#bac3ff] no-underline hover:text-white hover:underline">

@@ -58,7 +58,7 @@ export function MilestoneReportView({ data, backHref }: { data: MilestoneReportD
 
       <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-8 print:border-0 print:shadow-none">
         <div className="border-b border-dashed border-gray-200 dark:border-gray-700 pb-4 text-center">
-          <p className="text-lg font-bold text-[#0b1b62] dark:text-indigo-300">Brainwave Preschool Academy</p>
+          <p className="text-lg font-bold text-[#0b1b62] dark:text-indigo-300">Brain Wave Academy</p>
           <p className="text-sm text-gray-500 dark:text-gray-400">Milestone &amp; Attendance Report</p>
         </div>
 

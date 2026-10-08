@@ -68,7 +68,7 @@ export function PickupCardModal({
       <div className="overflow-y-auto p-5">
         <div id="pickup-card" className="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
           <div className="bg-[#0b1b62] px-4 py-2 text-center text-xs font-bold uppercase tracking-widest text-white">
-            Brainwave Preschool Academy - Authorized Pickup
+            Brain Wave Academy - Authorized Pickup
           </div>
           <div className="flex flex-col items-center gap-4 p-5 sm:flex-row sm:items-start">
             <div className="h-44 w-36 shrink-0 overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800">

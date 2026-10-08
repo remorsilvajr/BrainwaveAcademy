@@ -1,4 +1,4 @@
-import { isRealIsoDate, MAX_AGE, wholeMonthsOld } from '@/lib/dob'
+import { ageInYearsLabel, isRealIsoDate, MAX_AGE, wholeMonthsOld } from '@/lib/dob'
 import { todayIso } from '@/lib/format'
 
 // A classroom's age bounds (`min_age_months`/`max_age_months`) are whole
@@ -53,6 +53,24 @@ export function classroomAgeRangeLabel(classroom: { min_age_months: number | nul
   if (min != null && max != null) return `Ages ${monthsLabel(min)} - ${monthsLabel(max)}`
   if (min != null) return `Ages ${monthsLabel(min)} and up`
   return `Up to ${monthsLabel(max as number)}`
+}
+
+// Why a program card is locked for this child, in words a parent can act on
+// (the enroll wizards show it on the disabled card instead of a hover-only
+// tooltip). Null when the child is eligible or no valid DOB is entered yet.
+export function ineligibleReason(
+  dateOfBirth: string,
+  classroom: { min_age_months: number | null; max_age_months: number | null }
+): string | null {
+  if (!isRealIsoDate(dateOfBirth)) return null
+  const today = todayIso()
+  if (dateOfBirth > today || isAgeEligibleForClassroom(dateOfBirth, classroom)) return null
+  const months = wholeMonthsOld(dateOfBirth, today)
+  const age = ageInYearsLabel(months / 12)
+  if (classroom.min_age_months != null && months < classroom.min_age_months) {
+    return `Your child is ${age} old. This program starts at ${ageInYearsLabel(classroom.min_age_months / 12)}.`
+  }
+  return `Your child is ${age} old, older than this program's range (${classroomAgeRangeLabel(classroom)}).`
 }
 
 // Fee amounts are fixed (no UI or action changes them); only the two due dates

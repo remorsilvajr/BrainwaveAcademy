@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   classroomAgeRangeLabel,
   feeDueDateBounds,
+  ineligibleReason,
   isAgeEligibleForClassroom,
   nonDailyClassroomIds,
   tracksDailyAttendance,
@@ -67,6 +68,12 @@ describe('program age ranges (whole months, inclusive)', () => {
   it('a program with no range takes anyone, and has a label saying so', () => {
     expect(isAgeEligibleForClassroom(dobMonths(108), open)).toBe(true)
     expect(classroomAgeRangeLabel(open)).toBe('All ages')
+  })
+  it('a locked program says why, in the child age and the program range', () => {
+    expect(ineligibleReason(dobMonths(16), LE)).toBe('Your child is 1 year 4 months old. This program starts at 1 year 6 months.')
+    expect(ineligibleReason(dobMonths(59), PK)).toBe("Your child is 4 years 11 months old, older than this program's range (Ages 3 yrs 11 mo - 4 yrs 10 mo).")
+    expect(ineligibleReason(dobMonths(20), LE)).toBeNull()
+    expect(ineligibleReason('', LE)).toBeNull()
   })
   it('labels read as years and months', () => {
     expect(classroomAgeRangeLabel(LE)).toBe('Ages 1 yr 6 mo - 2 yrs')

@@ -22,8 +22,8 @@ export function AdminTopBar({ sections, admin }: { sections: NavSection[]; admin
 
   const title =
     pathname === '/admin'
-      ? 'Brainwave Dashboard'
-      : (sections.flatMap((s) => s.items).find((item) => item.href === pathname)?.label ?? 'Brainwave Dashboard')
+      ? 'Brain Wave Dashboard'
+      : (sections.flatMap((s) => s.items).find((item) => item.href === pathname)?.label ?? 'Brain Wave Dashboard')
 
   return (
     <header className="sticky top-14 z-20 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-4 sm:px-8 lg:top-0">

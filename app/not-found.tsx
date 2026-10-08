@@ -5,7 +5,7 @@ import { SiteFooter } from '@/components/landing/site-footer'
 import { getPortalAuth } from '@/lib/get-portal-auth'
 
 export const metadata: Metadata = {
-  title: 'Page Not Found | Brainwave Preschool Academy',
+  title: 'Page Not Found | Brain Wave Academy',
   description: 'The page you are looking for does not exist or may have moved.',
 }
 

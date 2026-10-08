@@ -19,7 +19,7 @@ export async function sendEmail({
   })
 
   await transporter.sendMail({
-    from: `"Brainwave Preschool Academy" <${process.env.BREVO_SENDER_EMAIL}>`,
+    from: `"Brain Wave Academy" <${process.env.BREVO_SENDER_EMAIL}>`,
     to,
     subject,
     html,

@@ -1,6 +1,13 @@
+import { createClient } from '@/lib/supabase/server'
 import { CreateAccountForm } from '@/components/admin/create-account-form'
 
-export default function CreateNewAccountPage() {
+export default async function CreateNewAccountPage() {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  const { data: actor } = await supabase.from('profiles').select('is_super_admin').eq('id', user?.id ?? '').single()
+
   return (
     <div className="space-y-6">
       <div>
@@ -10,7 +17,7 @@ export default function CreateNewAccountPage() {
         </p>
       </div>
 
-      <CreateAccountForm />
+      <CreateAccountForm canCreateAdmin={!!actor?.is_super_admin} />
     </div>
   )
 }

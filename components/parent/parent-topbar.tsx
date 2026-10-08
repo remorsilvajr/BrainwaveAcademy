@@ -40,8 +40,8 @@ export function ParentTopBar({
 
   const title =
     pathname === '/parent'
-      ? 'Brainwave Dashboard'
-      : (sections.flatMap((s) => s.items).find((item) => item.href === pathname)?.label ?? 'Brainwave Dashboard')
+      ? 'Brain Wave Dashboard'
+      : (sections.flatMap((s) => s.items).find((item) => item.href === pathname)?.label ?? 'Brain Wave Dashboard')
 
   const selectedId = searchParams.get('student') ?? students[0]?.id ?? null
   const selected = students.find((s) => s.id === selectedId) ?? null

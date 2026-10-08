@@ -44,6 +44,7 @@ export function UserEditModal({
   onClose,
   readOnly = false,
   canSetPassword = false,
+  canAssignAdmin = false,
 }: {
   user: Profile
   onClose: () => void
@@ -51,6 +52,8 @@ export function UserEditModal({
   // Computed on the server for the acting admin (see app/admin/user-management/page.tsx),
   // never derived from anything about the account's tier in the browser.
   canSetPassword?: boolean
+  // Same: only a super admin (or an account that is already an admin) sees the Admin role.
+  canAssignAdmin?: boolean
 }) {
   const [avatarUrl, setAvatarUrl] = useState(user.avatar_url)
   const [isSavingAvatar, setIsSavingAvatar] = useState(false)
@@ -276,7 +279,7 @@ export function UserEditModal({
               <option value="parent" className={optionClasses}>Parent</option>
               <option value="teacher" className={optionClasses}>Teacher</option>
               <option value="cashier" className={optionClasses}>Cashier</option>
-              <option value="admin" className={optionClasses}>Admin</option>
+              {canAssignAdmin && <option value="admin" className={optionClasses}>Admin</option>}
             </select>
           </div>
 
