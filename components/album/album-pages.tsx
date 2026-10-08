@@ -9,6 +9,8 @@ import { UploadPanel } from '@/components/album/upload-panel'
 import { albumDateFromParam, formatAlbumDate, loadAlbumFolders, loadAlbumPhotos } from '@/lib/album'
 import { getTeacherAssignedClassrooms } from '@/lib/teacher-classrooms'
 import { todayIso } from '@/lib/format'
+import { PhotoConsentPanel } from '@/components/consent/photo-consent-panel'
+import { loadNoPhotoConsentByClassroom, loadParentChildrenConsent } from '@/lib/photo-consent-load'
 
 type AlbumRole = 'parent' | 'teacher' | 'admin'
 
@@ -27,10 +29,12 @@ export async function AlbumIndexPage({ role }: { role: AlbumRole }) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const [folders, classrooms] = await Promise.all([
+  const [folders, classrooms, childrenConsent] = await Promise.all([
     loadAlbumFolders(supabase),
     role === 'teacher' && user ? getTeacherAssignedClassrooms(supabase, user.id) : Promise.resolve([]),
+    role === 'parent' && user ? loadParentChildrenConsent(supabase, user.id) : Promise.resolve([]),
   ])
+  const noConsent = role === 'teacher' ? await loadNoPhotoConsentByClassroom(supabase, classrooms.map((c) => c.id)) : {}
 
   return (
     <div className="space-y-6">
@@ -39,7 +43,17 @@ export async function AlbumIndexPage({ role }: { role: AlbumRole }) {
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{subtitles[role]}</p>
       </div>
 
-      {role === 'teacher' && <UploadPanel classrooms={classrooms} />}
+      {role === 'teacher' && <UploadPanel classrooms={classrooms} noConsentByClassroom={noConsent} />}
+
+      {role === 'parent' && childrenConsent.length > 0 && (
+        <section className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-900">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">May your child appear in class photos?</h2>
+          <p className="mb-4 mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Other parents in the class can see these photos. Until you choose, teachers keep your child out of them.
+          </p>
+          <PhotoConsentPanel students={childrenConsent} />
+        </section>
+      )}
 
       {folders.length === 0 ? (
         <EmptyState
