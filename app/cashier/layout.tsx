@@ -1,4 +1,5 @@
 import { Sidebar, type NavSection } from '@/components/sidebar'
+import { SlowSiteNotice } from '@/components/ui/slow-site-notice'
 import { CashierTopBar } from '@/components/cashier/cashier-topbar'
 import { createClient } from '@/lib/supabase/server'
 
@@ -40,6 +41,7 @@ export default async function CashierLayout({ children }: { children: React.Reac
             avatar_url: profile?.avatar_url ?? null,
           }}
         />
+        <SlowSiteNotice />
         <main className="bg-[#faf9fc] dark:bg-gray-950 p-4 sm:p-8">{children}</main>
       </div>
     </div>
