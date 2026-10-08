@@ -14,8 +14,8 @@ export const feedbackCategoryLabels: Record<string, string> = {
 
 export const feedbackCategoryOrder = Object.keys(feedbackCategoryLabels)
 
-// What the form opens on (unchanged from before the dropdown was reordered).
-export const DEFAULT_FEEDBACK_CATEGORY = 'bug'
+// What the form opens on: the top of the list (Concern).
+export const DEFAULT_FEEDBACK_CATEGORY = feedbackCategoryOrder[0]
 
 // What the form suggests for each category: the intro line, the subject
 // placeholder, and the label and placeholder of the main text box. Only
