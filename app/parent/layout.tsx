@@ -1,6 +1,5 @@
 import { Sidebar, type NavSection } from '@/components/sidebar'
 import { ParentTopBar } from '@/components/parent/parent-topbar'
-import { SelectedChildBanner } from '@/components/parent/selected-child-banner'
 import { createClient } from '@/lib/supabase/server'
 import { parentApplicationsFilter } from '@/lib/parent-applications'
 
@@ -100,7 +99,6 @@ export default async function ParentLayout({ children }: { children: React.React
             avatar_url: profile?.avatar_url ?? null,
           }}
         />
-        <SelectedChildBanner students={students} />
         <main className="p-4 sm:p-8">{children}</main>
       </div>
     </div>

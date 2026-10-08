@@ -58,7 +58,7 @@ export default async function ParentStudentDashboardPage({
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Student Dashboard</h1>
+          <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Student Dashboard for {application.student_first_name} {application.student_last_name}</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Attendance, assessments, and development milestones for your child.
           </p>
@@ -103,7 +103,7 @@ export default async function ParentStudentDashboardPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Student Dashboard</h1>
+        <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Student Dashboard for {application.student_first_name} {application.student_last_name}</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Attendance, assessments, and development milestones for your child.
         </p>
