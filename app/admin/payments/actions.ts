@@ -6,6 +6,7 @@ import { logActivity } from '@/lib/activity-log'
 import { emailReceiptFor } from '@/lib/send-receipt'
 import { formatCurrency, formatDateShort, roundToCents } from '@/lib/format'
 import { requireAdmin, requirePaymentsStaff } from '@/lib/require-admin'
+import { requireSuperAdmin } from '@/lib/require-super-admin'
 import { notifyParentsOfStudent } from '@/lib/notify'
 import { validateFeeAmount, validateFeeDueDate, validateFeeReason, validateNewFeeAmount } from '@/lib/fees'
 
@@ -491,4 +492,85 @@ export async function addPendingFee(
   })
 
   revalidateAll()
+}
+
+// Super admin only: remove a fee that has nothing paid toward it. The fee,
+// its correction history and any reversed payment rows move to
+// deleted_payments (Deleted Items), from where restoreFee puts them back.
+// delete_fee/restore_fee check for a super admin themselves too.
+const DELETE_FEE_MESSAGES: Record<string, string> = {
+  NOT_SUPER_ADMIN: 'Only a super admin can delete a fee.',
+  REASON_REQUIRED: 'Add a short reason (5-500 characters) so there is a record of why.',
+  PAYMENT_NOT_FOUND: 'That fee could not be found. It may already be deleted.',
+  HAS_PAYMENTS: 'Something has been paid toward this fee. Reverse the payment first, then delete it.',
+  NOT_FOUND: 'That deleted fee could not be found. It may already be restored.',
+  STUDENT_GONE: "The fee's student no longer exists, so it can't be restored.",
+}
+
+function deleteFeeError(message: string) {
+  const code = Object.keys(DELETE_FEE_MESSAGES).find((c) => message.includes(c))
+  return code ? DELETE_FEE_MESSAGES[code] : message
+}
+
+export async function deleteFee(paymentId: string, reason: string): Promise<ActionResult> {
+  let actor
+  try {
+    actor = await requireSuperAdmin()
+  } catch {
+    return { error: DELETE_FEE_MESSAGES.NOT_SUPER_ADMIN }
+  }
+  const reasonError = validateFeeReason(reason)
+  if (reasonError) return { error: reasonError }
+
+  const supabase = await createClient()
+  const { data: fee } = await supabase.from('payments').select('student_id, amount, description, fee_type').eq('id', paymentId).maybeSingle()
+  const { error } = await supabase.rpc('delete_fee', { p_payment_id: paymentId, p_reason: reason.trim() })
+  if (error) return { error: deleteFeeError(error.message) }
+
+  await logActivity(supabase, {
+    actorId: actor.id,
+    action: `Deleted a fee${fee ? ` (${feeLabel(fee)}, ${formatCurrency(fee.amount)})` : ''}: ${reason.trim()}`,
+    targetTable: 'payments',
+    targetId: paymentId,
+  })
+  if (fee) {
+    await notifyParentsOfStudent(fee.student_id, {
+      kind: 'money',
+      title: 'A fee was removed',
+      body: `${feeLabel(fee)} (${formatCurrency(fee.amount)}) was removed from your account.`,
+      href: '/parent/payments',
+    })
+  }
+  revalidateAll()
+  revalidatePath('/admin/deleted-items')
+}
+
+export async function restoreFee(paymentId: string): Promise<ActionResult> {
+  let actor
+  try {
+    actor = await requireSuperAdmin()
+  } catch {
+    return { error: DELETE_FEE_MESSAGES.NOT_SUPER_ADMIN }
+  }
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('restore_fee', { p_payment_id: paymentId })
+  if (error) return { error: deleteFeeError(error.message) }
+
+  const { data: fee } = await supabase.from('payments').select('student_id, amount, description, fee_type').eq('id', paymentId).maybeSingle()
+  await logActivity(supabase, {
+    actorId: actor.id,
+    action: `Restored a deleted fee${fee ? ` (${feeLabel(fee)}, ${formatCurrency(fee.amount)})` : ''}`,
+    targetTable: 'payments',
+    targetId: paymentId,
+  })
+  if (fee) {
+    await notifyParentsOfStudent(fee.student_id, {
+      kind: 'money',
+      title: 'A fee was restored',
+      body: `${feeLabel(fee)} (${formatCurrency(fee.amount)}) is back on your account.`,
+      href: '/parent/payments',
+    })
+  }
+  revalidateAll()
+  revalidatePath('/admin/deleted-items')
 }

@@ -119,6 +119,7 @@ export function PaymentsTable({
   initialStatus = 'all',
   initialSearch = '',
   canCorrect = true,
+  canDeleteFees = false,
   receiptBasePath = '/admin/payments',
 }: {
   view: PaymentsView
@@ -131,6 +132,8 @@ export function PaymentsTable({
   initialSearch?: string
   // Admin only: waive, void, edit and reverse. The cashier portal passes false.
   canCorrect?: boolean
+  // Super admin only: delete a fee with nothing paid (moves to Deleted Items).
+  canDeleteFees?: boolean
   receiptBasePath?: string
 }) {
   const [search, setSearch] = useState(initialSearch)
@@ -438,6 +441,7 @@ export function PaymentsTable({
           fee={managing}
           adjustments={adjustmentsByPayment[managing.id] ?? []}
           onClose={() => setManaging(null)}
+          canDelete={canDeleteFees}
         />
       )}
       {reversing && (

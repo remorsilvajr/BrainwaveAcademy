@@ -84,6 +84,7 @@ export async function cleanupTestData(admin: SupabaseClient, userIds: string[], 
       await bestEffort(admin.from('payment_transactions').delete().in('payment_id', feeIds))
       await bestEffort(admin.from('payment_adjustments').delete().in('payment_id', feeIds))
     }
+    await bestEffort(admin.from('deleted_payments').delete().in('student_id', studentIds))
     await bestEffort(admin.from('payments').delete().in('student_id', studentIds))
     await bestEffort(admin.from('students').delete().in('id', studentIds))
   }
