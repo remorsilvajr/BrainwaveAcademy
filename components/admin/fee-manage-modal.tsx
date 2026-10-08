@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Ban, CalendarClock, HandHeart, Pencil, X } from 'lucide-react'
 import { editPendingFee, voidFee, waiveFee } from '@/app/admin/payments/actions'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { DeleteFeeSection } from '@/components/admin/delete-fee-section'
 import { DobSelect } from '@/components/ui/dob-select'
 import { Modal } from '@/components/ui/modal'
 import { formatCurrency, formatDateLong, formatDateShort, todayIso } from '@/lib/format'
@@ -45,10 +46,13 @@ export function FeeManageModal({
   fee,
   adjustments,
   onClose,
+  canDelete = false,
 }: {
   fee: ManagedFee
   adjustments: FeeAdjustment[]
   onClose: () => void
+  // Super admin only (decided on the server); see DeleteFeeSection.
+  canDelete?: boolean
 }) {
   const router = useRouter()
   const isPending = fee.status === 'pending'
@@ -283,6 +287,8 @@ export function FeeManageModal({
               </ul>
             )}
           </div>
+
+          {canDelete && <DeleteFeeSection fee={fee} onDeleted={onClose} />}
         </div>
 
         <div className="flex justify-end border-t border-gray-100 p-6 dark:border-gray-800">

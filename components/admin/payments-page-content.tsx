@@ -24,6 +24,13 @@ export async function PaymentsPageContent({ mode }: { mode: 'admin' | 'cashier' 
     supabase.from('classrooms').select('id, name').order('created_at', { ascending: true }),
   ])
 
+  // Only a super admin can delete fees; decided here so nothing about the tier reaches a regular admin's browser.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  const { data: me } = mode === 'admin' ? await supabase.from('profiles').select('is_super_admin').eq('id', user?.id ?? '').maybeSingle() : { data: null }
+  const canDeleteFees = !!me?.is_super_admin
+
   const studentById = new Map((students ?? []).map((s) => [s.id, s]))
 
   const rows = (payments ?? []).map((p) => {
@@ -77,6 +84,7 @@ export async function PaymentsPageContent({ mode }: { mode: 'admin' | 'cashier' 
         balanceStudents={balanceStudents}
         classrooms={classrooms ?? []}
         mode={mode}
+        {...(canDeleteFees ? { canDeleteFees: true } : {})}
       />
     </div>
   )

@@ -26,6 +26,7 @@ export function PaymentsTabs({
   balanceStudents,
   classrooms,
   mode = 'admin',
+  canDeleteFees = false,
 }: {
   payments: PaymentRow[]
   received: ReceivedRow[]
@@ -35,6 +36,7 @@ export function PaymentsTabs({
   studentOptions: SearchableOption[]
   // The cashier portal shows the same tabs without the admin-only corrections.
   mode?: 'admin' | 'cashier'
+  canDeleteFees?: boolean
 }) {
   // Read once on mount as the initial tab (`?tab=received`), not kept in sync with the URL.
   const searchParams = useSearchParams()
@@ -97,6 +99,7 @@ export function PaymentsTabs({
             initialStatus={tab === 'fees' ? initialStatus : 'all'}
             initialSearch={tab === 'fees' ? feesSearch : ''}
             canCorrect={mode === 'admin'}
+            canDeleteFees={mode === 'admin' && canDeleteFees}
             receiptBasePath={mode === 'admin' ? '/admin/payments' : '/cashier/payments'}
           />
         )}

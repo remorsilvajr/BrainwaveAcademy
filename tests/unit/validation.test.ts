@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { isValidEmail, normalizeEmail } from '@/lib/email-validation'
 import { isValidPhilippineMobile, isValidPhoneInput, normalizePhilippineMobile } from '@/lib/phone'
 import { isValidName, toTitleCase, NAME_HTML_PATTERN } from '@/lib/name'
-import { validateFeeAmount, validateFeeDueDate, validateFeeReason } from '@/lib/fees'
+import { validateFeeAmount, validateFeeDueDate, validateFeeReason, validateNewFeeAmount } from '@/lib/fees'
 import { isPickupRelationship, PICKUP_RELATIONSHIPS } from '@/lib/pickup-relationships'
 import { pickupDisplayName } from '@/lib/pickup-names'
 
@@ -86,5 +86,16 @@ describe('pickup helpers', () => {
     expect(pickupDisplayName({ first_name: 'Ana', middle_name: null, last_name: 'Reyes' })).toBe('Ana Reyes')
     expect(pickupDisplayName({ first_name: 'Ana', middle_name: 'Marie', last_name: 'Reyes' })).toBe('Ana Marie Reyes')
     expect(pickupDisplayName({ first_name: 'Ana', middle_name: null, last_name: null })).toBe('Ana')
+  })
+})
+
+describe('new fee amount limit', () => {
+  it('a fee added by hand is at most 10,000 pesos', () => {
+    expect(validateNewFeeAmount(10_000)).toBeNull()
+    expect(validateNewFeeAmount(9_999.99)).toBeNull()
+    expect(validateNewFeeAmount(10_000.01)).toContain('10,000')
+    expect(validateNewFeeAmount(0)).not.toBeNull()
+    // Editing an existing fee keeps the higher limit.
+    expect(validateFeeAmount(50_000)).toBeNull()
   })
 })
