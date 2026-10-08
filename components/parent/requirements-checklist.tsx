@@ -164,7 +164,9 @@ export function RequirementsChecklist({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Enrollment Requirements Checklist</h2>
+        <h2 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">
+          Enrollment Requirements for {record.studentFirstName} {record.studentLastName}
+        </h2>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Please submit the following documents to complete your child&apos;s enrollment for the
           upcoming academic year.

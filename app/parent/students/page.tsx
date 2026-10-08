@@ -98,7 +98,7 @@ export default async function StudentProfilePage({
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">
-          {application.created_student_id ? 'Student Profile' : 'Applicant Profile'}
+          {`${application.created_student_id ? 'Student Profile' : 'Applicant Profile'} for ${application.student_first_name} ${application.student_last_name}`}
         </h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">View your child&apos;s enrollment record.</p>
       </div>
