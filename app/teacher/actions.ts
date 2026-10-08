@@ -42,7 +42,7 @@ export async function postAnnouncement(input: {
     }
     const isAssigned = classroom.lead_teacher_id === user.id || !!assistantLink
     if (!isAssigned) {
-      return { error: 'You can only post to a classroom you are assigned to as a lead or assistant teacher.' }
+      return { error: 'You can only post to a classroom you are assigned to as a teacher.' }
     }
   }
 

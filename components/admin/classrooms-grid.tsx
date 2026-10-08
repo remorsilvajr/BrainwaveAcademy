@@ -14,13 +14,11 @@ export type ClassroomRow = {
   slug: string
   min_age_months: number | null
   max_age_months: number | null
-  lead_teacher_id: string | null
-  leadTeacherName: string | null
   tuition_fee: number
   activity_fee: number
   tuition_due_date: string | null
   activity_due_date: string | null
-  assistants: { id: string; name: string }[]
+  teachers: { id: string; name: string }[]
   roster: { id: string; first_name: string; last_name: string; student_id: string | null; avatar_url: string | null; date_of_birth: string; program_options: string[] }[]
 }
 
@@ -56,17 +54,12 @@ export function ClassroomsGrid({
 
             <div className="mt-3 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
               <GraduationCap className="h-4 w-4 shrink-0" />
-              {c.leadTeacherName ? (
-                <span>{c.leadTeacherName} (Lead)</span>
+              {c.teachers.length > 0 ? (
+                <span>{c.teachers.map((t) => t.name).join(', ')}</span>
               ) : (
-                <span className="text-amber-600 dark:text-amber-400">No lead teacher assigned</span>
+                <span className="text-amber-600 dark:text-amber-400">No teacher assigned</span>
               )}
             </div>
-            {c.assistants.length > 0 && (
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                +{c.assistants.length} assistant{c.assistants.length === 1 ? '' : 's'}
-              </p>
-            )}
 
             <div className="mt-3 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
               <Users className="h-4 w-4 shrink-0" />

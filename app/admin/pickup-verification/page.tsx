@@ -4,8 +4,17 @@ import { createClient } from '@/lib/supabase/server'
 import { PickupVerificationPanel } from '@/components/teacher/pickup-verification-panel'
 import { EmptyState } from '@/components/ui/empty-state'
 import { loadAllPickupsWithPhotos } from '@/lib/pickup-list'
+import { AttendanceTabLinks } from '@/components/attendance/attendance-tab-links'
+import { AuthorizedPickupManager } from '@/components/parent/authorized-pickup-manager'
+import { PickupStudentPicker } from '@/components/admin/pickup-student-picker'
 
-export default async function AdminPickupVerificationPage() {
+export default async function AdminPickupVerificationPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string; student?: string }>
+}) {
+  const { tab: tabParam, student: studentParam } = await searchParams
+  const tab = tabParam === 'manage' ? 'manage' : 'verify'
   const supabase = await createClient()
 
   const [{ data: students }, pickups] = await Promise.all([
@@ -20,6 +29,7 @@ export default async function AdminPickupVerificationPage() {
   // The Do-Not-Release list is a hidden feature for now (super admin only), so it is not checked here.
   // A withdrawn or graduated child's pickup people aren't on the verification list.
   const enrolledIds = new Set((students ?? []).map((s) => s.id))
+  const managedStudent = (students ?? []).find((s) => s.id === studentParam) ?? null
 
   return (
     <div className="space-y-6">
@@ -30,13 +40,38 @@ export default async function AdminPickupVerificationPage() {
         </p>
       </div>
 
+      <AttendanceTabLinks
+        basePath="/admin/pickup-verification"
+        active={tab}
+        tabs={[
+          { key: 'verify', label: 'Verify Pickup' },
+          { key: 'manage', label: 'Manage Pickup People' },
+        ]}
+      />
+
       {(students ?? []).length === 0 ? (
         <EmptyState icon={Users} title="No Students on File Yet" description="Once students are enrolled, their authorized pickup lists appear here." />
-      ) : (
+      ) : tab === 'verify' ? (
         <PickupVerificationPanel
           students={students ?? []}
           pickups={pickups.filter((p) => enrolledIds.has(p.student_id))}
         />
+      ) : (
+        <div className="space-y-4">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Add, edit or remove a child&apos;s pickup people and their photos. The child&apos;s parents are notified of every change.
+          </p>
+          <PickupStudentPicker
+            value={managedStudent?.id ?? null}
+            options={(students ?? []).map((s) => ({ value: s.id, label: `${s.first_name} ${s.last_name}` }))}
+          />
+          {managedStudent && (
+            <AuthorizedPickupManager
+              students={[managedStudent]}
+              pickups={pickups.filter((p) => p.student_id === managedStudent.id)}
+            />
+          )}
+        </div>
       )}
     </div>
   )

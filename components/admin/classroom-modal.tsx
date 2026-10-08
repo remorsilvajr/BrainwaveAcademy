@@ -10,10 +10,8 @@ import { DobSelect } from '@/components/ui/dob-select'
 import { isHourlyProgram, programOptionConfig, PROGRAM_BRANCH_NOTE } from '@/lib/program-options'
 import { SearchableSelect, type SearchableOption } from '@/components/ui/searchable-select'
 import {
-  assignLeadTeacher,
-  removeLeadTeacher,
-  addAssistantTeacher,
-  removeAssistantTeacher,
+  addClassroomTeacher,
+  removeClassroomTeacher,
   updateFeeDueDates,
 } from '@/app/admin/classrooms/actions'
 import type { ClassroomRow } from '@/components/admin/classrooms-grid'
@@ -108,8 +106,7 @@ export function ClassroomModal({
   const router = useRouter()
   const [tab, setTab] = useState<Tab>('roster')
 
-  const [leadPick, setLeadPick] = useState<string | null>(null)
-  const [assistantPick, setAssistantPick] = useState<string | null>(null)
+  const [teacherPick, setTeacherPick] = useState<string | null>(null)
   const [teacherError, setTeacherError] = useState('')
   const [isSavingTeacher, setIsSavingTeacher] = useState(false)
 
@@ -123,24 +120,20 @@ export function ClassroomModal({
 
   const bounds = feeDueDateBounds()
 
-  const assignedTeacherIds = new Set([
-    ...(classroom.lead_teacher_id ? [classroom.lead_teacher_id] : []),
-    ...classroom.assistants.map((a) => a.id),
-  ])
-  const availableForLead = teacherOptions.filter((t) => t.value !== classroom.lead_teacher_id)
-  const availableForAssistant = teacherOptions.filter((t) => !assignedTeacherIds.has(t.value))
+  const assignedTeacherIds = new Set(classroom.teachers.map((t) => t.id))
+  const availableTeachers = teacherOptions.filter((t) => !assignedTeacherIds.has(t.value))
 
-  async function handleAssignLead() {
-    if (!leadPick) return
+  async function handleAddTeacher() {
+    if (!teacherPick) return
     setTeacherError('')
     setIsSavingTeacher(true)
     try {
-      const result = await assignLeadTeacher(classroom.id, leadPick)
+      const result = await addClassroomTeacher(classroom.id, teacherPick)
       if (result?.error) {
         setTeacherError(result.error)
         return
       }
-      setLeadPick(null)
+      setTeacherPick(null)
       router.refresh()
     } catch {
       setTeacherError('Something went wrong.')
@@ -149,47 +142,11 @@ export function ClassroomModal({
     }
   }
 
-  async function handleRemoveLead() {
+  async function handleRemoveTeacher(teacherId: string) {
     setTeacherError('')
     setIsSavingTeacher(true)
     try {
-      const result = await removeLeadTeacher(classroom.id)
-      if (result?.error) {
-        setTeacherError(result.error)
-        return
-      }
-      router.refresh()
-    } catch {
-      setTeacherError('Something went wrong.')
-    } finally {
-      setIsSavingTeacher(false)
-    }
-  }
-
-  async function handleAddAssistant() {
-    if (!assistantPick) return
-    setTeacherError('')
-    setIsSavingTeacher(true)
-    try {
-      const result = await addAssistantTeacher(classroom.id, assistantPick)
-      if (result?.error) {
-        setTeacherError(result.error)
-        return
-      }
-      setAssistantPick(null)
-      router.refresh()
-    } catch {
-      setTeacherError('Something went wrong.')
-    } finally {
-      setIsSavingTeacher(false)
-    }
-  }
-
-  async function handleRemoveAssistant(teacherId: string) {
-    setTeacherError('')
-    setIsSavingTeacher(true)
-    try {
-      const result = await removeAssistantTeacher(classroom.id, teacherId)
+      const result = await removeClassroomTeacher(classroom.id, teacherId)
       if (result?.error) {
         setTeacherError(result.error)
         return
@@ -321,49 +278,19 @@ export function ClassroomModal({
         {tab === 'teachers' && (
           <div className="space-y-6">
             <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Lead Teacher</h3>
-              {classroom.leadTeacherName ? (
-                <div className="mt-2 flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 p-3">
-                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{classroom.leadTeacherName}</span>
-                  <button
-                    onClick={handleRemoveLead}
-                    disabled={isSavingTeacher}
-                    className="rounded-full border border-red-300 dark:border-red-800 px-3 py-1.5 text-xs font-semibold text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 disabled:opacity-60"
-                  >
-                    Remove
-                  </button>
-                </div>
-              ) : (
-                <div className="mt-2 flex flex-col gap-2 sm:flex-row">
-                  <div className="flex-1">
-                    <SearchableSelect
-                      options={availableForLead}
-                      value={leadPick}
-                      onChange={setLeadPick}
-                      placeholder="Select a teacher…"
-                    />
-                  </div>
-                  <button
-                    onClick={handleAssignLead}
-                    disabled={!leadPick || isSavingTeacher}
-                    className="rounded-lg bg-[#0b1b62] px-4 py-2 text-sm font-semibold text-white hover:bg-[#08154d] disabled:opacity-60"
-                  >
-                    Assign
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
-                Assistant Teachers
-              </h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Teachers</h3>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Every teacher of a class has the same role. A teacher can teach more than one class.
+              </p>
               <div className="mt-2 space-y-2">
-                {classroom.assistants.map((a) => (
-                  <div key={a.id} className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 p-3">
-                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{a.name}</span>
+                {classroom.teachers.length === 0 && (
+                  <p className="text-sm text-amber-600 dark:text-amber-400">No teacher assigned yet.</p>
+                )}
+                {classroom.teachers.map((t) => (
+                  <div key={t.id} className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+                    <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{t.name}</span>
                     <button
-                      onClick={() => handleRemoveAssistant(a.id)}
+                      onClick={() => handleRemoveTeacher(t.id)}
                       disabled={isSavingTeacher}
                       className="rounded-full border border-red-300 dark:border-red-800 px-3 py-1.5 text-xs font-semibold text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 disabled:opacity-60"
                     >
@@ -375,18 +302,18 @@ export function ClassroomModal({
               <div className="mt-2 flex flex-col gap-2 sm:flex-row">
                 <div className="flex-1">
                   <SearchableSelect
-                    options={availableForAssistant}
-                    value={assistantPick}
-                    onChange={setAssistantPick}
+                    options={availableTeachers}
+                    value={teacherPick}
+                    onChange={setTeacherPick}
                     placeholder="Select a teacher to add…"
                   />
                 </div>
                 <button
-                  onClick={handleAddAssistant}
-                  disabled={!assistantPick || isSavingTeacher}
-                  className="rounded-lg border border-[#0b1b62] dark:border-indigo-300 px-4 py-2 text-sm font-semibold text-[#0b1b62] dark:text-indigo-300 hover:bg-[#0b1b62]/5 disabled:opacity-60"
+                  onClick={handleAddTeacher}
+                  disabled={!teacherPick || isSavingTeacher}
+                  className="rounded-lg bg-[#0b1b62] px-4 py-2 text-sm font-semibold text-white hover:bg-[#08154d] disabled:opacity-60"
                 >
-                  Add Assistant
+                  Add Teacher
                 </button>
               </div>
             </div>
