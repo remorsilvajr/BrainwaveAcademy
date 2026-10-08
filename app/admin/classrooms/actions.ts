@@ -5,13 +5,13 @@ import { createClient } from '@/lib/supabase/server'
 import { logActivity } from '@/lib/activity-log'
 import { validateFeeDueDate } from '@/lib/classrooms'
 
-// All four teacher-assignment actions below rely on admins_manage_classrooms
-// / admins_manage_classroom_assistants (both `for all`, admin-only) for the
-// actual write permission — same "trust RLS, don't duplicate the check"
-// pattern as updateStudentRecord/updateTeacherRecord. Each still does its
-// own friendly pre-checks (role, duplicate, lead-vs-assistant conflict)
-// so a real mistake surfaces as a clear message rather than a raw
-// unique-constraint/permission error.
+// A classroom's teachers are equals (there is no head teacher: the school's
+// teachers share the same responsibilities). They are all rows in
+// classroom_assistants, a table named before that decision; the older
+// classrooms.lead_teacher_id is no longer written, only cleared, and every read
+// still unions it in so a classroom set up the old way keeps its teacher.
+// admins_manage_classrooms / admins_manage_classroom_assistants (admin-only)
+// decide the write; the pre-checks here only turn mistakes into clear messages.
 
 async function getTeacherProfile(supabase: Awaited<ReturnType<typeof createClient>>, teacherId: string) {
   const { data: teacher } = await supabase
@@ -22,76 +22,12 @@ async function getTeacherProfile(supabase: Awaited<ReturnType<typeof createClien
   return teacher
 }
 
-export async function assignLeadTeacher(classroomId: string, teacherId: string): Promise<{ error: string } | undefined> {
+export async function addClassroomTeacher(classroomId: string, teacherId: string): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
 
   const teacher = await getTeacherProfile(supabase, teacherId)
   if (!teacher || teacher.role !== 'teacher') {
-    return { error: 'Only teacher accounts can be assigned as a lead teacher.' }
-  }
-
-  const { data: classroom } = await supabase.from('classrooms').select('id, name').eq('id', classroomId).single()
-  if (!classroom) {
-    return { error: 'Classroom not found.' }
-  }
-
-  const { data: alreadyAssistant } = await supabase
-    .from('classroom_assistants')
-    .select('classroom_id')
-    .eq('classroom_id', classroomId)
-    .eq('teacher_id', teacherId)
-    .maybeSingle()
-  if (alreadyAssistant) {
-    return {
-      error: `${teacher.first_name} ${teacher.last_name} is already an assistant teacher in this classroom. Remove them as an assistant first.`,
-    }
-  }
-
-  const { error } = await supabase.from('classrooms').update({ lead_teacher_id: teacherId }).eq('id', classroomId)
-  if (error) {
-    return { error: error.message }
-  }
-
-  const {
-    data: { user: actingAdmin },
-  } = await supabase.auth.getUser()
-  await logActivity(supabase, {
-    actorId: actingAdmin?.id ?? null,
-    action: `Assigned ${teacher.first_name} ${teacher.last_name} as lead teacher of ${classroom.name}`,
-    targetTable: 'classrooms',
-    targetId: classroomId,
-  })
-
-  revalidatePath('/admin/classrooms')
-}
-
-export async function removeLeadTeacher(classroomId: string): Promise<{ error: string } | undefined> {
-  const supabase = await createClient()
-
-  const { error } = await supabase.from('classrooms').update({ lead_teacher_id: null }).eq('id', classroomId)
-  if (error) {
-    return { error: error.message }
-  }
-
-  const {
-    data: { user: actingAdmin },
-  } = await supabase.auth.getUser()
-  await logActivity(supabase, {
-    actorId: actingAdmin?.id ?? null,
-    action: 'Removed lead teacher from classroom',
-    targetTable: 'classrooms',
-    targetId: classroomId,
-  })
-
-  revalidatePath('/admin/classrooms')
-}
-
-export async function addAssistantTeacher(classroomId: string, teacherId: string): Promise<{ error: string } | undefined> {
-  const supabase = await createClient()
-
-  const teacher = await getTeacherProfile(supabase, teacherId)
-  if (!teacher || teacher.role !== 'teacher') {
-    return { error: 'Only teacher accounts can be assigned as an assistant teacher.' }
+    return { error: 'Only teacher accounts can be assigned to a classroom.' }
   }
 
   const { data: classroom } = await supabase
@@ -103,13 +39,13 @@ export async function addAssistantTeacher(classroomId: string, teacherId: string
     return { error: 'Classroom not found.' }
   }
   if (classroom.lead_teacher_id === teacherId) {
-    return { error: `${teacher.first_name} ${teacher.last_name} is already the lead teacher of this classroom.` }
+    return { error: `${teacher.first_name} ${teacher.last_name} already teaches this classroom.` }
   }
 
   const { error } = await supabase.from('classroom_assistants').insert({ classroom_id: classroomId, teacher_id: teacherId })
   if (error) {
     if (error.code === '23505') {
-      return { error: `${teacher.first_name} ${teacher.last_name} is already an assistant teacher in this classroom.` }
+      return { error: `${teacher.first_name} ${teacher.last_name} already teaches this classroom.` }
     }
     return { error: error.message }
   }
@@ -119,7 +55,7 @@ export async function addAssistantTeacher(classroomId: string, teacherId: string
   } = await supabase.auth.getUser()
   await logActivity(supabase, {
     actorId: actingAdmin?.id ?? null,
-    action: `Added ${teacher.first_name} ${teacher.last_name} as an assistant teacher in ${classroom.name}`,
+    action: `Assigned ${teacher.first_name} ${teacher.last_name} as a teacher of ${classroom.name}`,
     targetTable: 'classrooms',
     targetId: classroomId,
   })
@@ -127,16 +63,17 @@ export async function addAssistantTeacher(classroomId: string, teacherId: string
   revalidatePath('/admin/classrooms')
 }
 
-export async function removeAssistantTeacher(classroomId: string, teacherId: string): Promise<{ error: string } | undefined> {
+export async function removeClassroomTeacher(classroomId: string, teacherId: string): Promise<{ error: string } | undefined> {
   const supabase = await createClient()
 
-  const { error } = await supabase
-    .from('classroom_assistants')
-    .delete()
-    .eq('classroom_id', classroomId)
-    .eq('teacher_id', teacherId)
-  if (error) {
-    return { error: error.message }
+  const [{ error: linkError }, { error: leadError }] = await Promise.all([
+    supabase.from('classroom_assistants').delete().eq('classroom_id', classroomId).eq('teacher_id', teacherId),
+    // A classroom set up before teachers were equals may still name this teacher here.
+    supabase.from('classrooms').update({ lead_teacher_id: null }).eq('id', classroomId).eq('lead_teacher_id', teacherId),
+  ])
+  const failed = linkError ?? leadError
+  if (failed) {
+    return { error: failed.message }
   }
 
   const {
@@ -144,13 +81,14 @@ export async function removeAssistantTeacher(classroomId: string, teacherId: str
   } = await supabase.auth.getUser()
   await logActivity(supabase, {
     actorId: actingAdmin?.id ?? null,
-    action: 'Removed an assistant teacher from classroom',
+    action: 'Removed a teacher from classroom',
     targetTable: 'classrooms',
     targetId: classroomId,
   })
 
   revalidatePath('/admin/classrooms')
 }
+
 
 // Due dates only: the fee amounts are deliberately not writable from here.
 // Only affects students assigned to this classroom *after* the change, and

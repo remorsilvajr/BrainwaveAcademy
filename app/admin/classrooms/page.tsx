@@ -25,10 +25,13 @@ export default async function ClassroomsPage() {
 
   const rows = (classrooms ?? []).map((c) => ({
     ...c,
-    leadTeacherName: c.lead_teacher_id ? (teacherById.get(c.lead_teacher_id) ?? 'Unknown teacher') : null,
-    assistants: (assistants ?? [])
-      .filter((a) => a.classroom_id === c.id)
-      .map((a) => ({ id: a.teacher_id, name: teacherById.get(a.teacher_id) ?? 'Unknown teacher' })),
+    // Equal teachers: classroom_assistants rows plus a teacher still named the older way.
+    teachers: [
+      ...new Set([
+        ...(c.lead_teacher_id ? [c.lead_teacher_id] : []),
+        ...(assistants ?? []).filter((a) => a.classroom_id === c.id).map((a) => a.teacher_id),
+      ]),
+    ].map((id) => ({ id, name: teacherById.get(id) ?? 'Unknown teacher' })),
     roster: (students ?? []).filter((s) => s.classroom_id === c.id),
   }))
 
@@ -37,7 +40,7 @@ export default async function ClassroomsPage() {
       <div>
         <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Classrooms</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Assign lead and assistant teachers to each program, manage its fee schedule, and view its students.
+          Assign teachers to each program, manage its fee schedule, and view its students.
           Students are assigned to a classroom from their record in Students.
         </p>
       </div>
