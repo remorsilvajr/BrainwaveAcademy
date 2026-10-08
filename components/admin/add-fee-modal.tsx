@@ -104,7 +104,7 @@ export function AddFeeModal({
             </button>
           </div>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Creates a new unpaid fee for this student to pay later — not an already-paid record.
+            Creates a new unpaid fee for this student to pay later. It is not an already-paid record.
           </p>
         </div>
 
