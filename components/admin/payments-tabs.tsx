@@ -80,6 +80,7 @@ export function PaymentsTabs({
             classrooms={classrooms}
             payments={payments}
             received={received}
+            canAddFee={mode === 'admin'}
             onViewFees={(student) => {
               setFeesSearch(student.accountId ?? student.name)
               setTab('fees')

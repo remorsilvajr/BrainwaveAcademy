@@ -8,6 +8,7 @@ import { usePagination } from '@/lib/use-pagination'
 import { SortSelect } from '@/components/ui/sort-select'
 import { useSort, compareStrings, compareDates, type SortOption } from '@/lib/use-sort'
 import type { PaymentRow, ReceivedRow } from '@/components/admin/payments-table'
+import { AddFeeModal } from '@/components/admin/add-fee-modal'
 
 export type BalanceStudent = { id: string; name: string; accountId: string | null; classId: string | null; className: string | null }
 
@@ -33,16 +34,20 @@ export function StudentBalancesTable({
   payments,
   received,
   onViewFees,
+  canAddFee = false,
 }: {
   students: BalanceStudent[]
   classrooms: { id: string; name: string }[]
   payments: PaymentRow[]
   received: ReceivedRow[]
   onViewFees: (student: BalanceStudent) => void
+  // Admin only (addPendingFee is admin-only too); the cashier portal passes false.
+  canAddFee?: boolean
 }) {
   const [search, setSearch] = useState('')
   const [classFilter, setClassFilter] = useState('all')
   const [balanceFilter, setBalanceFilter] = useState('all')
+  const [addingFeeFor, setAddingFeeFor] = useState<BalanceStudent | null>(null)
 
   const rows: BalanceRow[] = useMemo(() => {
     const studentOfFee = new Map(payments.map((p) => [p.id, p.student_id]))
@@ -195,13 +200,24 @@ export function StudentBalancesTable({
                     </td>
                     <td className="p-4 text-gray-700 dark:text-gray-300">{r.lastPaid ? formatDateShort(r.lastPaid) : '-'}</td>
                     <td className="p-4">
-                      <button
-                        type="button"
-                        onClick={() => onViewFees(r)}
-                        className="rounded-full border border-[#0b1b62] px-3 py-1.5 text-xs font-semibold text-[#0b1b62] hover:bg-[#0b1b62] hover:text-white dark:border-indigo-300 dark:text-indigo-300"
-                      >
-                        View Fees
-                      </button>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => onViewFees(r)}
+                          className="rounded-full border border-[#0b1b62] px-3 py-1.5 text-xs font-semibold text-[#0b1b62] hover:bg-[#0b1b62] hover:text-white dark:border-indigo-300 dark:text-indigo-300"
+                        >
+                          View Fees
+                        </button>
+                        {canAddFee && (
+                          <button
+                            type="button"
+                            onClick={() => setAddingFeeFor(r)}
+                            className="rounded-full bg-[#0b1b62] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#08154d]"
+                          >
+                            Add Fee
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -217,6 +233,17 @@ export function StudentBalancesTable({
         </div>
         <Pagination page={page} totalPages={totalPages} totalItems={totalItems} pageSize={pageSize} onPageChange={setPage} />
       </div>
+
+      {addingFeeFor && (
+        <AddFeeModal
+          key={addingFeeFor.id}
+          studentId={addingFeeFor.id}
+          studentName={addingFeeFor.name}
+          defaultClassroomId={addingFeeFor.classId}
+          classrooms={classrooms}
+          onClose={() => setAddingFeeFor(null)}
+        />
+      )}
     </>
   )
 }
