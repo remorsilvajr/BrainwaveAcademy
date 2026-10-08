@@ -43,7 +43,7 @@ begin
   end loop;
   if p_amount > v_total_outstanding then raise exception 'AMOUNT_EXCEEDS_OUTSTANDING'; end if;
 
-  v_remaining := p_amount;
+   v_remaining := p_amount;
   for v_fee in
     select id, amount, amount_paid from public.payments
     where student_id = p_student_id and status = 'pending'
