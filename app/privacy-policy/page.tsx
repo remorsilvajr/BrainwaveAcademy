@@ -147,6 +147,12 @@ export default async function PrivacyPolicyPage() {
               school and in an emergency.
             </li>
             <li>
+              <strong>Class photos:</strong> photos of class activities that teachers share in the
+              portal&apos;s Photo Album, visible to the parents of children in that class. A parent
+              chooses whether their child may appear in them (asked at enrollment and changeable anytime
+              in Settings or the Photo Album); a child whose parent has not said yes is kept out of them.
+            </li>
+            <li>
               <strong>Pickup safety records:</strong> the names, relationships, phone numbers and
               optional photos of people a parent authorizes to collect a child, and, where a court order
               or similar instruction exists, a School-maintained list of people who must not be given a

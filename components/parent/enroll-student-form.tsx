@@ -10,6 +10,7 @@ import { DobSelect } from '@/components/ui/dob-select'
 import { PlainSelect } from '@/components/ui/plain-select'
 import { Field } from '@/components/enroll/enroll-field'
 import { StepTab } from '@/components/enroll/step-tab'
+import { PhotoConsentChoice } from '@/components/enroll/photo-consent-choice'
 import { ProgramSelector, type SelectableClassroom } from '@/components/enroll/program-selector'
 import { validateEnrollField, validateEnrollFields, STUDENT_KEYS, PROGRAM_KEYS } from '@/lib/enroll-validation'
 import { NAME_HTML_PATTERN, NAME_HTML_TITLE } from '@/lib/name'
@@ -40,6 +41,7 @@ export function EnrollStudentForm({
   const [studentMiddleName, setStudentMiddleName] = useState(state.values?.student_middle_name ?? '')
   const [studentLastName, setStudentLastName] = useState(state.values?.student_last_name ?? '')
   const [studentDob, setStudentDob] = useState(state.values?.student_dob ?? '')
+  const [photoConsent, setPhotoConsent] = useState(state.values?.photo_consent ?? '')
 
   const [syncedState, setSyncedState] = useState(state)
   if (state !== syncedState) {
@@ -51,6 +53,7 @@ export function EnrollStudentForm({
     setStudentMiddleName(state.values?.student_middle_name ?? '')
     setStudentLastName(state.values?.student_last_name ?? '')
     setStudentDob(state.values?.student_dob ?? '')
+    setPhotoConsent(state.values?.photo_consent ?? '')
 
     const errorKeys = Object.keys(state.fieldErrors ?? {})
     if (errorKeys.length > 0) {
@@ -271,6 +274,17 @@ export function EnrollStudentForm({
             error={liveErrors.requested_classroom_id}
             optionsError={liveErrors.requested_program_options}
             onOptionsChange={() => clearError('requested_program_options')}
+          />
+        </div>
+
+        <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
+          <PhotoConsentChoice
+            value={photoConsent}
+            onChange={(v) => {
+              setPhotoConsent(v)
+              clearError('photo_consent')
+            }}
+            error={liveErrors.photo_consent}
           />
         </div>
 

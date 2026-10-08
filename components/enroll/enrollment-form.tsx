@@ -8,6 +8,7 @@ import { DobSelect } from '@/components/ui/dob-select'
 import { PlainSelect } from '@/components/ui/plain-select'
 import { Field } from '@/components/enroll/enroll-field'
 import { StepTab } from '@/components/enroll/step-tab'
+import { PhotoConsentChoice } from '@/components/enroll/photo-consent-choice'
 import { ProgramSelector, type SelectableClassroom } from '@/components/enroll/program-selector'
 import { PasswordFields } from '@/components/ui/password-fields'
 import { validateEnrollField, validateEnrollFields, STUDENT_KEYS, PROGRAM_KEYS, PARENT_KEYS } from '@/lib/enroll-validation'
@@ -67,6 +68,7 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [responses, setResponses] = useState(0)
+  const [photoConsent, setPhotoConsent] = useState('')
 
   // Sync local state from the action result as it changes — the "adjusting
   // state when a prop changes" pattern (done inline during render, not in a
@@ -95,6 +97,7 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
     setParentDob(state.values?.parent_dob ?? '')
     setParentContactNumber(state.values?.parent_contact_number ?? '')
     setParentEmail(state.values?.parent_email ?? '')
+    setPhotoConsent(state.values?.photo_consent ?? '')
     setResponses((n) => n + 1)
 
     // After a failed submission, jump to whichever step actually has the
@@ -558,6 +561,15 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
             />
           </div>
         </div>
+
+        <PhotoConsentChoice
+          value={photoConsent}
+          onChange={(v) => {
+            setPhotoConsent(v)
+            clearError('photo_consent')
+          }}
+          error={liveErrors.photo_consent}
+        />
 
         <div className="flex flex-col gap-3">
           <label className="flex items-start gap-2 text-sm text-[#454650] dark:text-slate-300">

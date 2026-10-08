@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { validateProgramOptions } from '@/lib/program-options'
+import { parsePhotoConsent, PHOTO_CONSENT_REQUIRED_MESSAGE } from '@/lib/photo-consent'
 import { notifyAdmins } from '@/lib/notify'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -24,7 +25,7 @@ const requiredFields: Record<string, string> = {
   requested_classroom_id: 'Program selection',
 }
 
-const allFieldKeys = [...Object.keys(requiredFields), 'student_middle_name']
+const allFieldKeys = [...Object.keys(requiredFields), 'student_middle_name', 'photo_consent']
 const nameFields = ['student_first_name', 'student_middle_name', 'student_last_name']
 
 export async function submitStudent(
@@ -113,6 +114,11 @@ export async function submitStudent(
     }
   }
 
+  // Class-photo permission is a required yes/no (the radios are UX only).
+  if (parsePhotoConsent(values.photo_consent) === null) {
+    fieldErrors.photo_consent = PHOTO_CONSENT_REQUIRED_MESSAGE
+  }
+
   if (Object.keys(fieldErrors).length > 0) {
     return { error: 'Please fix the highlighted fields below.', fieldErrors, values }
   }
@@ -139,6 +145,7 @@ export async function submitStudent(
     parent_email: profile.email,
     requested_classroom_id: values.requested_classroom_id || null,
     requested_program_options: programOptions,
+    photo_consent: parsePhotoConsent(values.photo_consent),
   })
 
   if (error) {

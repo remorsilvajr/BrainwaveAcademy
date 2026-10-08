@@ -1,6 +1,7 @@
 'use server'
 
 import { redirect } from 'next/navigation'
+import { parsePhotoConsent, PHOTO_CONSENT_REQUIRED_MESSAGE } from '@/lib/photo-consent'
 import { cookies } from 'next/headers'
 import { validateProgramOptions } from '@/lib/program-options'
 import { createClient } from '@/lib/supabase/server'
@@ -38,7 +39,7 @@ const requiredFields: Record<string, string> = {
   requested_classroom_id: 'Program selection',
 }
 
-const allFieldKeys = [...Object.keys(requiredFields), 'student_middle_name', 'parent_middle_name', 'parent_gender']
+const allFieldKeys = [...Object.keys(requiredFields), 'student_middle_name', 'parent_middle_name', 'parent_gender', 'photo_consent']
 
 const nameFields = [
   'student_first_name',
@@ -119,6 +120,11 @@ export async function submitApplication(
   // actually records that the applicant consented to the Privacy
   // Policy/Terms before we process their (and their child's) personal
   // information.
+  // Class-photo permission is a required yes/no (the radios are UX only).
+  if (parsePhotoConsent(formData.get('photo_consent')) === null) {
+    fieldErrors.photo_consent = PHOTO_CONSENT_REQUIRED_MESSAGE
+  }
+
   if (formData.get('agreed_to_policies') !== 'on') {
     fieldErrors.agreed_to_policies = 'Please review and agree to the Privacy Policy and Terms of Service to continue.'
   }
@@ -214,6 +220,7 @@ export async function submitApplication(
       parent_contact_number: normalizePhilippineMobile(values.parent_contact_number),
       requested_classroom_id: values.requested_classroom_id || null,
       requested_program_options: programOptions,
+      photo_consent: parsePhotoConsent(values.photo_consent),
     },
   })
 
