@@ -9,7 +9,6 @@ import {
   paymentReceiptEmail,
   setPasswordEmail,
   feeReminderEmail,
-  walletDecisionEmail,
 } from '@/lib/notification-emails'
 
 const SITE = 'https://school.test'
@@ -28,22 +27,6 @@ describe('notification emails escape everything a person typed', () => {
     expect(m.html).not.toContain('<i>Lee')
     expect(m.html).toContain('&lt;script&gt;')
     expect(m.html).toContain(SITE)
-  })
-  it('wallet decision, approved with a different amount', () => {
-    const m = walletDecisionEmail({ parentFirstName: 'Ana', approved: true, requestedAmount: 1000, approvedAmount: 800, note: evil, siteUrl: SITE })
-    expect(m.subject).toContain('approved')
-    expect(m.html).toContain('800.00')
-    expect(m.html).toContain('different amount')
-    expect(m.html).not.toContain('<script>')
-  })
-  it('wallet decision, approved for exactly the requested amount does not mention a difference', () => {
-    const m = walletDecisionEmail({ parentFirstName: 'Ana', approved: true, requestedAmount: 1000, approvedAmount: 1000, note: null, siteUrl: SITE })
-    expect(m.html).not.toContain('different amount')
-  })
-  it('wallet decision, denied', () => {
-    const m = walletDecisionEmail({ parentFirstName: 'Ana', approved: false, requestedAmount: 500, approvedAmount: null, note: 'Not this month', siteUrl: SITE })
-    expect(m.html).toContain('500.00')
-    expect(m.html).toContain('Not this month')
   })
   it('fee reminders escape child and fee names', () => {
     const m = feeReminderEmail({ parentFirstName: 'Ana', siteUrl: SITE, fees: [{ studentName: 'Zz<b>Kid', description: evil, amount: 1500, dueDate: '2026-09-25', overdue: false }] })

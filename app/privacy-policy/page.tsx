@@ -131,10 +131,11 @@ export default async function PrivacyPolicyPage() {
             </li>
             <li>
               <strong>Fee and payment records:</strong> tuition and other fee amounts and due
-              dates, an in-app wallet balance, and a history of which fees were paid, when, and by
-              what method. This wallet is a bookkeeping feature only; we do not collect or store
-              any bank account, card, or other real payment-instrument information (see Section 6
-              of our Terms of Service).
+              dates, and a history of which fees were paid, how much, when, and by what method. When
+              you pay online, we keep only the card brand and its last four digits (or the last four
+              digits of a GCash number); we never store a full card number or security code. Online
+              payment is currently a test checkout: no real card or GCash account is charged (see
+              Section 6 of our Terms of Service).
             </li>
             <li>
               <strong>Health and emergency information (sensitive):</strong> if you choose to provide
@@ -176,7 +177,7 @@ export default async function PrivacyPolicyPage() {
             <li>To create and manage parent, teacher, and admin portal accounts. A parent account is created when a parent submits the enrollment form; teacher and admin accounts are created by the School.</li>
             <li>To record attendance and track developmental milestones for enrolled students.</li>
             <li>To keep children safe: acting on allergy and medical information, contacting emergency contacts, and checking who may collect a child.</li>
-            <li>To track tuition and other fees owed, and to record payments made via the in-app wallet or received directly by School staff.</li>
+            <li>To track tuition and other fees owed, and to record payments made online or received directly by School staff.</li>
             <li>To communicate with parents/guardians about admission decisions, requests to correct an enrollment request or resubmit a document, links to set or reset a password, and school announcements.</li>
             <li>To verify identity and eligibility documents submitted as part of enrollment.</li>
             <li>To maintain an internal audit trail of who changed what record and when, for accountability and security.</li>

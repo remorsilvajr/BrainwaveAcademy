@@ -3,8 +3,6 @@ import { createClient } from '@/lib/supabase/server'
 import { parentApplicationsFilter } from '@/lib/parent-applications'
 import { EmptyState } from '@/components/ui/empty-state'
 import { FeeBreakdown } from '@/components/parent/fee-breakdown'
-import { WalletPanel } from '@/components/parent/wallet-panel'
-import { PaymentsTabs } from '@/components/parent/payments-tabs'
 import { withStudent } from '@/lib/parent-links'
 
 export default async function ParentPaymentsPage({
@@ -20,30 +18,17 @@ export default async function ParentPaymentsPage({
 
   // Same created_parent_id/parent_email + hidden_from_parent filtering as
   // every other parent page — see app/parent/layout.tsx.
-  const [{ data: applications }, { data: wallet }, { data: walletRequests }] = await Promise.all([
-    supabase
-      .from('applications')
-      .select('id, student_first_name, student_last_name, created_student_id')
-      .eq('hidden_from_parent', false)
-      .or(parentApplicationsFilter(user))
-      .order('submitted_at', { ascending: true }),
-    supabase.from('wallets').select('balance').eq('parent_id', user?.id ?? '').maybeSingle(),
-    supabase
-      .from('wallet_requests')
-      .select('id, requested_amount, approved_amount, status, note, review_note, reviewed_at, created_at')
-      .eq('parent_id', user?.id ?? '')
-      .order('created_at', { ascending: false })
-      .limit(100),
-  ])
-
-  const walletBalance = wallet?.balance ?? 0
+  // Fees are paid online (a sandbox for now, see lib/sandbox-checkout.ts); the
+  // old wallet is no longer shown anywhere. Its tables are kept, untouched.
+  const { data: applications } = await supabase
+    .from('applications')
+    .select('id, student_first_name, student_last_name, created_student_id')
+    .eq('hidden_from_parent', false)
+    .or(parentApplicationsFilter(user))
+    .order('submitted_at', { ascending: true })
 
   const application = (applications ?? []).find((a) => a.id === studentParam) ?? applications?.[0] ?? null
 
-  // The wallet itself belongs to the parent, not any one child, so it (and
-  // requesting more funds) is shown regardless of whether a child has
-  // gotten as far as being enrolled/classroom-assigned yet — only the
-  // per-child fee breakdown below needs that.
   if (!application) {
     return (
       <div className="space-y-6">
@@ -51,17 +36,11 @@ export default async function ParentPaymentsPage({
           <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Payments</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">View billing history and pay outstanding fees.</p>
         </div>
-        <WalletPanel balance={walletBalance} />
-        <PaymentsTabs
-          requests={walletRequests ?? []}
-          feesContent={
-            <EmptyState
-              icon={ClipboardList}
-              title="No Enrollment Application Yet"
-              description="Once your child is enrolled and assigned to a classroom, their fee breakdown and payment history will appear here."
-              action={{ href: '/parent/enroll-a-student', label: 'Enroll A Student' }}
-            />
-          }
+        <EmptyState
+          icon={ClipboardList}
+          title="No Enrollment Application Yet"
+          description="Once your child is enrolled and assigned to a classroom, their fee breakdown and payment history will appear here."
+          action={{ href: '/parent/enroll-a-student', label: 'Enroll A Student' }}
         />
       </div>
     )
@@ -76,18 +55,12 @@ export default async function ParentPaymentsPage({
           <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Payments</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">View billing history and pay outstanding fees.</p>
         </div>
-        <WalletPanel balance={walletBalance} />
-        <PaymentsTabs
-          requests={walletRequests ?? []}
-          feesContent={
-            <EmptyState
-              icon={GraduationCap}
-              title="Not Enrolled Yet"
-              tone="warning"
-              description={`${studentName} hasn't been enrolled and assigned to a classroom yet, so there are no fees to show. Check Enrollment Status for the latest update.`}
-              action={{ href: withStudent('/parent/enrollment-status', studentParam), label: 'View Enrollment Status' }}
-            />
-          }
+        <EmptyState
+          icon={GraduationCap}
+          title="Not Enrolled Yet"
+          tone="warning"
+          description={`${studentName} hasn't been enrolled and assigned to a classroom yet, so there are no fees to show. Check Enrollment Status for the latest update.`}
+          action={{ href: withStudent('/parent/enrollment-status', studentParam), label: 'View Enrollment Status' }}
         />
       </div>
     )
@@ -133,19 +106,12 @@ export default async function ParentPaymentsPage({
         <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Payments</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">View billing history and pay outstanding fees.</p>
       </div>
-      <WalletPanel balance={walletBalance} />
-      <PaymentsTabs
-        requests={walletRequests ?? []}
-        feesContent={
-          <FeeBreakdown
-            studentId={application.created_student_id}
-            studentName={studentName}
-            classroomName={classroom?.name ?? null}
-            walletBalance={walletBalance}
-            payments={payments ?? []}
-            transactions={transactions}
-          />
-        }
+      <FeeBreakdown
+        studentId={application.created_student_id}
+        studentName={studentName}
+        classroomName={classroom?.name ?? null}
+        payments={payments ?? []}
+        transactions={transactions}
       />
     </div>
   )

@@ -22,6 +22,8 @@ export type ReceiptData = {
 
 const methodLabels: Record<string, string> = {
   wallet: 'Wallet',
+  card: 'Card (online)',
+  gcash: 'GCash (online)',
   cash: 'Cash',
   check: 'Check',
 }

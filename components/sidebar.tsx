@@ -22,7 +22,7 @@ import {
   Trash2,
   Bug,
   Building2,
-  Wallet,
+  CreditCard,
   ShieldCheck,
   CalendarDays,
   MessageSquare,
@@ -54,7 +54,7 @@ export const iconMap = {
   trash: Trash2,
   bug: Bug,
   classroom: Building2,
-  wallet: Wallet,
+  wallet: CreditCard, // the Payments tab (key kept from the wallet days)
   pickup: ShieldCheck,
   calendar: CalendarDays,
   feedback: MessageSquare,

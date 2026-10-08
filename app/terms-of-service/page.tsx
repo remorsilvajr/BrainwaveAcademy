@@ -129,15 +129,13 @@ export default async function TermsOfServicePage() {
 
           <H2 id="fees">6. Fees and payments</H2>
           <P>
-            The Service displays your child&apos;s tuition and other fees and lets you settle an
-            outstanding fee using an in-app wallet balance the School provides. This wallet is a
-            bookkeeping feature only: it is not connected to any bank account, card processor, or
-            other real financial institution, and no real money moves through the Service itself.
-            A cash payment made directly with the School office is recorded in the
-            Service by School staff and is separate from the wallet. If a real online payment
-            method (for example, a card or bank-linked payment processor) is introduced in the
-            future, these Terms will be updated to describe the applicable payment terms before
-            that feature becomes available.
+            The Service displays your child&apos;s tuition and other fees and lets you pay any amount
+            toward them online by card or GCash, with a receipt for each payment. Online payment is
+            currently a test checkout (a sandbox): it is not connected to any bank, card processor,
+            or e-wallet, it accepts only published test numbers, and no real money moves through the
+            Service. A cash payment made directly with the School office is recorded in the Service
+            by School staff. Before a real payment provider is connected, these Terms will be updated
+            to describe the applicable payment terms.
           </P>
 
           <H2 id="ip">7. Intellectual property</H2>

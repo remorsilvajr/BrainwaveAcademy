@@ -60,7 +60,7 @@ export function RecordPaymentModal({
           </button>
         </div>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          For a cash payment received outside the app. This does not touch the parent&apos;s wallet.
+          For a cash payment received at the school.
         </p>
       </div>
 

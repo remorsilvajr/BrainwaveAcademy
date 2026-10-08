@@ -23,6 +23,7 @@ export type ReversibleFee = {
   // the wallet part is refunded, the cash part is handled outside the app.
   walletPaid: number
   cashPaid: number
+  onlinePaid: number
 }
 
 // Undo a payment that was recorded by mistake. A wallet payment is refunded to
@@ -43,7 +44,9 @@ export function ReversePaymentModal({
   const [isWorking, setIsWorking] = useState(false)
   const [error, setError] = useState('')
   const isWallet = fee.walletPaid > 0
-  const methods = [fee.walletPaid > 0 ? 'wallet' : null, fee.cashPaid > 0 ? 'cash' : null].filter(Boolean).join(' and ')
+  const methods = [fee.onlinePaid > 0 ? 'online' : null, fee.cashPaid > 0 ? 'cash' : null, fee.walletPaid > 0 ? 'old wallet' : null]
+    .filter(Boolean)
+    .join(' and ')
   const title = fee.description || `${fee.fee_type.charAt(0).toUpperCase()}${fee.fee_type.slice(1)} fee`
 
   function askConfirm() {
@@ -116,6 +119,10 @@ export function ReversePaymentModal({
           <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
             {`Everything paid toward this fee is reversed and the fee goes back to unpaid.${
               isWallet ? ` ${formatCurrency(fee.walletPaid)} is returned to the parent's wallet, with an entry in Wallet Activity.` : ''
+            }${
+              fee.onlinePaid > 0
+                ? ` The online payment (${formatCurrency(fee.onlinePaid)}) is refunded through the payment provider; in this test checkout no real money was taken, so there is nothing to return.`
+                : ''
             }${
               fee.cashPaid > 0
                 ? ` The cash (${formatCurrency(fee.cashPaid)}) is not handled here, so return it to the family yourself if that is needed.`

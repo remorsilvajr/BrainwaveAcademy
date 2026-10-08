@@ -2,62 +2,45 @@
 
 import { useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { PaymentsTable, type PaymentRow, type ReceivedRow, type WalletTxRow } from '@/components/admin/payments-table'
-import { ParentWalletsTable, type ParentWallet } from '@/components/admin/parent-wallets-table'
-import { WalletRequestsPanel, type WalletRequest } from '@/components/admin/wallet-requests-panel'
+import { PaymentsTable, type PaymentRow, type ReceivedRow } from '@/components/admin/payments-table'
 import type { SearchableOption } from '@/components/ui/searchable-select'
 import type { FeeAdjustment } from '@/lib/fees'
 
-// One job per tab: Fees (what is owed, and correcting it), Received (money in,
-// receipts, reversals), Wallet Activity (the admin adjustment ledger), Parent
-// Wallets (balances) and Fund Requests. `payments` is the old name of the first
+// One job per tab: Fees (what is owed, and correcting it) and Received (money
+// in, one row per payment, receipts, reversals). Parents pay online, so the old
+// wallet tabs (Wallet Activity, Parent Wallets, Fund Requests) are gone; their
+// tables are kept in the database. `payments` is the old name of the first
 // tab, still accepted so existing links keep working.
-type Tab = 'fees' | 'received' | 'activity' | 'wallets' | 'requests'
+type Tab = 'fees' | 'received'
 
-const VALID_TABS: Tab[] = ['fees', 'received', 'activity', 'wallets', 'requests']
+const VALID_TABS: Tab[] = ['fees', 'received']
 const VALID_STATUSES = ['pending', 'overdue', 'waived', 'voided']
 
 export function PaymentsTabs({
   payments,
   received,
-  walletTransactions,
   adjustmentsByPayment,
   studentOptions,
-  parents,
-  requests,
   mode = 'admin',
 }: {
   payments: PaymentRow[]
   received: ReceivedRow[]
-  walletTransactions: WalletTxRow[]
   adjustmentsByPayment: Record<string, FeeAdjustment[]>
   studentOptions: SearchableOption[]
-  parents: ParentWallet[]
-  requests: WalletRequest[]
   // The cashier portal shows the same tabs without the admin-only corrections.
   mode?: 'admin' | 'cashier'
 }) {
-  // Supports deep-linking from the dashboard's "Pending Fund Requests" card
-  // (`/admin/payments?tab=requests`) — read once on mount as the initial
-  // tab rather than staying in sync with the URL afterward, so clicking
-  // between tabs here doesn't need to push a new URL each time.
+  // Read once on mount as the initial tab (`?tab=received`), not kept in sync with the URL.
   const searchParams = useSearchParams()
   const initialTab = searchParams.get('tab')
-  const [tab, setTab] = useState<Tab>(
-    initialTab === 'payments' ? 'fees' : initialTab && (VALID_TABS as string[]).includes(initialTab) ? (initialTab as Tab) : 'fees'
-  )
-  // Same deep-link idea for the dashboard's Outstanding Balance card
-  // (`/admin/payments?status=pending`): only seeds the table's initial filter.
+  const [tab, setTab] = useState<Tab>(initialTab && (VALID_TABS as string[]).includes(initialTab) ? (initialTab as Tab) : 'fees')
+  // The dashboard's Outstanding Balance card (`/admin/payments?status=pending`) seeds the table's filter.
   const statusParam = searchParams.get('status')
   const initialStatus = statusParam && VALID_STATUSES.includes(statusParam) ? statusParam : 'all'
-  const pendingCount = requests.filter((r) => r.status === 'pending').length
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'fees', label: 'Fees' },
     { key: 'received', label: 'Received' },
-    { key: 'activity', label: 'Wallet Activity' },
-    { key: 'wallets', label: 'Parent Wallets' },
-    { key: 'requests', label: 'Fund Requests' },
   ]
 
   return (
@@ -75,32 +58,22 @@ export function PaymentsTabs({
             }`}
           >
             {t.label}
-            {t.key === 'requests' && pendingCount > 0 && (
-              <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-semibold text-white">
-                {pendingCount}
-              </span>
-            )}
           </button>
         ))}
       </div>
 
       <div className="mt-4">
-        {(tab === 'fees' || tab === 'received' || tab === 'activity') && (
-          <PaymentsTable
-            key={tab}
-            view={tab}
-            payments={payments}
-            received={received}
-            walletTransactions={walletTransactions}
-            adjustmentsByPayment={adjustmentsByPayment}
-            studentOptions={studentOptions}
-            initialStatus={tab === 'fees' ? initialStatus : 'all'}
-            canCorrect={mode === 'admin'}
-            receiptBasePath={mode === 'admin' ? '/admin/payments' : '/cashier/payments'}
-          />
-        )}
-        {tab === 'wallets' && <ParentWalletsTable parents={parents} canAdjust={mode === 'admin'} />}
-        {tab === 'requests' && <WalletRequestsPanel requests={requests} />}
+        <PaymentsTable
+          key={tab}
+          view={tab}
+          payments={payments}
+          received={received}
+          adjustmentsByPayment={adjustmentsByPayment}
+          studentOptions={studentOptions}
+          initialStatus={tab === 'fees' ? initialStatus : 'all'}
+          canCorrect={mode === 'admin'}
+          receiptBasePath={mode === 'admin' ? '/admin/payments' : '/cashier/payments'}
+        />
       </div>
     </div>
   )
