@@ -46,6 +46,8 @@ const tryRun = async (sql, params) => {
   }
 }
 if (allStudents.length) {
+  // A fee's payment history rows must go before the fee itself (foreign key).
+  await tryRun(`delete from public.payment_transactions where payment_id in (select id from public.payments where student_id = any($1))`, [allStudents])
   for (const table of ['student_health', 'emergency_contacts', 'do_not_release', 'attendance', 'milestones', 'authorized_pickups', 'payment_adjustments', 'unenrollment_requests', 'student_promotions', 'parent_student', 'payments']) {
     await tryRun(`delete from public.${table} where student_id = any($1)`, [allStudents])
   }
