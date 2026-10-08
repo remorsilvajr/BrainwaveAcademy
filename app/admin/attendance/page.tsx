@@ -1,19 +1,19 @@
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { attendanceDateFromParam } from '@/lib/date-params'
 import { TeacherAttendanceRoster } from '@/components/admin/teacher-attendance-roster'
 import { AttendanceRecords } from '@/components/attendance/attendance-records'
 import { AttendanceTabLinks } from '@/components/attendance/attendance-tab-links'
-import { loadStudentAttendanceRecords, loadTeacherAttendanceRecords } from '@/lib/attendance-records'
+import { loadTeacherAttendanceRecords } from '@/lib/attendance-records'
 
 const TABS = [
   { key: 'checkin', label: 'Teacher Check-in' },
   { key: 'teachers', label: 'Teacher Records' },
-  { key: 'students', label: 'Student Records' },
 ]
 
 // The admin records attendance for the TEACHERS. Student attendance is recorded by the
-// teachers themselves (/teacher/attendance); the admin reads it on the Student Records
-// tab, on each student's dashboard and in the Export Report.
+// teachers themselves (/teacher/attendance); the admin reads it on Student Attendance
+// (/admin/student-attendance), on each student's dashboard and in the Export Report.
 export default async function AdminAttendancePage({
   searchParams,
 }: {
@@ -22,23 +22,26 @@ export default async function AdminAttendancePage({
   const { date: dateParam, tab: tabParam } = await searchParams
   const selectedDate = attendanceDateFromParam(dateParam)
 
+  // Student records moved to their own page; old links still land there.
+  if (tabParam === 'students') redirect('/admin/student-attendance?tab=records')
+
   const supabase = await createClient()
 
-  if (tabParam === 'teachers' || tabParam === 'students') {
-    const { rows, capped } = tabParam === 'teachers' ? await loadTeacherAttendanceRecords(supabase) : await loadStudentAttendanceRecords(supabase)
+  if (tabParam === 'teachers') {
+    const { rows, capped } = await loadTeacherAttendanceRecords(supabase)
     return (
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Teacher Attendance</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {tabParam === 'teachers' ? 'Every teacher attendance record on file.' : 'Every student attendance record on file. Teachers record these.'}
+            Every teacher attendance record on file.
           </p>
         </div>
         <AttendanceTabLinks basePath="/admin/attendance" active={tabParam} tabs={TABS} />
         <AttendanceRecords
           rows={rows}
-          subject={tabParam === 'teachers' ? 'teacher' : 'student'}
-          groupLabel={tabParam === 'teachers' ? 'Classroom' : 'Program'}
+          subject="teacher"
+          groupLabel="Classroom"
           capped={capped}
         />
       </div>
@@ -80,7 +83,7 @@ export default async function AdminAttendancePage({
         <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Teacher Attendance</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Record whether each teacher was present, late or absent. You can record or correct any date up to today. Student
-          attendance is recorded by the teachers.
+          attendance is recorded by the teachers and shown on Student Attendance.
         </p>
       </div>
 

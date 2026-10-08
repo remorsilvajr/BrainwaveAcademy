@@ -395,26 +395,7 @@ export function StudentRecordModal({
                 </div>
               </div>
 
-              {saveError && (
-                <p className="rounded-lg bg-red-50 dark:bg-red-950/30 px-3 py-2 text-sm text-red-600 dark:text-red-400">{saveError}</p>
-              )}
 
-              <div className="flex gap-2 pt-1">
-                <button
-                  onClick={handleCancelEdit}
-                  disabled={isSaving}
-                  className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-60"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveDetails}
-                  disabled={isSaving}
-                  className="flex-1 rounded-lg bg-[#0b1b62] py-2.5 text-sm font-semibold text-white hover:bg-[#08154d] disabled:opacity-60"
-                >
-                  {isSaving ? 'Saving…' : 'Save Changes'}
-                </button>
-              </div>
             </div>
           )}
 
@@ -529,7 +510,29 @@ export function StudentRecordModal({
           )}
         </div>
 
-        <div className="border-t border-gray-100 dark:border-gray-800 p-6">
+        <div className="space-y-2 border-t border-gray-100 dark:border-gray-800 p-6">
+          {/* Editing personal details: Save sits right above Close Record, always in view. */}
+          {tab === 'personal' && isEditing && saveError && (
+            <p className="rounded-lg bg-red-50 dark:bg-red-950/30 px-3 py-2 text-sm text-red-600 dark:text-red-400">{saveError}</p>
+          )}
+          {tab === 'personal' && isEditing && (
+            <div className="flex gap-2">
+              <button
+                onClick={handleCancelEdit}
+                disabled={isSaving}
+                className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveDetails}
+                disabled={isSaving}
+                className="flex-1 rounded-lg bg-[#0b1b62] py-2.5 text-sm font-semibold text-white hover:bg-[#08154d] disabled:opacity-60"
+              >
+                {isSaving ? 'Saving…' : 'Save Changes'}
+              </button>
+            </div>
+          )}
           <button
             onClick={onClose}
             className="w-full rounded-lg border border-gray-300 dark:border-gray-600 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"

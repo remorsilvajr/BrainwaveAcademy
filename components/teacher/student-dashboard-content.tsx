@@ -8,6 +8,7 @@ import { CalendarCheck, ClipboardList, User as UserIcon } from 'lucide-react'
 import { recordAttendance, submitMilestoneAssessment } from '@/app/teacher/student-dashboard/actions'
 import { milestoneCategoryLabels, milestoneCategoryOrder } from '@/lib/milestones'
 import { formatDateLong, todayIso } from '@/lib/format'
+import { ageInYearsLabel, wholeMonthsOld } from '@/lib/dob'
 import { AvatarEditor } from '@/components/ui/avatar-editor'
 
 type Student = {
@@ -200,7 +201,7 @@ export function StudentDashboardContent({
         <div>
           <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{fullName}</p>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {formatDateLong(student.date_of_birth)} &middot; <span className="capitalize">{student.gender}</span> &middot;{' '}
+            {ageInYearsLabel(wholeMonthsOld(student.date_of_birth) / 12)} old &middot; <span className="capitalize">{student.gender}</span> &middot;{' '}
             <span className="capitalize">{student.enrollment_status}</span>
             {student.classroomName !== undefined && (
               <>

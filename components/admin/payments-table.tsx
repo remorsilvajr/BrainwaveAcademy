@@ -117,6 +117,7 @@ export function PaymentsTable({
   adjustmentsByPayment,
   studentOptions,
   initialStatus = 'all',
+  initialSearch = '',
   canCorrect = true,
   receiptBasePath = '/admin/payments',
 }: {
@@ -126,11 +127,13 @@ export function PaymentsTable({
   adjustmentsByPayment: Record<string, FeeAdjustment[]>
   studentOptions: SearchableOption[]
   initialStatus?: string
+  // Student Balances' View Fees opens this tab already searching for one student.
+  initialSearch?: string
   // Admin only: waive, void, edit and reverse. The cashier portal passes false.
   canCorrect?: boolean
   receiptBasePath?: string
 }) {
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(initialSearch)
   const [filter, setFilter] = useState(
     filterOptions[view].some((o) => o.value === initialStatus) ? initialStatus : 'all'
   )

@@ -3,17 +3,19 @@
 import { useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { PaymentsTable, type PaymentRow, type ReceivedRow } from '@/components/admin/payments-table'
+import { StudentBalancesTable, type BalanceStudent } from '@/components/admin/student-balances-table'
 import type { SearchableOption } from '@/components/ui/searchable-select'
 import type { FeeAdjustment } from '@/lib/fees'
 
-// One job per tab: Fees (what is owed, and correcting it) and Received (money
-// in, one row per payment, receipts, reversals). Parents pay online, so the old
+// One job per tab: Fees (what is owed, and correcting it), Received (money
+// in, one row per payment, receipts, reversals) and Student Balances (every
+// student's account: billed, paid, still owed, overdue). Parents pay online, so the old
 // wallet tabs (Wallet Activity, Parent Wallets, Fund Requests) are gone; their
 // tables are kept in the database. `payments` is the old name of the first
 // tab, still accepted so existing links keep working.
-type Tab = 'fees' | 'received'
+type Tab = 'fees' | 'received' | 'balances'
 
-const VALID_TABS: Tab[] = ['fees', 'received']
+const VALID_TABS: Tab[] = ['fees', 'received', 'balances']
 const VALID_STATUSES = ['pending', 'overdue', 'waived', 'voided']
 
 export function PaymentsTabs({
@@ -21,10 +23,14 @@ export function PaymentsTabs({
   received,
   adjustmentsByPayment,
   studentOptions,
+  balanceStudents,
+  classrooms,
   mode = 'admin',
 }: {
   payments: PaymentRow[]
   received: ReceivedRow[]
+  balanceStudents: BalanceStudent[]
+  classrooms: { id: string; name: string }[]
   adjustmentsByPayment: Record<string, FeeAdjustment[]>
   studentOptions: SearchableOption[]
   // The cashier portal shows the same tabs without the admin-only corrections.
@@ -37,10 +43,12 @@ export function PaymentsTabs({
   // The dashboard's Outstanding Balance card (`/admin/payments?status=pending`) seeds the table's filter.
   const statusParam = searchParams.get('status')
   const initialStatus = statusParam && VALID_STATUSES.includes(statusParam) ? statusParam : 'all'
+  const [feesSearch, setFeesSearch] = useState('')
 
   const tabs: { key: Tab; label: string }[] = [
     { key: 'fees', label: 'Fees' },
     { key: 'received', label: 'Received' },
+    { key: 'balances', label: 'Student Balances' },
   ]
 
   return (
@@ -50,7 +58,10 @@ export function PaymentsTabs({
           <button
             key={t.key}
             type="button"
-            onClick={() => setTab(t.key)}
+            onClick={() => {
+              setFeesSearch('')
+              setTab(t.key)
+            }}
             className={`flex shrink-0 items-center gap-1.5 border-b-2 px-1 pb-3 text-sm font-medium ${
               tab === t.key
                 ? 'border-[#e6007e] text-[#e6007e]'
@@ -63,17 +74,31 @@ export function PaymentsTabs({
       </div>
 
       <div className="mt-4">
-        <PaymentsTable
-          key={tab}
-          view={tab}
-          payments={payments}
-          received={received}
-          adjustmentsByPayment={adjustmentsByPayment}
-          studentOptions={studentOptions}
-          initialStatus={tab === 'fees' ? initialStatus : 'all'}
-          canCorrect={mode === 'admin'}
-          receiptBasePath={mode === 'admin' ? '/admin/payments' : '/cashier/payments'}
-        />
+        {tab === 'balances' ? (
+          <StudentBalancesTable
+            students={balanceStudents}
+            classrooms={classrooms}
+            payments={payments}
+            received={received}
+            onViewFees={(student) => {
+              setFeesSearch(student.accountId ?? student.name)
+              setTab('fees')
+            }}
+          />
+        ) : (
+          <PaymentsTable
+            key={`${tab}|${feesSearch}`}
+            view={tab}
+            payments={payments}
+            received={received}
+            adjustmentsByPayment={adjustmentsByPayment}
+            studentOptions={studentOptions}
+            initialStatus={tab === 'fees' ? initialStatus : 'all'}
+            initialSearch={tab === 'fees' ? feesSearch : ''}
+            canCorrect={mode === 'admin'}
+            receiptBasePath={mode === 'admin' ? '/admin/payments' : '/cashier/payments'}
+          />
+        )}
       </div>
     </div>
   )
