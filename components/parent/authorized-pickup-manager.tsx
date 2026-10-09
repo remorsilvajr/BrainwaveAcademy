@@ -369,13 +369,13 @@ export function AuthorizedPickupManager({ students, pickups }: { students: Stude
         const studentPickups = pickups.filter((p) => p.student_id === student.id)
         return (
           <div key={student.id} className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="min-w-0 text-lg font-bold text-gray-900 dark:text-gray-100">
                 {student.first_name} {student.last_name}
               </h2>
               <button
                 onClick={() => setFormFor({ studentId: student.id, editing: null })}
-                className="flex items-center gap-1.5 rounded-full bg-[#0b1b62] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#08154d]"
+                className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#0b1b62] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#08154d]"
               >
                 <Plus className="h-3.5 w-3.5" />
                 Add Person

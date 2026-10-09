@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Ban, ShieldCheck, ShieldAlert, ShieldQuestion } from 'lucide-react'
+import { Ban, ShieldAlert, ShieldQuestion } from 'lucide-react'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
 import { recordPickup } from '@/app/teacher/pickup-verification/actions'
@@ -10,6 +10,7 @@ import { logDoNotReleaseHit } from '@/app/admin/do-not-release/actions'
 import { PickupAvatar } from '@/components/pickup/pickup-avatar'
 import { PickupCardModal } from '@/components/pickup/pickup-card-modal'
 import { PickupScanner } from '@/components/pickup/pickup-scanner'
+import { PickupMatchCard } from '@/components/pickup/pickup-match-card'
 import { PICKUP_RELATIONSHIPS, relationshipGroup } from '@/lib/pickup-relationships'
 import { pickupDisplayName } from '@/lib/pickup-names'
 import { matchDoNotRelease, type DoNotReleaseEntry } from '@/lib/health'
@@ -228,40 +229,17 @@ export function PickupVerificationPanel({
               </div>
             ) : (
               matches.map((p) => (
-                <div
+                <PickupMatchCard
                   key={p.id}
-                  className="flex items-center justify-between gap-3 rounded-lg bg-green-50 dark:bg-green-950/30 p-3"
-                >
-                  <div className="flex items-center gap-3">
-                    <PickupAvatar
-                      url={p.photoUrl}
-                      sizeClassName="h-12 w-12"
-                      iconClassName="h-5 w-5"
-                      fallbackClassName="bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500"
-                      onClick={() => setCardFor(p)}
-                    />
-                    <div>
-                      <p className="flex items-center gap-1.5 font-medium text-green-800 dark:text-green-300">
-                        <ShieldCheck className="h-4 w-4" />
-                        {pickupDisplayName(p)}
-                      </p>
-                      <p className="text-xs text-green-700 dark:text-green-400">
-                        {[p.relationship, p.phone_number].filter(Boolean).join(' · ') || 'Authorized on file'}
-                      </p>
-                      <p className="text-xs font-semibold text-green-800 dark:text-green-300">
-                        Authorized for {studentNameById.get(p.student_id) ?? 'an unknown student'}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleLog(p)}
-                    disabled={!!loggedAt[p.id] || recordingId === p.id}
-                    className="shrink-0 rounded-full border border-green-600 dark:border-green-500 px-3 py-1.5 text-xs font-semibold text-green-700 dark:text-green-400 hover:bg-green-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {loggedAt[p.id] ? `Picked up ${formatManilaTime(loggedAt[p.id])}` : recordingId === p.id ? 'Recording...' : 'Record Pickup'}
-                  </button>
-                </div>
+                  photoUrl={p.photoUrl}
+                  onPhotoClick={() => setCardFor(p)}
+                  name={pickupDisplayName(p)}
+                  details={[p.relationship, p.phone_number].filter(Boolean).join(' · ') || 'Authorized on file'}
+                  studentName={studentNameById.get(p.student_id) ?? 'an unknown student'}
+                  buttonLabel={loggedAt[p.id] ? `Picked up ${formatManilaTime(loggedAt[p.id])}` : recordingId === p.id ? 'Recording...' : 'Record Pickup'}
+                  buttonDisabled={!!loggedAt[p.id] || recordingId === p.id}
+                  onButtonClick={() => handleLog(p)}
+                />
               ))
             )}
             {similar.length > 0 && (

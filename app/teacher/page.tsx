@@ -143,7 +143,7 @@ export default async function TeacherDashboardPage() {
             const domains = domainsByStudent.get(s.id)?.size ?? 0
             return (
               <div key={s.id} className="flex items-center justify-between gap-4 py-3">
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                     {s.first_name} {s.last_name}
                   </p>
@@ -151,7 +151,7 @@ export default async function TeacherDashboardPage() {
                 </div>
                 <Link
                   href={`/teacher/student-dashboard?student=${s.id}`}
-                  className="rounded-lg bg-[#e6007e] px-4 py-2 text-sm font-semibold text-white hover:bg-[#c9006e]"
+                  className="shrink-0 whitespace-nowrap rounded-lg bg-[#e6007e] px-4 py-2 text-sm font-semibold text-white hover:bg-[#c9006e]"
                 >
                   Assess Now
                 </Link>
