@@ -61,7 +61,6 @@ const baseSections: NavSection[] = [
 const hiddenFeaturesSection: NavSection = {
   title: 'Hidden Features (Bonus, Unfinished)',
   items: [
-    { label: 'Year-End Promotion', href: '/admin/year-end', icon: 'yearEnd' },
     { label: 'Do-Not-Release', href: '/admin/do-not-release', icon: 'ban' },
   ],
 }

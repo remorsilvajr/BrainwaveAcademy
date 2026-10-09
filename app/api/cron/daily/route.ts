@@ -5,6 +5,7 @@ import { getSiteUrl } from '@/lib/site-url'
 import { todayIso } from '@/lib/format'
 import { runDailyNotifications } from '@/lib/daily-notifications'
 import { runAutoPromotions } from '@/lib/auto-promotion'
+import { runCompletions } from '@/lib/completion'
 
 // Called once a day by Vercel Cron (vercel.json). Vercel sends
 // `Authorization: Bearer <CRON_SECRET>` when a CRON_SECRET environment variable
@@ -40,6 +41,14 @@ export async function GET(request: Request) {
   } catch (err) {
     promotions = { promoted: [], errors: [err instanceof Error ? err.message : String(err)] }
   }
+  // Then complete preschool for Curious Adventurers children past the age with
+  // nothing owed (the rest stay Pending Completion until paid).
+  let completions
+  try {
+    completions = await runCompletions({ admin, today: todayIso() })
+  } catch (err) {
+    completions = { completed: [], pending: [], errors: [err instanceof Error ? err.message : String(err)] }
+  }
 
   const summary = await runDailyNotifications({
     admin,
@@ -47,5 +56,5 @@ export async function GET(request: Request) {
     today: todayIso(),
     siteUrl: getSiteUrl(),
   })
-  return Response.json({ ...summary, promotions })
+  return Response.json({ ...summary, promotions, completions })
 }

@@ -82,7 +82,7 @@ export default async function StudentMilestoneReportPage({
             p.action === 'promoted'
               ? `Promoted from ${nameOf(p.from_classroom_id)} to ${nameOf(p.to_classroom_id)}`
               : p.action === 'graduated'
-                ? `Graduated from ${nameOf(p.from_classroom_id)}`
+                ? `Completed preschool (${nameOf(p.from_classroom_id)})`
                 : `Stayed in ${nameOf(p.from_classroom_id)}`
           return { schoolYear: p.school_year, label }
         }),

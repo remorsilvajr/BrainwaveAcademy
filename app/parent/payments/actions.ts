@@ -7,6 +7,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { logActivity } from '@/lib/activity-log'
 import { emailReceiptFor } from '@/lib/send-receipt'
 import { simulateCardPayment, simulateGcashPayment, type OnlineMethod } from '@/lib/sandbox-checkout'
+import { completeIfReadyAfterBalanceChange } from '@/lib/completion'
 
 const ERROR_MESSAGES: Record<string, string> = {
   INVALID_AMOUNT: 'Enter a valid amount greater than zero.',
@@ -87,6 +88,7 @@ export async function payOnline(studentId: string, rawAmount: number, details: O
     await emailReceiptFor(id)
   }
 
+  await completeIfReadyAfterBalanceChange(studentId)
   revalidatePath('/parent/payments')
   revalidatePath('/parent', 'layout')
   return {

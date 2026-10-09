@@ -4,13 +4,14 @@ import { useMemo, useState } from 'react'
 import type { HealthInput } from '@/lib/health'
 import Link from 'next/link'
 import { User as UserIcon } from 'lucide-react'
-import { formatCurrency } from '@/lib/format'
+import { formatCurrency, todayIso } from '@/lib/format'
 import type { UnpaidFee } from '@/lib/payments'
 import { StudentRecordModal } from '@/components/admin/student-record-modal'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
 import { SortSelect } from '@/components/ui/sort-select'
 import { useSort, compareStrings, compareDates, type SortOption } from '@/lib/use-sort'
+import { isPendingCompletion, studentStatusLabel } from '@/lib/completion-rules'
 
 type Guardian = { name: string; relationship: string | null; phone: string | null; email: string | null }
 type DocRow = { document_type: string; file_url: string; verification_status: string }
@@ -39,6 +40,7 @@ type Student = {
 type Classroom = { id: string; name: string; slug: string; min_age_months: number | null; max_age_months: number | null }
 
 export function StudentsTable({ students, classrooms }: { students: Student[]; classrooms: Classroom[] }) {
+  const today = todayIso()
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   // Holds an id, not the row itself — router.refresh() (after editing a
@@ -107,7 +109,7 @@ export function StudentsTable({ students, classrooms }: { students: Student[]; c
               <option value="all">All</option>
               {statuses.map((s) => (
                 <option key={s} value={s}>
-                  {s.charAt(0).toUpperCase() + s.slice(1)}
+                  {studentStatusLabel(s)}
                 </option>
               ))}
             </select>
@@ -184,14 +186,21 @@ export function StudentsTable({ students, classrooms }: { students: Student[]; c
                     </td>
                     <td className="p-4">
                       <span
-                        className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium capitalize ${
+                        className={`inline-block rounded-full px-2.5 py-1 text-xs font-medium ${
                           s.enrollment_status === 'active'
                             ? 'bg-green-50 dark:bg-green-950/30 text-green-700'
-                            : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                            : s.enrollment_status === 'graduated'
+                              ? 'bg-indigo-50 text-[#0b1b62] dark:bg-indigo-950/40 dark:text-indigo-300'
+                              : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
                         }`}
                       >
-                        {s.enrollment_status}
+                        {studentStatusLabel(s.enrollment_status)}
                       </span>
+                      {isPendingCompletion(s, classrooms.find((c) => c.id === s.classroom_id), s.outstanding, today) && (
+                        <span className="mt-1 block w-fit rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 dark:bg-amber-950/30 dark:text-amber-300">
+                          Pending Completion
+                        </span>
+                      )}
                     </td>
                     <td className="p-4">
                       <div className="flex flex-wrap items-center gap-2">

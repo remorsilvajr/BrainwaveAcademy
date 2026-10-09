@@ -5,7 +5,8 @@
 //   and reversed when that account is active again.
 // - 'withdrawn': the family unenrolled (an approved unenrollment request, or an
 //   admin withdrawal). Terminal: nothing flips it back automatically.
-// - 'graduated': finished the program (year-end promotion). Terminal.
+// - 'graduated': completed preschool (shown as "Completed Preschool", see
+//   lib/completion.ts). Terminal.
 //
 // Terminal students keep every record (attendance, milestones, payments,
 // receipts) but drop out of the working views: attendance rosters, classroom

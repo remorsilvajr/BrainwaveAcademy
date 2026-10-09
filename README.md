@@ -60,7 +60,8 @@ A school admin / enrollment portal for Brain Wave Academy (Tagum City), built wi
 - Students (with an Outstanding balance column and a Balance tab where admin can also add a fee), Teachers, and Classrooms directories. A class has any number of **equal teachers** (no head teacher), and fee due dates are managed per class
 - **Teacher Attendance**: record each teacher present, late or absent for any date up to today, plus every teacher attendance record
 - Student Dashboard with a class filter, milestone edit rights and avatar upload (attendance is view-only for admin), and Export Report whose Back returns to it; **Health** tab and class-photo answer on each student record
-- **Hidden Features (super admin only)**: Year-End Promotion and the Do-Not-Release list are built but parked until they are reworked
+- **Automatic move-up and preschool completion**: the daily job moves a child into the next class once they outgrow theirs (adding the new class's fees, keeping the old ones); a child past Curious Adventurers completes preschool once nothing is owed (Pending Completion until then, admin can also complete by hand), gets no new fees, and has a printable Certificate of Completion for admin and parents
+- **Hidden Features (super admin only)**: the Do-Not-Release list is built but parked until it is reworked
 - **Authorized pickup**: admin can add, edit (including the photo) and remove a child's pickup people, and the parents are notified of every change. Each person has a printable View Card with photo and a QR Pickup ID that staff scan in Pickup Verification
 - **Cashier portal**: a fourth role whose only area is Payments (record cash payments, in full or in part)
 - Export Progress Reports: printable per-student milestone, attendance and program-history report
@@ -104,7 +105,7 @@ npm run start             # run the production build
 npm run lint              # ESLint
 npm run typecheck         # TypeScript
 npm test                  # unit tests (no network)
-npm run test:integration  # RLS, payments (partial, online, cashier), unenrollment, album, photo consent, year-end and daily-job checks against the real Supabase project (self-cleaning)
+npm run test:integration  # RLS, payments (partial, online, cashier), unenrollment, album, photo consent, auto move-up, preschool completion and daily-job checks against the real Supabase project (self-cleaning)
 npm run test:sweep        # remove leftovers from an interrupted integration run
 npm run db:verify         # prove supabase/migrations rebuild the live schema (needs Docker)
 npm run backup            # save all data + uploaded files to backups/ (gitignored)

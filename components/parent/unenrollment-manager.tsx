@@ -238,7 +238,7 @@ export function UnenrollmentManager({
               <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/60">
                 <p className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
                   <CheckCircle2 className="h-4 w-4" />
-                  {child.status === 'graduated' ? 'Graduated' : 'Unenrolled'}
+                  {child.status === 'graduated' ? 'Completed Preschool' : 'Unenrolled'}
                   {latest?.status === 'approved' ? `, last day ${formatDateLong(latest.last_day)}` : ''}
                 </p>
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
