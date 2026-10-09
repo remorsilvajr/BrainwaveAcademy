@@ -7,6 +7,30 @@ import { loadAllPickupsWithPhotos } from '@/lib/pickup-list'
 import { AttendanceTabLinks } from '@/components/attendance/attendance-tab-links'
 import { AuthorizedPickupManager } from '@/components/parent/authorized-pickup-manager'
 import { PickupStudentPicker } from '@/components/admin/pickup-student-picker'
+import { PickupHistory } from '@/components/pickup/pickup-history'
+import { loadPickupHistory } from '@/lib/pickup-history'
+
+function Header({ tab }: { tab: string }) {
+  return (
+    <>
+      <div>
+        <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Pickup Verification</h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          Search everyone registered to pick up a child, confirm who&apos;s allowed to collect them, and record each pickup.
+        </p>
+      </div>
+      <AttendanceTabLinks
+        basePath="/admin/pickup-verification"
+        active={tab}
+        tabs={[
+          { key: 'verify', label: 'Verify Pickup' },
+          { key: 'history', label: 'Pickup History' },
+          { key: 'manage', label: 'Manage Pickup People' },
+        ]}
+      />
+    </>
+  )
+}
 
 export default async function AdminPickupVerificationPage({
   searchParams,
@@ -14,8 +38,18 @@ export default async function AdminPickupVerificationPage({
   searchParams: Promise<{ tab?: string; student?: string }>
 }) {
   const { tab: tabParam, student: studentParam } = await searchParams
-  const tab = tabParam === 'manage' ? 'manage' : 'verify'
+  const tab = tabParam === 'manage' ? 'manage' : tabParam === 'history' ? 'history' : 'verify'
   const supabase = await createClient()
+
+  if (tab === 'history') {
+    const { rows, capped } = await loadPickupHistory(supabase)
+    return (
+      <div className="space-y-6">
+        <Header tab={tab} />
+        <PickupHistory rows={rows} capped={capped} />
+      </div>
+    )
+  }
 
   const [{ data: students }, pickups] = await Promise.all([
     supabase
@@ -33,21 +67,7 @@ export default async function AdminPickupVerificationPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Pickup Verification</h1>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Search everyone registered to pick up a child and confirm who&apos;s allowed to collect them.
-        </p>
-      </div>
-
-      <AttendanceTabLinks
-        basePath="/admin/pickup-verification"
-        active={tab}
-        tabs={[
-          { key: 'verify', label: 'Verify Pickup' },
-          { key: 'manage', label: 'Manage Pickup People' },
-        ]}
-      />
+      <Header tab={tab} />
 
       {(students ?? []).length === 0 ? (
         <EmptyState icon={Users} title="No Students on File Yet" description="Once students are enrolled, their authorized pickup lists appear here." />

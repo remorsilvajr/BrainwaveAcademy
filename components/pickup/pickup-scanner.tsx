@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import jsQR from 'jsqr'
 import { Camera, CameraOff, ScanLine, ShieldAlert, ShieldCheck } from 'lucide-react'
-import { verifyPickupCard, logPickupCheck, type ScannedPickup } from '@/app/teacher/pickup-verification/actions'
+import { verifyPickupCard, recordPickup, type ScannedPickup } from '@/app/teacher/pickup-verification/actions'
+import { formatManilaTime } from '@/lib/pickup-history'
 import { PickupAvatar } from '@/components/pickup/pickup-avatar'
 
 // Pickup ID scanning for Pickup Verification. Two ways in: the camera (any laptop or
@@ -22,7 +23,10 @@ export function PickupScanner() {
   const [manualCode, setManualCode] = useState('')
   const [checking, setChecking] = useState(false)
   const [result, setResult] = useState<{ error: string } | { person: ScannedPickup } | null>(null)
-  const [logged, setLogged] = useState(false)
+  // The time the pickup was recorded (shown on the button), or null.
+  const [logged, setLogged] = useState<string | null>(null)
+  const [recording, setRecording] = useState(false)
+  const [recordError, setRecordError] = useState('')
 
   const stopCamera = useCallback(() => {
     if (frameRef.current !== null) cancelAnimationFrame(frameRef.current)
@@ -38,7 +42,8 @@ export function PickupScanner() {
     if (busyRef.current) return
     busyRef.current = true
     setChecking(true)
-    setLogged(false)
+    setLogged(null)
+    setRecordError('')
     try {
       setResult(await verifyPickupCard(code))
     } catch {
@@ -108,8 +113,17 @@ export function PickupScanner() {
   }
 
   async function handleLog(person: ScannedPickup) {
-    const outcome = await logPickupCheck(person.studentId, person.name)
-    if (!outcome?.error) setLogged(true)
+    setRecording(true)
+    setRecordError('')
+    try {
+      const outcome = await recordPickup(person.id, 'scan')
+      if ('error' in outcome) setRecordError(outcome.error)
+      else setLogged(outcome.pickedUpAt)
+    } catch {
+      setRecordError('Something went wrong. Please try again.')
+    } finally {
+      setRecording(false)
+    }
   }
 
   return (
@@ -194,13 +208,14 @@ export function PickupScanner() {
           <button
             type="button"
             onClick={() => handleLog(result.person)}
-            disabled={logged}
+            disabled={!!logged || recording}
             className="shrink-0 rounded-full border border-green-600 dark:border-green-500 px-3 py-1.5 text-xs font-semibold text-green-700 dark:text-green-400 hover:bg-green-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {logged ? 'Logged' : 'Log Check'}
+            {logged ? `Picked up ${formatManilaTime(logged)}` : recording ? 'Recording...' : 'Record Pickup'}
           </button>
         </div>
       )}
+      {recordError && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{recordError}</p>}
     </div>
   )
 }

@@ -6,8 +6,35 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { PICKUP_PHOTO_URL_TTL_SECONDS } from '@/lib/pickup-list'
 import { pickupIdCode, pickupIdLabel } from '@/lib/pickup-id'
 import { AuthorizedPickupManager } from '@/components/parent/authorized-pickup-manager'
+import { AttendanceTabLinks } from '@/components/attendance/attendance-tab-links'
+import { PickupHistory } from '@/components/pickup/pickup-history'
+import { loadPickupHistory } from '@/lib/pickup-history'
 
-export default async function AuthorizedPickupPage() {
+function Header({ tab }: { tab: string }) {
+  return (
+    <>
+      <div>
+        <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Authorized Pickup</h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          Register the people allowed to pick up your child, and see each time your child was picked up. Teachers and admin
+          check this list at pickup time.
+        </p>
+      </div>
+      <AttendanceTabLinks
+        basePath="/parent/pickup"
+        active={tab}
+        tabs={[
+          { key: 'people', label: 'Authorized People' },
+          { key: 'history', label: 'Pickup History' },
+        ]}
+      />
+    </>
+  )
+}
+
+export default async function AuthorizedPickupPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  const { tab: tabParam } = await searchParams
+  const tab = tabParam === 'history' ? 'history' : 'people'
   const supabase = await createClient()
   const {
     data: { user },
@@ -15,6 +42,17 @@ export default async function AuthorizedPickupPage() {
 
   const { data: linkedStudentIds } = await supabase.from('parent_student').select('student_id').eq('parent_id', user?.id ?? '')
   const studentIds = (linkedStudentIds ?? []).map((row) => row.student_id)
+
+  // Every linked child's history, including a child who has since left the school.
+  if (tab === 'history') {
+    const { rows, capped } = await loadPickupHistory(supabase, studentIds)
+    return (
+      <div className="space-y-6">
+        <Header tab={tab} />
+        <PickupHistory rows={rows} capped={capped} />
+      </div>
+    )
+  }
 
   const [{ data: students }, { data: pickups }] = await Promise.all([
     studentIds.length > 0
@@ -52,12 +90,7 @@ export default async function AuthorizedPickupPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Authorized Pickup</h1>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Register the people allowed to pick up your child. Teachers and admin can look this list up at pickup time.
-        </p>
-      </div>
+      <Header tab={tab} />
 
       {(students ?? []).length === 0 ? (
         <EmptyState

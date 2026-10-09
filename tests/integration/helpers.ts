@@ -74,7 +74,7 @@ const bestEffort = async (run: PromiseLike<unknown>) => {
 /** Removes the given test users and students and every row that hangs off them. */
 export async function cleanupTestData(admin: SupabaseClient, userIds: string[], studentIds: string[]) {
   if (studentIds.length > 0) {
-    for (const table of ['student_health', 'emergency_contacts', 'do_not_release', 'attendance', 'milestones', 'authorized_pickups', 'unenrollment_requests', 'student_promotions', 'parent_student']) {
+    for (const table of ['student_health', 'emergency_contacts', 'do_not_release', 'attendance', 'milestones', 'authorized_pickups', 'unenrollment_requests', 'student_promotions', 'pickup_records', 'parent_student']) {
       await bestEffort(admin.from(table).delete().in('student_id', studentIds))
     }
     // A fee's payment history rows must go before the fee itself (foreign key).
@@ -103,6 +103,7 @@ export async function cleanupTestData(admin: SupabaseClient, userIds: string[], 
       // teacher may have been made an assistant of a real classroom.
       ['album_photos', 'uploaded_by'],
       ['classroom_assistants', 'teacher_id'],
+      ['pickup_records', 'recorded_by'],
     ] as const) {
       await bestEffort(admin.from(table).delete().in(column, userIds))
     }

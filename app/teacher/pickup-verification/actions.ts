@@ -7,40 +7,73 @@ import { parsePickupIdCode, normalizePickupIdLabel, findPickupIdByLabel } from '
 import { PICKUP_PHOTO_URL_TTL_SECONDS } from '@/lib/pickup-list'
 import { pickupDisplayName } from '@/lib/pickup-names'
 import { isTerminalStudentStatus } from '@/lib/student-status'
+import { revalidatePath } from 'next/cache'
+import { notifyParentsOfStudent } from '@/lib/notify'
+import { formatManilaDate, formatManilaTime } from '@/lib/pickup-history'
 
-// A lightweight audit trail for "someone at the front desk checked this
-// person against the list" — deliberately not a new table, just an
-// activity_log entry, since the actual authorization data already lives in
-// authorized_pickups and doesn't need a separate check-in/out record for
-// what this feature asked for.
-//
-// Server Actions bypass middleware's role-based routing entirely (see the
-// CLAUDE.md note on this), so this re-checks the caller is teacher/admin
-// itself rather than trusting that only those roles could have reached the
-// page that renders the "Log Check" button.
-export async function logPickupCheck(studentId: string, personName: string): Promise<{ error: string } | undefined> {
+// "Record Pickup" in Pickup Verification: the child is being collected by this
+// authorized person, now. Writes the pickup history (pickup_records) that staff and
+// the child's parents can read, tells the parents, and logs it. The person is looked
+// up again here (never trusted from the browser) and must still be on the child's
+// list; the child must still be enrolled. Re-derives the caller's role, since Server
+// Actions skip the middleware's role routing.
+export async function recordPickup(authorizedPickupId: string, method: 'scan' | 'name'): Promise<{ error: string } | { pickedUpAt: string }> {
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) {
-    return { error: 'Your session has expired. Please log in again.' }
-  }
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (!user) return { error: 'Your session has expired. Please log in again.' }
+  const { data: profile } = await supabase.from('profiles').select('role, first_name, last_name').eq('id', user.id).single()
   if (profile?.role !== 'teacher' && profile?.role !== 'admin') {
     return { error: 'Only teachers and admins can do this.' }
   }
+  if (method !== 'scan' && method !== 'name') return { error: 'Invalid check method.' }
 
-  // target_id here is the student being checked, not a specific
-  // authorized_pickups row (a check can match, or fail to match, any
-  // number of them) — targetTable is 'students' so the Activity Log's
-  // existing student-label resolution picks it up correctly.
+  const { data: person } = await supabase
+    .from('authorized_pickups')
+    .select('id, student_id, first_name, middle_name, last_name, relationship')
+    .eq('id', authorizedPickupId)
+    .maybeSingle()
+  if (!person) return { error: 'This person is no longer on the authorized list. Do not release the child without admin confirmation.' }
+
+  const { data: student } = await supabase.from('students').select('first_name, last_name, enrollment_status').eq('id', person.student_id).maybeSingle()
+  if (!student || isTerminalStudentStatus(student.enrollment_status)) return { error: 'This child is no longer enrolled.' }
+
+  const personName = pickupDisplayName(person)
+  const studentName = `${student.first_name} ${student.last_name}`
+  const { data: record, error } = await supabase
+    .from('pickup_records')
+    .insert({
+      student_id: person.student_id,
+      authorized_pickup_id: person.id,
+      student_name: studentName,
+      person_name: personName,
+      relationship: person.relationship,
+      method,
+      recorded_by: user.id,
+      recorded_by_name: `${profile.first_name} ${profile.last_name}`,
+    })
+    .select('picked_up_at')
+    .single()
+  if (error || !record) return { error: error?.message ?? 'Could not record the pickup.' }
+
   await logActivity(supabase, {
     actorId: user.id,
-    action: `Checked pickup authorization for "${personName.trim()}"`,
+    action: `Recorded pickup by "${personName}"${method === 'scan' ? ' (Pickup ID scanned)' : ' (name checked)'}`,
     targetTable: 'students',
-    targetId: studentId,
+    targetId: person.student_id,
   })
+  await notifyParentsOfStudent(person.student_id, {
+    kind: 'message',
+    title: `${student.first_name} was picked up`,
+    body: `${studentName} was picked up by ${personName}${person.relationship ? ` (${person.relationship})` : ''} at ${formatManilaTime(record.picked_up_at)}, ${formatManilaDate(record.picked_up_at)}.`,
+    href: '/parent/pickup?tab=history',
+  })
+
+  revalidatePath('/admin/pickup-verification')
+  revalidatePath('/teacher/pickup-verification')
+  revalidatePath('/parent/pickup')
+  return { pickedUpAt: record.picked_up_at }
 }
 
 export type ScannedPickup = {
