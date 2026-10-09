@@ -4,6 +4,7 @@ import { sendEmail } from '@/lib/email'
 import { getSiteUrl } from '@/lib/site-url'
 import { todayIso } from '@/lib/format'
 import { runDailyNotifications } from '@/lib/daily-notifications'
+import { runAutoPromotions } from '@/lib/auto-promotion'
 
 // Called once a day by Vercel Cron (vercel.json). Vercel sends
 // `Authorization: Bearer <CRON_SECRET>` when a CRON_SECRET environment variable
@@ -29,11 +30,22 @@ export async function GET(request: Request) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  const admin = createAdminClient()
+  // First move children who have outgrown their class (adds the new class's fees),
+  // so the reminders below already see those fees. Kept out of
+  // runDailyNotifications on purpose: its test runs with a far-future "today".
+  let promotions
+  try {
+    promotions = await runAutoPromotions({ admin, today: todayIso() })
+  } catch (err) {
+    promotions = { promoted: [], errors: [err instanceof Error ? err.message : String(err)] }
+  }
+
   const summary = await runDailyNotifications({
-    admin: createAdminClient(),
+    admin,
     send: (to, mail) => sendEmail({ to, subject: mail.subject, html: mail.html }),
     today: todayIso(),
     siteUrl: getSiteUrl(),
   })
-  return Response.json(summary)
+  return Response.json({ ...summary, promotions })
 }
