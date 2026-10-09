@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import jsQR from 'jsqr'
-import { Camera, CameraOff, ScanLine, ShieldAlert, ShieldCheck } from 'lucide-react'
+import { Camera, CameraOff, ScanLine, ShieldAlert } from 'lucide-react'
 import { verifyPickupCard, recordPickup, type ScannedPickup } from '@/app/teacher/pickup-verification/actions'
 import { formatManilaTime } from '@/lib/pickup-history'
-import { PickupAvatar } from '@/components/pickup/pickup-avatar'
+import { PickupMatchCard } from '@/components/pickup/pickup-match-card'
 
 // Pickup ID scanning for Pickup Verification. Two ways in: the camera (any laptop or
 // phone), or the text box, which also takes a USB/Bluetooth barcode scanner because
@@ -185,34 +185,18 @@ export function PickupScanner() {
       )}
 
       {result && 'person' in result && (
-        <div className="mt-3 flex items-center justify-between gap-3 rounded-lg bg-green-50 dark:bg-green-950/30 p-3">
-          <div className="flex items-center gap-3">
-            <PickupAvatar
-              url={result.person.photoUrl}
-              sizeClassName="h-20 w-20"
-              iconClassName="h-7 w-7"
-              fallbackClassName="bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500"
-            />
-            <div>
-              <p className="flex items-center gap-1.5 font-medium text-green-800 dark:text-green-300">
-                <ShieldCheck className="h-4 w-4" />
-                {result.person.name}
-              </p>
-              <p className="text-xs text-green-700 dark:text-green-400">
-                {[result.person.relationship, result.person.phone].filter(Boolean).join(' · ') || 'Authorized on file'}
-              </p>
-              <p className="text-xs font-semibold text-green-800 dark:text-green-300">Authorized for {result.person.studentName}</p>
-              <p className="mt-1 text-xs text-green-700 dark:text-green-400">Compare this photo with the person in front of you.</p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => handleLog(result.person)}
-            disabled={!!logged || recording}
-            className="shrink-0 rounded-full border border-green-600 dark:border-green-500 px-3 py-1.5 text-xs font-semibold text-green-700 dark:text-green-400 hover:bg-green-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {logged ? `Picked up ${formatManilaTime(logged)}` : recording ? 'Recording...' : 'Record Pickup'}
-          </button>
+        <div className="mt-3">
+          <PickupMatchCard
+            large
+            photoUrl={result.person.photoUrl}
+            name={result.person.name}
+            details={[result.person.relationship, result.person.phone].filter(Boolean).join(' · ') || 'Authorized on file'}
+            studentName={result.person.studentName}
+            note="Compare this photo with the person in front of you."
+            buttonLabel={logged ? `Picked up ${formatManilaTime(logged)}` : recording ? 'Recording...' : 'Record Pickup'}
+            buttonDisabled={!!logged || recording}
+            onButtonClick={() => handleLog(result.person)}
+          />
         </div>
       )}
       {recordError && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{recordError}</p>}
