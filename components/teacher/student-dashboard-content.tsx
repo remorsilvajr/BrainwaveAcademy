@@ -10,6 +10,7 @@ import { milestoneCategoryLabels, milestoneCategoryOrder } from '@/lib/milestone
 import { formatDateLong, todayIso } from '@/lib/format'
 import { ageInYearsLabel, wholeMonthsOld } from '@/lib/dob'
 import { AvatarEditor } from '@/components/ui/avatar-editor'
+import { formatTime12 } from '@/lib/attendance-times'
 
 type Student = {
   id: string
@@ -22,7 +23,7 @@ type Student = {
   avatar_url: string | null
   classroomName?: string | null
 }
-type AttendanceRow = { id: string; date: string; status: string }
+type AttendanceRow = { id: string; date: string; status: string; arrival_time?: string | null; departure_time?: string | null }
 type MilestoneRow = { id: string; category: string; assessment_date: string; notes: string }
 
 const attendanceStatusMeta: Record<string, string> = {
@@ -38,6 +39,7 @@ export function StudentDashboardContent({
   avatarEditor,
   readOnly = false,
   attendanceReadOnly = false,
+  attendanceReadOnlyNote = 'Student attendance is recorded by the teachers.',
   attendanceTracked = true,
   health,
 }: {
@@ -64,6 +66,8 @@ export function StudentDashboardContent({
   // Admin: attendance is shown but not editable (teachers record student attendance), while
   // assessments and the avatar stay editable. Unlike readOnly, this hides only the check-in.
   attendanceReadOnly?: boolean
+  // Shown instead of the check-in when attendanceReadOnly is set.
+  attendanceReadOnlyNote?: string
   // False for a student in Tutorial or Quiz Bee & Competitions, which
   // don't run daily: the attendance controls and history are replaced by a note.
   attendanceTracked?: boolean
@@ -228,14 +232,15 @@ export function StudentDashboardContent({
               <span className={`rounded-full px-2 py-0.5 text-xs font-semibold uppercase ${attendanceStatusMeta[todayRecord.status]}`}>
                 {todayRecord.status}
               </span>{' '}
-              for today.
+              for today{todayRecord.arrival_time ? `, arrived ${formatTime12(todayRecord.arrival_time)}` : ''}
+              {todayRecord.departure_time ? `, left ${formatTime12(todayRecord.departure_time)}` : ''}.
             </p>
           ) : (
             <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">Not marked for today.</p>
           )}
           {attendanceTracked && attendanceError && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{attendanceError}</p>}
           {attendanceTracked && !readOnly && attendanceReadOnly && (
-            <p className="mt-3 text-xs text-gray-400 dark:text-gray-500">Student attendance is recorded by the teachers.</p>
+            <p className="mt-3 text-xs text-gray-400 dark:text-gray-500">{attendanceReadOnlyNote}</p>
           )}
           {attendanceTracked && !readOnly && !attendanceReadOnly && (
             <div className="mt-4 flex gap-2">
@@ -364,6 +369,11 @@ export function StudentDashboardContent({
                 <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                   <CalendarCheck className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                   {formatDateLong(a.date)}
+                  {a.arrival_time && (
+                    <span className="text-xs text-gray-400 dark:text-gray-500">
+                      {`In ${formatTime12(a.arrival_time)}${a.departure_time ? ` · Out ${formatTime12(a.departure_time)}` : ''}`}
+                    </span>
+                  )}
                 </div>
                 <span className={`rounded-full px-2 py-0.5 text-xs font-semibold uppercase ${attendanceStatusMeta[a.status]}`}>
                   {a.status}

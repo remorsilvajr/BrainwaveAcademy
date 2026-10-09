@@ -58,11 +58,12 @@ export default async function AdminStudentAttendancePage({
       .not('classroom_id', 'is', null)
       .not('enrollment_status', 'in', TERMINAL_STATUS_FILTER)
       .order('first_name', { ascending: true }),
-    supabase.from('attendance').select('student_id, status').eq('date', selectedDate),
+    supabase.from('attendance').select('student_id, status, arrival_time, departure_time').eq('date', selectedDate),
     supabase.from('student_health').select('student_id, allergies, severe_allergy'),
   ])
 
   const statusByStudent = new Map((records ?? []).map((r) => [r.student_id, r.status]))
+  const timesByStudent = new Map((records ?? []).map((r) => [r.student_id, { arrival: r.arrival_time as string | null, departure: r.departure_time as string | null }]))
   const allergyByStudent = new Map((health ?? []).map((h) => [h.student_id, allergyAlert(h)]))
   const classes: DayClass[] = (classrooms ?? [])
     .filter((c) => tracksDailyAttendance(c))
@@ -76,6 +77,8 @@ export default async function AdminStudentAttendancePage({
           name: `${s.first_name} ${s.last_name}`,
           status: (statusByStudent.get(s.id) ?? null) as DayClass['students'][number]['status'],
           allergy: allergyByStudent.get(s.id) ?? null,
+          arrival: timesByStudent.get(s.id)?.arrival ?? null,
+          departure: timesByStudent.get(s.id)?.departure ?? null,
         })),
     }))
 

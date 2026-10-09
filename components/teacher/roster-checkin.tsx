@@ -1,10 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { AlertTriangle } from 'lucide-react'
+import type { HealthAlert } from '@/lib/health'
+import { HealthAlertChips } from '@/components/health/health-alert-chips'
 import { useRouter } from 'next/navigation'
 import { Check } from 'lucide-react'
-import { recordAttendance } from '@/app/teacher/student-dashboard/actions'
+import { recordAttendance, recordAttendanceTimes } from '@/app/teacher/student-dashboard/actions'
+import { formatTime12, manilaTimeNow, toHHMM } from '@/lib/attendance-times'
 import { todayIso } from '@/lib/format'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
@@ -27,9 +29,17 @@ export function RosterCheckin({
   basePath,
   readOnly = false,
   alerts = {},
+  timesByStudent = {},
+  showUnassigned = true,
+  emptyMessage,
 }: {
-  // studentId -> a short allergy alert shown beside their name.
-  alerts?: Record<string, string>
+  // studentId -> today's (or the viewed day's) arrival / departure, "HH:MM:SS" from the database.
+  timesByStudent?: Record<string, { arrival: string | null; departure: string | null }>
+  // The teacher's roster only holds their own classes, so no "Unassigned" option.
+  showUnassigned?: boolean
+  emptyMessage?: string
+  // studentId -> allergy / medical flags shown beside their name (lib/health.ts).
+  alerts?: Record<string, HealthAlert[]>
   students: Student[]
   // Classroom assignment is an org/billing structure, not an access
   // boundary (see the Classrooms note in CLAUDE.md) — this filter is a
@@ -130,23 +140,21 @@ export function RosterCheckin({
               {c.name}
             </option>
           ))}
-          <option value="unassigned">Unassigned</option>
+          {showUnassigned && <option value="unassigned">Unassigned</option>}
         </select>
       </div>
 
       <div className="mt-2 min-h-[320px] divide-y divide-gray-100 dark:divide-gray-800">
         {pageItems.map((s) => {
           const status = statusByStudent[s.id]
+          const times = timesByStudent[s.id]
+          const attended = status === 'present' || status === 'late'
           return (
-            <div key={s.id} className="flex flex-col gap-2 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+            <div key={s.id} className="py-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
               <p className="min-w-0 text-sm font-medium text-gray-900 dark:text-gray-100 sm:flex-1">
                 {s.first_name} {s.last_name}
-                {alerts[s.id] && (
-                  <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-red-600 px-2 py-0.5 text-[11px] font-bold text-white" title={alerts[s.id]}>
-                    <AlertTriangle className="h-3 w-3" />
-                    Allergy: {alerts[s.id]}
-                  </span>
-                )}
+                {alerts[s.id] && <HealthAlertChips alerts={alerts[s.id]} className="ml-2 align-middle" />}
                 {classroomFilter === 'all' && (
                   <span className="ml-2 text-xs font-normal text-gray-400 dark:text-gray-500">
                     {s.classroom_id ? (classroomById.get(s.classroom_id) ?? '') : 'Unassigned'}
@@ -186,11 +194,20 @@ export function RosterCheckin({
                 </div>
               )}
             </div>
+            {attended &&
+              (readOnly ? (
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Arrived {formatTime12(times?.arrival)} · Left {formatTime12(times?.departure)}
+                </p>
+              ) : (
+                <ArrivalDeparture key={`${s.id}-${times?.arrival ?? ''}-${times?.departure ?? ''}`} studentId={s.id} arrival={times?.arrival ?? null} departure={times?.departure ?? null} />
+              ))}
+            </div>
           )
         })}
         {pageItems.length === 0 && (
           <p className="py-6 text-center text-sm text-gray-500 dark:text-gray-400">
-            {students.length === 0 ? 'No students on file yet.' : 'No students match your search.'}
+            {students.length === 0 ? (emptyMessage ?? 'No students on file yet.') : 'No students match your search.'}
           </p>
         )}
       </div>
@@ -204,6 +221,82 @@ export function RosterCheckin({
           onPageChange={setPage}
         />
       </div>
+    </div>
+  )
+}
+
+// Today's arrival and departure for one child: editable times (saved when a field
+// is left) and a "Now" button for the departure.
+function ArrivalDeparture({ studentId, arrival, departure }: { studentId: string; arrival: string | null; departure: string | null }) {
+  const router = useRouter()
+  const [arrivalValue, setArrivalValue] = useState(toHHMM(arrival) ?? '')
+  const [departureValue, setDepartureValue] = useState(toHHMM(departure) ?? '')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  async function save(nextArrival: string, nextDeparture: string) {
+    if (nextArrival === (toHHMM(arrival) ?? '') && nextDeparture === (toHHMM(departure) ?? '')) return
+    setSaving(true)
+    setError('')
+    try {
+      const result = await recordAttendanceTimes({ student_id: studentId, arrival_time: nextArrival || null, departure_time: nextDeparture || null })
+      if (result?.error) {
+        setError(result.error)
+        return
+      }
+      router.refresh()
+    } catch {
+      setError('Something went wrong.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const timeInput =
+    'rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-900 focus:border-[#0b1b62] focus:outline-none disabled:opacity-60 dark:border-gray-700 dark:bg-gray-800 dark:text-slate-100 dark:focus:border-indigo-400'
+
+  return (
+    <div className="mt-1.5">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-gray-500 dark:text-gray-400">
+        <label className="flex items-center gap-1.5">
+          Arrived
+          <input
+            type="time"
+            value={arrivalValue}
+            disabled={saving}
+            onChange={(e) => setArrivalValue(e.target.value)}
+            onBlur={() => save(arrivalValue, departureValue)}
+            className={timeInput}
+          />
+        </label>
+        <label className="flex items-center gap-1.5">
+          Left
+          <input
+            type="time"
+            value={departureValue}
+            disabled={saving}
+            onChange={(e) => setDepartureValue(e.target.value)}
+            onBlur={() => save(arrivalValue, departureValue)}
+            className={timeInput}
+          />
+        </label>
+        {!departureValue && (
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => {
+              const now = manilaTimeNow()
+              setDepartureValue(now)
+              void save(arrivalValue, now)
+            }}
+            className="rounded-full border border-gray-300 px-2.5 py-1 font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+          >
+            Left Now
+          </button>
+        )}
+        {saving && <span>Saving...</span>}
+      </div>
+      {error && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{error}</p>}
     </div>
   )
 }

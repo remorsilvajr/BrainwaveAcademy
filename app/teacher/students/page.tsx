@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { TeacherStudentsTable } from '@/components/teacher/students-table'
+import { healthAlerts } from '@/lib/health'
 
 export default async function TeacherStudentsPage() {
   const supabase = await createClient()
@@ -11,11 +12,15 @@ export default async function TeacherStudentsPage() {
       .order('first_name', { ascending: true }),
     supabase.from('classrooms').select('id, name').order('min_age_months', { ascending: true, nullsFirst: false }).order('slug'),
   ])
+  // Allergy and medical flags beside each name (teachers may read every child's health record).
+  const { data: healthRows } = await supabase.from('student_health').select('student_id, allergies, severe_allergy, medical_conditions, medications')
+  const alertsByStudent = new Map((healthRows ?? []).map((h) => [h.student_id, healthAlerts(h)]))
 
   const classroomById = new Map((classrooms ?? []).map((c) => [c.id, c.name]))
   const rows = (students ?? []).map((s) => ({
     ...s,
     classroomName: s.classroom_id ? (classroomById.get(s.classroom_id) ?? null) : null,
+    alerts: alertsByStudent.get(s.id) ?? [],
   }))
 
   return (

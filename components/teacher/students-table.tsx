@@ -9,6 +9,8 @@ import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
 import { SortSelect } from '@/components/ui/sort-select'
 import { useSort, compareStrings, compareDates, type SortOption } from '@/lib/use-sort'
+import type { HealthAlert } from '@/lib/health'
+import { HealthAlertChips } from '@/components/health/health-alert-chips'
 
 type Student = {
   id: string
@@ -21,6 +23,7 @@ type Student = {
   avatar_url: string | null
   classroom_id: string | null
   classroomName: string | null
+  alerts: HealthAlert[]
 }
 
 type Classroom = { id: string; name: string }
@@ -29,10 +32,13 @@ export function TeacherStudentsTable({ students, classrooms }: { students: Stude
   const router = useRouter()
   const [search, setSearch] = useState('')
   const [classroomFilter, setClassroomFilter] = useState('all')
+  const [alertFilter, setAlertFilter] = useState('all')
 
   const filtered = students.filter((s) => {
     if (classroomFilter === 'unassigned' && s.classroom_id) return false
     if (classroomFilter !== 'all' && classroomFilter !== 'unassigned' && s.classroom_id !== classroomFilter) return false
+    if (alertFilter === 'any' && s.alerts.length === 0) return false
+    if (alertFilter === 'severe' && !s.alerts.some((a) => a.kind === 'severe')) return false
     if (!search.trim()) return true
     const term = search.toLowerCase()
     return `${s.first_name} ${s.middle_name ?? ''} ${s.last_name}`.toLowerCase().includes(term)
@@ -51,13 +57,13 @@ export function TeacherStudentsTable({ students, classrooms }: { students: Stude
 
   const { page, setPage, totalPages, totalItems, pageItems, pageSize } = usePagination(
     sorted,
-    `${search}|${classroomFilter}|${sortKey}`
+    `${search}|${classroomFilter}|${alertFilter}|${sortKey}`
   )
 
   return (
     <>
       <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_200px_260px]">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_200px_200px_260px]">
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Search Students</label>
             <input
@@ -83,19 +89,32 @@ export function TeacherStudentsTable({ students, classrooms }: { students: Stude
               <option value="unassigned">Unassigned</option>
             </select>
           </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Health Alerts</label>
+            <select
+              value={alertFilter}
+              onChange={(e) => setAlertFilter(e.target.value)}
+              className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+            >
+              <option value="all">All Students</option>
+              <option value="any">Has Alerts</option>
+              <option value="severe">Severe Allergy</option>
+            </select>
+          </div>
           <SortSelect value={sortKey} onChange={setSortKey} options={sortOptions} />
         </div>
       </div>
 
       <div className="mt-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
         <div className="min-h-[420px] overflow-x-auto">
-        <table className="w-full min-w-[640px] text-sm">
+        <table className="w-full min-w-[860px] text-sm">
           <thead className="bg-gray-50 dark:bg-gray-800/60 text-left text-gray-500 dark:text-gray-400">
             <tr>
               <th className="p-4 font-medium">Name</th>
               <th className="p-4 font-medium">Date of Birth</th>
               <th className="p-4 font-medium">Gender</th>
               <th className="p-4 font-medium">Classroom</th>
+              <th className="p-4 font-medium">Health Alerts</th>
               <th className="p-4 font-medium">Enrollment Status</th>
               <th className="p-4"></th>
             </tr>
@@ -130,6 +149,9 @@ export function TeacherStudentsTable({ students, classrooms }: { students: Stude
                 <td className="p-4 text-gray-600 dark:text-gray-400">
                   {s.classroomName ?? <span className="text-gray-400 dark:text-gray-500">Unassigned</span>}
                 </td>
+                <td className="max-w-[280px] p-4">
+                  {s.alerts.length > 0 ? <HealthAlertChips alerts={s.alerts} /> : <span className="text-gray-400 dark:text-gray-500">None</span>}
+                </td>
                 <td className="p-4">
                   <span
                     className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${
@@ -153,7 +175,7 @@ export function TeacherStudentsTable({ students, classrooms }: { students: Stude
             ))}
             {pageItems.length === 0 && (
               <tr>
-                <td colSpan={6} className="p-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                <td colSpan={7} className="p-8 text-center text-sm text-gray-500 dark:text-gray-400">
                   {students.length === 0 ? 'No students on file yet.' : 'No students match your search.'}
                 </td>
               </tr>
