@@ -55,7 +55,7 @@ export function PaymentsTabs({
 
   return (
     <div>
-      <div className="flex gap-6 overflow-x-auto border-b border-gray-200 dark:border-gray-700">
+      <div className="flex gap-4 overflow-x-auto border-b border-gray-200 [scrollbar-width:none] dark:border-gray-700 sm:gap-6 [&::-webkit-scrollbar]:hidden">
         {tabs.map((t) => (
           <button
             key={t.key}

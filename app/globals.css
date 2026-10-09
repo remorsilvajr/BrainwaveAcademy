@@ -36,3 +36,12 @@
     cursor: not-allowed;
   }
 }
+
+/* Phones: a wide table already scrolls sideways inside its `overflow-x-auto` box, but
+   its cells still wrapped word by word ("January / 15, / 2024"), making tall squeezed
+   rows and squashed avatars. Keep each cell on one line and let the box scroll. */
+@media (max-width: 639px) {
+  .overflow-x-auto > table :where(th, td) {
+    white-space: nowrap;
+  }
+}

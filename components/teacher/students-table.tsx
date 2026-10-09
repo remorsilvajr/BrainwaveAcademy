@@ -63,8 +63,8 @@ export function TeacherStudentsTable({ students, classrooms }: { students: Stude
   return (
     <>
       <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_200px_200px_260px]">
-          <div>
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-[1fr_200px_200px_260px]">
+          <div className="col-span-2 lg:col-span-1">
             <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Search Students</label>
             <input
               value={search}
@@ -101,12 +101,48 @@ export function TeacherStudentsTable({ students, classrooms }: { students: Stude
               <option value="severe">Severe Allergy</option>
             </select>
           </div>
-          <SortSelect value={sortKey} onChange={setSortKey} options={sortOptions} />
+          <div className="col-span-2 lg:col-span-1">
+            <SortSelect value={sortKey} onChange={setSortKey} options={sortOptions} />
+          </div>
         </div>
       </div>
 
       <div className="mt-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-        <div className="min-h-[420px] overflow-x-auto">
+        {/* Phone: one card per child (the wide table squeezed names and dates onto 3-4 lines). */}
+        <ul className="min-h-[420px] divide-y divide-gray-100 dark:divide-gray-800 sm:hidden">
+          {pageItems.map((s) => (
+            <li key={s.id}>
+              <Link href={`/teacher/student-dashboard?student=${s.id}`} className="flex gap-3 p-4 hover:bg-gray-50 dark:hover:bg-gray-800/60">
+                {s.avatar_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={s.avatar_url} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
+                ) : (
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300">
+                    <UserIcon className="h-4 w-4" />
+                  </span>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-gray-900 dark:text-gray-100">
+                    {s.first_name}
+                    {s.middle_name ? ` ${s.middle_name}` : ''} {s.last_name}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {`${s.classroomName ?? 'Unassigned'} · ${calculateAge(s.date_of_birth)}y · `}
+                    <span className="capitalize">{s.gender}</span>
+                    {s.enrollment_status !== 'active' ? <span className="capitalize">{` · ${s.enrollment_status}`}</span> : null}
+                  </p>
+                  {s.alerts.length > 0 && <HealthAlertChips alerts={s.alerts} className="mt-1.5" />}
+                </div>
+              </Link>
+            </li>
+          ))}
+          {pageItems.length === 0 && (
+            <li className="p-8 text-center text-sm text-gray-500 dark:text-gray-400">
+              {students.length === 0 ? 'No students on file yet.' : 'No students match your search.'}
+            </li>
+          )}
+        </ul>
+        <div className="hidden min-h-[420px] overflow-x-auto sm:block">
         <table className="w-full min-w-[860px] text-sm">
           <thead className="bg-gray-50 dark:bg-gray-800/60 text-left text-gray-500 dark:text-gray-400">
             <tr>

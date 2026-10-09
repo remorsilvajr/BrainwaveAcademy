@@ -12,7 +12,7 @@ const STYLES: Record<HealthAlert['kind'], string> = {
 export function HealthAlertChips({ alerts, className = '' }: { alerts: HealthAlert[]; className?: string }) {
   if (alerts.length === 0) return null
   return (
-    <span className={`inline-flex flex-wrap gap-1 ${className}`}>
+    <span className={`flex min-w-0 max-w-full flex-wrap gap-1 ${className}`}>
       {alerts.map((a) => {
         const Icon = a.kind === 'medication' ? Pill : a.kind === 'medical' ? HeartPulse : AlertTriangle
         return (
