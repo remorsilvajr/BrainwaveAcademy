@@ -7,6 +7,7 @@ import { postAnnouncement, deleteAnnouncement } from '@/app/admin/announcement/a
 import { formatRelativeTime } from '@/lib/format'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 type Announcement = {
   id: string
@@ -48,6 +49,7 @@ export function AnnouncementFeed({
   const [errorMessage, setErrorMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [confirmingDelete, setConfirmingDelete] = useState<Announcement | null>(null)
   const [search, setSearch] = useState('')
 
   const filtered = announcements.filter((a) => {
@@ -92,6 +94,7 @@ export function AnnouncementFeed({
         setErrorMessage(result.error)
         return
       }
+      setConfirmingDelete(null)
       router.refresh()
     } catch {
       setErrorMessage('Something went wrong.')
@@ -208,7 +211,7 @@ export function AnnouncementFeed({
             </div>
             <button
               type="button"
-              onClick={() => handleDelete(a.id)}
+              onClick={() => setConfirmingDelete(a)}
               disabled={deletingId === a.id}
               aria-label="Delete announcement"
               className="shrink-0 text-gray-400 dark:text-gray-500 hover:text-red-600 disabled:opacity-60"
@@ -233,6 +236,17 @@ export function AnnouncementFeed({
           onPageChange={setPage}
         />
       </div>
+
+      {confirmingDelete && (
+        <ConfirmDialog
+          title="Delete this announcement?"
+          description={`"${confirmingDelete.title}" will be removed for everyone who can see it.`}
+          confirmLabel="Yes, Delete"
+          isPending={deletingId === confirmingDelete.id}
+          onConfirm={() => handleDelete(confirmingDelete.id)}
+          onCancel={() => setConfirmingDelete(null)}
+        />
+      )}
     </div>
   )
 }

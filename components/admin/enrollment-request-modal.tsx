@@ -297,7 +297,7 @@ export function EnrollmentRequestModal({
           {result ? (
             <button
               onClick={onClose}
-              className="w-full rounded-lg bg-gray-900 py-3 text-sm font-semibold text-white hover:bg-gray-800"
+              className="w-full rounded-lg bg-gray-900 py-3 text-sm font-semibold text-white hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600"
             >
               Close
             </button>
@@ -371,7 +371,7 @@ export function EnrollmentRequestModal({
             <>
               <button
                 onClick={() => setPendingAction('dismiss')}
-                className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                className="flex-1 rounded-lg border border-red-300 dark:border-red-800 py-3 text-sm font-semibold text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"
               >
                 Dismiss Request
               </button>

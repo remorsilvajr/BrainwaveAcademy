@@ -170,7 +170,7 @@ export function FeedbackForm({
         {sent ? (
           <button
             onClick={onCancel ?? resetForm}
-            className="w-full rounded-lg bg-gray-900 py-3 text-sm font-semibold text-white hover:bg-gray-800"
+            className="w-full rounded-lg bg-gray-900 py-3 text-sm font-semibold text-white hover:bg-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600"
           >
             {onCancel ? 'Close' : 'Send Another'}
           </button>

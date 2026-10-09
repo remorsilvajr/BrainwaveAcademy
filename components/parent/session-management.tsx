@@ -67,7 +67,7 @@ export function SessionManagement({ lastSignInAt }: { lastSignInAt: string | nul
           type="button"
           onClick={() => handleLogout('all')}
           disabled={isLoggingOut !== null}
-          className="text-sm font-semibold text-gray-700 dark:text-gray-300 underline hover:text-gray-900 disabled:opacity-60"
+          className="rounded-lg border border-red-300 px-4 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-60 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/30"
         >
           {isLoggingOut === 'all' ? 'Logging out of all devices…' : 'Log Out of All Devices'}
         </button>
