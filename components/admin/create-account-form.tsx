@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Camera } from 'lucide-react'
 import { createSystemUser, type CreateSystemUserState } from '@/app/admin/create-new-account/actions'
 import { PasswordFields } from '@/components/ui/password-fields'
+import { adminSetPasswordRequirements } from '@/lib/password-rules'
 
 const initialState: CreateSystemUserState = {}
 
@@ -299,7 +300,7 @@ export function CreateAccountForm({ canCreateAdmin = false }: { canCreateAdmin?:
                     onConfirmChange={setConfirmPassword}
                     required
                     resetKey={responses}
-                    showRules={false}
+                    requirements={adminSetPasswordRequirements}
                     passwordError={fieldErrors.password}
                     confirmError={fieldErrors.confirm_password}
                   />

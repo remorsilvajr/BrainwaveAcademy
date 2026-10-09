@@ -107,3 +107,13 @@ describe('generateUnknownPassword', () => {
     expect(passwordRequirements.every((r) => r.test(a))).toBe(true)
   })
 })
+
+describe('adminSetPasswordRequirements', () => {
+  it("is only Supabase Auth's 6-character minimum", async () => {
+    const { adminSetPasswordRequirements, SUPABASE_MIN_PASSWORD_LENGTH } = await import('@/lib/password-rules')
+    expect(SUPABASE_MIN_PASSWORD_LENGTH).toBe(6)
+    expect(adminSetPasswordRequirements).toHaveLength(1)
+    expect(adminSetPasswordRequirements[0].test('abcde')).toBe(false)
+    expect(adminSetPasswordRequirements[0].test('abcdef')).toBe(true)
+  })
+})

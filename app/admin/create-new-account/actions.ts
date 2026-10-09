@@ -5,6 +5,7 @@ import { isValidEmail, EMAIL_VALIDATION_MESSAGE } from '@/lib/email-validation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { generateUnknownPassword, PASSWORD_MAX_BYTES } from '@/lib/password'
+import { SUPABASE_MIN_PASSWORD_LENGTH } from '@/lib/password-rules'
 import { sendEmail } from '@/lib/email'
 import { accountCreatedWithPasswordEmail } from '@/lib/notification-emails'
 import { getSiteUrl } from '@/lib/site-url'
@@ -85,11 +86,12 @@ export async function createSystemUser(
     fieldErrors.phone_number = 'Enter a valid PH mobile number, e.g. 0917 123 4567 or +63 917 123 4567.'
   }
 
-  // No strength rules here (the admin decides); only that it was typed, typed the
-  // same twice, and fits bcrypt's 72-byte limit. Supabase Auth's own minimum
-  // length (dashboard setting) still applies and its message shows in the banner.
+  // No strength rules here (the admin decides), only Supabase Auth's own minimum
+  // length, the same entry twice, and bcrypt's 72-byte limit.
   if (values.password_mode === 'set') {
     if (!password) fieldErrors.password = 'Enter a password.'
+    else if (password.length < SUPABASE_MIN_PASSWORD_LENGTH)
+      fieldErrors.password = `The password must be at least ${SUPABASE_MIN_PASSWORD_LENGTH} characters long.`
     else if (new TextEncoder().encode(password).length > PASSWORD_MAX_BYTES) fieldErrors.password = 'That password is too long.'
     else if (password !== confirmPassword) fieldErrors.confirm_password = 'The two passwords do not match.'
   }

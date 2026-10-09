@@ -23,7 +23,7 @@ export function PasswordFields({
   passwordError,
   confirmError,
   resetKey = 0,
-  showRules = true,
+  requirements = passwordRequirements,
 }: {
   password: string
   confirm: string
@@ -37,13 +37,13 @@ export function PasswordFields({
   confirmError?: string
   // Change it to remount the visible inputs (see above).
   resetKey?: number
-  // false hides the rule checklist (admin setting a password, where no rules apply).
-  showRules?: boolean
+  // The checklist to show; defaults to the full app rules (lib/password-rules.ts).
+  requirements?: readonly { id: string; label: string; test: (p: string) => boolean }[]
 }) {
   // Each field has its own eye, like the reset-password form.
   const [show, setShow] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
-  const met = passwordRequirements.map((r) => ({ ...r, isMet: r.test(password) }))
+  const met = requirements.map((r) => ({ ...r, isMet: r.test(password) }))
   const matches = confirm.length > 0 && password === confirm
 
   const inputClass = (error?: string) =>
@@ -123,7 +123,6 @@ export function PasswordFields({
         )}
       </div>
 
-      {showRules && (
       <div className="rounded-lg border border-[#c6c5d280] bg-[#f5f2f9] p-3 dark:border-slate-700 dark:bg-gray-900">
         <p className="text-xs font-medium text-[#454650] dark:text-slate-300">Your password needs:</p>
         <ul className="mt-1.5 flex flex-col gap-1">
@@ -139,7 +138,6 @@ export function PasswordFields({
           ))}
         </ul>
       </div>
-      )}
     </div>
   )
 }

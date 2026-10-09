@@ -26,3 +26,17 @@ export const passwordRequirements = [
     test: (p: string) => /[\d\W_]/.test(p),
   },
 ] as const
+
+// Supabase Auth's own minimum for this project (Authentication settings), measured
+// 2026-10-09: 6 characters, no character-class rule. It is the only rule when an
+// admin sets a password in Create New Account. Keep in step with the dashboard.
+export const SUPABASE_MIN_PASSWORD_LENGTH = 6
+
+export const adminSetPasswordRequirements = [
+  {
+    id: 'length',
+    label: `At least ${SUPABASE_MIN_PASSWORD_LENGTH} characters long`,
+    phrase: `be at least ${SUPABASE_MIN_PASSWORD_LENGTH} characters long`,
+    test: (p: string) => p.length >= SUPABASE_MIN_PASSWORD_LENGTH,
+  },
+] as const
