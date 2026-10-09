@@ -9,7 +9,7 @@ import { logDoNotReleaseHit } from '@/app/admin/do-not-release/actions'
 import { PickupAvatar } from '@/components/pickup/pickup-avatar'
 import { PickupCardModal } from '@/components/pickup/pickup-card-modal'
 import { PickupScanner } from '@/components/pickup/pickup-scanner'
-import { PICKUP_RELATIONSHIPS } from '@/lib/pickup-relationships'
+import { PICKUP_RELATIONSHIPS, relationshipGroup } from '@/lib/pickup-relationships'
 import { pickupDisplayName } from '@/lib/pickup-names'
 import { matchDoNotRelease, type DoNotReleaseEntry } from '@/lib/health'
 
@@ -32,7 +32,8 @@ const NO_RELATIONSHIP = '__none__'
 // Free-text relationships ("Grandmother", "grandmother ") should collapse into
 // one filter option, so compare on a trimmed, lowercased key.
 function relationshipKey(relationship: string | null) {
-  const key = relationship?.trim().toLowerCase()
+  // "Other (Neighbor)" groups under Other.
+  const key = relationshipGroup(relationship)?.toLowerCase()
   return key ? key : NO_RELATIONSHIP
 }
 

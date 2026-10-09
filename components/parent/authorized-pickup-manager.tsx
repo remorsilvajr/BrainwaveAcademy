@@ -12,7 +12,16 @@ import {
 import { Modal } from '@/components/ui/modal'
 import { isValidPhoneInput, PHONE_VALIDATION_MESSAGE } from '@/lib/phone'
 import { PlainSelect } from '@/components/ui/plain-select'
-import { PICKUP_RELATIONSHIPS, PICKUP_RELATIONSHIP_MESSAGE } from '@/lib/pickup-relationships'
+import {
+  PICKUP_RELATIONSHIPS,
+  PICKUP_RELATIONSHIP_MESSAGE,
+  OTHER_RELATIONSHIP,
+  OTHER_SPEC_MAX,
+  OTHER_SPEC_MESSAGE,
+  composeOtherRelationship,
+  isValidOtherSpec,
+  parseRelationship,
+} from '@/lib/pickup-relationships'
 import { pickupDisplayName } from '@/lib/pickup-names'
 import { PickupAvatar } from '@/components/pickup/pickup-avatar'
 import { PickupCardModal } from '@/components/pickup/pickup-card-modal'
@@ -53,17 +62,18 @@ function PickupFormModal({
           firstName: editing.first_name ?? '',
           middleName: editing.middle_name ?? '',
           lastName: editing.last_name ?? '',
-          relationship: editing.relationship ?? '',
+          relationship: parseRelationship(editing.relationship).choice,
           phoneNumber: editing.phone_number ?? '',
         }
       : emptyInput
   )
+  // "Other" needs the relationship spelled out; stored as "Other (Neighbor)".
+  const [otherSpec, setOtherSpec] = useState(parseRelationship(editing?.relationship).other)
   // A legacy free-text relationship (saved before this became a fixed list) is
   // appended as its own option so editing that row still shows what's stored.
+  const editingChoice = parseRelationship(editing?.relationship).choice
   const legacyRelationship =
-    editing?.relationship && !(PICKUP_RELATIONSHIPS as readonly string[]).includes(editing.relationship)
-      ? editing.relationship
-      : null
+    editingChoice && !(PICKUP_RELATIONSHIPS as readonly string[]).includes(editingChoice) ? editingChoice : null
   const relationshipOptions = [...PICKUP_RELATIONSHIPS, ...(legacyRelationship ? [legacyRelationship] : [])].map((r) => ({
     value: r,
     label: r,
@@ -119,6 +129,14 @@ function PickupFormModal({
       setError(PICKUP_RELATIONSHIP_MESSAGE)
       return
     }
+    const isOther = input.relationship === OTHER_RELATIONSHIP
+    // A bare "Other" saved before this rule stays as it was until it's changed.
+    const keepsLegacyBareOther = isOther && !otherSpec.trim() && editing?.relationship === OTHER_RELATIONSHIP
+    if (isOther && !keepsLegacyBareOther && !isValidOtherSpec(otherSpec)) {
+      setError(OTHER_SPEC_MESSAGE)
+      return
+    }
+    const toSave: PickupPersonInput = { ...input, relationship: isOther && !keepsLegacyBareOther ? composeOtherRelationship(otherSpec) : input.relationship }
     if (input.phoneNumber.trim() && !isValidPhoneInput(input.phoneNumber.trim())) {
       setError(PHONE_VALIDATION_MESSAGE)
       return
@@ -129,13 +147,13 @@ function PickupFormModal({
       if (photo) formData.set('photo', photo)
 
       if (editing) {
-        const result = await updatePickupPerson(editing.id, input, formData, removingExistingPhoto)
+        const result = await updatePickupPerson(editing.id, toSave, formData, removingExistingPhoto)
         if (result?.error) {
           setError(result.error)
           return
         }
       } else {
-        const result = await addPickupPerson(studentId, input, formData)
+        const result = await addPickupPerson(studentId, toSave, formData)
         if ('error' in result) {
           setError(result.error)
           return
@@ -153,7 +171,7 @@ function PickupFormModal({
   }
 
   return (
-    <Modal onClose={busy ? () => {} : onClose} maxWidth="md">
+    <Modal onClose={busy ? () => {} : onClose} maxWidth="xl">
       <div className="flex items-start justify-between border-b border-gray-100 dark:border-gray-800 p-6">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
           {editing ? 'Edit Authorized Pickup Person' : 'Add Authorized Pickup Person'}
@@ -177,17 +195,18 @@ function PickupFormModal({
             <input
               value={input.firstName}
               onChange={(e) => setInput({ ...input, firstName: e.target.value })}
-              className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-[#0b1b62] focus:outline-none dark:border-gray-700 dark:bg-transparent dark:text-gray-100 dark:focus:border-indigo-400"
             />
           </div>
           <div>
             <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
-              Middle Name <span className="font-normal text-gray-400 dark:text-gray-500">(optional)</span>
+              Middle Name
             </label>
             <input
               value={input.middleName}
+              placeholder="Optional"
               onChange={(e) => setInput({ ...input, middleName: e.target.value })}
-              className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-[#0b1b62] focus:outline-none dark:border-gray-700 dark:bg-transparent dark:text-gray-100 dark:focus:border-indigo-400"
             />
           </div>
           <div>
@@ -197,7 +216,7 @@ function PickupFormModal({
             <input
               value={input.lastName}
               onChange={(e) => setInput({ ...input, lastName: e.target.value })}
-              className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-[#0b1b62] focus:outline-none dark:border-gray-700 dark:bg-transparent dark:text-gray-100 dark:focus:border-indigo-400"
             />
           </div>
         </div>
@@ -210,6 +229,20 @@ function PickupFormModal({
             options={relationshipOptions}
             placeholder="Select Relationship"
           />
+          {input.relationship === OTHER_RELATIONSHIP && (
+            <div className="sm:order-last sm:col-span-2">
+              <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
+                Please Specify <span className="text-red-500">*</span>
+              </label>
+              <input
+                value={otherSpec}
+                onChange={(e) => setOtherSpec(e.target.value)}
+                maxLength={OTHER_SPEC_MAX}
+                placeholder="e.g. Neighbor"
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-[#0b1b62] focus:outline-none dark:border-gray-700 dark:bg-transparent dark:text-gray-100 dark:focus:border-indigo-400"
+              />
+            </div>
+          )}
           <div>
             <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Contact Number</label>
             <input
@@ -219,7 +252,7 @@ function PickupFormModal({
               inputMode="tel"
               maxLength={20}
               placeholder="e.g. 0917 123 4567"
-              className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-[#0b1b62] focus:outline-none dark:border-gray-700 dark:bg-transparent dark:text-gray-100 dark:focus:border-indigo-400"
             />
           </div>
         </div>
