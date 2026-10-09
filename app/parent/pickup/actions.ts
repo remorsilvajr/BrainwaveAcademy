@@ -8,7 +8,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { notifyParentsOfStudent } from '@/lib/notify'
 import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
 import { isValidPhoneInput, normalizePhilippineMobile, PHONE_VALIDATION_MESSAGE } from '@/lib/phone'
-import { isPickupRelationship, PICKUP_RELATIONSHIP_MESSAGE } from '@/lib/pickup-relationships'
+import { isAllowedPickupRelationship, OTHER_RELATIONSHIP, OTHER_SPEC_MESSAGE, parseRelationship, PICKUP_RELATIONSHIP_MESSAGE } from '@/lib/pickup-relationships'
 import { logActivity } from '@/lib/activity-log'
 import { pickupDisplayName } from '@/lib/pickup-names'
 
@@ -35,8 +35,8 @@ function validateInput(input: PickupPersonInput, currentRelationship?: string | 
   const middleName = input.middleName.trim()
   if (middleName && !isValidName(middleName)) return NAME_VALIDATION_MESSAGE
   const relationship = input.relationship.trim()
-  if (!isPickupRelationship(relationship) && !(currentRelationship && relationship === currentRelationship)) {
-    return PICKUP_RELATIONSHIP_MESSAGE
+  if (!isAllowedPickupRelationship(relationship) && !(currentRelationship && relationship === currentRelationship)) {
+    return parseRelationship(relationship).choice === OTHER_RELATIONSHIP ? OTHER_SPEC_MESSAGE : PICKUP_RELATIONSHIP_MESSAGE
   }
   const phone = input.phoneNumber.trim()
   if (phone && !isValidPhoneInput(phone)) return PHONE_VALIDATION_MESSAGE
