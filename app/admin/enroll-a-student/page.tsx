@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { EnrollmentRequestsTable } from '@/components/admin/enrollment-requests-table'
 import { isToday } from '@/lib/format'
+import { normalizeEmail } from '@/lib/email-validation'
 
 export default async function EnrollAStudentPage() {
   const supabase = await createClient()
@@ -10,7 +11,20 @@ export default async function EnrollAStudentPage() {
     .is('deleted_at', null)
     .order('submitted_at', { ascending: false })
 
-  const applications = data ?? []
+  // An older pending request isn't linked to an account; if its email belongs to a
+  // live parent account, Request Correction can link it (see requestApplicationCorrection).
+  const unlinkedEmails = [
+    ...new Set((data ?? []).filter((a) => a.status === 'pending_review' && !a.created_parent_id).map((a) => normalizeEmail(a.parent_email))),
+  ]
+  const { data: parentProfiles } =
+    unlinkedEmails.length > 0
+      ? await supabase.from('profiles').select('email').eq('role', 'parent').is('deleted_at', null).in('email', unlinkedEmails)
+      : { data: [] as { email: string }[] }
+  const parentEmails = new Set((parentProfiles ?? []).map((p) => normalizeEmail(p.email)))
+  const applications = (data ?? []).map((a) => ({
+    ...a,
+    has_parent_account: !a.created_parent_id && parentEmails.has(normalizeEmail(a.parent_email)),
+  }))
   const pendingCount = applications.filter((a) => a.status === 'pending_review').length
   const approvedTodayCount = applications.filter(
     (a) => a.status === 'approved' && a.reviewed_at && isToday(a.reviewed_at)

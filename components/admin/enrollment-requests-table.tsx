@@ -19,6 +19,7 @@ type Application = {
   submitted_at: string
   status: string
   created_parent_id: string | null
+  has_parent_account?: boolean
   reviewed_at: string | null
   archived: boolean
   student_first_name: string

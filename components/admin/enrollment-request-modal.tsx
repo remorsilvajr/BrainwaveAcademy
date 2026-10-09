@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Mail, ShieldCheck, Send, X, AlertTriangle, Pencil } from 'lucide-react'
+import { Mail, ShieldCheck, Send, X, AlertTriangle } from 'lucide-react'
 import { approveApplication, dismissApplication, requestApplicationCorrection } from '@/app/admin/enroll-a-student/actions'
 import { calculateAge, formatDateLong, formatStatus } from '@/lib/format'
 import { Modal } from '@/components/ui/modal'
@@ -11,6 +11,9 @@ type Application = {
   id: string
   status: string
   created_parent_id: string | null
+  // Set by the page for an older, unlinked request whose email belongs to a live
+  // parent account: Request Correction links it to that account.
+  has_parent_account?: boolean
   reviewed_at: string | null
   student_first_name: string
   student_middle_name: string | null
@@ -119,7 +122,7 @@ export function EnrollmentRequestModal({
     }
   }
 
-  const canRequestCorrection = !!application.created_parent_id
+  const canRequestCorrection = !!application.created_parent_id || !!application.has_parent_account
 
   return (
     <Modal onClose={onClose} maxWidth="md">
@@ -376,9 +379,8 @@ export function EnrollmentRequestModal({
                 onClick={() => setPendingAction('correct')}
                 disabled={!canRequestCorrection}
                 title={!canRequestCorrection ? 'This older request has no parent account, so the parent cannot edit it' : undefined}
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-amber-300 dark:border-amber-700 py-3 text-sm font-semibold text-amber-800 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/30 disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex-1 rounded-lg border border-amber-300 dark:border-amber-700 py-3 text-sm font-semibold text-amber-800 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/30 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                <Pencil className="h-3.5 w-3.5" />
                 Request Correction
               </button>
               <button

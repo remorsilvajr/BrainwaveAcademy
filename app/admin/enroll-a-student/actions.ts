@@ -257,13 +257,27 @@ export async function requestApplicationCorrection(applicationId: string, note: 
     .single()
   if (fetchError || !application) return { error: 'Application not found.' }
   if (application.status !== 'pending_review') return { error: 'This request has already been handled.' }
-  if (!application.created_parent_id) {
-    return { error: 'This older request has no parent account to edit it. Approve or reject it instead.' }
+  // An older request (from before parents got an account at sign-up) isn't linked to
+  // one, and only the linked parent may resubmit it (parents_resubmit_own_application).
+  // Link it here to the parent account with the same email, under the same rule as
+  // approveApplication: only a live *parent* account, never a teacher/admin/deleted one.
+  let parentId = application.created_parent_id as string | null
+  if (!parentId) {
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('id, role, deleted_at')
+      .eq('email', normalizeEmail(application.parent_email))
+      .maybeSingle()
+    if (!existingProfile || existingProfile.role !== 'parent' || existingProfile.deleted_at) {
+      return { error: 'This older request has no parent account to edit it. Approve or reject it instead.' }
+    }
+    parentId = existingProfile.id as string
   }
+  const linkedParentId: string = parentId
 
   const { data: updated, error } = await supabase
     .from('applications')
-    .update({ status: 'needs_correction', review_notes: trimmedNote, reviewed_at: new Date().toISOString() })
+    .update({ status: 'needs_correction', created_parent_id: linkedParentId, review_notes: trimmedNote, reviewed_at: new Date().toISOString() })
     .eq('id', applicationId)
     .eq('status', 'pending_review')
     .select('id')
@@ -283,7 +297,7 @@ export async function requestApplicationCorrection(applicationId: string, note: 
     console.error('sendEmail failed for the enrollment correction request:', err)
   }
 
-  await notifyUsers([application.created_parent_id], {
+  await notifyUsers([linkedParentId], {
     kind: 'request',
     title: 'A correction is needed on your enrollment request',
     body: `${studentName}: ${trimmedNote}`.slice(0, 200),

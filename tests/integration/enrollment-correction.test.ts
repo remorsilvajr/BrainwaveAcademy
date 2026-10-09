@@ -109,3 +109,43 @@ describe('resubmitting', () => {
     expect(row.student_first_name).toBe('Corrected')
   })
 })
+
+// An older request (submitted before parents got an account at sign-up) has no
+// created_parent_id. requestApplicationCorrection links it to the parent account
+// with the same email in the same update, so that parent can then resubmit it.
+describe('an older request with no linked account', () => {
+  let olderId: string
+  const storedOlder = async () => (await f.admin.from('applications').select('*').eq('id', olderId).single()).data!
+
+  beforeAll(async () => {
+    const { data, error } = await f.admin.from('applications').insert({ ...application(), created_parent_id: null }).select('id').single()
+    if (error || !data) throw new Error(error?.message)
+    olderId = data.id
+  })
+
+  it('the parent cannot resubmit it while it is unlinked', async () => {
+    const r = await admin.client.from('applications').update({ status: 'needs_correction', review_notes: 'Fix the name.' }).eq('id', olderId)
+    expect(r.error).toBeNull()
+    const { data } = await parent.client.from('applications').update({ status: 'pending_review', student_first_name: 'Fixed' }).eq('id', olderId).select('id')
+    expect(data ?? []).toHaveLength(0)
+    expect((await storedOlder()).status).toBe('needs_correction')
+    // back to pending for the next case, as a signed-in admin
+    expect((await admin.client.from('applications').update({ status: 'pending_review' }).eq('id', olderId)).error).toBeNull()
+  })
+
+  it('an admin can link it while requesting a correction, and the parent can then resubmit', async () => {
+    const r = await admin.client
+      .from('applications')
+      .update({ status: 'needs_correction', created_parent_id: parent.id, review_notes: 'Fix the name.', reviewed_at: new Date().toISOString() })
+      .eq('id', olderId)
+      .select('id')
+    expect(r.error).toBeNull()
+    expect(r.data).toHaveLength(1)
+    expect((await storedOlder()).created_parent_id).toBe(parent.id)
+
+    const { data, error } = await parent.client.from('applications').update({ status: 'pending_review', student_first_name: 'Fixed' }).eq('id', olderId).select('id')
+    expect(error).toBeNull()
+    expect(data).toHaveLength(1)
+    expect(await storedOlder()).toMatchObject({ status: 'pending_review', student_first_name: 'Fixed' })
+  })
+})
