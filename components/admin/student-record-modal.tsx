@@ -6,7 +6,7 @@ import { HealthForm } from '@/components/health/health-form'
 import type { HealthInput } from '@/lib/health'
 import { useRouter } from 'next/navigation'
 import { X } from 'lucide-react'
-import { calculateAge, formatCurrency, formatDateLong } from '@/lib/format'
+import { calculateAge, formatCurrency, formatDateLong, todayIso } from '@/lib/format'
 import { isOverdue, remainingBalance, type UnpaidFee } from '@/lib/payments'
 import { AddFeeModal } from '@/components/admin/add-fee-modal'
 import { dobInputMin, dobInputMax, MIN_STUDENT_AGE, MAX_STUDENT_AGE } from '@/lib/dob'
@@ -18,7 +18,11 @@ import {
   updateStudentAvatar,
   removeStudentAvatar,
   assignStudentClassroom,
+  completePreschool,
 } from '@/app/admin/students/actions'
+import Link from 'next/link'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { FINAL_CLASS_SLUG, isPendingCompletion, studentStatusLabel } from '@/lib/completion-rules'
 import { AvatarEditor } from '@/components/ui/avatar-editor'
 import { DocumentPreviewModal } from '@/components/ui/document-preview-modal'
 import { DobSelect } from '@/components/ui/dob-select'
@@ -83,6 +87,34 @@ export function StudentRecordModal({
   const [tab, setTab] = useState<Tab>('personal')
   const [errorMessage, setErrorMessage] = useState('')
   const [showAddFee, setShowAddFee] = useState(false)
+
+  // Completing preschool (lib/completion.ts): shown for a Curious Adventurers child.
+  const currentClassroom = classrooms.find((c) => c.id === student.classroom_id)
+  const completed = student.enrollment_status === 'graduated'
+  const pendingCompletion = isPendingCompletion(student, currentClassroom, student.outstanding, todayIso())
+  const canComplete = student.enrollment_status === 'active' && currentClassroom?.slug === FINAL_CLASS_SLUG
+  const [confirmingComplete, setConfirmingComplete] = useState(false)
+  const [isCompleting, setIsCompleting] = useState(false)
+  const [completeError, setCompleteError] = useState('')
+
+  async function handleComplete() {
+    setIsCompleting(true)
+    setCompleteError('')
+    try {
+      const result = await completePreschool(student.id)
+      if (result?.error) {
+        setCompleteError(result.error)
+        return
+      }
+      router.refresh()
+      onClose()
+    } catch {
+      setCompleteError('Something went wrong.')
+    } finally {
+      setIsCompleting(false)
+      setConfirmingComplete(false)
+    }
+  }
 
   const [classroomPick, setClassroomPick] = useState(student.classroom_id ?? '')
   const [optionPicks, setOptionPicks] = useState<string[]>(student.program_options ?? [])
@@ -241,13 +273,49 @@ export function StudentRecordModal({
                   className={`rounded-full px-2 py-0.5 text-xs font-medium uppercase ${
                     student.enrollment_status === 'active'
                       ? 'bg-green-50 dark:bg-green-950/30 text-green-700'
-                      : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                      : completed
+                        ? 'bg-indigo-50 text-[#0b1b62] dark:bg-indigo-950/40 dark:text-indigo-300'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
                   }`}
                 >
-                  {student.enrollment_status}
+                  {studentStatusLabel(student.enrollment_status)}
                 </span>
+                {pendingCompletion && (
+                  <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium uppercase text-amber-700 dark:bg-amber-950/30 dark:text-amber-300">
+                    Pending Completion
+                  </span>
+                )}
               </div>
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Student ID: {student.student_id ?? '-'}</p>
+              {pendingCompletion && (
+                <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                  Finished {currentClassroom?.name}; completes preschool once the {formatCurrency(student.outstanding)} owed is settled.
+                </p>
+              )}
+              {(completed || canComplete) && (
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  {completed && (
+                    <Link
+                      href={`/admin/students/${student.id}/certificate`}
+                      className="rounded-full bg-[#0b1b62] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#08154d]"
+                    >
+                      Certificate of Completion
+                    </Link>
+                  )}
+                  {canComplete && (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmingComplete(true)}
+                      disabled={student.outstanding > 0}
+                      title={student.outstanding > 0 ? `${formatCurrency(student.outstanding)} is still owed` : undefined}
+                      className="rounded-full border border-[#0b1b62] px-3 py-1.5 text-xs font-semibold text-[#0b1b62] hover:bg-[#0b1b62] hover:text-white disabled:cursor-not-allowed disabled:opacity-40 dark:border-indigo-300 dark:text-indigo-300"
+                    >
+                      Complete Preschool
+                    </button>
+                  )}
+                </div>
+              )}
+              {completeError && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{completeError}</p>}
               </div>
             </div>
             <button onClick={onClose} aria-label="Close" className="text-gray-400 dark:text-gray-500 hover:text-gray-600">
@@ -442,12 +510,14 @@ export function StudentRecordModal({
                     <p className="text-xs text-red-500 dark:text-red-400">{formatCurrency(student.overdue)} of this is overdue</p>
                   )}
                 </div>
+                {!completed && (
                 <button
                   onClick={() => setShowAddFee(true)}
                   className="shrink-0 rounded-full border border-[#0b1b62] dark:border-indigo-300 px-3 py-1.5 text-xs font-semibold text-[#0b1b62] dark:text-indigo-300 hover:bg-[#0b1b62] hover:text-white"
                 >
                   Add Fee
                 </button>
+                )}
               </div>
               {student.unpaidFees.length > 0 ? (
                 student.unpaidFees.map((fee) => {
@@ -548,6 +618,17 @@ export function StudentRecordModal({
         onClose={() => setPreviewUrl(null)}
       />
 
+      {confirmingComplete && (
+        <ConfirmDialog
+          tone="neutral"
+          title="Complete preschool?"
+          description={`${student.first_name} ${student.last_name} will be marked as having completed preschool, leave the class lists, and get a Certificate of Completion. Their parents are notified.`}
+          confirmLabel="Yes, Complete"
+          isPending={isCompleting}
+          onConfirm={handleComplete}
+          onCancel={() => setConfirmingComplete(false)}
+        />
+      )}
       {showAddFee && <AddFeeModal studentId={student.id} classrooms={classrooms} onClose={() => setShowAddFee(false)} />}
     </>
   )

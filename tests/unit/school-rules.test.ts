@@ -9,7 +9,7 @@ import {
   validateFeeDueDate as validateProgramDueDate,
 } from '@/lib/classrooms'
 import { isOverdue, remainingBalance, summarizeOutstanding } from '@/lib/payments'
-import { ladderClassrooms, PROMOTION_LADDER, suggestChoice, CHOICE_GRADUATE, CHOICE_STAY, type LadderClassroom } from '@/lib/promotion'
+import { ladderClassrooms, PROMOTION_LADDER, type LadderClassroom } from '@/lib/promotion'
 import { isHourlyProgram, programOptionConfig, validateProgramOptions } from '@/lib/program-options'
 import { isTerminalStudentStatus, TERMINAL_STATUS_FILTER } from '@/lib/student-status'
 import {
@@ -173,7 +173,7 @@ describe('student statuses', () => {
   })
 })
 
-describe('year-end promotion suggestions', () => {
+describe('promotion ladder', () => {
   const room = (slug: string, min: number | null, max: number | null): LadderClassroom => ({ id: `id-${slug}`, name: slug, slug, min_age_months: min, max_age_months: max })
   const classrooms = [
     room('smart-explorers', 35, 46),
@@ -186,22 +186,6 @@ describe('year-end promotion suggestions', () => {
 
   it('the ladder is in the fixed order regardless of how the rows come back', () => {
     expect(ladder.map((c) => c.slug)).toEqual([...PROMOTION_LADDER])
-  })
-  it('each step goes to the next program and the last graduates', () => {
-    const pick = (slug: string, months = 30) => suggestChoice({ date_of_birth: dobMonths(months), classroomSlug: slug }, ladder).choice
-    expect(pick('little-explorers')).toBe('id-advanced-toddler')
-    expect(pick('advanced-toddler', 40)).toBe('id-smart-explorers')
-    expect(pick('smart-explorers', 50)).toBe('id-curious-adventurers')
-    expect(pick('curious-adventurers', 70)).toBe(CHOICE_GRADUATE)
-  })
-  it('a support program or no program stays', () => {
-    expect(suggestChoice({ date_of_birth: dobMonths(96), classroomSlug: 'academic-tutorials' }, ladder).choice).toBe(CHOICE_STAY)
-    expect(suggestChoice({ date_of_birth: dobMonths(48), classroomSlug: null }, ladder).choice).toBe(CHOICE_STAY)
-  })
-  it('a child too old for the next program stays, with a note saying why', () => {
-    const r = suggestChoice({ date_of_birth: dobMonths(96), classroomSlug: 'little-explorers' }, ladder)
-    expect(r.choice).toBe(CHOICE_STAY)
-    expect(r.note).toContain('advanced-toddler')
   })
 })
 

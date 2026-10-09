@@ -27,6 +27,12 @@ export async function applyClassroomToStudent(
     throw new Error('Classroom not found.')
   }
 
+  // A child who has completed preschool keeps their last class and gets no new fees.
+  const { data: student } = await supabase.from('students').select('enrollment_status').eq('id', studentId).maybeSingle()
+  if (student?.enrollment_status === 'graduated') {
+    throw new Error('This student has completed preschool, so their class can no longer be changed.')
+  }
+
   if (!isAgeEligibleForClassroom(dateOfBirth, classroom)) {
     throw new Error(
       `This student's age doesn't fall within ${classroom.name}'s allowed range (${classroomAgeRangeLabel(classroom)}).`

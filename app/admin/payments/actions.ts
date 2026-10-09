@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { completeIfReadyAfterBalanceChange } from '@/lib/completion'
 import { createClient } from '@/lib/supabase/server'
 import { logActivity } from '@/lib/activity-log'
 import { emailReceiptFor } from '@/lib/send-receipt'
@@ -67,10 +68,11 @@ export async function recordManualPayment(
     return { error: 'Enter a short description for this payment.' }
   }
 
-  const { data: student } = await supabase.from('students').select('id, classroom_id').eq('id', studentId).single()
+  const { data: student } = await supabase.from('students').select('id, classroom_id, enrollment_status').eq('id', studentId).single()
   if (!student) {
     return { error: 'Student not found.' }
   }
+  if (student.enrollment_status === 'graduated') return { error: 'This student has completed preschool, so no new fees can be added.' }
 
   const {
     data: { user: actingAdmin },
@@ -134,7 +136,7 @@ export async function markPaymentPaidManually(paymentId: string, method: string,
 
   const { data: fee } = await supabase
     .from('payments')
-    .select('id, amount, amount_paid, status')
+    .select('id, student_id, amount, amount_paid, status')
     .eq('id', paymentId)
     .maybeSingle()
   if (!fee) return { error: 'This fee could not be found.' }
@@ -191,6 +193,7 @@ export async function markPaymentPaidManually(paymentId: string, method: string,
   })
 
   if (transaction) await emailReceiptFor(transaction.id)
+  await completeIfReadyAfterBalanceChange(fee.student_id)
 
   revalidateAll()
 }
@@ -285,6 +288,7 @@ async function settleFee(paymentId: string, reason: string, kind: 'waived' | 'vo
     body: `${feeLabel(fee)} (${formatCurrency(fee.amount)}) no longer needs to be paid.`,
     href: '/parent/payments',
   })
+  await completeIfReadyAfterBalanceChange(fee.student_id)
   revalidateAll()
 }
 
@@ -350,6 +354,7 @@ export async function editPendingFee(
     body: `${feeLabel(fee)} is now ${formatCurrency(amount)}${dueDate ? `, due ${formatDateShort(dueDate)}` : ''}.`,
     href: '/parent/payments',
   })
+  await completeIfReadyAfterBalanceChange(fee.student_id)
   revalidateAll()
 }
 
@@ -443,8 +448,9 @@ export async function addPendingFee(
   const { data: classroom } = await supabase.from('classrooms').select('id, name').eq('id', input.classroomId).maybeSingle()
   if (!classroom) return { error: 'Select a classroom.' }
 
-  const { data: student } = await supabase.from('students').select('id').eq('id', studentId).maybeSingle()
+  const { data: student } = await supabase.from('students').select('id, enrollment_status').eq('id', studentId).maybeSingle()
   if (!student) return { error: 'Student not found.' }
+  if (student.enrollment_status === 'graduated') return { error: 'This student has completed preschool, so no new fees can be added.' }
 
   if (input.feeType === 'tuition' && !input.confirmed) {
     const { data: existingTuition } = await supabase
@@ -540,6 +546,7 @@ export async function deleteFee(paymentId: string, reason: string): Promise<Acti
       body: `${feeLabel(fee)} (${formatCurrency(fee.amount)}) was removed from your account.`,
       href: '/parent/payments',
     })
+    await completeIfReadyAfterBalanceChange(fee.student_id)
   }
   revalidateAll()
   revalidatePath('/admin/deleted-items')

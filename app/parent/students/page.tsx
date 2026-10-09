@@ -1,7 +1,9 @@
 import Link from 'next/link'
 import { GraduationCap, ClipboardList } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
-import { calculateAge, formatDateLong } from '@/lib/format'
+import { calculateAge, formatCurrency, formatDateLong, roundToCents, todayIso } from '@/lib/format'
+import { remainingBalance } from '@/lib/payments'
+import { hasOutgrownFinalClass, isPendingCompletion } from '@/lib/completion-rules'
 import { documentOrder, documentShortLabels } from '@/lib/documents'
 import { StudentAvatarEditor } from '@/components/parent/student-avatar-editor'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -61,7 +63,7 @@ export default async function StudentProfilePage({
       .select('document_type, verification_status')
       .eq('application_id', application.id),
     application.created_student_id
-      ? supabase.from('students').select('avatar_url, classroom_id, program_options').eq('id', application.created_student_id).single()
+      ? supabase.from('students').select('avatar_url, classroom_id, program_options, enrollment_status, date_of_birth').eq('id', application.created_student_id).single()
       : Promise.resolve({ data: null }),
   ])
 
@@ -72,8 +74,18 @@ export default async function StudentProfilePage({
   // applicant with no real assignment yet.
   const programClassroomId = student?.classroom_id ?? (!application.created_student_id ? application.requested_classroom_id : null)
   const { data: programClassroom } = programClassroomId
-    ? await supabase.from('classrooms').select('name').eq('id', programClassroomId).maybeSingle()
+    ? await supabase.from('classrooms').select('name, slug, max_age_months').eq('id', programClassroomId).maybeSingle()
     : { data: null }
+
+  // Completing preschool (lib/completion.ts): a certificate once done, or a note
+  // while the last class is finished but something is still owed.
+  const completed = student?.enrollment_status === 'graduated'
+  let owed = 0
+  if (student && application.created_student_id && hasOutgrownFinalClass(student.date_of_birth, programClassroom, todayIso())) {
+    const { data: pending } = await supabase.from('payments').select('amount, amount_paid').eq('student_id', application.created_student_id).eq('status', 'pending')
+    owed = roundToCents((pending ?? []).reduce((sum, row) => sum + remainingBalance(row), 0))
+  }
+  const pendingCompletion = !!student && isPendingCompletion(student, programClassroom, owed, todayIso())
 
   // The options they picked inside a Tutorial / Quiz Bee style program: the
   // student's own once enrolled, the request's until then.
@@ -82,7 +94,9 @@ export default async function StudentProfilePage({
   const validCount = (documents ?? []).filter((d) => d.verification_status === 'valid').length
   const fullName = `${application.student_first_name}${application.student_middle_name ? ' ' + application.student_middle_name : ''} ${application.student_last_name}`
 
-  const statusLabel = application.created_student_id
+  const statusLabel = completed
+    ? 'Completed Preschool'
+    : application.created_student_id
     ? 'Enrolled'
     : (documents ?? []).some((d) => d.verification_status === 'needs_correction')
       ? 'Needs Correction'
@@ -117,6 +131,8 @@ export default async function StudentProfilePage({
             className={`mt-1 inline-block rounded-full px-3 py-1 text-xs font-medium ${
               statusLabel === 'Enrolled'
                 ? 'bg-green-50 dark:bg-green-950/30 text-green-700'
+                : statusLabel === 'Completed Preschool'
+                  ? 'bg-indigo-50 text-[#0b1b62] dark:bg-indigo-950/40 dark:text-indigo-300'
                 : statusLabel === 'Needs Correction' || statusLabel === 'Rejected'
                   ? 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400'
                   : 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300'
@@ -124,6 +140,25 @@ export default async function StudentProfilePage({
           >
             {statusLabel}
           </span>
+
+          {completed && (
+            <div className="mt-3">
+              <Link
+                href={withStudent('/parent/students/certificate', application.id)}
+                className="inline-block rounded-full bg-[#0b1b62] px-4 py-2 text-xs font-semibold text-white hover:bg-[#08154d]"
+              >
+                Certificate of Completion
+              </Link>
+            </div>
+          )}
+          {pendingCompletion && (
+            <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-left text-xs text-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
+              {`${application.student_first_name} has finished ${programClassroom?.name}. Once the remaining ${formatCurrency(owed)} is paid, preschool is complete and the Certificate of Completion will be ready here.`}{' '}
+              <Link href={withStudent('/parent/payments', application.id)} className="font-semibold underline">
+                Go to Payments
+              </Link>
+            </p>
+          )}
 
           {application.status === 'rejected' && (
             <div className="mt-3">

@@ -60,6 +60,8 @@ export async function PaymentsPageContent({ mode }: { mode: 'admin' | 'cashier' 
       accountId: s.student_id ?? null,
       classId: s.classroom_id ?? null,
       className: s.classroom_id ? (classNameById.get(s.classroom_id) ?? null) : null,
+      // A child who completed preschool gets no new fees (lib/completion.ts).
+      completed: s.enrollment_status === 'graduated',
     }))
 
   // Every fee's own history (waived, voided, edited, reversed), newest first.

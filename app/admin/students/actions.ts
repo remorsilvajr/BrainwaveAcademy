@@ -7,6 +7,10 @@ import { isValidDob, dobRangeMessage, MIN_STUDENT_AGE, MAX_STUDENT_AGE } from '@
 import { applyClassroomToStudent } from '@/lib/classroom-assignment'
 import { logActivity } from '@/lib/activity-log'
 import { missingFieldsMessage } from '@/lib/form-errors'
+import { requireAdmin } from '@/lib/require-admin'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { completeStudentIfReady } from '@/lib/completion'
+import { formatCurrency, todayIso } from '@/lib/format'
 
 // Returns `{ error }` instead of throwing for every expected failure — this
 // is invoked as a plain `await` call from student-record-modal.tsx, not
@@ -87,11 +91,14 @@ export async function assignStudentClassroom(
 
   const { data: student } = await supabase
     .from('students')
-    .select('id, date_of_birth')
+    .select('id, date_of_birth, enrollment_status')
     .eq('id', studentId)
     .single()
   if (!student) {
     return { error: 'Student not found.' }
+  }
+  if (student.enrollment_status === 'graduated') {
+    return { error: 'This student has completed preschool, so their class can no longer be changed.' }
   }
 
   if (classroomId === null) {
@@ -182,4 +189,20 @@ export async function removeStudentAvatar(studentId: string): Promise<{ error: s
 
   revalidatePath('/admin/students')
   revalidatePath('/admin/student-dashboard')
+}
+
+// Admin's "Complete Preschool" on the Student Record: for a Curious Adventurers
+// child, before the daily job would do it by age. Still only with nothing owed.
+export async function completePreschool(studentId: string): Promise<{ error: string } | undefined> {
+  const actor = await requireAdmin()
+  try {
+    const result = await completeStudentIfReady(createAdminClient(), studentId, { today: todayIso(), manual: true, actorId: actor.id })
+    if (result.status === 'pending') return { error: `${formatCurrency(result.owed)} is still owed. Settle or waive it first.` }
+    if (result.status === 'not-eligible') return { error: result.reason }
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : 'Could not complete preschool.' }
+  }
+  revalidatePath('/admin/students')
+  revalidatePath('/admin/classrooms')
+  revalidatePath('/admin/payments')
 }

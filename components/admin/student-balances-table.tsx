@@ -10,7 +10,7 @@ import { useSort, compareStrings, compareDates, type SortOption } from '@/lib/us
 import type { PaymentRow, ReceivedRow } from '@/components/admin/payments-table'
 import { AddFeeModal } from '@/components/admin/add-fee-modal'
 
-export type BalanceStudent = { id: string; name: string; accountId: string | null; classId: string | null; className: string | null }
+export type BalanceStudent = { id: string; name: string; accountId: string | null; classId: string | null; className: string | null; completed?: boolean }
 
 type BalanceRow = BalanceStudent & {
   billed: number
@@ -208,7 +208,7 @@ export function StudentBalancesTable({
                         >
                           View Fees
                         </button>
-                        {canAddFee && (
+                        {canAddFee && !r.completed && (
                           <button
                             type="button"
                             onClick={() => setAddingFeeFor(r)}
