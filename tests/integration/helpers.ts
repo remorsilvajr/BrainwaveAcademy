@@ -87,6 +87,8 @@ export async function cleanupTestData(admin: SupabaseClient, userIds: string[], 
     await bestEffort(admin.from('deleted_payments').delete().in('student_id', studentIds))
     await bestEffort(admin.from('payments').delete().in('student_id', studentIds))
     await bestEffort(admin.from('students').delete().in('id', studentIds))
+    // The daily auto-promotion logs with no actor, about the student.
+    await bestEffort(admin.from('activity_log').delete().eq('target_table', 'students').in('target_id', studentIds))
   }
   if (userIds.length > 0) {
     await bestEffort(admin.from('parent_student').delete().in('parent_id', userIds))
