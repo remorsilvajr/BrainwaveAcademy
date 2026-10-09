@@ -299,6 +299,7 @@ export function CreateAccountForm({ canCreateAdmin = false }: { canCreateAdmin?:
                     onConfirmChange={setConfirmPassword}
                     required
                     resetKey={responses}
+                    showRules={false}
                     passwordError={fieldErrors.password}
                     confirmError={fieldErrors.confirm_password}
                   />

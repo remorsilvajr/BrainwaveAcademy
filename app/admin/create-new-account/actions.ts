@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import { isValidEmail, EMAIL_VALIDATION_MESSAGE } from '@/lib/email-validation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { generateUnknownPassword, validateNewPassword } from '@/lib/password'
+import { generateUnknownPassword, PASSWORD_MAX_BYTES } from '@/lib/password'
 import { sendEmail } from '@/lib/email'
 import { accountCreatedWithPasswordEmail } from '@/lib/notification-emails'
 import { getSiteUrl } from '@/lib/site-url'
@@ -85,15 +85,13 @@ export async function createSystemUser(
     fieldErrors.phone_number = 'Enter a valid PH mobile number, e.g. 0917 123 4567 or +63 917 123 4567.'
   }
 
+  // No strength rules here (the admin decides); only that it was typed, typed the
+  // same twice, and fits bcrypt's 72-byte limit. Supabase Auth's own minimum
+  // length (dashboard setting) still applies and its message shows in the banner.
   if (values.password_mode === 'set') {
-    const problem = await validateNewPassword(password, confirmPassword, {
-      email: values.email,
-      names: [values.first_name, values.middle_name, values.last_name],
-    })
-    if (problem) {
-      if (problem.toLowerCase().includes('match')) fieldErrors.confirm_password = problem
-      else fieldErrors.password = problem
-    }
+    if (!password) fieldErrors.password = 'Enter a password.'
+    else if (new TextEncoder().encode(password).length > PASSWORD_MAX_BYTES) fieldErrors.password = 'That password is too long.'
+    else if (password !== confirmPassword) fieldErrors.confirm_password = 'The two passwords do not match.'
   }
 
   if (Object.keys(fieldErrors).length > 0) {
