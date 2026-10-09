@@ -4,6 +4,7 @@ import { useActionState, useRef, useState } from 'react'
 import Link from 'next/link'
 import { Camera } from 'lucide-react'
 import { createSystemUser, type CreateSystemUserState } from '@/app/admin/create-new-account/actions'
+import { PasswordFields } from '@/components/ui/password-fields'
 
 const initialState: CreateSystemUserState = {}
 
@@ -61,6 +62,18 @@ export function CreateAccountForm({ canCreateAdmin = false }: { canCreateAdmin?:
   const [role, setRole] = useState(values.role || 'parent')
   const [relationship, setRelationship] = useState(values.relationship_to_student ?? '')
   const [gender, setGender] = useState(values.gender ?? '')
+  const [passwordMode, setPasswordMode] = useState<'link' | 'set'>(values.password_mode === 'set' ? 'set' : 'link')
+  // Kept in state so a mistake elsewhere doesn't make the admin retype it (never sent back by the server).
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  // React resets the form after each action response; bumping this remounts the
+  // visible password inputs and mode radios so they show the kept state again.
+  const [responses, setResponses] = useState(0)
+  const [seenState, setSeenState] = useState(state)
+  if (state !== seenState) {
+    setSeenState(state)
+    setResponses((n) => n + 1)
+  }
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [photoError, setPhotoError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -254,12 +267,43 @@ export function CreateAccountForm({ canCreateAdmin = false }: { canCreateAdmin?:
               </div>
             )}
 
-            <div className="mt-4 rounded-xl bg-gray-50 dark:bg-gray-800/60 px-4 py-3">
+            <div className="mt-4 space-y-3 rounded-xl bg-gray-50 dark:bg-gray-800/60 px-4 py-3">
               <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Password</p>
-              <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                The new user gets an email with a one-time link to choose their own password. You never see or
-                send a password.
-              </p>
+              <input type="hidden" name="password_mode" value={passwordMode} />
+              <div className="flex flex-col gap-2 sm:flex-row">
+                {(
+                  [
+                    { key: 'link', label: 'Email them a link to choose their own' },
+                    { key: 'set', label: 'Set a password now' },
+                  ] as const
+                ).map((o) => (
+                  <label key={o.key} className="flex flex-1 cursor-pointer items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
+                    <input key={`${o.key}-${responses}`} type="radio" checked={passwordMode === o.key} onChange={() => setPasswordMode(o.key)} className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span>{o.label}</span>
+                  </label>
+                ))}
+              </div>
+              {passwordMode === 'link' ? (
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  The new user gets an email with a one-time link to choose their own password. You never see or send a password.
+                </p>
+              ) : (
+                <>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Give the password to the person yourself. It is never emailed; they get a note that their account is ready.
+                  </p>
+                  <PasswordFields
+                    password={password}
+                    confirm={confirmPassword}
+                    onPasswordChange={setPassword}
+                    onConfirmChange={setConfirmPassword}
+                    required
+                    resetKey={responses}
+                    passwordError={fieldErrors.password}
+                    confirmError={fieldErrors.confirm_password}
+                  />
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -277,7 +321,7 @@ export function CreateAccountForm({ canCreateAdmin = false }: { canCreateAdmin?:
           disabled={isPending}
           className="flex-1 rounded-lg bg-[#e6007e] py-3 text-sm font-semibold text-white hover:bg-[#c9006e] disabled:opacity-60"
         >
-          {isPending ? 'Creating…' : 'Create & Send Password Link'}
+          {isPending ? 'Creating…' : passwordMode === 'set' ? 'Create Account' : 'Create & Send Password Link'}
         </button>
       </div>
     </form>

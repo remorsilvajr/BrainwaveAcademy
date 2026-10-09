@@ -87,6 +87,21 @@ export function setPasswordEmail(input: { firstName: string; url: string; kind: 
   }
 }
 
+// Sent when an admin creates an account and sets its password themselves
+// (Create New Account > Set a password now). Never contains the password: the
+// school hands it over in person.
+export function accountCreatedWithPasswordEmail(input: { firstName: string; email: string; siteUrl: string }): Mail {
+  return {
+    subject: 'Your Brain Wave Academy account is ready',
+    html: shell(
+      'Your account is ready',
+      `<p>Hi ${escapeHtml(input.firstName)}, the school created a Brain Wave Academy portal account for you.</p>
+       <p>Log in with <strong>${escapeHtml(input.email)}</strong> and the password the school gives you directly. You can change it any time in Settings.</p>`,
+      input.siteUrl
+    ),
+  }
+}
+
 // Sent to the account owner when a super admin set their password for them, so a
 // change they did not ask for is never silent. Never contains the password.
 export function passwordChangedByAdminEmail(input: { firstName: string; siteUrl: string }): Mail {
