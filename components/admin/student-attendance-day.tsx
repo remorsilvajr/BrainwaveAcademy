@@ -2,11 +2,12 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { formatTime12 } from '@/lib/attendance-times'
 
 export type DayClass = {
   id: string
   name: string
-  students: { id: string; name: string; status: 'present' | 'late' | 'absent' | null; allergy: string | null }[]
+  students: { id: string; name: string; status: 'present' | 'late' | 'absent' | null; allergy: string | null; arrival?: string | null; departure?: string | null }[]
 }
 
 const statusStyles: Record<string, string> = {
@@ -80,6 +81,11 @@ export function StudentAttendanceDay({ classes, isToday }: { classes: DayClass[]
                       >
                         {s.name}
                       </Link>
+                      {s.arrival && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {`Arrived ${formatTime12(s.arrival)}${s.departure ? ` · Left ${formatTime12(s.departure)}` : ''}`}
+                        </p>
+                      )}
                       {s.allergy && (
                         <p className="mt-0.5 inline-block rounded bg-red-50 px-1.5 py-0.5 text-xs font-medium text-red-700 dark:bg-red-950/30 dark:text-red-400">
                           Allergy: {s.allergy}

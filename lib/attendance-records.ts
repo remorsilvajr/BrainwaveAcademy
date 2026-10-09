@@ -15,7 +15,7 @@ export async function loadStudentAttendanceRecords(supabase: SupabaseClient) {
   const [{ data: attendance }, { data: students }, { data: classrooms }] = await Promise.all([
     supabase
       .from('attendance')
-      .select('id, student_id, date, status')
+      .select('id, student_id, date, status, arrival_time, departure_time')
       .order('date', { ascending: false })
       .limit(ATTENDANCE_RECORD_LIMIT + 1),
     supabase.from('students').select('id, first_name, last_name, classroom_id'),
@@ -36,6 +36,8 @@ export async function loadStudentAttendanceRecords(supabase: SupabaseClient) {
         name: student ? `${student.first_name} ${student.last_name}` : 'Unknown student',
         status: a.status,
         group: (student?.classroom_id && classroomName.get(student.classroom_id)) || '',
+        arrival: a.arrival_time ?? null,
+        departure: a.departure_time ?? null,
       }
     })
   return { rows, capped: all.length > ATTENDANCE_RECORD_LIMIT }

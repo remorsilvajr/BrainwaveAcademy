@@ -30,7 +30,7 @@ export default async function AdminStudentDashboardPage({
         .select('id, first_name, middle_name, last_name, date_of_birth, gender, enrollment_status, avatar_url, classroom_id')
         .eq('id', id)
         .single(),
-      supabase.from('attendance').select('id, date, status').eq('student_id', id).order('date', { ascending: false }).limit(14),
+      supabase.from('attendance').select('id, date, status, arrival_time, departure_time').eq('student_id', id).order('date', { ascending: false }).limit(14),
       supabase
         .from('milestones')
         .select('id, category, assessment_date, notes')

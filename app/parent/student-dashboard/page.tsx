@@ -84,7 +84,7 @@ export default async function ParentStudentDashboardPage({
       .single(),
     supabase
       .from('attendance')
-      .select('id, date, status')
+      .select('id, date, status, arrival_time, departure_time')
       .eq('student_id', studentId)
       .order('date', { ascending: false })
       .limit(14),

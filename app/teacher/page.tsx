@@ -53,7 +53,9 @@ export default async function TeacherDashboardPage() {
   // students are left out of the check-in list and its counts (milestones
   // below still use the full roster).
   const nonDaily = nonDailyClassroomIds(classrooms ?? [])
-  const attendanceRoster = roster.filter((s) => !s.classroom_id || !nonDaily.has(s.classroom_id))
+  // Only the classes this teacher takes attendance for.
+  const assignedIds = new Set(assignableClassrooms.map((c) => c.id))
+  const attendanceRoster = roster.filter((s) => !!s.classroom_id && assignedIds.has(s.classroom_id) && !nonDaily.has(s.classroom_id))
   const attendanceRosterIds = new Set(attendanceRoster.map((s) => s.id))
   const todayStatusByStudent: Record<string, string> = {}
   for (const a of todayAttendance ?? []) {

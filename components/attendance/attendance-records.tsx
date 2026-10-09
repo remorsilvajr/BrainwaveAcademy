@@ -7,6 +7,7 @@ import { SortSelect } from '@/components/ui/sort-select'
 import { usePagination } from '@/lib/use-pagination'
 import { useSort, compareStrings, type SortOption } from '@/lib/use-sort'
 import { formatDateLong } from '@/lib/format'
+import { formatTime12 } from '@/lib/attendance-times'
 
 export type AttendanceRecordRow = {
   id: string
@@ -15,6 +16,9 @@ export type AttendanceRecordRow = {
   status: 'present' | 'late' | 'absent'
   // A student's program, or the teacher's classroom label. Empty when there is none.
   group: string
+  // Students only: arrival / departure times ("HH:MM:SS").
+  arrival?: string | null
+  departure?: string | null
 }
 
 const STATUS_STYLES: Record<AttendanceRecordRow['status'], string> = {
@@ -150,6 +154,7 @@ export function AttendanceRecords({
                   <p className="truncate text-xs text-gray-500 dark:text-gray-400">
                     {formatDateLong(r.date)}
                     {r.group ? ` · ${r.group}` : ''}
+                    {r.arrival ? ` · In ${formatTime12(r.arrival)}${r.departure ? `, out ${formatTime12(r.departure)}` : ''}` : ''}
                   </p>
                 </div>
                 <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold capitalize ${STATUS_STYLES[r.status]}`}>{r.status}</span>

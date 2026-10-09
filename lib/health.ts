@@ -160,3 +160,28 @@ export function matchDoNotRelease(
   )
   return { matches, similar }
 }
+
+// The flags a teacher sees beside a child's name (class list, attendance roster), so
+// they are in front of whoever is serving a meal or running play time: a severe
+// allergy first (red), then any other allergy, medical condition and medication
+// (amber). Text is trimmed for a chip; the full record is on the Student Dashboard.
+export type HealthAlertKind = 'severe' | 'allergy' | 'medical' | 'medication'
+export type HealthAlert = { kind: HealthAlertKind; label: string; text: string }
+
+const ALERT_TEXT_MAX = 60
+const shorten = (value: string) => (value.length > ALERT_TEXT_MAX ? `${value.slice(0, ALERT_TEXT_MAX - 3)}...` : value)
+
+export function healthAlerts(
+  health: Pick<StudentHealth, 'allergies' | 'severe_allergy' | 'medical_conditions' | 'medications'> | null | undefined
+): HealthAlert[] {
+  if (!health) return []
+  const alerts: HealthAlert[] = []
+  const allergies = (health.allergies ?? '').trim()
+  if (health.severe_allergy) alerts.push({ kind: 'severe', label: 'Severe allergy', text: shorten(allergies || 'Ask the parent for details') })
+  else if (allergies) alerts.push({ kind: 'allergy', label: 'Allergy', text: shorten(allergies) })
+  const medical = (health.medical_conditions ?? '').trim()
+  if (medical) alerts.push({ kind: 'medical', label: 'Medical', text: shorten(medical) })
+  const medications = (health.medications ?? '').trim()
+  if (medications) alerts.push({ kind: 'medication', label: 'Medication', text: shorten(medications) })
+  return alerts
+}

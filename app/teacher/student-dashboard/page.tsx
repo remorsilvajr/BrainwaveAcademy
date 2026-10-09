@@ -3,6 +3,7 @@ import { loadStudentHealth } from '@/lib/health-load'
 import { createClient } from '@/lib/supabase/server'
 import { StudentDashboardContent } from '@/components/teacher/student-dashboard-content'
 import { tracksDailyAttendance } from '@/lib/classrooms'
+import { getTeacherAssignedClassrooms } from '@/lib/teacher-classrooms'
 import { StudentSelector, StudentSwitchArea, StudentSwitchProvider } from '@/components/teacher/student-selector'
 import { EmptyState } from '@/components/ui/empty-state'
 
@@ -20,6 +21,8 @@ export default async function TeacherStudentDashboardPage({
     .from('students')
     .select('id, first_name, last_name, classroom_id')
     .order('first_name', { ascending: true })
+  // The classes this teacher takes attendance for; others are view-only here.
+  const assignedPromise = supabase.auth.getUser().then(({ data: { user } }) => getTeacherAssignedClassrooms(supabase, user?.id ?? ''))
   const classroomsQuery = supabase.from('classrooms').select('id, name, slug').order('min_age_months', { ascending: true, nullsFirst: false }).order('slug')
 
   function detailQueries(id: string) {
@@ -29,7 +32,7 @@ export default async function TeacherStudentDashboardPage({
         .select('id, first_name, middle_name, last_name, date_of_birth, gender, enrollment_status, avatar_url, classroom_id')
         .eq('id', id)
         .single(),
-      supabase.from('attendance').select('id, date, status').eq('student_id', id).order('date', { ascending: false }).limit(14),
+      supabase.from('attendance').select('id, date, status, arrival_time, departure_time').eq('student_id', id).order('date', { ascending: false }).limit(14),
       supabase
         .from('milestones')
         .select('id, category, assessment_date, notes')
@@ -54,6 +57,7 @@ export default async function TeacherStudentDashboardPage({
   const [studentRes, attendanceRes, milestonesRes, healthData] = details ?? [null, null, null, null]
   const student = studentRes?.data ?? null
   const classroomById = new Map((classrooms ?? []).map((c) => [c.id, c.name]))
+  const assignedIds = new Set((await assignedPromise).map((c) => c.id))
 
   const heading = (
     <div>
@@ -91,6 +95,8 @@ export default async function TeacherStudentDashboardPage({
               student={{ ...student, classroomName: student.classroom_id ? (classroomById.get(student.classroom_id) ?? null) : null }}
               attendance={attendanceRes?.data ?? []}
               attendanceTracked={tracksDailyAttendance((classrooms ?? []).find((c) => c.id === student.classroom_id))}
+              attendanceReadOnly={!student.classroom_id || !assignedIds.has(student.classroom_id)}
+              attendanceReadOnlyNote="Attendance for this child is taken by their own class's teachers."
               milestones={milestonesRes?.data ?? []}
             />
           ) : (

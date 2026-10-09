@@ -6,6 +6,8 @@ import { logActivity } from '@/lib/activity-log'
 import { isRealIsoDate } from '@/lib/dob'
 import { todayIso } from '@/lib/format'
 import { tracksDailyAttendance } from '@/lib/classrooms'
+import { getTeacherAssignedClassrooms } from '@/lib/teacher-classrooms'
+import { manilaTimeNow, validateAttendanceTimes } from '@/lib/attendance-times'
 
 const ATTENDANCE_STATUSES = ['present', 'absent', 'late'] as const
 const MILESTONE_CATEGORIES = [
@@ -66,6 +68,11 @@ export async function recordAttendance(input: {
       return { error: `Attendance is not taken for ${classroom.name}, since it does not run daily.` }
     }
   }
+  // Only for the classes this teacher teaches (the database policy says the same).
+  const assigned = await getTeacherAssignedClassrooms(supabase, user.id)
+  if (!student.classroom_id || !assigned.some((c) => c.id === student.classroom_id)) {
+    return { error: 'You can only take attendance for the classes you teach.' }
+  }
 
   // No DB-level uniqueness on (student_id, date) to rely on for an upsert,
   // so re-marking the same day updates the existing row instead of piling
@@ -74,23 +81,33 @@ export async function recordAttendance(input: {
   // this update-in-place logic existed are still floating around.
   const { data: existingRows } = await supabase
     .from('attendance')
-    .select('id')
+    .select('id, arrival_time')
     .eq('student_id', input.student_id)
     .eq('date', input.date)
     .order('created_at', { ascending: false })
     .limit(1)
   const existing = existingRows?.[0]
 
+  // Present or late stamps the arrival time now (Manila) unless one is already set;
+  // the teacher can correct it on the roster. Absent clears both times.
+  const times =
+    input.status === 'absent'
+      ? { arrival_time: null, departure_time: null }
+      : existing?.arrival_time
+        ? {}
+        : { arrival_time: manilaTimeNow() }
+
   const { error } = existing
     ? await supabase
         .from('attendance')
-        .update({ status: input.status, recorded_by: user.id })
+        .update({ status: input.status, recorded_by: user.id, ...times })
         .eq('id', existing.id)
     : await supabase.from('attendance').insert({
         student_id: input.student_id,
         date: input.date,
         status: input.status,
         recorded_by: user.id,
+        ...times,
       })
 
   if (error) {
@@ -106,6 +123,64 @@ export async function recordAttendance(input: {
 
   revalidatePath('/teacher/student-dashboard')
   revalidatePath('/teacher')
+  revalidatePath('/parent/student-dashboard')
+}
+
+// Arrival / departure times on today's record (the roster's time fields and its
+// "Now" button). Same rules as recordAttendance: a teacher, today only, their own
+// class, and the child must already be marked present or late.
+export async function recordAttendanceTimes(input: {
+  student_id: string
+  arrival_time: string | null
+  departure_time: string | null
+}): Promise<{ error: string } | undefined> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'Your session has expired. Please log in again.' }
+
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (profile?.role !== 'teacher') return { error: 'Only teachers can record student attendance.' }
+
+  const { data: student } = await supabase.from('students').select('classroom_id').eq('id', input.student_id).maybeSingle()
+  if (!student) return { error: 'Student not found.' }
+  const assigned = await getTeacherAssignedClassrooms(supabase, user.id)
+  if (!student.classroom_id || !assigned.some((c) => c.id === student.classroom_id)) {
+    return { error: 'You can only take attendance for the classes you teach.' }
+  }
+
+  const today = todayIso()
+  const { data: rows } = await supabase
+    .from('attendance')
+    .select('id, status')
+    .eq('student_id', input.student_id)
+    .eq('date', today)
+    .order('created_at', { ascending: false })
+    .limit(1)
+  const record = rows?.[0]
+  if (!record) return { error: 'Mark the child present or late first.' }
+
+  const arrival = input.arrival_time || null
+  const departure = input.departure_time || null
+  const problem = validateAttendanceTimes({ status: record.status, arrival, departure, now: manilaTimeNow() })
+  if (problem) return { error: problem }
+
+  const { error } = await supabase
+    .from('attendance')
+    .update({ arrival_time: arrival, departure_time: departure, recorded_by: user.id })
+    .eq('id', record.id)
+  if (error) return { error: error.message }
+
+  await logActivity(supabase, {
+    actorId: user.id,
+    action: `Recorded arrival/departure times (${arrival ?? '-'} to ${departure ?? '-'})`,
+    targetTable: 'attendance',
+    targetId: input.student_id,
+  })
+
+  revalidatePath('/teacher/attendance')
+  revalidatePath('/teacher/student-dashboard')
   revalidatePath('/parent/student-dashboard')
 }
 
