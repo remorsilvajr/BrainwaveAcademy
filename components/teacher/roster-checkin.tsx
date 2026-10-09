@@ -263,11 +263,11 @@ function ArrivalDeparture({ studentId, arrival, departure }: { studentId: string
     <div className={`mt-1.5 transition-opacity ${saving ? 'opacity-60' : ''}`}>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-gray-500 dark:text-gray-400">
         <span className="flex items-center gap-2">
-          <span className="w-11">Arrived</span>
+          <span>Arrived</span>
           <TimeSelect value={arrivalValue} ariaLabel="Arrival time" disabled={saving} onChange={(v) => void save(v, departureValue)} />
         </span>
         <span className="flex items-center gap-2">
-          <span className="w-11">Left</span>
+          <span>Left</span>
           <TimeSelect value={departureValue} ariaLabel="Departure time" disabled={saving} clearable onChange={(v) => void save(arrivalValue, v)} />
         </span>
         <button
