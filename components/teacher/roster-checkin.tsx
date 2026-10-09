@@ -201,7 +201,7 @@ export function RosterCheckin({
                   Arrived {formatTime12(times?.arrival)} · Left {formatTime12(times?.departure)}
                 </p>
               ) : (
-                <ArrivalDeparture key={`${s.id}-${times?.arrival ?? ''}-${times?.departure ?? ''}`} studentId={s.id} arrival={times?.arrival ?? null} departure={times?.departure ?? null} />
+                <ArrivalDeparture key={s.id} studentId={s.id} arrival={times?.arrival ?? null} departure={times?.departure ?? null} />
               ))}
             </div>
           )
@@ -226,8 +226,9 @@ export function RosterCheckin({
   )
 }
 
-// Today's arrival and departure for one child: Hour/Minute/AM-PM pickers (saved as
-// soon as a full time is chosen) and a "Left Now" button for the departure.
+// Today's arrival and departure for one child. Fixed-width labels and fields so the
+// times line up from row to row, and nothing appears or disappears while saving
+// (the row just dims), so the list doesn't jump around.
 function ArrivalDeparture({ studentId, arrival, departure }: { studentId: string; arrival: string | null; departure: string | null }) {
   const router = useRouter()
   const [arrivalValue, setArrivalValue] = useState(toHHMM(arrival) ?? '')
@@ -236,14 +237,17 @@ function ArrivalDeparture({ studentId, arrival, departure }: { studentId: string
   const [error, setError] = useState('')
 
   async function save(nextArrival: string, nextDeparture: string) {
+    if (nextArrival === (toHHMM(arrival) ?? '') && nextDeparture === (toHHMM(departure) ?? '')) return
     setArrivalValue(nextArrival)
     setDepartureValue(nextDeparture)
-    if (nextArrival === (toHHMM(arrival) ?? '') && nextDeparture === (toHHMM(departure) ?? '')) return
     setSaving(true)
     setError('')
     try {
       const result = await recordAttendanceTimes({ student_id: studentId, arrival_time: nextArrival || null, departure_time: nextDeparture || null })
       if (result?.error) {
+        // Show what is actually saved again, with the reason.
+        setArrivalValue(toHHMM(arrival) ?? '')
+        setDepartureValue(toHHMM(departure) ?? '')
         setError(result.error)
         return
       }
@@ -256,27 +260,24 @@ function ArrivalDeparture({ studentId, arrival, departure }: { studentId: string
   }
 
   return (
-    <div className="mt-1.5">
+    <div className={`mt-1.5 transition-opacity ${saving ? 'opacity-60' : ''}`}>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-gray-500 dark:text-gray-400">
-        <span className="flex items-center gap-1.5">
-          Arrived
+        <span className="flex items-center gap-2">
+          <span className="w-11">Arrived</span>
           <TimeSelect value={arrivalValue} ariaLabel="Arrival time" disabled={saving} onChange={(v) => void save(v, departureValue)} />
         </span>
-        <span className="flex items-center gap-1.5">
-          Left
+        <span className="flex items-center gap-2">
+          <span className="w-11">Left</span>
           <TimeSelect value={departureValue} ariaLabel="Departure time" disabled={saving} clearable onChange={(v) => void save(arrivalValue, v)} />
         </span>
-        {!departureValue && (
-          <button
-            type="button"
-            disabled={saving}
-            onClick={() => void save(arrivalValue, manilaTimeNow())}
-            className="rounded-full border border-gray-300 px-2.5 py-1 font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
-          >
-            Left Now
-          </button>
-        )}
-        {saving && <span>Saving...</span>}
+        <button
+          type="button"
+          disabled={saving || !!departureValue}
+          onClick={() => void save(arrivalValue, manilaTimeNow())}
+          className="w-[76px] rounded-full border border-gray-300 py-1 text-center font-semibold text-gray-700 hover:bg-gray-50 disabled:invisible dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+        >
+          Left Now
+        </button>
       </div>
       {error && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{error}</p>}
     </div>
