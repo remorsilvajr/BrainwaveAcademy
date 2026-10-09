@@ -324,7 +324,7 @@ export function EnrollmentRequestModal({
                 onClick={handleConfirmedDismiss}
                 disabled={isSubmitting || !rejectReason.trim()}
                 title={!rejectReason.trim() ? 'Add a reason for rejection first' : undefined}
-                className="flex-1 rounded-lg bg-gray-900 py-3 text-sm font-semibold text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex-1 rounded-lg bg-red-600 py-3 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {isSubmitting ? 'Working…' : 'Yes, Reject Request'}
               </button>
