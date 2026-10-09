@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { logActivity } from '@/lib/activity-log'
-import { parsePickupIdCode } from '@/lib/pickup-id'
+import { parsePickupIdCode, normalizePickupIdLabel, findPickupIdByLabel } from '@/lib/pickup-id'
 import { PICKUP_PHOTO_URL_TTL_SECONDS } from '@/lib/pickup-list'
 import { pickupDisplayName } from '@/lib/pickup-names'
 import { isTerminalStudentStatus } from '@/lib/student-status'
@@ -73,7 +73,12 @@ export async function verifyPickupCard(code: string): Promise<{ error: string } 
 
   const invalid = { error: 'This Pickup ID is not valid, or the person is no longer authorized. Do not release the child without admin confirmation.' }
   if (typeof code !== 'string' || code.length > 200) return invalid
-  const pickupId = parsePickupIdCode(code)
+  // The QR's full code, or the short "PU-XXXX-XXXX" printed under it, typed by hand.
+  let pickupId = parsePickupIdCode(code)
+  if (!pickupId && normalizePickupIdLabel(code)) {
+    const { data: everyone } = await supabase.from('authorized_pickups').select('id')
+    pickupId = findPickupIdByLabel(code, (everyone ?? []).map((p) => p.id))
+  }
   if (!pickupId) return invalid
 
   const { data: row } = await supabase

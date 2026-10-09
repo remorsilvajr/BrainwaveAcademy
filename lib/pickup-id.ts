@@ -22,8 +22,10 @@ export function pickupIdCode(pickupId: string): string {
   return `${PREFIX}.${pickupId.toLowerCase()}.${signature(pickupId)}`
 }
 
-// A short readable form for the printed card, e.g. "PU-3FA9-C210" (not a secret and
-// not enough on its own to verify anything).
+// A short readable form for the printed card, e.g. "PU-3FA9-C210". Staff can type it
+// into Pickup Verification when there's no camera: the server finds the person whose
+// signature starts with it (findPickupIdByLabel). It comes from the signature, so it
+// can't be made up for a person, and staff still compare the photo.
 export function pickupIdLabel(pickupId: string): string {
   const sig = signature(pickupId).toUpperCase()
   return `PU-${sig.slice(0, 4)}-${sig.slice(4, 8)}`
@@ -38,4 +40,20 @@ export function parsePickupIdCode(raw: string): string | null {
   const given = Buffer.from(parts[2].toLowerCase())
   if (expected.length !== given.length || !timingSafeEqual(expected, given)) return null
   return parts[1].toLowerCase()
+}
+
+// "PU-031E-1069", "pu 031e 1069" or "PU031E1069" -> "PU-031E-1069"; null if it isn't one.
+export function normalizePickupIdLabel(raw: string): string | null {
+  const compact = raw.trim().toUpperCase().replace(/[\s-]/g, '')
+  const match = /^PU([0-9A-F]{8})$/.exec(compact)
+  return match ? `PU-${match[1].slice(0, 4)}-${match[1].slice(4)}` : null
+}
+
+// The authorized_pickups id whose printed label matches, among `candidateIds`.
+export function findPickupIdByLabel(label: string, candidateIds: string[]): string | null {
+  const wanted = normalizePickupIdLabel(label)
+  if (!wanted) return null
+  const matches = candidateIds.filter((id) => pickupIdLabel(id) === wanted)
+  // Two people sharing a label (about 1 in 4 billion) is refused rather than guessed.
+  return matches.length === 1 ? matches[0].toLowerCase() : null
 }
