@@ -17,6 +17,7 @@ import { validateNewPassword } from '@/lib/password'
 import { revokeAllSessions } from '@/lib/revoke-sessions'
 import { notifyUsers } from '@/lib/notify'
 import { passwordChangedByAdminEmail } from '@/lib/notification-emails'
+import { missingFieldsMessage } from '@/lib/form-errors'
 
 // A parent account that isn't active (inactive or blocked) shouldn't leave
 // their linked students showing as actively enrolled — keeps the Students
@@ -204,9 +205,11 @@ export async function updateUserProfile(
   const lastName = updates.last_name.trim()
   const middleName = updates.middle_name.trim()
 
-  if (!firstName || !lastName) {
-    return { error: 'First name and last name are required.' }
-  }
+  const missing = missingFieldsMessage([
+    ['First name', firstName],
+    ['Last name', lastName],
+  ])
+  if (missing) return { error: missing }
   if (!isValidName(firstName) || !isValidName(lastName) || (middleName && !isValidName(middleName))) {
     return { error: NAME_VALIDATION_MESSAGE }
   }

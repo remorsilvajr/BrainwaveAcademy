@@ -6,6 +6,7 @@ import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
 import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
 import { isValidDob, dobRangeMessage, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
 import { logActivity } from '@/lib/activity-log'
+import { missingFieldsMessage } from '@/lib/form-errors'
 
 // Deliberately doesn't touch role or account_status — those stay the
 // exclusive job of User Management (role changes, block/unblock) so this
@@ -31,9 +32,11 @@ export async function updateTeacherRecord(
   const lastName = updates.last_name.trim()
   const middleName = updates.middle_name.trim()
 
-  if (!firstName || !lastName) {
-    return { error: 'First name and last name are required.' }
-  }
+  const missing = missingFieldsMessage([
+    ['First name', firstName],
+    ['Last name', lastName],
+  ])
+  if (missing) return { error: missing }
   if (!isValidName(firstName) || !isValidName(lastName) || (middleName && !isValidName(middleName))) {
     return { error: NAME_VALIDATION_MESSAGE }
   }

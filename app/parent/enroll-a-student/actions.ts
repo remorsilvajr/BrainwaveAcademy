@@ -10,6 +10,7 @@ import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
 import { isValidDob, dobRangeMessage, MIN_STUDENT_AGE, MAX_STUDENT_AGE } from '@/lib/dob'
 import { isAgeEligibleForClassroom } from '@/lib/classrooms'
 import { logActivity } from '@/lib/activity-log'
+import { joinLabels } from '@/lib/form-errors'
 
 export type SubmitStudentState = {
   error?: string
@@ -65,10 +66,18 @@ export async function submitStudent(
     .eq('id', user.id)
     .single()
 
-  if (!profile?.phone_number || !profile?.date_of_birth || !profile?.relationship_to_student) {
+  // Name only what is actually missing (it used to list all three whenever any one was).
+  const missing = [
+    !profile?.phone_number && 'phone number',
+    !profile?.date_of_birth && 'date of birth',
+    !profile?.relationship_to_student && 'relationship to student',
+  ].filter((m): m is string => !!m)
+  if (!profile || missing.length > 0) {
+    const list = joinLabels(missing)
     return {
-      error:
-        'Your profile is missing some required information (phone number, date of birth, or relationship to student). Please complete My Profile first.',
+      error: profile
+        ? `Your profile is missing your ${list}. Please add it in My Profile first.`
+        : 'Your profile could not be loaded. Please try again.',
       values,
     }
   }

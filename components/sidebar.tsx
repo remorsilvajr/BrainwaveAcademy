@@ -192,12 +192,14 @@ function NavLinks({
               const Icon = item.icon ? iconMap[item.icon] : undefined
               const active = pathname === item.href
               const badge = badges[item.href!] ?? 0
+              const alert = badge === 'alert'
+              const count = typeof badge === 'number' ? badge : 0
 
               return (
                 <li key={item.href}>
                   <Link
                     href={hrefWithStudent(item.href!)}
-                    aria-label={badge > 0 ? `${item.label}, ${badge} new` : undefined}
+                    aria-label={alert ? `${item.label}, needs attention` : count > 0 ? `${item.label}, ${count} new` : undefined}
                     onClick={(e) => {
                       onLinkClick(hrefWithStudent(item.href!), e)
                       onNavigate?.()
@@ -214,13 +216,13 @@ function NavLinks({
                     <span className="min-w-0 truncate whitespace-nowrap" title={item.label}>
                       {item.label}
                     </span>
-                    {badge > 0 && (
+                    {(alert || count > 0) && (
                       <span
                         className={`ml-auto flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-bold leading-none ${
                           active ? 'bg-white text-[#e6007e]' : 'bg-[#e6007e] text-white'
                         }`}
                       >
-                        {badge > 99 ? '99+' : badge}
+                        {alert ? '!' : count > 99 ? '99+' : count}
                       </span>
                     )}
                   </Link>

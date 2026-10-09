@@ -150,10 +150,24 @@ describe('an admin sees real counts, and nobody else gets them', () => {
     const { error } = await f.admin.from('applications').insert(application({ status: 'pending_review', student_first_name: 'Pending' }))
     expect(error).toBeNull()
     const after = (await loadStateBadges(admin.client, 'admin', admin.id, ADMIN_TABS))['/admin/enroll-a-student']
-    expect(after).toBe(before + 1)
+    expect(after).toBe((before as number) + 1)
   })
 
   it('gives a parent no admin counts', async () => {
     expect(await loadStateBadges(parent.client, 'parent', parent.id, ADMIN_TABS)).toEqual({})
+  })
+})
+
+describe('Enroll A Student shows "!" only while a parent has no child', () => {
+  const ENROLL = ['/parent/enroll-a-student']
+
+  it('a parent with no request gets the alert', async () => {
+    const childless = await f.user('parent', 'badgenochild')
+    expect((await loadStateBadges(childless.client, 'parent', childless.id, ENROLL))['/parent/enroll-a-student']).toBe('alert')
+  })
+
+  it('a parent with a request does not', async () => {
+    // `parent` has the request created in beforeAll
+    expect((await loadStateBadges(parent.client, 'parent', parent.id, ENROLL))['/parent/enroll-a-student']).toBeUndefined()
   })
 })

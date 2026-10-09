@@ -10,7 +10,10 @@ import { documentOrder } from '@/lib/documents'
 //    never because the tab was opened, and they replace the notification count for
 //    that tab so nothing is counted twice.
 
-export type NavBadges = Record<string, number>
+// A count, or 'alert' for a "!" (something to do that isn't a number, e.g. a parent
+// with no child yet on Enroll A Student).
+export type NavBadge = number | 'alert'
+export type NavBadges = Record<string, NavBadge>
 
 // A tab, not the portal's own dashboard ("/parent" is a prefix of every path).
 const SECTION_HREF = /^\/(parent|teacher|admin|cashier)\/[a-z0-9-]+$/
@@ -33,7 +36,7 @@ function pathOf(href: string): string {
 // Unread notifications per tab: a notification belongs to a tab when its path is the
 // tab's path or below it (/parent/album/2026-09-21 belongs to /parent/album).
 export function countUnreadByNavHref(unreadHrefs: (string | null)[], navHrefs: string[]): NavBadges {
-  const counts: NavBadges = {}
+  const counts: Record<string, number> = {}
   for (const nav of navHrefs) {
     if (!isSectionHref(nav)) continue
     let n = 0
@@ -87,6 +90,13 @@ export async function loadStateBadges(supabase: SupabaseClient, role: string, us
         ? await supabase.from('application_documents').select('application_id, document_type, file_url, verification_status').in('application_id', ids)
         : { data: [] }
     out['/parent/requirements'] = requirementsToDo(applications ?? [], documents ?? [])
+  }
+
+  // A parent with no child at all (no request they can see): a "!" on Enroll A Student.
+  // RLS already limits applications to their own (created_parent_id or parent_email).
+  if (role === 'parent' && wants('/parent/enroll-a-student')) {
+    const { count } = await supabase.from('applications').select('id', { count: 'exact', head: true }).eq('hidden_from_parent', false)
+    if ((count ?? 0) === 0) out['/parent/enroll-a-student'] = 'alert'
   }
 
   if (role === 'admin') {

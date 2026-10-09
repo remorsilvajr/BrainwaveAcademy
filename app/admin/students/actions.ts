@@ -6,6 +6,7 @@ import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
 import { isValidDob, dobRangeMessage, MIN_STUDENT_AGE, MAX_STUDENT_AGE } from '@/lib/dob'
 import { applyClassroomToStudent } from '@/lib/classroom-assignment'
 import { logActivity } from '@/lib/activity-log'
+import { missingFieldsMessage } from '@/lib/form-errors'
 
 // Returns `{ error }` instead of throwing for every expected failure — this
 // is invoked as a plain `await` call from student-record-modal.tsx, not
@@ -28,9 +29,13 @@ export async function updateStudentRecord(
   const lastName = updates.last_name.trim()
   const middleName = updates.middle_name.trim()
 
-  if (!firstName || !lastName || !updates.date_of_birth || !updates.gender) {
-    return { error: 'First name, last name, date of birth, and gender are required.' }
-  }
+  const missing = missingFieldsMessage([
+    ['First name', firstName],
+    ['Last name', lastName],
+    ['Date of birth', updates.date_of_birth],
+    ['Gender', updates.gender],
+  ])
+  if (missing) return { error: missing }
   if (!isValidName(firstName) || !isValidName(lastName) || (middleName && !isValidName(middleName))) {
     return { error: NAME_VALIDATION_MESSAGE }
   }
