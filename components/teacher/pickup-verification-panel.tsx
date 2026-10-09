@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import { Ban, ShieldCheck, ShieldAlert, ShieldQuestion } from 'lucide-react'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
-import { logPickupCheck } from '@/app/teacher/pickup-verification/actions'
+import { recordPickup } from '@/app/teacher/pickup-verification/actions'
+import { formatManilaTime } from '@/lib/pickup-history'
 import { logDoNotReleaseHit } from '@/app/admin/do-not-release/actions'
 import { PickupAvatar } from '@/components/pickup/pickup-avatar'
 import { PickupCardModal } from '@/components/pickup/pickup-card-modal'
@@ -67,7 +68,9 @@ export function PickupVerificationPanel({
   const [firstSearch, setFirstSearch] = useState('')
   const [lastSearch, setLastSearch] = useState('')
   const [relationshipFilter, setRelationshipFilter] = useState('all')
-  const [loggedId, setLoggedId] = useState<string | null>(null)
+  // authorized_pickups id -> when their pickup was recorded on this screen.
+  const [loggedAt, setLoggedAt] = useState<Record<string, string>>({})
+  const [recordingId, setRecordingId] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [cardFor, setCardFor] = useState<Pickup | null>(null)
 
@@ -142,14 +145,17 @@ export function PickupVerificationPanel({
   async function handleLog(pickup: Pickup) {
     setError('')
     try {
-      const result = await logPickupCheck(pickup.student_id, pickupDisplayName(pickup))
-      if (result?.error) {
+      setRecordingId(pickup.id)
+      const result = await recordPickup(pickup.id, 'name')
+      if ('error' in result) {
         setError(result.error)
         return
       }
-      setLoggedId(pickup.id)
+      setLoggedAt((current) => ({ ...current, [pickup.id]: result.pickedUpAt }))
     } catch {
       setError('Something went wrong. Please try again.')
+    } finally {
+      setRecordingId(null)
     }
   }
 
@@ -250,10 +256,10 @@ export function PickupVerificationPanel({
                   <button
                     type="button"
                     onClick={() => handleLog(p)}
-                    disabled={loggedId === p.id}
+                    disabled={!!loggedAt[p.id] || recordingId === p.id}
                     className="shrink-0 rounded-full border border-green-600 dark:border-green-500 px-3 py-1.5 text-xs font-semibold text-green-700 dark:text-green-400 hover:bg-green-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {loggedId === p.id ? 'Logged' : 'Log Check'}
+                    {loggedAt[p.id] ? `Picked up ${formatManilaTime(loggedAt[p.id])}` : recordingId === p.id ? 'Recording...' : 'Record Pickup'}
                   </button>
                 </div>
               ))
