@@ -22,7 +22,7 @@ const baseSections: NavSection[] = [
       { label: 'User Management', href: '/admin/user-management', icon: 'users' },
       { label: 'Create New Account', href: '/admin/create-new-account', icon: 'checklist' },
       { label: 'Enrollment Requests', href: '/admin/enroll-a-student', icon: 'userPlus' },
-      { label: 'Unenrollment Requests', href: '/admin/unenrollment', icon: 'userMinus' },
+      { label: 'Unenrollment', href: '/admin/unenrollment', icon: 'userMinus' },
       { label: 'Applications', href: '/admin/applications', icon: 'file' },
       { label: 'Payments', href: '/admin/payments', icon: 'wallet' },
     ],
