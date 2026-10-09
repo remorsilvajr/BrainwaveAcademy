@@ -9,6 +9,7 @@ import { formatCurrency, formatDateLong, roundToCents } from '@/lib/format'
 import { getSiteUrl } from '@/lib/site-url'
 import { notifyUsers } from '@/lib/notify'
 import { UNENROLLMENT_REASON_MAX, UNENROLLMENT_REASON_MIN, type FeeDecision } from '@/lib/unenrollment'
+import { isTerminalStudentStatus } from '@/lib/student-status'
 
 // Every expected failure is returned as `{ error }`, never thrown, since a thrown
 // Server Function error is redacted in a production build.
@@ -237,6 +238,127 @@ export async function declineUnenrollment(requestId: string, note: string): Prom
       })
     } catch (err) {
       console.error('sendEmail failed for declineUnenrollment:', err)
+    }
+  }
+
+  revalidateAll()
+}
+
+// "Unenroll a Student": the school withdraws a child itself, with no request from
+// the family. Same outcome as approving a request (withdrawn, the admin decides
+// the unpaid fees), plus a reason that every linked parent is told. A child with
+// a pending request from their parent is handled there instead, so the two can't
+// both apply.
+export async function unenrollStudent(
+  studentId: string,
+  feeDecision: FeeDecision | null,
+  reason: string
+): Promise<{ error: string } | undefined> {
+  const admin = await requireAdmin()
+  const supabase = await createClient()
+
+  const trimmedReason = reason.trim()
+  if (trimmedReason.length < UNENROLLMENT_REASON_MIN) return { error: 'Write the reason for unenrolling, in a few words.' }
+  if (trimmedReason.length > UNENROLLMENT_REASON_MAX) return { error: `The reason must be ${UNENROLLMENT_REASON_MAX} characters or fewer.` }
+
+  const { data: student } = await supabase
+    .from('students')
+    .select('id, first_name, last_name, enrollment_status')
+    .eq('id', studentId)
+    .maybeSingle()
+  if (!student) return { error: 'That student could not be found.' }
+  if (isTerminalStudentStatus(student.enrollment_status)) {
+    return { error: `${student.first_name} is no longer enrolled.` }
+  }
+
+  const { data: pendingRequest } = await supabase
+    .from('unenrollment_requests')
+    .select('id')
+    .eq('student_id', studentId)
+    .eq('status', 'pending')
+    .limit(1)
+    .maybeSingle()
+  if (pendingRequest) {
+    return { error: `${student.first_name}'s parent already asked to unenroll them. Review it in the Unenrollment Requests tab.` }
+  }
+
+  const { data: unpaid } = await supabase
+    .from('payments')
+    .select('id, amount, amount_paid')
+    .eq('student_id', studentId)
+    .eq('status', 'pending')
+  const unpaidFees = unpaid ?? []
+  if (unpaidFees.length > 0 && feeDecision !== 'keep' && feeDecision !== 'waive') {
+    return { error: 'Choose what happens to the unpaid fees: keep them collectible, or waive them.' }
+  }
+
+  // Guarded on the status just read, so a double submit can't apply it twice.
+  const { data: updated, error: studentError } = await supabase
+    .from('students')
+    .update({ enrollment_status: 'withdrawn' })
+    .eq('id', studentId)
+    .eq('enrollment_status', student.enrollment_status)
+    .select('id')
+  if (studentError) return { error: studentError.message }
+  if (!updated || updated.length === 0) return { error: `${student.first_name}'s record changed meanwhile. Reload and try again.` }
+
+  let waivedTotal = 0
+  if (unpaidFees.length > 0 && feeDecision === 'waive') {
+    const { error: waiveError } = await supabase.from('payments').update({ status: 'waived' }).eq('student_id', studentId).eq('status', 'pending')
+    if (waiveError) {
+      return { error: `${student.first_name} was unenrolled, but the fees could not be waived: ${waiveError.message}` }
+    }
+    waivedTotal = roundToCents(unpaidFees.reduce((sum, p) => sum + (p.amount - p.amount_paid), 0))
+  }
+
+  const name = `${student.first_name} ${student.last_name}`
+  await logActivity(supabase, {
+    actorId: admin.id,
+    action: `Unenrolled ${name} (no parent request)${feeDecision === 'waive' && waivedTotal > 0 ? `, waived ${formatCurrency(waivedTotal)} in unpaid fees` : ''}`,
+    targetTable: 'students',
+    targetId: studentId,
+  })
+
+  const { data: links } = await supabase.from('parent_student').select('parent_id').eq('student_id', studentId)
+  const parentIds = (links ?? []).map((l) => l.parent_id)
+  await notifyUsers(parentIds, {
+    kind: 'unenroll',
+    title: `${student.first_name} has been unenrolled`,
+    body: `The school unenrolled ${name}: ${trimmedReason}`.slice(0, 200),
+    href: '/parent/unenrollment',
+  })
+
+  if (parentIds.length > 0) {
+    const { data: parents } = await supabase
+      .from('profiles')
+      .select('email, first_name')
+      .in('id', parentIds)
+      .eq('account_status', 'active')
+      .is('deleted_at', null)
+    const feeLine =
+      unpaidFees.length === 0
+        ? ''
+        : feeDecision === 'waive'
+          ? `<p>The unpaid fees on ${escapeHtml(student.first_name)}'s account (${formatCurrency(waivedTotal)}) have been waived.</p>`
+          : `<p>Any unpaid fees on ${escapeHtml(student.first_name)}'s account remain due. You can review them under Payments in your portal.</p>`
+    for (const parent of parents ?? []) {
+      if (!parent.email) continue
+      try {
+        await sendEmail({
+          to: parent.email,
+          subject: `${student.first_name} has been unenrolled`,
+          html: `
+            <h2>Unenrollment</h2>
+            <p>Hi ${escapeHtml(parent.first_name)}, the school has unenrolled <strong>${escapeHtml(name)}</strong>.</p>
+            <p><strong>Reason:</strong> ${escapeHtml(trimmedReason)}</p>
+            ${feeLine}
+            <p>Your child's records and receipts stay available in your portal. If you have questions, please contact the school.</p>
+            <p><a href="${getSiteUrl()}/login">Log in</a></p>
+          `,
+        })
+      } catch (err) {
+        console.error('sendEmail failed for unenrollStudent:', err)
+      }
     }
   }
 
