@@ -161,7 +161,7 @@ export function PickupScanner() {
         <input
           value={manualCode}
           onChange={(e) => setManualCode(e.target.value)}
-          placeholder="Or type the PU code on the card, e.g. PU-031E-1069"
+          placeholder="Or type the PU code, e.g. PU-031E-1069"
           aria-label="Pickup ID code"
           autoComplete="off"
           className="min-w-0 flex-1 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"

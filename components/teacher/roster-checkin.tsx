@@ -153,15 +153,18 @@ export function RosterCheckin({
           return (
             <div key={s.id} className="py-2">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-              <p className="min-w-0 text-sm font-medium text-gray-900 dark:text-gray-100 sm:flex-1">
-                {s.first_name} {s.last_name}
-                {alerts[s.id] && <HealthAlertChips alerts={alerts[s.id]} className="ml-2 align-middle" />}
-                {classroomFilter === 'all' && (
-                  <span className="ml-2 text-xs font-normal text-gray-400 dark:text-gray-500">
-                    {s.classroom_id ? (classroomById.get(s.classroom_id) ?? '') : 'Unassigned'}
-                  </span>
-                )}
-              </p>
+              <div className="min-w-0 sm:flex-1">
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  {s.first_name} {s.last_name}
+                  {classroomFilter === 'all' && (
+                    <span className="ml-2 text-xs font-normal text-gray-400 dark:text-gray-500">
+                      {s.classroom_id ? (classroomById.get(s.classroom_id) ?? '') : 'Unassigned'}
+                    </span>
+                  )}
+                </p>
+                {/* On their own line under the name (inline they staggered on a phone). */}
+                {alerts[s.id] && <HealthAlertChips alerts={alerts[s.id]} className="mt-1" />}
+              </div>
               {readOnly ? (
                 <span
                   className={`w-fit rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${
@@ -261,20 +264,19 @@ function ArrivalDeparture({ studentId, arrival, departure }: { studentId: string
 
   return (
     <div className={`mt-1.5 transition-opacity ${saving ? 'opacity-60' : ''}`}>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-gray-500 dark:text-gray-400">
-        <span className="flex items-center gap-2">
-          <span>Arrived</span>
-          <TimeSelect value={arrivalValue} ariaLabel="Arrival time" disabled={saving} onChange={(v) => void save(v, departureValue)} />
-        </span>
-        <span className="flex items-center gap-2">
-          <span>Left</span>
-          <TimeSelect value={departureValue} ariaLabel="Departure time" disabled={saving} clearable onChange={(v) => void save(arrivalValue, v)} />
-        </span>
+      {/* Phone: two rows (Arrived / Left), with "Left Now" beside the Left time instead of
+          dropping to a line of its own. From sm up: one row. */}
+      <div className="grid grid-cols-[auto_auto_1fr] items-center gap-x-2 gap-y-1.5 text-xs text-gray-500 dark:text-gray-400 sm:flex sm:flex-wrap sm:gap-x-2">
+        <span>Arrived</span>
+        <TimeSelect value={arrivalValue} ariaLabel="Arrival time" disabled={saving} onChange={(v) => void save(v, departureValue)} />
+        <span className="sm:hidden" />
+        <span className="sm:ml-3">Left</span>
+        <TimeSelect value={departureValue} ariaLabel="Departure time" disabled={saving} clearable onChange={(v) => void save(arrivalValue, v)} />
         <button
           type="button"
           disabled={saving || !!departureValue}
           onClick={() => void save(arrivalValue, manilaTimeNow())}
-          className="w-[76px] rounded-full border border-gray-300 py-1 text-center font-semibold text-gray-700 hover:bg-gray-50 disabled:invisible dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+          className="w-[76px] justify-self-start rounded-full border border-gray-300 py-1 text-center font-semibold sm:ml-2 text-gray-700 hover:bg-gray-50 disabled:invisible dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
         >
           Left Now
         </button>

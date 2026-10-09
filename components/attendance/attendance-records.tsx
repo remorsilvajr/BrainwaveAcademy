@@ -118,19 +118,22 @@ export function AttendanceRecords({
             {hasUngrouped && <option value={NO_GROUP}>None</option>}
           </select>
         </div>
-        <div>
-          <label className={labelClass}>From</label>
-          <input type="date" value={from} max={to || undefined} onChange={(e) => setFrom(e.target.value)} className={inputClass} />
-        </div>
-        <div>
-          <label className={labelClass}>To</label>
-          <input type="date" value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} className={inputClass} />
+        {/* From / To side by side on a phone; separate grid cells from sm up. */}
+        <div className="grid grid-cols-2 gap-3 sm:contents">
+          <div>
+            <label className={labelClass}>From</label>
+            <input type="date" value={from} max={to || undefined} onChange={(e) => setFrom(e.target.value)} className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass}>To</label>
+            <input type="date" value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} className={inputClass} />
+          </div>
         </div>
       </div>
 
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex flex-wrap gap-2 text-xs font-semibold">
-          <span className="rounded-full bg-gray-100 px-3 py-1 text-gray-700 dark:bg-gray-800 dark:text-gray-300">{filtered.length} records</span>
+          <span className="rounded-full bg-gray-100 px-3 py-1 text-gray-700 dark:bg-gray-800 dark:text-gray-300">{filtered.length} {filtered.length === 1 ? 'record' : 'records'}</span>
           <span className={`rounded-full px-3 py-1 ${STATUS_STYLES.present}`}>{count('present')} present</span>
           <span className={`rounded-full px-3 py-1 ${STATUS_STYLES.late}`}>{count('late')} late</span>
           <span className={`rounded-full px-3 py-1 ${STATUS_STYLES.absent}`}>{count('absent')} absent</span>
@@ -151,7 +154,7 @@ export function AttendanceRecords({
               <li key={r.id} className="flex items-center justify-between gap-3 px-4 py-3">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{r.name}</p>
-                  <p className="truncate text-xs text-gray-500 dark:text-gray-400">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 sm:truncate">
                     {formatDateLong(r.date)}
                     {r.group ? ` · ${r.group}` : ''}
                     {r.arrival ? ` · In ${formatTime12(r.arrival)}${r.departure ? `, out ${formatTime12(r.departure)}` : ''}` : ''}

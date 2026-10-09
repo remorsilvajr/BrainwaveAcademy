@@ -12,7 +12,8 @@ export function AttendanceTabLinks({
   tabs: { key: string; label: string }[]
 }) {
   return (
-    <div className="flex gap-6 overflow-x-auto border-b border-gray-200 dark:border-gray-700">
+    // On a phone the strip scrolls sideways without a visible scrollbar (one looked broken).
+    <div className="flex gap-4 overflow-x-auto border-b border-gray-200 [scrollbar-width:none] dark:border-gray-700 sm:gap-6 [&::-webkit-scrollbar]:hidden">
       {tabs.map((t) => (
         <Link
           key={t.key}

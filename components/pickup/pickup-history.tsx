@@ -65,13 +65,16 @@ export function PickupHistory({ rows, capped, showChildFilter = true }: { rows: 
             </select>
           </div>
         )}
-        <div>
-          <label className={labelClass}>From</label>
-          <input type="date" value={from} max={to || undefined} onChange={(e) => setFrom(e.target.value)} className={inputClass} />
-        </div>
-        <div>
-          <label className={labelClass}>To</label>
-          <input type="date" value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} className={inputClass} />
+        {/* From / To side by side on a phone; separate grid cells from sm up. */}
+        <div className="grid grid-cols-2 gap-3 sm:contents">
+          <div>
+            <label className={labelClass}>From</label>
+            <input type="date" value={from} max={to || undefined} onChange={(e) => setFrom(e.target.value)} className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass}>To</label>
+            <input type="date" value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} className={inputClass} />
+          </div>
         </div>
       </div>
 

@@ -217,7 +217,7 @@ export function ClassroomModal({
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="mt-4 flex gap-4 border-b border-gray-100 dark:border-gray-800">
+        <div className="mt-4 flex gap-4 overflow-x-auto border-b border-gray-100 [scrollbar-width:none] dark:border-gray-800 [&::-webkit-scrollbar]:hidden">
           {tabs.map((t) => (
             <button
               key={t.key}
@@ -228,7 +228,7 @@ export function ClassroomModal({
                 setTuitionPartial(false)
                 setActivityPartial(false)
               }}
-              className={`border-b-2 px-1 pb-3 text-sm font-medium ${
+              className={`shrink-0 whitespace-nowrap border-b-2 px-1 pb-3 text-sm font-medium ${
                 tab === t.key ? 'border-[#e6007e] text-[#e6007e]' : 'border-transparent text-gray-500 dark:text-gray-400'
               }`}
             >
