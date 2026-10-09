@@ -66,6 +66,14 @@ export function CreateAccountForm({ canCreateAdmin = false }: { canCreateAdmin?:
   // Kept in state so a mistake elsewhere doesn't make the admin retype it (never sent back by the server).
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  // React resets the form after each action response; bumping this remounts the
+  // visible password inputs and mode radios so they show the kept state again.
+  const [responses, setResponses] = useState(0)
+  const [seenState, setSeenState] = useState(state)
+  if (state !== seenState) {
+    setSeenState(state)
+    setResponses((n) => n + 1)
+  }
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [photoError, setPhotoError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -270,7 +278,7 @@ export function CreateAccountForm({ canCreateAdmin = false }: { canCreateAdmin?:
                   ] as const
                 ).map((o) => (
                   <label key={o.key} className="flex flex-1 cursor-pointer items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
-                    <input type="radio" checked={passwordMode === o.key} onChange={() => setPasswordMode(o.key)} className="mt-0.5 h-4 w-4 shrink-0" />
+                    <input key={`${o.key}-${responses}`} type="radio" checked={passwordMode === o.key} onChange={() => setPasswordMode(o.key)} className="mt-0.5 h-4 w-4 shrink-0" />
                     <span>{o.label}</span>
                   </label>
                 ))}
@@ -290,6 +298,7 @@ export function CreateAccountForm({ canCreateAdmin = false }: { canCreateAdmin?:
                     onPasswordChange={setPassword}
                     onConfirmChange={setConfirmPassword}
                     required
+                    resetKey={responses}
                     passwordError={fieldErrors.password}
                     confirmError={fieldErrors.confirm_password}
                   />
