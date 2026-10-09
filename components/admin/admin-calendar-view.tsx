@@ -8,6 +8,7 @@ import { EventDetailModal, type EventDetail } from '@/components/calendar/event-
 import { Modal } from '@/components/ui/modal'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { createEvent, updateEvent, deleteEvent, type EventInput } from '@/app/admin/calendar/actions'
+import { TimeSelect } from '@/components/ui/time-select'
 
 type AdminEvent = EventDetail & { going: number; notGoing: number }
 
@@ -117,21 +118,11 @@ function EventFormModal({
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Start Time (optional)</label>
-            <input
-              type="time"
-              value={input.startTime}
-              onChange={(e) => setInput({ ...input, startTime: e.target.value })}
-              className="w-full rounded-lg border border-gray-200 bg-white text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
-            />
+            <TimeSelect size="md" clearable value={input.startTime} ariaLabel="Start time" onChange={(v) => setInput((cur) => ({ ...cur, startTime: v }))} />
           </div>
           <div>
             <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">End Time (optional)</label>
-            <input
-              type="time"
-              value={input.endTime}
-              onChange={(e) => setInput({ ...input, endTime: e.target.value })}
-              className="w-full rounded-lg border border-gray-200 bg-white text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
-            />
+            <TimeSelect size="md" clearable value={input.endTime} ariaLabel="End time" onChange={(v) => setInput((cur) => ({ ...cur, endTime: v }))} />
           </div>
         </div>
         <div>

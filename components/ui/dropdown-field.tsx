@@ -24,6 +24,7 @@ export function DropdownField({
   hasError,
   disabled,
   onChange,
+  size = 'md',
 }: {
   value: string
   options: DropdownOption[]
@@ -32,6 +33,8 @@ export function DropdownField({
   hasError?: boolean
   disabled?: boolean
   onChange: (value: string) => void
+  // 'sm': a compact trigger for tight rows (the attendance roster's time picker).
+  size?: 'md' | 'sm'
 }) {
   const [isOpen, setIsOpen] = useState(false)
   const [position, setPosition] = useState<{ top: number; left: number; width: number } | null>(null)
@@ -58,6 +61,8 @@ export function DropdownField({
       setIsOpen(false)
     }
     window.addEventListener('scroll', closeOnScroll, true)
+    // Open on the current choice (a long list like minutes would otherwise start at the top).
+    panelRef.current?.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: 'center' })
     return () => window.removeEventListener('scroll', closeOnScroll, true)
   }, [isOpen])
 
@@ -79,7 +84,9 @@ export function DropdownField({
         onKeyDown={(e) => {
           if (e.key === 'Escape') setIsOpen(false)
         }}
-        className={`flex w-full items-center justify-between gap-1 rounded-lg border bg-white dark:bg-gray-900 px-3 py-2.5 text-sm focus:outline-none disabled:opacity-60 ${
+        className={`flex w-full items-center justify-between gap-1 rounded-lg border bg-white dark:bg-gray-900 focus:outline-none disabled:opacity-60 ${
+          size === 'sm' ? 'px-2 py-1 text-xs' : 'px-3 py-2.5 text-sm'
+        } ${
           selected ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 dark:text-gray-500'
         } ${
           hasError
@@ -88,7 +95,7 @@ export function DropdownField({
         }`}
       >
         <span className="truncate">{selected ? selected.label : placeholder}</span>
-        <ChevronDown className="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500" />
+        <ChevronDown className={`${size === 'sm' ? 'h-3 w-3' : 'h-4 w-4'} shrink-0 text-gray-400 dark:text-gray-500`} />
       </button>
 
       {isOpen &&

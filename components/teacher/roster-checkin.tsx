@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { Check } from 'lucide-react'
 import { recordAttendance, recordAttendanceTimes } from '@/app/teacher/student-dashboard/actions'
 import { formatTime12, manilaTimeNow, toHHMM } from '@/lib/attendance-times'
+import { TimeSelect } from '@/components/ui/time-select'
 import { todayIso } from '@/lib/format'
 import { Pagination } from '@/components/ui/pagination'
 import { usePagination } from '@/lib/use-pagination'
@@ -225,8 +226,8 @@ export function RosterCheckin({
   )
 }
 
-// Today's arrival and departure for one child: editable times (saved when a field
-// is left) and a "Now" button for the departure.
+// Today's arrival and departure for one child: Hour/Minute/AM-PM pickers (saved as
+// soon as a full time is chosen) and a "Left Now" button for the departure.
 function ArrivalDeparture({ studentId, arrival, departure }: { studentId: string; arrival: string | null; departure: string | null }) {
   const router = useRouter()
   const [arrivalValue, setArrivalValue] = useState(toHHMM(arrival) ?? '')
@@ -235,6 +236,8 @@ function ArrivalDeparture({ studentId, arrival, departure }: { studentId: string
   const [error, setError] = useState('')
 
   async function save(nextArrival: string, nextDeparture: string) {
+    setArrivalValue(nextArrival)
+    setDepartureValue(nextDeparture)
     if (nextArrival === (toHHMM(arrival) ?? '') && nextDeparture === (toHHMM(departure) ?? '')) return
     setSaving(true)
     setError('')
@@ -252,43 +255,22 @@ function ArrivalDeparture({ studentId, arrival, departure }: { studentId: string
     }
   }
 
-  const timeInput =
-    'rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-900 focus:border-[#0b1b62] focus:outline-none disabled:opacity-60 dark:border-gray-700 dark:bg-gray-800 dark:text-slate-100 dark:focus:border-indigo-400'
-
   return (
     <div className="mt-1.5">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-gray-500 dark:text-gray-400">
-        <label className="flex items-center gap-1.5">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-gray-500 dark:text-gray-400">
+        <span className="flex items-center gap-1.5">
           Arrived
-          <input
-            type="time"
-            value={arrivalValue}
-            disabled={saving}
-            onChange={(e) => setArrivalValue(e.target.value)}
-            onBlur={() => save(arrivalValue, departureValue)}
-            className={timeInput}
-          />
-        </label>
-        <label className="flex items-center gap-1.5">
+          <TimeSelect value={arrivalValue} ariaLabel="Arrival time" disabled={saving} onChange={(v) => void save(v, departureValue)} />
+        </span>
+        <span className="flex items-center gap-1.5">
           Left
-          <input
-            type="time"
-            value={departureValue}
-            disabled={saving}
-            onChange={(e) => setDepartureValue(e.target.value)}
-            onBlur={() => save(arrivalValue, departureValue)}
-            className={timeInput}
-          />
-        </label>
+          <TimeSelect value={departureValue} ariaLabel="Departure time" disabled={saving} clearable onChange={(v) => void save(arrivalValue, v)} />
+        </span>
         {!departureValue && (
           <button
             type="button"
             disabled={saving}
-            onClick={() => {
-              const now = manilaTimeNow()
-              setDepartureValue(now)
-              void save(arrivalValue, now)
-            }}
+            onClick={() => void save(arrivalValue, manilaTimeNow())}
             className="rounded-full border border-gray-300 px-2.5 py-1 font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
           >
             Left Now
