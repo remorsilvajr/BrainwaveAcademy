@@ -368,7 +368,6 @@ Tables: `pickup_records`, `profiles`, `applications` (`requested_classroom_id`, 
 
 ## Known temporary state / TODO
 
-- **SQL waiting to be run by the user (branch `feature/pickup-history`):** `20261009150000_pickup_records.sql` (one block). Then verify read-only, run `tests/integration/pickup-records.test.ts`, and merge.
 - **Later TODO (from the 2026-10-08 directress interview):** parent video uploads for home tasks (Google Classroom style, US5), interactive learning activities (US8). Online payment is a sandbox until the school gets real payment-provider credentials.
 - **SQL waiting to be run by the user (branch `feature/age-months-cashier-hidden`, merge only after it is verified):** `20260922000000_program_age_months.sql` (month columns + the four new ranges; the branch code reads `min_age_months`/`max_age_months`, so **the SQL must run before the branch is deployed**), `20260922010000_lead_teacher_multiple_classrooms.sql`, then the cashier trio `20260922020000_cashier_role.sql` -> `..030000_cashier_policies.sql` -> `..040000_cashier_guard_triggers.sql` (separate blocks, enum first). Then verify read-only against `pg_policy`/`pg_trigger`/`information_schema`, run `npm run test:integration` (`cashier.test.ts`) and `npm run db:verify`. Existing students already placed are not re-checked against the new ranges.
 - **Not seen in a real browser yet:** the QR scanner and card printing, the hidden-features sidebar section, the cashier portal, the Attendance Records tab, blur validation in the enroll forms.
