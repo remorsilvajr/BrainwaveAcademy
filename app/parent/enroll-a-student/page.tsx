@@ -17,7 +17,7 @@ export default async function EnrollAStudentPage({
     supabase
       .from('classrooms')
       .select('id, name, slug, min_age_months, max_age_months, tuition_fee, activity_fee')
-      .order('created_at'),
+      .order('min_age_months', { ascending: true, nullsFirst: false }).order('slug'),
   ])
 
   const parentName = profile ? `${profile.first_name} ${profile.last_name}` : 'your account'

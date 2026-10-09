@@ -15,7 +15,7 @@ export default async function EnrollPage() {
   const { data: classrooms } = await supabase
     .from('classrooms')
     .select('id, name, slug, min_age_months, max_age_months, tuition_fee, activity_fee')
-    .order('created_at')
+    .order('min_age_months', { ascending: true, nullsFirst: false }).order('slug')
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-white dark:bg-gray-950">

@@ -20,7 +20,7 @@ export default async function TeacherStudentDashboardPage({
     .from('students')
     .select('id, first_name, last_name, classroom_id')
     .order('first_name', { ascending: true })
-  const classroomsQuery = supabase.from('classrooms').select('id, name, slug').order('created_at', { ascending: true })
+  const classroomsQuery = supabase.from('classrooms').select('id, name, slug').order('min_age_months', { ascending: true, nullsFirst: false }).order('slug')
 
   function detailQueries(id: string) {
     return Promise.all([

@@ -51,7 +51,7 @@ export default async function AdminStudentAttendancePage({
 
   const selectedDate = attendanceDateFromParam(dateParam)
   const [{ data: classrooms }, { data: students }, { data: records }, { data: health }] = await Promise.all([
-    supabase.from('classrooms').select('id, name, slug').order('created_at', { ascending: true }),
+    supabase.from('classrooms').select('id, name, slug').order('min_age_months', { ascending: true, nullsFirst: false }).order('slug'),
     supabase
       .from('students')
       .select('id, first_name, last_name, classroom_id')

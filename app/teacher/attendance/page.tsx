@@ -46,7 +46,7 @@ export default async function TeacherAttendancePage({
       .not('enrollment_status', 'in', TERMINAL_STATUS_FILTER)
       .order('first_name', { ascending: true }),
     supabase.from('attendance').select('student_id, status').eq('date', selectedDate),
-    supabase.from('classrooms').select('id, name, slug').order('created_at', { ascending: true }),
+    supabase.from('classrooms').select('id, name, slug').order('min_age_months', { ascending: true, nullsFirst: false }).order('slug'),
   ])
 
   // Tutorial and Quiz Bee & Competitions aren't daily, so their students

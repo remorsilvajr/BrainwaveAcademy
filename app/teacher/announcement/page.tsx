@@ -32,7 +32,7 @@ export default async function TeacherAnnouncementPage() {
       .in('target_role', ['teacher', 'all'])
       .order('created_at', { ascending: false })
       .returns<AnnouncementRow[]>(),
-    supabase.from('classrooms').select('id, name').order('created_at', { ascending: true }),
+    supabase.from('classrooms').select('id, name').order('min_age_months', { ascending: true, nullsFirst: false }).order('slug'),
     getTeacherAssignedClassrooms(supabase, user?.id ?? ''),
   ])
 

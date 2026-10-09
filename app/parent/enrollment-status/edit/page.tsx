@@ -26,7 +26,7 @@ export default async function EditEnrollmentRequestPage({
       .eq('id', student)
       .eq('created_parent_id', user.id)
       .maybeSingle(),
-    supabase.from('classrooms').select('id, name, slug, min_age_months, max_age_months, tuition_fee, activity_fee').order('created_at'),
+    supabase.from('classrooms').select('id, name, slug, min_age_months, max_age_months, tuition_fee, activity_fee').order('min_age_months', { ascending: true, nullsFirst: false }).order('slug'),
   ])
 
   if (!application) redirect('/parent/enrollment-status')

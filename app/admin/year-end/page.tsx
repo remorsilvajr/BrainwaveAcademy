@@ -17,7 +17,7 @@ export default async function AdminYearEndPage({ searchParams }: { searchParams:
       .select('id, first_name, last_name, student_id, date_of_birth, classroom_id')
       .eq('enrollment_status', 'active')
       .order('first_name', { ascending: true }),
-    supabase.from('classrooms').select('id, name, slug, min_age_months, max_age_months').order('created_at', { ascending: true }),
+    supabase.from('classrooms').select('id, name, slug, min_age_months, max_age_months').order('min_age_months', { ascending: true, nullsFirst: false }).order('slug'),
     supabase.from('student_promotions').select('student_id, action').eq('school_year', schoolYear),
     supabase.from('payments').select('student_id, amount, amount_paid, status, due_date').eq('status', 'pending'),
   ])

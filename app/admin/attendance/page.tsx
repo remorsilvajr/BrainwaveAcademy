@@ -56,7 +56,7 @@ export default async function AdminAttendancePage({
       .is('deleted_at', null)
       .order('first_name', { ascending: true }),
     supabase.from('teacher_attendance').select('teacher_id, status').eq('date', selectedDate),
-    supabase.from('classrooms').select('id, name, lead_teacher_id').order('created_at', { ascending: true }),
+    supabase.from('classrooms').select('id, name, lead_teacher_id').order('min_age_months', { ascending: true, nullsFirst: false }).order('slug'),
     supabase.from('classroom_assistants').select('classroom_id, teacher_id'),
   ])
 

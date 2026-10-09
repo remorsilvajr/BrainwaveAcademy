@@ -42,7 +42,7 @@ export default async function TeacherDashboardPage() {
             profiles: { first_name: string; last_name: string } | null
           }[]
         >(),
-      supabase.from('classrooms').select('id, name, slug').order('created_at', { ascending: true }),
+      supabase.from('classrooms').select('id, name, slug').order('min_age_months', { ascending: true, nullsFirst: false }).order('slug'),
     ])
 
   const classroomNameById = new Map((classrooms ?? []).map((c) => [c.id, c.name]))

@@ -36,7 +36,7 @@ export default async function StudentsPage() {
     supabase
       .from('classrooms')
       .select('id, name, slug, min_age_months, max_age_months')
-      .order('created_at', { ascending: true }),
+      .order('min_age_months', { ascending: true, nullsFirst: false }).order('slug'),
     // Every unpaid fee school-wide (uncapped: it feeds per-child sums), grouped
     // by child below. Same "pending = outstanding" rule as the dashboard.
     supabase

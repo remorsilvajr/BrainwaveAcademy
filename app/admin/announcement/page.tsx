@@ -20,7 +20,7 @@ export default async function AdminAnnouncementPage() {
       .select('id, title, body, target_role, created_at, classroom_id, profiles(first_name, last_name)')
       .order('created_at', { ascending: false })
       .returns<AnnouncementRow[]>(),
-    supabase.from('classrooms').select('id, name').order('created_at', { ascending: true }),
+    supabase.from('classrooms').select('id, name').order('min_age_months', { ascending: true, nullsFirst: false }).order('slug'),
   ])
 
   const classroomNameById = new Map((classrooms ?? []).map((c) => [c.id, c.name]))

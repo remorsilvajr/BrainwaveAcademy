@@ -6,7 +6,7 @@ export default async function ClassroomsPage() {
   const supabase = await createClient()
 
   const [{ data: classrooms }, { data: teachers }, { data: assistants }, { data: students }] = await Promise.all([
-    supabase.from('classrooms').select('*').order('created_at', { ascending: true }),
+    supabase.from('classrooms').select('*').order('min_age_months', { ascending: true, nullsFirst: false }).order('slug'),
     supabase
       .from('profiles')
       .select('id, first_name, last_name')

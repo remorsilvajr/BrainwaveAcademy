@@ -21,7 +21,7 @@ export async function PaymentsPageContent({ mode }: { mode: 'admin' | 'cashier' 
       .select('id, payment_id, amount, payment_method, transaction_date, receipt_ref')
       .is('reversed_at', null)
       .order('transaction_date', { ascending: false }),
-    supabase.from('classrooms').select('id, name').order('created_at', { ascending: true }),
+    supabase.from('classrooms').select('id, name').order('min_age_months', { ascending: true, nullsFirst: false }).order('slug'),
   ])
 
   // Only a super admin can delete fees; decided here so nothing about the tier reaches a regular admin's browser.

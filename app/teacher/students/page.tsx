@@ -9,7 +9,7 @@ export default async function TeacherStudentsPage() {
       .from('students')
       .select('id, first_name, middle_name, last_name, date_of_birth, gender, enrollment_status, avatar_url, classroom_id')
       .order('first_name', { ascending: true }),
-    supabase.from('classrooms').select('id, name').order('created_at', { ascending: true }),
+    supabase.from('classrooms').select('id, name').order('min_age_months', { ascending: true, nullsFirst: false }).order('slug'),
   ])
 
   const classroomById = new Map((classrooms ?? []).map((c) => [c.id, c.name]))
