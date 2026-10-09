@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest'
-import { parsePickupIdCode, pickupIdCode, pickupIdLabel } from '@/lib/pickup-id'
+import { findPickupIdByLabel, normalizePickupIdLabel, parsePickupIdCode, pickupIdCode, pickupIdLabel } from '@/lib/pickup-id'
 
 const ID = '3f2b8c1e-5d4a-4f6b-9a7c-1e2d3c4b5a69'
 
@@ -29,5 +29,23 @@ describe('pickup ID codes', () => {
   })
   it('has a short readable label', () => {
     expect(pickupIdLabel(ID)).toMatch(/^PU-[0-9A-F]{4}-[0-9A-F]{4}$/)
+  })
+})
+
+describe('pickup ID label typed by hand', () => {
+  const other = '7c9e6679-7425-40de-944b-e07fc1f90ae7'
+  it('normalizes the ways people type it', () => {
+    expect(normalizePickupIdLabel('PU-031E-1069')).toBe('PU-031E-1069')
+    expect(normalizePickupIdLabel(' pu 031e 1069 ')).toBe('PU-031E-1069')
+    expect(normalizePickupIdLabel('PU031E1069')).toBe('PU-031E-1069')
+    expect(normalizePickupIdLabel('PU-031E-106')).toBeNull()
+    expect(normalizePickupIdLabel('BWPID1.x.y')).toBeNull()
+  })
+  it('finds the person whose card carries that label, and nobody else', () => {
+    const label = pickupIdLabel(ID)
+    expect(findPickupIdByLabel(label, [other, ID])).toBe(ID)
+    expect(findPickupIdByLabel(label.toLowerCase().replace(/-/g, ' '), [other, ID])).toBe(ID)
+    expect(findPickupIdByLabel(label, [other])).toBeNull()
+    expect(findPickupIdByLabel('PU-0000-0000', [other, ID])).toBeNull()
   })
 })
