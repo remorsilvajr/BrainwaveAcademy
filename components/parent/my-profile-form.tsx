@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Lock } from 'lucide-react'
 import { updateMyProfile, uploadMyAvatar, removeMyAvatar } from '@/app/parent/my-profile/actions'
 import { formatDateShort } from '@/lib/format'
-import { isValidPhilippineMobile } from '@/lib/phone'
+import { isValidPhilippineMobile, phoneMessage } from '@/lib/phone'
 import { dobInputMin, dobInputMax, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
 import { AvatarEditor } from '@/components/ui/avatar-editor'
 import { DobSelect } from '@/components/ui/dob-select'
@@ -75,7 +75,7 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
     // silently kept the new photo while reporting the whole save as failed.
     if (phone.trim() && !isValidPhilippineMobile(phone.trim())) {
       setMessage({
-        text: 'Enter a valid PH mobile number, e.g. 0917 123 4567 or +63 917 123 4567.',
+        text: phoneMessage(phone.trim()),
         isError: true,
       })
       return

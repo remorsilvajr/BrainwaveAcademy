@@ -2,8 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
-import { isValidDob, dobRangeMessage, MIN_STUDENT_AGE, MAX_STUDENT_AGE } from '@/lib/dob'
+import { toTitleCase, labeledNameProblem } from '@/lib/name'
+import { isValidDob, dobRangeMessage, MIN_STUDENT_AGE, MAX_STUDENT_AGE, dobProblem } from '@/lib/dob'
 import { applyClassroomToStudent } from '@/lib/classroom-assignment'
 import { logActivity } from '@/lib/activity-log'
 import { missingFieldsMessage } from '@/lib/form-errors'
@@ -40,11 +40,10 @@ export async function updateStudentRecord(
     ['Gender', updates.gender],
   ])
   if (missing) return { error: missing }
-  if (!isValidName(firstName) || !isValidName(lastName) || (middleName && !isValidName(middleName))) {
-    return { error: NAME_VALIDATION_MESSAGE }
-  }
+  const badName = labeledNameProblem([['First name', firstName], ['Middle name', middleName], ['Last name', lastName]])
+  if (badName) return { error: badName }
   if (!isValidDob(updates.date_of_birth, { minAge: MIN_STUDENT_AGE, maxAge: MAX_STUDENT_AGE })) {
-    return { error: dobRangeMessage('Student', MIN_STUDENT_AGE, MAX_STUDENT_AGE) }
+    return { error: (dobProblem(updates.date_of_birth, 'Student', MIN_STUDENT_AGE, MAX_STUDENT_AGE) ?? dobRangeMessage('Student', MIN_STUDENT_AGE, MAX_STUDENT_AGE)) }
   }
 
   const { error } = await supabase

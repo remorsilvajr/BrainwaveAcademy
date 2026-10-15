@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { requireSuperAdmin } from '@/lib/require-super-admin'
 import { logActivity } from '@/lib/activity-log'
 import { notifyAdmins } from '@/lib/notify'
-import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
+import { toTitleCase, labeledNameProblem } from '@/lib/name'
 
 // Admin-managed list of people who must never be handed a child (a custody
 // order, for example). Teachers can read it (Pickup Verification needs it),
@@ -23,7 +23,8 @@ export async function addDoNotRelease(input: {
   const lastName = input.lastName.trim()
   const note = input.note.trim()
   if (!firstName || !lastName) return { error: 'Enter both a first and a last name.' }
-  if (!isValidName(firstName) || !isValidName(lastName)) return { error: NAME_VALIDATION_MESSAGE }
+  const badName = labeledNameProblem([['First name', firstName], ['Last name', lastName]])
+  if (badName) return { error: badName }
   if (note.length > NOTE_MAX) return { error: `The note must be ${NOTE_MAX} characters or fewer.` }
 
   const supabase = await createClient()

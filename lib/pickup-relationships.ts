@@ -30,7 +30,17 @@ export function isPickupRelationship(value: string) {
 // staff's Relationship filter groups every "Other (...)" under Other.
 export const OTHER_RELATIONSHIP = 'Other'
 export const OTHER_SPEC_MAX = 40
-export const OTHER_SPEC_MESSAGE = 'Please specify the relationship (letters only, up to 40 characters).'
+export const OTHER_SPEC_MESSAGE = 'Please specify the relationship.'
+
+// The one thing wrong with an "Other" specification (same rule as isValidOtherSpec).
+export function otherSpecProblem(spec: string): string | null {
+  const value = spec.trim().replace(/\s+/g, ' ')
+  if (!value) return OTHER_SPEC_MESSAGE
+  if (value.length < 2) return 'Use at least 2 letters.'
+  if (value.length > OTHER_SPEC_MAX) return `Keep it to ${OTHER_SPEC_MAX} characters or fewer.`
+  if (!/^\p{L}[\p{L} '\-/.]*$/u.test(value)) return 'Use letters only.'
+  return null
+}
 const OTHER_PATTERN = /^Other \((.+)\)$/
 
 export function composeOtherRelationship(spec: string): string {

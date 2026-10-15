@@ -1,5 +1,5 @@
-import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
-import { CONTACT_NUMBER_MESSAGE, isValidContactNumber, isValidPhoneInput, normalizePhilippineMobile, PHONE_VALIDATION_MESSAGE } from '@/lib/phone'
+import { toTitleCase, nameProblem } from '@/lib/name'
+import { CONTACT_NUMBER_MESSAGE, isValidContactNumber, isValidPhoneInput, normalizePhilippineMobile, phoneMessage } from '@/lib/phone'
 import { isPickupRelationship, PICKUP_RELATIONSHIP_MESSAGE } from '@/lib/pickup-relationships'
 
 // A child's health and emergency information. Sensitive personal information
@@ -105,9 +105,11 @@ export function validateHealthInput(input: HealthInput): { error: string } | { v
   for (const [i, c] of contacts.entries()) {
     const n = i + 1
     const fullName = trim(c.fullName)
-    if (!fullName || !isValidName(fullName)) return { error: `Contact ${n}: ${fullName ? NAME_VALIDATION_MESSAGE : 'enter a name.'}` }
+    if (!fullName) return { error: `Contact ${n}: enter a name.` }
+    const badName = nameProblem(fullName)
+    if (badName) return { error: `Contact ${n}: ${badName}` }
     if (!isPickupRelationship(trim(c.relationship))) return { error: `Contact ${n}: ${PICKUP_RELATIONSHIP_MESSAGE}` }
-    if (!isValidPhoneInput(trim(c.phoneNumber))) return { error: `Contact ${n}: ${PHONE_VALIDATION_MESSAGE}` }
+    if (!isValidPhoneInput(trim(c.phoneNumber))) return { error: `Contact ${n}: ${phoneMessage(trim(c.phoneNumber))}` }
     clean.contacts.push({
       fullName: toTitleCase(fullName),
       relationship: trim(c.relationship),

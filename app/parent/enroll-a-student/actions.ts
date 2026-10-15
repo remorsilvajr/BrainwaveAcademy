@@ -6,8 +6,8 @@ import { parsePhotoConsent, PHOTO_CONSENT_REQUIRED_MESSAGE } from '@/lib/photo-c
 import { notifyAdmins } from '@/lib/notify'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
-import { isValidDob, dobRangeMessage, MIN_STUDENT_AGE, MAX_STUDENT_AGE } from '@/lib/dob'
+import { toTitleCase, nameProblem } from '@/lib/name'
+import { isValidDob, dobRangeMessage, MIN_STUDENT_AGE, MAX_STUDENT_AGE, dobProblem } from '@/lib/dob'
 import { isAgeEligibleForClassroom } from '@/lib/classrooms'
 import { logActivity } from '@/lib/activity-log'
 import { joinLabels } from '@/lib/form-errors'
@@ -46,8 +46,9 @@ export async function submitStudent(
 
   for (const key of nameFields) {
     const value = values[key]
-    if (value && !isValidName(value)) {
-      fieldErrors[key] = NAME_VALIDATION_MESSAGE
+    const problem = value ? nameProblem(value) : null
+    if (problem) {
+      fieldErrors[key] = problem
     }
   }
 
@@ -84,7 +85,7 @@ export async function submitStudent(
 
   if (values.student_dob && !fieldErrors.student_dob) {
     if (!isValidDob(values.student_dob, { minAge: MIN_STUDENT_AGE, maxAge: MAX_STUDENT_AGE })) {
-      fieldErrors.student_dob = dobRangeMessage('Student', MIN_STUDENT_AGE, MAX_STUDENT_AGE)
+      fieldErrors.student_dob = (dobProblem(values.student_dob, 'Student', MIN_STUDENT_AGE, MAX_STUDENT_AGE) ?? dobRangeMessage('Student', MIN_STUDENT_AGE, MAX_STUDENT_AGE))
     } else {
       const studentDob = new Date(values.student_dob)
       const minParentDob = new Date(studentDob)

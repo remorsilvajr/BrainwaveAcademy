@@ -13,7 +13,7 @@ export function normalizePhilippineMobile(raw: string) {
   return `+63 ${local.slice(0, 3)} ${local.slice(3, 6)} ${local.slice(6)}`
 }
 
-export const PHONE_VALIDATION_MESSAGE = 'Enter a valid PH mobile number, e.g. 0917 123 4567 or +63 917 123 4567.'
+export const PHONE_VALIDATION_MESSAGE = 'Enter a valid PH mobile number, e.g. 0917 123 4567.'
 
 // isValidPhilippineMobile strips every non-digit before matching, so on its own
 // "0917abc1234567" passes. This also rejects any character that isn't a digit,
@@ -68,3 +68,20 @@ export function isValidContactNumber(raw: string) {
 }
 
 export const CONTACT_NUMBER_MESSAGE = 'Enter a valid mobile or landline number, e.g. 0917 123 4567 or (084) 123 4567.'
+
+// What is wrong with a mobile number that failed the check, as one short
+// sentence naming only that problem. Only chooses the wording: whether a number
+// is accepted is still decided by isValidPhilippineMobile / isValidPhoneInput.
+export function phoneMessage(raw: string): string {
+  const trimmed = raw.trim()
+  const digits = trimmed.replace(/\D/g, '')
+  if (!trimmed) return 'Enter a mobile number.'
+  if (/[^0-9\s+()-]/.test(trimmed)) return 'Use digits only.'
+  if (trimmed.startsWith('+') && !digits.startsWith('63')) return 'A Philippine number starts with +63 or 0.'
+  const { local } = splitPhone(trimmed)
+  if (local.length > 0 && !local.startsWith('9')) return 'A mobile number starts with 9 after the 0 or +63.'
+  if (local.length !== MOBILE_LOCAL_DIGITS) {
+    return `A mobile number has ${MOBILE_LOCAL_DIGITS} digits after the 0 or +63 (this has ${local.length}).`
+  }
+  return PHONE_VALIDATION_MESSAGE
+}

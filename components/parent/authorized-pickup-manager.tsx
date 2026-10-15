@@ -12,7 +12,7 @@ import {
   type PickupPersonInput,
 } from '@/app/parent/pickup/actions'
 import { Modal } from '@/components/ui/modal'
-import { isValidPhoneInput, PHONE_VALIDATION_MESSAGE } from '@/lib/phone'
+import { isValidPhoneInput, phoneMessage } from '@/lib/phone'
 import { PlainSelect } from '@/components/ui/plain-select'
 import {
   PICKUP_RELATIONSHIPS,
@@ -20,6 +20,7 @@ import {
   OTHER_RELATIONSHIP,
   OTHER_SPEC_MAX,
   OTHER_SPEC_MESSAGE,
+  otherSpecProblem,
   composeOtherRelationship,
   isValidOtherSpec,
   parseRelationship,
@@ -135,12 +136,12 @@ function PickupFormModal({
     // A bare "Other" saved before this rule stays as it was until it's changed.
     const keepsLegacyBareOther = isOther && !otherSpec.trim() && editing?.relationship === OTHER_RELATIONSHIP
     if (isOther && !keepsLegacyBareOther && !isValidOtherSpec(otherSpec)) {
-      setError(OTHER_SPEC_MESSAGE)
+      setError(otherSpecProblem(otherSpec) ?? OTHER_SPEC_MESSAGE)
       return
     }
     const toSave: PickupPersonInput = { ...input, relationship: isOther && !keepsLegacyBareOther ? composeOtherRelationship(otherSpec) : input.relationship }
     if (input.phoneNumber.trim() && !isValidPhoneInput(input.phoneNumber.trim())) {
-      setError(PHONE_VALIDATION_MESSAGE)
+      setError(phoneMessage(input.phoneNumber.trim()))
       return
     }
     setIsSaving(true)

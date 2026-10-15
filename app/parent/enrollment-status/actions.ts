@@ -7,9 +7,9 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { logActivity } from '@/lib/activity-log'
 import { notifyAdmins } from '@/lib/notify'
 import { validateProgramOptions } from '@/lib/program-options'
-import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
-import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
-import { isValidDob, dobRangeMessage, MIN_STUDENT_AGE, MAX_STUDENT_AGE, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
+import { isValidPhilippineMobile, normalizePhilippineMobile, phoneMessage } from '@/lib/phone'
+import { toTitleCase, nameProblem } from '@/lib/name'
+import { isValidDob, dobRangeMessage, MIN_STUDENT_AGE, MAX_STUDENT_AGE, MIN_ADULT_AGE, MAX_AGE, dobProblem } from '@/lib/dob'
 import { genderFromParentRelationship } from '@/lib/gender'
 import { isAgeEligibleForClassroom } from '@/lib/classrooms'
 
@@ -109,16 +109,17 @@ export async function resubmitApplication(
     if (!values[key]) fieldErrors[key] = `${label} is required.`
   }
   for (const key of resubmitNameFields) {
-    if (values[key] && !isValidName(values[key])) fieldErrors[key] = NAME_VALIDATION_MESSAGE
+    const problem = values[key] ? nameProblem(values[key]) : null
+    if (problem) fieldErrors[key] = problem
   }
   if (values.parent_contact_number && !isValidPhilippineMobile(values.parent_contact_number)) {
-    fieldErrors.parent_contact_number = 'Enter a valid PH mobile number, e.g. 0917 123 4567 or +63 917 123 4567.'
+    fieldErrors.parent_contact_number = phoneMessage(values.parent_contact_number)
   }
   if (values.student_dob && !fieldErrors.student_dob && !isValidDob(values.student_dob, { minAge: MIN_STUDENT_AGE, maxAge: MAX_STUDENT_AGE })) {
-    fieldErrors.student_dob = dobRangeMessage('Student', MIN_STUDENT_AGE, MAX_STUDENT_AGE)
+    fieldErrors.student_dob = (dobProblem(values.student_dob, 'Student', MIN_STUDENT_AGE, MAX_STUDENT_AGE) ?? dobRangeMessage('Student', MIN_STUDENT_AGE, MAX_STUDENT_AGE))
   }
   if (values.parent_dob && !fieldErrors.parent_dob && !isValidDob(values.parent_dob, { minAge: MIN_ADULT_AGE, maxAge: MAX_AGE })) {
-    fieldErrors.parent_dob = dobRangeMessage('Parent', MIN_ADULT_AGE, MAX_AGE)
+    fieldErrors.parent_dob = (dobProblem(values.parent_dob, 'Parent', MIN_ADULT_AGE, MAX_AGE) ?? dobRangeMessage('Parent', MIN_ADULT_AGE, MAX_AGE))
   }
   if (values.student_dob && values.parent_dob && !fieldErrors.student_dob && !fieldErrors.parent_dob) {
     const minParentDob = new Date(values.student_dob)

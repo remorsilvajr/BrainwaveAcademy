@@ -6,9 +6,9 @@ import { cookies } from 'next/headers'
 import { validateProgramOptions } from '@/lib/program-options'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
-import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
-import { isValidDob, dobRangeMessage, MIN_STUDENT_AGE, MAX_STUDENT_AGE, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
+import { isValidPhilippineMobile, normalizePhilippineMobile, phoneMessage } from '@/lib/phone'
+import { toTitleCase, nameProblem } from '@/lib/name'
+import { isValidDob, dobRangeMessage, MIN_STUDENT_AGE, MAX_STUDENT_AGE, MIN_ADULT_AGE, MAX_AGE, dobProblem } from '@/lib/dob'
 import { isValidEmail, EMAIL_VALIDATION_MESSAGE, normalizeEmail } from '@/lib/email-validation'
 import { notifyAdmins } from '@/lib/notify'
 import { genderFromParentRelationship } from '@/lib/gender'
@@ -77,8 +77,9 @@ export async function submitApplication(
 
   for (const key of nameFields) {
     const value = values[key]
-    if (value && !isValidName(value)) {
-      fieldErrors[key] = NAME_VALIDATION_MESSAGE
+    const problem = value ? nameProblem(value) : null
+    if (problem) {
+      fieldErrors[key] = problem
     }
   }
 
@@ -88,18 +89,18 @@ export async function submitApplication(
 
   if (values.parent_contact_number && !isValidPhilippineMobile(values.parent_contact_number)) {
     fieldErrors.parent_contact_number =
-      'Enter a valid PH mobile number, e.g. 0917 123 4567 or +63 917 123 4567.'
+      phoneMessage(values.parent_contact_number)
   }
 
   if (values.student_dob && !fieldErrors.student_dob) {
     if (!isValidDob(values.student_dob, { minAge: MIN_STUDENT_AGE, maxAge: MAX_STUDENT_AGE })) {
-      fieldErrors.student_dob = dobRangeMessage('Student', MIN_STUDENT_AGE, MAX_STUDENT_AGE)
+      fieldErrors.student_dob = (dobProblem(values.student_dob, 'Student', MIN_STUDENT_AGE, MAX_STUDENT_AGE) ?? dobRangeMessage('Student', MIN_STUDENT_AGE, MAX_STUDENT_AGE))
     }
   }
 
   if (values.parent_dob && !fieldErrors.parent_dob) {
     if (!isValidDob(values.parent_dob, { minAge: MIN_ADULT_AGE, maxAge: MAX_AGE })) {
-      fieldErrors.parent_dob = dobRangeMessage('Parent', MIN_ADULT_AGE, MAX_AGE)
+      fieldErrors.parent_dob = (dobProblem(values.parent_dob, 'Parent', MIN_ADULT_AGE, MAX_AGE) ?? dobRangeMessage('Parent', MIN_ADULT_AGE, MAX_AGE))
     }
   }
 

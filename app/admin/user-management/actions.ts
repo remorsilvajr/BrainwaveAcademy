@@ -4,9 +4,9 @@ import { revalidatePath } from 'next/cache'
 import { TERMINAL_STATUS_FILTER } from '@/lib/student-status'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
-import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
-import { isValidDob, dobRangeMessage, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
+import { isValidPhilippineMobile, normalizePhilippineMobile, phoneMessage } from '@/lib/phone'
+import { toTitleCase, labeledNameProblem } from '@/lib/name'
+import { isValidDob, dobRangeMessage, MIN_ADULT_AGE, MAX_AGE, dobProblem } from '@/lib/dob'
 import { genderFromParentRelationship } from '@/lib/gender'
 import { logActivity } from '@/lib/activity-log'
 import { canModerateAccount } from '@/lib/permissions'
@@ -210,18 +210,17 @@ export async function updateUserProfile(
     ['Last name', lastName],
   ])
   if (missing) return { error: missing }
-  if (!isValidName(firstName) || !isValidName(lastName) || (middleName && !isValidName(middleName))) {
-    return { error: NAME_VALIDATION_MESSAGE }
-  }
+  const badName = labeledNameProblem([['First name', firstName], ['Middle name', middleName], ['Last name', lastName]])
+  if (badName) return { error: badName }
 
   const phone = updates.phone_number.trim()
   if (phone && !isValidPhilippineMobile(phone)) {
-    return { error: 'Enter a valid PH mobile number, e.g. 0917 123 4567 or +63 917 123 4567.' }
+    return { error: phoneMessage(phone) }
   }
 
   const dob = updates.date_of_birth.trim()
   if (dob && !isValidDob(dob, { minAge: MIN_ADULT_AGE, maxAge: MAX_AGE })) {
-    return { error: dobRangeMessage('This account', MIN_ADULT_AGE, MAX_AGE) }
+    return { error: (dobProblem(dob, 'This account', MIN_ADULT_AGE, MAX_AGE) ?? dobRangeMessage('This account', MIN_ADULT_AGE, MAX_AGE)) }
   }
 
   const { error } = await supabase
