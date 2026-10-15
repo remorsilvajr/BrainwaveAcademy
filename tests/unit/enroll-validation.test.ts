@@ -20,21 +20,21 @@ describe('enroll form live validation (mirrors the server checks)', () => {
     expect(validateEnrollField('confirm_password', { password: 'Abcdefg1', confirm_password: '' }, [], live)).toBeUndefined()
     expect(validateEnrollFields(STUDENT_KEYS, {}, [], live)).toEqual({})
     // a wrong value is still flagged live
-    expect(validateEnrollField('student_first_name', { student_first_name: 'A1' }, [], live)).toMatch(/Names must/)
+    expect(validateEnrollField('student_first_name', { student_first_name: 'A1' }, [], live)).toBe('Use letters only.')
     expect(validateEnrollField('password', { password: 'abc' }, [], live)).toMatch(/must be at least 8/)
   })
   it('rejects a bad name, email and phone', () => {
-    expect(validateEnrollField('student_first_name', { student_first_name: 'A1' })).toMatch(/Names must/)
-    expect(validateEnrollField('student_middle_name', { student_middle_name: '---' })).toMatch(/Names must/)
+    expect(validateEnrollField('student_first_name', { student_first_name: 'A1' })).toBe('Use letters only.')
+    expect(validateEnrollField('student_middle_name', { student_middle_name: '---' })).toMatch(/between letters/)
     expect(validateEnrollField('parent_email', { parent_email: 'a@b..c' })).toMatch(/valid email/)
-    expect(validateEnrollField('parent_contact_number', { parent_contact_number: '12345' })).toMatch(/PH mobile/)
+    expect(validateEnrollField('parent_contact_number', { parent_contact_number: '12345' })).toBe('A mobile number starts with 9 after the 0 or +63.')
     expect(validateEnrollField('parent_contact_number', { parent_contact_number: '0917 123 4567' })).toBeUndefined()
   })
   it('checks the student age range (1y 6m to 18y) and a parent 10+ years older', () => {
-    expect(validateEnrollField('student_dob', { student_dob: '2026-01-01' })).toMatch(/between 1 year 6 months and 18/)
+    expect(validateEnrollField('student_dob', { student_dob: '2026-01-01' })).toBe('Student must be at least 1 year 6 months old.')
     expect(validateEnrollField('student_dob', { student_dob: '2024-09-01' })).toBeUndefined()
-    expect(validateEnrollField('parent_dob', { parent_dob: '2020-01-01' })).toMatch(/between 18 and 100/)
-    expect(validateEnrollField('parent_dob', { parent_dob: '2010-01-01', student_dob: '2024-09-01' })).toMatch(/between 18 and 100/)
+    expect(validateEnrollField('parent_dob', { parent_dob: '2020-01-01' })).toBe('Parent must be at least 18 years old.')
+    expect(validateEnrollField('parent_dob', { parent_dob: '2010-01-01', student_dob: '2024-09-01' })).toBe('Parent must be at least 18 years old.')
     expect(validateEnrollField('parent_dob', { parent_dob: '2010-01-01', student_dob: '2001-09-01' })).toBeDefined()
     expect(validateEnrollField('parent_dob', { parent_dob: '1990-01-01', student_dob: '2024-09-01' })).toBeUndefined()
     // 18 years old but only 8 years older than a 10-year-old

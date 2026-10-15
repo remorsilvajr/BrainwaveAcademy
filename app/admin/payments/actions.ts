@@ -262,7 +262,7 @@ async function settleFee(paymentId: string, reason: string, kind: 'waived' | 'vo
   if (!fee) return { error: loadError }
   if (fee.amount_paid > 0) {
     return {
-      error: `${formatCurrency(fee.amount_paid)} has already been paid toward this fee, so it can't be ${kind === 'waived' ? 'waived' : 'voided'}. Reverse the payment first if this fee should never have existed.`,
+      error: `${formatCurrency(fee.amount_paid)} has been paid toward this fee. Reverse that payment first.`,
     }
   }
 

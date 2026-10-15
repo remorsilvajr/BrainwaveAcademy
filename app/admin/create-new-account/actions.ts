@@ -10,8 +10,8 @@ import { sendEmail } from '@/lib/email'
 import { accountCreatedWithPasswordEmail } from '@/lib/notification-emails'
 import { getSiteUrl } from '@/lib/site-url'
 import { sendSetPasswordEmail } from '@/lib/set-password-link'
-import { isValidPhilippineMobile, normalizePhilippineMobile } from '@/lib/phone'
-import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
+import { isValidPhilippineMobile, normalizePhilippineMobile, phoneMessage } from '@/lib/phone'
+import { toTitleCase, nameProblem } from '@/lib/name'
 import { genderFromParentRelationship } from '@/lib/gender'
 import { logActivity } from '@/lib/activity-log'
 import { requireAdmin } from '@/lib/require-admin'
@@ -57,16 +57,16 @@ export async function createSystemUser(
 
   if (!values.first_name) {
     fieldErrors.first_name = 'First name is required.'
-  } else if (!isValidName(values.first_name)) {
-    fieldErrors.first_name = NAME_VALIDATION_MESSAGE
+  } else if (nameProblem(values.first_name)) {
+    fieldErrors.first_name = nameProblem(values.first_name)!
   }
   if (!values.last_name) {
     fieldErrors.last_name = 'Last name is required.'
-  } else if (!isValidName(values.last_name)) {
-    fieldErrors.last_name = NAME_VALIDATION_MESSAGE
+  } else if (nameProblem(values.last_name)) {
+    fieldErrors.last_name = nameProblem(values.last_name)!
   }
-  if (values.middle_name && !isValidName(values.middle_name)) {
-    fieldErrors.middle_name = NAME_VALIDATION_MESSAGE
+  if (values.middle_name && nameProblem(values.middle_name)) {
+    fieldErrors.middle_name = nameProblem(values.middle_name)!
   }
   if (!roles.includes(values.role)) fieldErrors.role = 'Select a role.'
   if (values.role === 'admin') {
@@ -83,7 +83,7 @@ export async function createSystemUser(
   }
 
   if (values.phone_number && !isValidPhilippineMobile(values.phone_number)) {
-    fieldErrors.phone_number = 'Enter a valid PH mobile number, e.g. 0917 123 4567 or +63 917 123 4567.'
+    fieldErrors.phone_number = phoneMessage(values.phone_number)
   }
 
   // No strength rules here (the admin decides), only Supabase Auth's own minimum

@@ -1,7 +1,7 @@
-import { isValidName, NAME_VALIDATION_MESSAGE } from '@/lib/name'
+import { nameProblem } from '@/lib/name'
 import { isValidEmail, EMAIL_VALIDATION_MESSAGE } from '@/lib/email-validation'
-import { isValidPhilippineMobile, PHONE_VALIDATION_MESSAGE } from '@/lib/phone'
-import { isValidDob, dobRangeMessage, MIN_STUDENT_AGE, MAX_STUDENT_AGE, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
+import { isValidPhilippineMobile, phoneMessage } from '@/lib/phone'
+import { isValidDob, dobRangeMessage, MIN_STUDENT_AGE, MAX_STUDENT_AGE, MIN_ADULT_AGE, MAX_AGE, dobProblem } from '@/lib/dob'
 import { isAgeEligibleForClassroom } from '@/lib/classrooms'
 import { passwordRequirements } from '@/lib/password-rules'
 
@@ -84,17 +84,17 @@ export function validateEnrollField(
     return includeRequired && label ? `${label} is required.` : undefined
   }
 
-  if (NAME_KEYS.includes(key)) return isValidName(value) ? undefined : NAME_VALIDATION_MESSAGE
+  if (NAME_KEYS.includes(key)) return nameProblem(value) ?? undefined
   if (key === 'parent_email') return isValidEmail(value) ? undefined : EMAIL_VALIDATION_MESSAGE
-  if (key === 'parent_contact_number') return isValidPhilippineMobile(value) ? undefined : PHONE_VALIDATION_MESSAGE
+  if (key === 'parent_contact_number') return isValidPhilippineMobile(value) ? undefined : phoneMessage(value)
 
   if (key === 'student_dob') {
     return isValidDob(value, { minAge: MIN_STUDENT_AGE, maxAge: MAX_STUDENT_AGE })
       ? undefined
-      : dobRangeMessage('Student', MIN_STUDENT_AGE, MAX_STUDENT_AGE)
+      : (dobProblem(value, 'Student', MIN_STUDENT_AGE, MAX_STUDENT_AGE) ?? dobRangeMessage('Student', MIN_STUDENT_AGE, MAX_STUDENT_AGE))
   }
   if (key === 'parent_dob') {
-    if (!isValidDob(value, { minAge: MIN_ADULT_AGE, maxAge: MAX_AGE })) return dobRangeMessage('Parent', MIN_ADULT_AGE, MAX_AGE)
+    if (!isValidDob(value, { minAge: MIN_ADULT_AGE, maxAge: MAX_AGE })) return (dobProblem(value, 'Parent', MIN_ADULT_AGE, MAX_AGE) ?? dobRangeMessage('Parent', MIN_ADULT_AGE, MAX_AGE))
     const studentDob = (values.student_dob ?? '').trim()
     if (studentDob && isValidDob(studentDob, { minAge: MIN_STUDENT_AGE, maxAge: MAX_STUDENT_AGE })) {
       const minParentDob = new Date(studentDob)

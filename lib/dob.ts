@@ -70,6 +70,20 @@ export function ageInYearsLabel(years: number): string {
   return parts.join(' ')
 }
 
+// Which date-of-birth rule is broken, as one short sentence (or null when the
+// date is fine): not a real date, in the future, too young, or too old. Same
+// rules as isValidDob, which this must always agree with.
+export function dobProblem(value: string, subject: string, minAge: number, maxAge: number = MAX_AGE): string | null {
+  if (!isRealIsoDate(value)) return 'Please enter a valid date of birth.'
+  const today = todayIso()
+  if (value > today) return "The date of birth can't be in the future."
+  if (wholeMonthsOld(value, today) < Math.round(minAge * 12)) {
+    return `${subject} must be at least ${Number.isInteger(minAge) ? `${minAge} years` : ageInYearsLabel(minAge)} old.`
+  }
+  if (wholeYearsOld(value, today) > maxAge) return `${subject} must be ${maxAge} years old or younger.`
+  return null
+}
+
 export function dobRangeMessage(subject: string, minAge: number, maxAge: number = MAX_AGE): string {
   return `Please enter a valid date of birth. ${subject} must be between ${Number.isInteger(minAge) ? minAge : ageInYearsLabel(minAge)} and ${maxAge} years old.`
 }

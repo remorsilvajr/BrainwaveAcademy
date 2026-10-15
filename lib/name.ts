@@ -16,13 +16,49 @@ export function isValidName(value: string) {
   return trimmed.length >= MIN_NAME_LENGTH && NAME_SHAPE.test(trimmed)
 }
 
-export const NAME_VALIDATION_MESSAGE = `Names must be at least ${MIN_NAME_LENGTH} characters and use letters only, with single spaces and any hyphen or apostrophe between letters (like O'Brien or Mary-Jane).`
+// The short general message, for when there's no single broken rule to name.
+export const NAME_VALIDATION_MESSAGE = `Use letters only, at least ${MIN_NAME_LENGTH} characters.`
+
+// Which rule a name breaks, as one short sentence, or null when it is fine.
+// The general message lists none of the details; each detail is only said when
+// it is the actual problem (a long sentence listing every rule was too much).
+export function nameProblem(value: string): string | null {
+  const trimmed = value.trim()
+  if (trimmed.length < MIN_NAME_LENGTH) return `Names must be at least ${MIN_NAME_LENGTH} characters.`
+  if (NAME_SHAPE.test(trimmed)) return null
+  if (new RegExp(`[^${LETTER}\\s'-]`).test(trimmed)) return 'Use letters only.'
+  if (/\s{2,}|[^\S ]/.test(trimmed)) return 'Use a single space between words.'
+  return 'A hyphen or apostrophe must be between letters.'
+}
+
+// For a form that shows one error for several names: "Last name: Use letters only."
+export function labeledNameProblem(fields: [label: string, value: string | null | undefined][]): string | null {
+  for (const [label, value] of fields) {
+    if (value && value.trim()) {
+      const problem = nameProblem(value)
+      if (problem) return `${label}: ${problem}`
+    }
+  }
+  return null
+}
+
+// The first problem among several names (empty optional ones skipped), so a
+// form checking first + last together still names the actual problem.
+export function firstNameProblem(...values: (string | null | undefined)[]): string | null {
+  for (const v of values) {
+    if (v && v.trim()) {
+      const problem = nameProblem(v)
+      if (problem) return problem
+    }
+  }
+  return null
+}
 
 // The same rule for an <input pattern>: browsers anchor it themselves and compile it in
 // unicode-sets mode, so the alternation is spelled out rather than using a class with a
 // bare hyphen. UX only; isValidName is the real check.
 export const NAME_HTML_PATTERN = `[${LETTER}]+(?:(?:'|-)[${LETTER}]+)*(?: [${LETTER}]+(?:(?:'|-)[${LETTER}]+)*)*`
-export const NAME_HTML_TITLE = "Letters only, with single spaces and any hyphen or apostrophe between letters (like O'Brien or Mary-Jane)."
+export const NAME_HTML_TITLE = 'Use letters only, at least 2 characters.'
 
 // Capitalizes the first letter of each word/hyphen/apostrophe-separated
 // segment (e.g. "mary-jane o'brien" -> "Mary-Jane O'Brien"). Only `/enroll`
