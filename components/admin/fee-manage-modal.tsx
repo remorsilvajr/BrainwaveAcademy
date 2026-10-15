@@ -133,12 +133,12 @@ export function FeeManageModal({
             </div>
             {fee.amount_paid > 0 && (
               <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-800/60">
-                <p className="text-xs text-gray-400 dark:text-gray-500">Paid so far</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">Paid So Far</p>
                 <p className="text-sm font-semibold text-[#00a3e0] dark:text-sky-400">{formatCurrency(fee.amount_paid)}</p>
               </div>
             )}
             <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-800/60">
-              <p className="text-xs text-gray-400 dark:text-gray-500">Due date</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">Due Date</p>
               <p className="flex items-center gap-1 text-sm font-semibold text-gray-900 dark:text-gray-100">
                 <CalendarClock className="h-3.5 w-3.5" />
                 {fee.due_date ? formatDateShort(fee.due_date) : 'Not set'}
@@ -210,7 +210,7 @@ export function FeeManageModal({
                       <div>
                         <DobSelect
                           key={dueKey}
-                          label="Due date"
+                          label="Due Date"
                           defaultValue={dueSeed}
                           min={`${thisYear - 1}-01-01`}
                           max={`${thisYear + 1}-12-31`}

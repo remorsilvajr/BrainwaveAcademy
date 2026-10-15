@@ -121,7 +121,7 @@ export async function recordManualPayment(
   revalidateAll()
 }
 
-// Marks an already-generated pending fee item (e.g. a classroom's tuition
+// Marks an already-generated pending fee item (e.g. a class's tuition
 // fee) as paid via cash, the counterpart to the parent's online payment
 // (payOnline) for a payment made outside the app. `amount` defaults
 // to the fee's full remaining balance (its old, whole-fee-only behavior);
@@ -415,7 +415,7 @@ export async function reversePayment(paymentId: string, reason: string): Promise
   revalidateAll()
 }
 
-// Creates a new unpaid fee for a student, tied to a classroom — the one
+// Creates a new unpaid fee for a student, tied to a class — the one
 // thing admin couldn't do before: every other fee only ever came from
 // auto-generation at classroom assignment, or an already-paid manual cash
 // record (recordManualPayment, above). Tuition is a one-time payment at
@@ -446,7 +446,7 @@ export async function addPendingFee(
   if (!description) return { error: 'Enter a short description for this fee.' }
 
   const { data: classroom } = await supabase.from('classrooms').select('id, name').eq('id', input.classroomId).maybeSingle()
-  if (!classroom) return { error: 'Select a classroom.' }
+  if (!classroom) return { error: 'Select a class.' }
 
   const { data: student } = await supabase.from('students').select('id, enrollment_status').eq('id', studentId).maybeSingle()
   if (!student) return { error: 'Student not found.' }
@@ -461,7 +461,7 @@ export async function addPendingFee(
       .eq('fee_type', 'tuition')
       .limit(1)
     if (existingTuition && existingTuition.length > 0) {
-      return { warning: 'This student already has a tuition fee for this classroom.' }
+      return { warning: 'This student already has a tuition fee for this class.' }
     }
   }
 

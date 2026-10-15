@@ -42,7 +42,7 @@ export function LogoutButton({ icon, className }: { icon?: IconName; className?:
           <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/30" onClick={() => setConfirming(false)} />
             <div className="relative w-full max-w-sm rounded-xl bg-white dark:bg-gray-900 p-6 shadow-xl">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Log out?</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Log Out?</h2>
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 You&apos;ll need to sign in again to access your account.
               </p>

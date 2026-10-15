@@ -100,7 +100,7 @@ export function ReversePaymentModal({
         <div className="space-y-4 p-6">
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-800/60">
-              <p className="text-xs text-gray-400 dark:text-gray-500">Amount paid</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">Amount Paid</p>
               <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                 {formatCurrency(fee.amount_paid)}
                 {fee.amount_paid < fee.amount && (
@@ -109,7 +109,7 @@ export function ReversePaymentModal({
               </p>
             </div>
             <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-800/60">
-              <p className="text-xs text-gray-400 dark:text-gray-500">Paid by</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">Paid By</p>
               <p className="text-sm font-semibold capitalize text-gray-900 dark:text-gray-100">
                 {methods || fee.payment_method || 'unknown'}
                 {fee.receipt_ref ? <span className="ml-2 text-xs font-normal text-gray-400">{fee.receipt_ref}</span> : null}

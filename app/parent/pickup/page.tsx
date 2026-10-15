@@ -97,7 +97,7 @@ export default async function AuthorizedPickupPage({ searchParams }: { searchPar
           icon={ShieldCheck}
           title="No Enrolled Students Yet"
           description="Once a child is enrolled, you can register the people authorized to pick them up here."
-          action={{ href: '/parent/enroll-a-student', label: 'Enroll A Student' }}
+          action={{ href: '/parent/enroll-a-student', label: 'Enroll a Student' }}
         />
       ) : (
         <AuthorizedPickupManager students={students ?? []} pickups={pickupsWithUrls} />

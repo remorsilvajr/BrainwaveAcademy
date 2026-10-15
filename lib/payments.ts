@@ -29,7 +29,7 @@ export function remainingBalance(row: { amount: number; amount_paid: number }) {
 
 // Outstanding = the remaining balance of every `pending` fee (overdue ones
 // included, they're a subset; a partially-paid fee's already-paid portion is
-// excluded), the same definition the parent dashboard's Due Balance uses, so
+// excluded), the same definition the parent dashboard's Outstanding Balance uses, so
 // the two portals always agree.
 export function summarizeOutstanding(rows: (FeeLike & { amount: number; amount_paid: number })[]) {
   let outstanding = 0

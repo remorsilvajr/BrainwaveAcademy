@@ -86,7 +86,7 @@ export function ClassroomAnnouncements({
   return (
     <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Classroom Announcements</h2>
+        <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Class Announcements</h2>
         <button
           type="button"
           onClick={() => setIsPosting((v) => !v)}
@@ -114,14 +114,14 @@ export function ClassroomAnnouncements({
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">
               Classroom
-              {assignableClassrooms.length === 0 && " (you aren't assigned to any classroom yet)"}
+              {assignableClassrooms.length === 0 && " (you aren't assigned to any class yet)"}
             </label>
             <select
               value={classroomId}
               onChange={(e) => setClassroomId(e.target.value)}
               className="w-full rounded-lg border border-gray-200 bg-white text-slate-900 dark:border-gray-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
             >
-              <option value="">All Classrooms</option>
+              <option value="">All Classes</option>
               {assignableClassrooms.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -163,7 +163,7 @@ export function ClassroomAnnouncements({
               <div className="flex items-center gap-2">
                 <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{a.title}</p>
                 <span className="rounded-full bg-sky-50 dark:bg-sky-950/30 px-2 py-0.5 text-xs font-medium text-sky-700 dark:text-sky-300">
-                  {a.classroomName ?? 'All Classrooms'}
+                  {a.classroomName ?? 'All Classes'}
                 </span>
               </div>
               <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">{a.body}</p>

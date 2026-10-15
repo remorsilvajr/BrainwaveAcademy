@@ -243,7 +243,7 @@ export function ClassroomModal({
           <div className="space-y-2">
             {classroom.roster.length === 0 ? (
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                No students assigned yet. Assign a student to this classroom from their record in Students.
+                No students assigned yet. Assign a student to this class from their record in Students.
               </p>
             ) : (
               classroom.roster.map((s) => (
@@ -334,7 +334,7 @@ export function ClassroomModal({
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400">
               This program is billed by the hours actually taken, so no fixed fee is generated when a student is
-              assigned. Record each payment from Payments with Record Manual Payment. {PROGRAM_BRANCH_NOTE}
+              assigned. Record each payment from Payments with Record Cash Payment. {PROGRAM_BRANCH_NOTE}
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-400">
               Options: {programOptionConfig(classroom.slug)!.options.join(', ')}.

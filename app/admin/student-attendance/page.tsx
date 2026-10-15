@@ -44,7 +44,7 @@ export default async function AdminStudentAttendancePage({
       <div className="space-y-6">
         {heading}
         <AttendanceTabLinks basePath="/admin/student-attendance" active="records" tabs={TABS} />
-        <AttendanceRecords rows={rows} subject="student" groupLabel="Program" capped={capped} />
+        <AttendanceRecords rows={rows} subject="student" groupLabel="Class" capped={capped} />
       </div>
     )
   }

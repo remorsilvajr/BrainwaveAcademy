@@ -13,7 +13,7 @@ export default async function HomePage() {
       <AcademyOverview />
       <SiteFooter />
       {/* Logged-in visitors already have their own portal CTA in the header
-          (Portal / Enroll A Student) — the sticky prompt is for a
+          (Portal / Enroll a Student) — the sticky prompt is for a
           not-yet-applying, logged-out visitor specifically. */}
       {!auth && <StickyMobileCta />}
     </div>

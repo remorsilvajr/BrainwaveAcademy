@@ -30,7 +30,7 @@ export default async function ParentDashboardPage({
   } = await supabase.auth.getUser()
 
   // Fetched up front (not inside the main Promise.all below) since both
-  // the Due Balance card and the announcements query need the same
+  // the Outstanding Balance card and the announcements query need the same
   // linked-children/classroom info — one round trip covers both instead of
   // each re-deriving it separately.
   const { data: linkedStudentIds } = await supabase.from('parent_student').select('student_id').eq('parent_id', user?.id ?? '')
@@ -168,7 +168,7 @@ export default async function ParentDashboardPage({
           href={withStudent('/parent/payments', studentParam)}
           className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6 transition hover:border-sky-300 dark:hover:border-sky-500"
         >
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Due Balance</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Outstanding Balance</h2>
           <p className="mt-4 text-3xl font-bold text-[#0b1b62] dark:text-indigo-300">{formatCurrency(dueBalance)}</p>
           <p className="mt-2 flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
             <CalendarClock className="h-4 w-4" />

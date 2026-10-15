@@ -56,7 +56,7 @@ export function RecordPaymentModal({
     <Modal onClose={onClose} maxWidth="md">
       <div className="border-b border-gray-100 dark:border-gray-800 p-6">
         <div className="flex items-start justify-between">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Record Manual Payment</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Record Cash Payment</h2>
           <button onClick={onClose} aria-label="Close" className="text-gray-400 dark:text-gray-500 hover:text-gray-600">
             <X className="h-5 w-5" />
           </button>
@@ -144,7 +144,7 @@ export function RecordPaymentModal({
             disabled={isSaving}
             className="flex-1 rounded-lg bg-[#0b1b62] py-2.5 text-sm font-semibold text-white hover:bg-[#08154d] disabled:opacity-60"
           >
-            {isSaving ? 'Recording…' : 'Record Payment'}
+            {isSaving ? 'Recording…' : 'Record Cash Payment'}
           </button>
         )}
       </div>

@@ -46,7 +46,7 @@ export async function createParentWithApplication(
     return {
       ok: false,
       field: 'email',
-      error: 'An account already exists with this email. Please log in and use Enroll A Student in your portal to add another child.',
+      error: 'An account already exists with this email. Please log in and use Enroll a Student in your portal to add another child.',
     }
   }
 

@@ -5,7 +5,7 @@ import { SUPPORT_BRANCH } from '@/lib/school-locations'
 // billed by the hour (shown only, no fixed fee is generated) and a student
 // signs up for one or more named options inside the program (a subject, or a
 // competition). They're held at the separate Tutorial and Quiz Bee branch (lib/school-locations.ts), in one shared classroom
-// with a section per option, so an option is a section of the one classroom,
+// with a section per option, so an option is a section of the one class,
 // not a separate classroom.
 //
 // Keyed by the seeded classroom `slug` (not the display name, so renaming a
@@ -74,7 +74,7 @@ export function validateProgramOptions(
 }
 
 // Same check, looking the program up by id first (for server actions that only
-// have a classroom id). An unknown id is the caller's own error to report.
+// have a class id). An unknown id is the caller's own error to report.
 export async function validateProgramOptionsForClassroom(
   supabase: SupabaseClient,
   classroomId: string,

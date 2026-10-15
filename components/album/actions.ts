@@ -52,14 +52,14 @@ export async function recordAlbumPhotos(
 
   // Every photo belongs to exactly one class, and a parent only ever sees the
   // classes their own (active) child is in, so a photo can't go to "everyone".
-  // A teacher can only pick a classroom they lead or assist, the same rule as
+  // A teacher can only pick a class they lead or assist, the same rule as
   // classroom announcements (also enforced by the insert policy).
   if (!classroomId) {
     return { error: 'Choose which class these photos are for.' }
   }
   const assigned = await getTeacherAssignedClassrooms(supabase, user.id)
   if (!assigned.some((c) => c.id === classroomId)) {
-    return { error: "You can only share photos with a classroom you're assigned to." }
+    return { error: "You can only share photos with a class you're assigned to." }
   }
 
   const { error } = await supabase

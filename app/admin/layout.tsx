@@ -40,7 +40,7 @@ const baseSections: NavSection[] = [
     items: [
       { label: 'Teachers', href: '/admin/teachers', icon: 'teacher' },
       { label: 'Teacher Attendance', href: '/admin/attendance', icon: 'checklist' },
-      { label: 'Classrooms', href: '/admin/classrooms', icon: 'classroom' },
+      { label: 'Classes', href: '/admin/classrooms', icon: 'classroom' },
     ],
   },
   {

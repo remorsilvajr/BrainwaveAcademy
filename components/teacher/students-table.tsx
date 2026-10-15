@@ -74,13 +74,13 @@ export function TeacherStudentsTable({ students, classrooms }: { students: Stude
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Classroom</label>
+            <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Class</label>
             <select
               value={classroomFilter}
               onChange={(e) => setClassroomFilter(e.target.value)}
               className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
             >
-              <option value="all">All Classrooms</option>
+              <option value="all">All Classes</option>
               {classrooms.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -149,7 +149,7 @@ export function TeacherStudentsTable({ students, classrooms }: { students: Stude
               <th className="p-4 font-medium">Name</th>
               <th className="p-4 font-medium">Date of Birth</th>
               <th className="p-4 font-medium">Gender</th>
-              <th className="p-4 font-medium">Classroom</th>
+              <th className="p-4 font-medium">Class</th>
               <th className="p-4 font-medium">Health Alerts</th>
               <th className="p-4 font-medium">Enrollment Status</th>
               <th className="p-4"></th>

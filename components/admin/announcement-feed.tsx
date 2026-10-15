@@ -153,7 +153,7 @@ export function AnnouncementFeed({
                 onChange={(e) => setClassroomId(e.target.value)}
                 className="w-full rounded-lg border border-gray-200 bg-white text-slate-900 dark:border-gray-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
               >
-                <option value="">All Classrooms</option>
+                <option value="">All Classes</option>
                 {classrooms.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}

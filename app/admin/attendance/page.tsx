@@ -41,7 +41,7 @@ export default async function AdminAttendancePage({
         <AttendanceRecords
           rows={rows}
           subject="teacher"
-          groupLabel="Classroom"
+          groupLabel="Class"
           capped={capped}
         />
       </div>

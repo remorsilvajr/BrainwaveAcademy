@@ -33,7 +33,7 @@ const faqs = [
   {
     question: 'Can I enroll more than one child?',
     answer:
-      'Yes. Once you have a parent portal account, you can submit additional enrollment applications for other children directly from the "Enroll A Student" page in your portal, and you won\'t need to fill out your own contact details again.',
+      'Yes. Once you have a parent portal account, you can submit additional enrollment applications for other children directly from the "Enroll a Student" page in your portal, and you won\'t need to fill out your own contact details again.',
   },
   {
     question: 'How will I know if my application was approved?',

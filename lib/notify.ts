@@ -62,7 +62,7 @@ export async function notifyAdmins(input: NotificationInput): Promise<void> {
   }
 }
 
-// Parents linked to any still-enrolled child in a classroom.
+// Parents linked to any still-enrolled child in a class.
 export async function parentIdsOfClassroom(classroomId: string): Promise<string[]> {
   const admin = createAdminClient()
   const { data: students } = await admin

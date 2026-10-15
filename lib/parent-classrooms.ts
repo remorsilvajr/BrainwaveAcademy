@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 // A classroom-targeted announcement should only reach a parent whose own
-// linked child is actually in that classroom — this resolves the distinct
+// linked child is actually in that class — this resolves the distinct
 // set of classroom ids across every child linked to a parent, for exactly
 // that filter. Two plain queries (not an embedded join) to keep this
 // simple and avoid PostgREST embedding/typing quirks for a lookup this small.

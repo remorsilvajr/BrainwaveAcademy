@@ -46,7 +46,7 @@ export default async function ParentHealthPage({ searchParams }: { searchParams:
           icon={ClipboardList}
           title="No Enrollment Application Yet"
           description="Once a child is enrolled, you can add their health and emergency information here."
-          action={{ href: '/parent/enroll-a-student', label: 'Enroll A Student' }}
+          action={{ href: '/parent/enroll-a-student', label: 'Enroll a Student' }}
         />
       </div>
     )

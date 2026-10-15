@@ -24,7 +24,7 @@ export async function applyClassroomToStudent(
     .single()
 
   if (!classroom) {
-    throw new Error('Classroom not found.')
+    throw new Error('Class not found.')
   }
 
   // A child who has completed preschool keeps their last class and gets no new fees.
@@ -52,7 +52,7 @@ export async function applyClassroomToStudent(
 
   // Hourly programs (Tutorial, Quiz Bee & Competitions) are billed by the hours
   // actually taken, so no fixed tuition/activity fee is generated for them;
-  // admin records those payments with Record Manual Payment.
+  // admin records those payments with Record Cash Payment.
   if (isHourlyProgram(classroom.slug)) {
     return { classroomName: classroom.name }
   }

@@ -157,7 +157,7 @@ export function ApplicationsTable({
             <tr>
               <th className="p-4 font-medium">Application Ref</th>
               <th className="p-4 font-medium">Student Name</th>
-              <th className="p-4 font-medium">Parent/Guardian</th>
+              <th className="p-4 font-medium">Parent / Guardian</th>
               <th className="p-4 font-medium">Documents</th>
               <th className="p-4 font-medium">Status</th>
               <th className="p-4 font-medium">Action</th>

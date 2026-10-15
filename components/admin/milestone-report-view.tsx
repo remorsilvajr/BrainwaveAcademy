@@ -70,7 +70,7 @@ export function MilestoneReportView({ data, backHref }: { data: MilestoneReportD
             </p>
           </div>
           <div className="text-right">
-            <p className="text-xs text-gray-400 dark:text-gray-500">Classroom</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500">Class</p>
             <p className="font-medium text-gray-900 dark:text-gray-100">{data.classroomName ?? 'Unassigned'}</p>
           </div>
           <div>

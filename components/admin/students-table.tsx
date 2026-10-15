@@ -125,7 +125,7 @@ export function StudentsTable({ students, classrooms }: { students: Student[]; c
             <tr>
               <th className="p-4 font-medium">Student</th>
               <th className="p-4 font-medium">Guardian Contact</th>
-              <th className="p-4 font-medium">Classroom</th>
+              <th className="p-4 font-medium">Class</th>
               <th className="p-4 font-medium">Outstanding</th>
               <th className="p-4 font-medium">Status</th>
               <th className="p-4 font-medium">Action</th>

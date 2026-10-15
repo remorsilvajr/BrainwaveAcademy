@@ -224,7 +224,7 @@ export async function approveAndCreateStudentRecord(
       await applyClassroomToStudent(supabase, student.id, student.date_of_birth, classroomId, programOptions)
     } catch (err) {
       return {
-        error: `Student record created, but the classroom couldn't be assigned: ${err instanceof Error ? err.message : 'unknown error'}. You can assign it later from the Student Record.`,
+        error: `Student record created, but the class couldn't be assigned: ${err instanceof Error ? err.message : 'unknown error'}. You can assign it later from the Student Record.`,
       }
     }
   }

@@ -72,7 +72,7 @@ export default async function EnrollmentStatusPage({
           icon={ClipboardList}
           title="No Enrollment Application Yet"
           description="Once you've started an application for your child, its progress through submission, approval, document review, and enrollment will be tracked here step by step."
-          action={{ href: '/parent/enroll-a-student', label: 'Enroll A Student' }}
+          action={{ href: '/parent/enroll-a-student', label: 'Enroll a Student' }}
         />
       </div>
     )

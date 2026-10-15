@@ -45,7 +45,7 @@ export default async function ParentStudentDashboardPage({
           icon={ClipboardList}
           title="No Enrollment Application Yet"
           description="Attendance, assessments, and development milestones will appear here once your child is enrolled. Start an application to get things moving."
-          action={{ href: '/parent/enroll-a-student', label: 'Enroll A Student' }}
+          action={{ href: '/parent/enroll-a-student', label: 'Enroll a Student' }}
         />
       </div>
     )
