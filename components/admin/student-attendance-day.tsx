@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { AttendanceSplitBar } from '@/components/ui/attendance-split-bar'
 import Link from 'next/link'
 import { formatTime12 } from '@/lib/attendance-times'
 
@@ -47,6 +48,9 @@ export function StudentAttendanceDay({ classes, isToday }: { classes: DayClass[]
             ))}
           </select>
         </div>
+        <div className="w-full">
+          <AttendanceSplitBar present={count('present')} late={count('late')} absent={count('absent')} total={all.length} className="max-w-xl" />
+        </div>
         <div className="flex flex-wrap gap-2 text-sm">
           <span className={`rounded-full px-3 py-1 font-medium ${statusStyles.present}`}>{count('present')} present</span>
           <span className={`rounded-full px-3 py-1 font-medium ${statusStyles.late}`}>{count('late')} late</span>
@@ -68,6 +72,13 @@ export function StudentAttendanceDay({ classes, isToday }: { classes: DayClass[]
                 {c.students.filter((s) => s.status === 'present' || s.status === 'late').length} of {c.students.length} in
               </span>
             </div>
+            <AttendanceSplitBar
+              present={c.students.filter((s) => s.status === 'present').length}
+              late={c.students.filter((s) => s.status === 'late').length}
+              absent={c.students.filter((s) => s.status === 'absent').length}
+              total={c.students.length}
+              className="mt-2"
+            />
             {c.students.length === 0 ? (
               <p className="mt-3 text-sm text-gray-400 dark:text-gray-500">No students in this class.</p>
             ) : (

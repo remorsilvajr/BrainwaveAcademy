@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState, useRef, useState } from 'react'
+import { FileSizeNote, fileTooLargeMessage } from '@/components/ui/file-size-note'
 import { isValidEmail } from '@/lib/email-validation'
 import { isValidName } from '@/lib/name'
 import Link from 'next/link'
@@ -109,6 +110,7 @@ export function CreateAccountForm({ canCreateAdmin = false }: { canCreateAdmin?:
   }
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [photoError, setPhotoError] = useState('')
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // The `avatars` bucket this uploads to already enforces a 2MB
@@ -124,11 +126,13 @@ export function CreateAccountForm({ canCreateAdmin = false }: { canCreateAdmin?:
 
   function handlePhotoChange(file: File | null) {
     if (file && file.size > MAX_PHOTO_BYTES) {
-      setPhotoError('That photo is too large. Please choose one under 2MB.')
+      setPhotoError(fileTooLargeMessage(file, MAX_PHOTO_BYTES, 'photo'))
       if (fileInputRef.current) fileInputRef.current.value = ''
+      setPhotoFile(null)
       return
     }
     setPhotoError('')
+    setPhotoFile(file)
     if (photoPreview) URL.revokeObjectURL(photoPreview)
     setPhotoPreview(file ? URL.createObjectURL(file) : null)
   }
@@ -168,6 +172,7 @@ export function CreateAccountForm({ canCreateAdmin = false }: { canCreateAdmin?:
             </span>
             <span className="text-xs text-gray-400 dark:text-gray-500">Optional: JPG, PNG or GIF up to 2MB</span>
             {photoError && <span className="text-xs text-red-600 dark:text-red-400">{photoError}</span>}
+            {!photoError && <FileSizeNote file={photoFile} maxBytes={MAX_PHOTO_BYTES} />}
           </button>
           <input
             ref={fileInputRef}

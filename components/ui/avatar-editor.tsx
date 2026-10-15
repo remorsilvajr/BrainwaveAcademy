@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import { fileTooLargeMessage } from '@/components/ui/file-size-note'
 import { Camera, Trash2, User as UserIcon } from 'lucide-react'
 
 // The `avatars` Supabase Storage bucket itself already enforces a 2MB
@@ -77,7 +78,7 @@ export function AvatarEditor({
             const file = e.target.files?.[0]
             if (file) {
               if (file.size > MAX_FILE_BYTES) {
-                setSizeError('That photo is too large. Please choose one under 2MB.')
+                setSizeError(fileTooLargeMessage(file, MAX_FILE_BYTES, 'photo'))
               } else {
                 setSizeError('')
                 onFileSelected(file)

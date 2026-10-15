@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useTransition } from 'react'
+import { FileSizeNote, fileTooLargeMessage } from '@/components/ui/file-size-note'
 import { PhoneInput } from '@/components/ui/phone-input'
 import { useRouter } from 'next/navigation'
 import { Plus, X, ImagePlus, Loader2 } from 'lucide-react'
@@ -107,7 +108,7 @@ function PickupFormModal({
       return
     }
     if (file.size > MAX_PHOTO_BYTES) {
-      setError('Photo must be under 2MB.')
+      setError(fileTooLargeMessage(file, MAX_PHOTO_BYTES, 'photo'))
       return
     }
     setError('')
@@ -284,6 +285,7 @@ function PickupFormModal({
               Add a photo
             </button>
           )}
+          <FileSizeNote file={photo} maxBytes={MAX_PHOTO_BYTES} />
           <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
             JPG, PNG, or WEBP, up to 2MB. Helps staff confirm identity at pickup.
           </p>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import { FileSizeNote, fileTooLargeMessage } from '@/components/ui/file-size-note'
 import { useRouter } from 'next/navigation'
 import { X, ImagePlus } from 'lucide-react'
 import { submitFeedback } from '@/components/feedback/actions'
@@ -41,7 +42,7 @@ export function FeedbackForm({
       return
     }
     if (file.size > MAX_IMAGE_BYTES) {
-      setErrorMessage('Screenshot must be under 5MB.')
+      setErrorMessage(fileTooLargeMessage(file, MAX_IMAGE_BYTES, 'screenshot'))
       return
     }
     setErrorMessage('')
@@ -155,6 +156,7 @@ export function FeedbackForm({
                 Attach a screenshot
               </button>
             )}
+            <FileSizeNote file={image} maxBytes={MAX_IMAGE_BYTES} />
             <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">JPG, PNG, WEBP, or GIF, up to 5MB.</p>
 
             {errorMessage && (

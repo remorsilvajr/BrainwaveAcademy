@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { PaidBar } from '@/components/ui/paid-bar'
 import { AmountCheck, amountBorder, checkAmount } from '@/components/ui/amount-check'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -35,18 +36,16 @@ function FeeRow({ payment }: { payment: Payment }) {
   const overdue = isOverdue(payment)
   const remaining = remainingBalance(payment)
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-gray-200 dark:border-gray-700 p-3 sm:flex-row sm:items-center sm:justify-between">
-      <div>
+    <div className={`flex flex-col gap-2 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between ${
+      overdue ? 'border-red-200 bg-red-50/40 dark:border-red-900 dark:bg-red-950/20' : 'border-gray-200 dark:border-gray-700'
+    }`}>
+      <div className="min-w-0 flex-1 sm:max-w-md">
         <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{payment.description ?? payment.fee_type}</p>
         <p className="text-xs text-gray-500 dark:text-gray-400">
           {payment.due_date ? `Due ${formatDateLong(payment.due_date)}` : 'No due date'}
           {overdue && <span className="ml-2 font-semibold text-red-600 dark:text-red-400">Overdue</span>}
         </p>
-        {payment.amount_paid > 0 && (
-          <p className="mt-1 text-xs text-[#00a3e0] dark:text-sky-400">
-            {formatCurrency(payment.amount_paid)} of {formatCurrency(payment.amount)} paid
-          </p>
-        )}
+        <PaidBar paid={payment.amount_paid} total={payment.amount} overdue={overdue} className="mt-2" />
       </div>
       <span className="text-lg font-bold text-gray-900 dark:text-gray-100">{formatCurrency(remaining)}</span>
     </div>
