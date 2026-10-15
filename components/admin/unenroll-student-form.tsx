@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { LengthMeter } from '@/components/ui/length-meter'
 import { useRouter } from 'next/navigation'
 import { unenrollStudent } from '@/app/admin/unenrollment/actions'
 import { SearchableSelect } from '@/components/ui/searchable-select'
@@ -175,6 +176,7 @@ export function UnenrollStudentForm({ students }: { students: UnenrollCandidate[
               placeholder="Sent to the parents with the notice."
               className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-[#0b1b62] focus:outline-none dark:border-slate-700 dark:bg-gray-800 dark:text-gray-100 dark:focus:border-indigo-400"
             />
+            <LengthMeter value={reason} min={UNENROLLMENT_REASON_MIN} max={UNENROLLMENT_REASON_MAX} />
           </div>
         </>
       )}

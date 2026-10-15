@@ -1,8 +1,11 @@
 'use client'
 
 import { useActionState, useRef, useState } from 'react'
+import { FileSizeNote, fileTooLargeMessage } from '@/components/ui/file-size-note'
+import { isValidEmail } from '@/lib/email-validation'
+import { isValidName } from '@/lib/name'
 import Link from 'next/link'
-import { Camera } from 'lucide-react'
+import { Camera, Check } from 'lucide-react'
 import { createSystemUser, type CreateSystemUserState } from '@/app/admin/create-new-account/actions'
 import { PasswordFields } from '@/components/ui/password-fields'
 import { PhoneInput } from '@/components/ui/phone-input'
@@ -25,6 +28,7 @@ function Field({
   required,
   error,
   defaultValue,
+  confirm,
 }: {
   label: string
   name: string
@@ -33,7 +37,11 @@ function Field({
   required?: boolean
   error?: string
   defaultValue?: string
+  // Optional: the server's own check; passing it on leaving the field shows green.
+  confirm?: (value: string) => boolean
 }) {
+  const [confirmed, setConfirmed] = useState(false)
+  const showOk = confirmed && !error
   return (
     <div>
       <label htmlFor={name} className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
@@ -52,17 +60,27 @@ function Field({
           }`}
         />
       ) : (
-        <input
-          id={name}
-          name={name}
-          type={type}
-          placeholder={placeholder}
-          required={required}
-          defaultValue={defaultValue}
-          className={`w-full rounded-lg border px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 placeholder:text-gray-400 focus:outline-none ${
-            error ? 'border-red-400 focus:border-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-[#0b1b62] dark:focus:border-indigo-400'
-          }`}
-        />
+        <div className="relative">
+          <input
+            id={name}
+            name={name}
+            type={type}
+            placeholder={placeholder}
+            required={required}
+            defaultValue={defaultValue}
+            onChange={() => setConfirmed(false)}
+            onBlur={(e) => {
+              const v = e.target.value.trim()
+              setConfirmed(!!confirm && v !== '' && confirm(v))
+            }}
+            className={`w-full rounded-lg border px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 placeholder:text-gray-400 focus:outline-none ${
+              error ? 'border-red-400 focus:border-red-500' : showOk ? 'border-green-500 pr-9 focus:border-green-600' : 'border-slate-200 dark:border-slate-700 focus:border-[#0b1b62] dark:focus:border-indigo-400'
+            }`}
+          />
+          {showOk && (
+            <Check aria-label="Looks good" className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-green-600 dark:text-green-400" />
+          )}
+        </div>
       )}
       {error && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{error}</p>}
     </div>
@@ -92,6 +110,7 @@ export function CreateAccountForm({ canCreateAdmin = false }: { canCreateAdmin?:
   }
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [photoError, setPhotoError] = useState('')
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // The `avatars` bucket this uploads to already enforces a 2MB
@@ -107,11 +126,13 @@ export function CreateAccountForm({ canCreateAdmin = false }: { canCreateAdmin?:
 
   function handlePhotoChange(file: File | null) {
     if (file && file.size > MAX_PHOTO_BYTES) {
-      setPhotoError('That photo is too large. Please choose one under 2MB.')
+      setPhotoError(fileTooLargeMessage(file, MAX_PHOTO_BYTES, 'photo'))
       if (fileInputRef.current) fileInputRef.current.value = ''
+      setPhotoFile(null)
       return
     }
     setPhotoError('')
+    setPhotoFile(file)
     if (photoPreview) URL.revokeObjectURL(photoPreview)
     setPhotoPreview(file ? URL.createObjectURL(file) : null)
   }
@@ -151,6 +172,7 @@ export function CreateAccountForm({ canCreateAdmin = false }: { canCreateAdmin?:
             </span>
             <span className="text-xs text-gray-400 dark:text-gray-500">Optional: JPG, PNG or GIF up to 2MB</span>
             {photoError && <span className="text-xs text-red-600 dark:text-red-400">{photoError}</span>}
+            {!photoError && <FileSizeNote file={photoFile} maxBytes={MAX_PHOTO_BYTES} />}
           </button>
           <input
             ref={fileInputRef}
@@ -171,6 +193,7 @@ export function CreateAccountForm({ canCreateAdmin = false }: { canCreateAdmin?:
               <Field
                 label="First Name"
                 name="first_name"
+                confirm={isValidName}
                 placeholder="e.g. Jane"
                 required
                 error={fieldErrors.first_name}
@@ -179,6 +202,7 @@ export function CreateAccountForm({ canCreateAdmin = false }: { canCreateAdmin?:
               <Field
                 label="Middle Name"
                 name="middle_name"
+                confirm={isValidName}
                 placeholder="Optional"
                 error={fieldErrors.middle_name}
                 defaultValue={values.middle_name}
@@ -186,6 +210,7 @@ export function CreateAccountForm({ canCreateAdmin = false }: { canCreateAdmin?:
               <Field
                 label="Last Name"
                 name="last_name"
+                confirm={isValidName}
                 placeholder="e.g. Doe"
                 required
                 error={fieldErrors.last_name}
@@ -196,6 +221,7 @@ export function CreateAccountForm({ canCreateAdmin = false }: { canCreateAdmin?:
               <Field
                 label="Email Address"
                 name="email"
+                confirm={isValidEmail}
                 type="email"
                 placeholder="jane.doe@example.com"
                 required

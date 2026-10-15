@@ -147,13 +147,45 @@ export default async function TeacherDashboardPage() {
                   <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                     {s.first_name} {s.last_name}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{domains}/{milestoneCategoryOrder.length} Domains Complete</p>
+                  <div className="mt-1.5 flex w-40 gap-0.5" aria-hidden>
+                    {milestoneCategoryOrder.map((_, i) => (
+                      <span
+                        key={i}
+                        className={`h-1.5 flex-1 rounded-full ${
+                          i < domains
+                            ? domains === milestoneCategoryOrder.length
+                              ? 'bg-green-500'
+                              : 'bg-[#0b1b62] dark:bg-indigo-400'
+                            : 'bg-gray-200 dark:bg-gray-700'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <p
+                    className={`mt-1 text-xs ${
+                      domains === milestoneCategoryOrder.length
+                        ? 'font-medium text-green-700 dark:text-green-400'
+                        : domains === 0
+                          ? 'text-red-600 dark:text-red-400'
+                          : 'text-gray-500 dark:text-gray-400'
+                    }`}
+                  >
+                    {domains === milestoneCategoryOrder.length
+                      ? 'All 6 domains assessed ✓'
+                      : domains === 0
+                        ? 'No domains assessed yet'
+                        : `${domains}/${milestoneCategoryOrder.length} Domains Complete`}
+                  </p>
                 </div>
                 <Link
                   href={`/teacher/student-dashboard?student=${s.id}`}
-                  className="shrink-0 whitespace-nowrap rounded-lg bg-[#e6007e] px-4 py-2 text-sm font-semibold text-white hover:bg-[#c9006e]"
+                  className={`shrink-0 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-semibold ${
+                    domains === milestoneCategoryOrder.length
+                      ? 'border border-green-600 text-green-700 hover:bg-green-50 dark:border-green-500 dark:text-green-400 dark:hover:bg-green-950/30'
+                      : 'bg-[#e6007e] text-white hover:bg-[#c9006e]'
+                  }`}
                 >
-                  Assess Now
+                  {domains === milestoneCategoryOrder.length ? 'View' : 'Assess Now'}
                 </Link>
               </div>
             )

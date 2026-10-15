@@ -1,5 +1,7 @@
 'use client'
 
+import { useState } from 'react'
+import { Check } from 'lucide-react'
 import { PhoneInput } from '@/components/ui/phone-input'
 
 // Shared by both enroll wizards (public /enroll and /parent/enroll-a-student)
@@ -20,6 +22,7 @@ export function Field({
   max,
   minLength,
   extraLabelRow,
+  confirm,
 }: {
   label: string
   name: string
@@ -42,7 +45,12 @@ export function Field({
   // instead of sitting a row higher (DobSelect has two label rows above its
   // inputs where a plain field only has one).
   extraLabelRow?: boolean
+  // Optional: the same check the server runs. When the person leaves the field
+  // and it passes, the box turns green with a check (cleared again on typing).
+  confirm?: (value: string) => boolean
 }) {
+  const [confirmed, setConfirmed] = useState(false)
+  const showOk = confirmed && !error
   return (
     <div>
       <label htmlFor={name} className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
@@ -66,6 +74,7 @@ export function Field({
           }`}
         />
       ) : (
+      <div className="relative">
       <input
         id={name}
         name={name}
@@ -75,15 +84,26 @@ export function Field({
         pattern={pattern}
         title={title}
         defaultValue={defaultValue}
-        onChange={(e) => onChange?.(e.target.value)}
-        onBlur={(e) => onBlur?.(e.target.value)}
+        onChange={(e) => {
+          setConfirmed(false)
+          onChange?.(e.target.value)
+        }}
+        onBlur={(e) => {
+          const v = e.target.value.trim()
+          setConfirmed(!!confirm && v !== '' && confirm(v))
+          onBlur?.(e.target.value)
+        }}
         min={min}
         max={max}
         minLength={minLength}
         className={`w-full rounded-lg border px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 placeholder:text-gray-400 focus:outline-none ${
-          error ? 'border-red-400 focus:border-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-[#0b1b62] dark:focus:border-indigo-400'
+          error ? 'border-red-400 focus:border-red-500' : showOk ? 'border-green-500 pr-9 focus:border-green-600' : 'border-slate-200 dark:border-slate-700 focus:border-[#0b1b62] dark:focus:border-indigo-400'
         }`}
       />
+      {showOk && (
+        <Check aria-label="Looks good" className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-green-600 dark:text-green-400" />
+      )}
+      </div>
       )}
       {error && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{error}</p>}
     </div>

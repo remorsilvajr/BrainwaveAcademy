@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState, useTransition } from 'react'
+import { fileTooLargeMessage } from '@/components/ui/file-size-note'
 import { CheckCircle2, Clock, XCircle, FileText, ClipboardList, FileWarning } from 'lucide-react'
 import { uploadRequirementDocument, getOwnDocumentSignedUrl } from '@/app/parent/requirements/actions'
 import { documentOrder, documentShortLabels, documentDescriptions } from '@/lib/documents'
@@ -124,7 +125,7 @@ export function RequirementsChecklist({
   function handleFileChange(type: string, file: File | null) {
     if (!file || !applicationId) return
     if (file.size > MAX_DOCUMENT_BYTES) {
-      setErrorMessage('That file is too large. Please choose one under 4MB.')
+      setErrorMessage(fileTooLargeMessage(file, MAX_DOCUMENT_BYTES))
       return
     }
     setErrorMessage('')

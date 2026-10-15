@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { LengthMeter } from '@/components/ui/length-meter'
 import { useRouter } from 'next/navigation'
 import { Ban, Loader2, Plus, ShieldAlert } from 'lucide-react'
 import { addDoNotRelease, removeDoNotRelease } from '@/app/admin/do-not-release/actions'
@@ -73,6 +74,7 @@ function AddModal({ studentOptions, onClose }: { studentOptions: SearchableOptio
         <div>
           <label htmlFor="dnr-note" className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Reason or instruction</label>
           <textarea id="dnr-note" rows={3} maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} placeholder="For example: court order, call the office and the mother before any release." className={inputClass} />
+          <LengthMeter value={note} min={0} max={500} />
         </div>
         {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-950/30 dark:text-red-400">{error}</p>}
       </div>

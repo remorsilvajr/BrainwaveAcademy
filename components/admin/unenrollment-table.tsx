@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { LengthMeter } from '@/components/ui/length-meter'
 import { useRouter } from 'next/navigation'
 import { AlertTriangle, CalendarClock, X } from 'lucide-react'
 import { approveUnenrollment, declineUnenrollment } from '@/app/admin/unenrollment/actions'
@@ -11,7 +12,7 @@ import { SortSelect } from '@/components/ui/sort-select'
 import { usePagination } from '@/lib/use-pagination'
 import { compareDates, compareStrings, useSort, type SortOption } from '@/lib/use-sort'
 import { formatCurrency, formatDateLong, formatDateShort, roundToCents, todayIso } from '@/lib/format'
-import { UNENROLLMENT_REASON_MAX, type FeeDecision, type UnenrollmentStatus } from '@/lib/unenrollment'
+import { UNENROLLMENT_REASON_MAX, type FeeDecision, type UnenrollmentStatus, UNENROLLMENT_REASON_MIN } from '@/lib/unenrollment'
 
 export type UnenrollmentAdminRow = {
   id: string
@@ -220,6 +221,7 @@ function ReviewModal({ request, onClose }: { request: UnenrollmentAdminRow; onCl
                   maxLength={UNENROLLMENT_REASON_MAX}
                   className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-[#0b1b62] focus:outline-none dark:border-gray-700 dark:text-gray-100 dark:focus:border-indigo-400"
                 />
+                <LengthMeter value={note} min={UNENROLLMENT_REASON_MIN} max={UNENROLLMENT_REASON_MAX} />
                 <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Included in the email the parent receives.</p>
               </div>
             </>

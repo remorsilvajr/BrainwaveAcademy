@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { AmountCheck, amountBorder, checkAmount } from '@/components/ui/amount-check'
+import { LengthMeter } from '@/components/ui/length-meter'
 import { useRouter } from 'next/navigation'
 import { Ban, CalendarClock, HandHeart, Pencil, X } from 'lucide-react'
 import { editPendingFee, voidFee, waiveFee } from '@/app/admin/payments/actions'
@@ -9,14 +11,7 @@ import { DeleteFeeSection } from '@/components/admin/delete-fee-section'
 import { DobSelect } from '@/components/ui/dob-select'
 import { Modal } from '@/components/ui/modal'
 import { formatCurrency, formatDateLong, formatDateShort, todayIso } from '@/lib/format'
-import {
-  FEE_REASON_MAX,
-  feeAdjustmentLabels,
-  validateFeeAmount,
-  validateFeeDueDate,
-  validateFeeReason,
-  type FeeAdjustment,
-} from '@/lib/fees'
+import { FEE_MAX_AMOUNT, FEE_REASON_MAX, feeAdjustmentLabels, validateFeeAmount, validateFeeDueDate, validateFeeReason, type FeeAdjustment, FEE_REASON_MIN } from '@/lib/fees'
 
 export type ManagedFee = {
   id: string
@@ -208,8 +203,9 @@ export function FeeManageModal({
                           step="0.01"
                           value={amount}
                           onChange={(e) => setAmount(e.target.value)}
-                          className={inputClass}
+                          className={`${inputClass} ${amountBorder(checkAmount(amount, FEE_MAX_AMOUNT, 'limit', fee.amount_paid).tone)}`}
                         />
+                        <AmountCheck value={amount} max={FEE_MAX_AMOUNT} mode="limit" min={fee.amount_paid} />
                       </div>
                       <div>
                         <DobSelect
@@ -252,6 +248,7 @@ export function FeeManageModal({
                       placeholder="Recorded in the fee's history."
                       className={inputClass}
                     />
+                    <LengthMeter value={reason} min={FEE_REASON_MIN} max={FEE_REASON_MAX} />
                     <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">The parent is told in their notifications. The reason stays with admin.</p>
                   </div>
 

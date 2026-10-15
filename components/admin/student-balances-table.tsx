@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { PaidBar } from '@/components/ui/paid-bar'
 import { formatCurrency, formatDateShort, roundToCents } from '@/lib/format'
 import { isOverdue, remainingBalance } from '@/lib/payments'
 import { Pagination } from '@/components/ui/pagination'
@@ -186,7 +187,10 @@ export function StudentBalancesTable({
                     </td>
                     <td className="p-4 text-gray-700 dark:text-gray-300">{r.className ?? 'No class'}</td>
                     <td className="p-4 text-gray-700 dark:text-gray-300">{formatCurrency(r.billed)}</td>
-                    <td className="p-4 text-gray-700 dark:text-gray-300">{formatCurrency(r.paid)}</td>
+                    <td className="p-4 text-gray-700 dark:text-gray-300">
+                      {formatCurrency(r.paid)}
+                      <PaidBar paid={r.paid} total={r.paid + r.outstanding} overdue={r.overdue > 0} showLabel={false} className="mt-1.5 w-24" />
+                    </td>
                     <td className="p-4 font-semibold text-gray-900 dark:text-gray-100">
                       {formatCurrency(r.outstanding)}
                       {r.unpaidCount > 0 && (

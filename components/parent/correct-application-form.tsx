@@ -10,7 +10,7 @@ import { DobSelect } from '@/components/ui/dob-select'
 import { PlainSelect } from '@/components/ui/plain-select'
 import { Field } from '@/components/enroll/enroll-field'
 import { ProgramSelector, type SelectableClassroom } from '@/components/enroll/program-selector'
-import { NAME_HTML_PATTERN, NAME_HTML_TITLE } from '@/lib/name'
+import { NAME_HTML_PATTERN, NAME_HTML_TITLE, isValidName } from '@/lib/name'
 
 const initialState: ResubmitState = {}
 
@@ -127,6 +127,7 @@ export function CorrectApplicationForm({
           <Field
             label="First Name"
             name="student_first_name"
+            confirm={isValidName}
             required
             pattern={NAME_HTML_PATTERN}
             title={NAME_HTML_TITLE}
@@ -138,6 +139,7 @@ export function CorrectApplicationForm({
           <Field
             label="Middle Name"
             name="student_middle_name"
+            confirm={isValidName}
             placeholder="Optional"
             pattern={NAME_HTML_PATTERN}
             title={NAME_HTML_TITLE}
@@ -149,6 +151,7 @@ export function CorrectApplicationForm({
           <Field
             label="Last Name"
             name="student_last_name"
+            confirm={isValidName}
             required
             pattern={NAME_HTML_PATTERN}
             title={NAME_HTML_TITLE}
@@ -220,6 +223,7 @@ export function CorrectApplicationForm({
           <Field
             label="First Name"
             name="parent_first_name"
+            confirm={isValidName}
             required
             pattern={NAME_HTML_PATTERN}
             title={NAME_HTML_TITLE}
@@ -231,6 +235,7 @@ export function CorrectApplicationForm({
           <Field
             label="Middle Name"
             name="parent_middle_name"
+            confirm={isValidName}
             placeholder="Optional"
             pattern={NAME_HTML_PATTERN}
             title={NAME_HTML_TITLE}
@@ -242,6 +247,7 @@ export function CorrectApplicationForm({
           <Field
             label="Last Name"
             name="parent_last_name"
+            confirm={isValidName}
             required
             pattern={NAME_HTML_PATTERN}
             title={NAME_HTML_TITLE}
