@@ -1,5 +1,4 @@
 import { Sidebar, type NavSection } from '@/components/sidebar'
-import { SlowSiteNotice } from '@/components/ui/slow-site-notice'
 import { ParentTopBar } from '@/components/parent/parent-topbar'
 import { createClient } from '@/lib/supabase/server'
 import { parentApplicationsFilter } from '@/lib/parent-applications'
@@ -100,7 +99,6 @@ export default async function ParentLayout({ children }: { children: React.React
             avatar_url: profile?.avatar_url ?? null,
           }}
         />
-        <SlowSiteNotice />
         <main className="p-4 sm:p-8">{children}</main>
       </div>
     </div>
