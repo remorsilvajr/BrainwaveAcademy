@@ -1,5 +1,5 @@
 import { isValidName, NAME_VALIDATION_MESSAGE, toTitleCase } from '@/lib/name'
-import { isValidPhoneInput, normalizePhilippineMobile, PHONE_VALIDATION_MESSAGE } from '@/lib/phone'
+import { CONTACT_NUMBER_MESSAGE, isValidContactNumber, isValidPhoneInput, normalizePhilippineMobile, PHONE_VALIDATION_MESSAGE } from '@/lib/phone'
 import { isPickupRelationship, PICKUP_RELATIONSHIP_MESSAGE } from '@/lib/pickup-relationships'
 
 // A child's health and emergency information. Sensitive personal information
@@ -95,8 +95,9 @@ export function validateHealthInput(input: HealthInput): { error: string } | { v
   if (clean.preferredHospital.length > HEALTH_SHORT_MAX) return { error: `The hospital must be ${HEALTH_SHORT_MAX} characters or fewer.` }
   if (clean.severeAllergy && !clean.allergies) return { error: 'Describe the allergy, since it is marked severe.' }
   if (clean.doctorPhone) {
-    if (!isValidPhoneInput(clean.doctorPhone)) return { error: `Doctor's phone: ${PHONE_VALIDATION_MESSAGE}` }
-    clean.doctorPhone = normalizePhilippineMobile(clean.doctorPhone)
+    // A clinic may only have a landline; a mobile is still stored as +63 ...
+    if (!isValidContactNumber(clean.doctorPhone)) return { error: `Doctor's phone: ${CONTACT_NUMBER_MESSAGE}` }
+    if (isValidPhoneInput(clean.doctorPhone)) clean.doctorPhone = normalizePhilippineMobile(clean.doctorPhone)
   }
 
   const contacts = (input.contacts ?? []).filter((c) => trim(c.fullName) || trim(c.phoneNumber) || trim(c.relationship))

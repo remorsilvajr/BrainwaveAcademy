@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { User as UserIcon, X } from 'lucide-react'
 import { updateUserProfile, updateUserAvatar, removeUserAvatar } from '@/app/admin/user-management/actions'
 import { dobInputMin, dobInputMax, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
@@ -257,9 +258,9 @@ export function UserEditModal({
           )}
           <div>
             <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Phone Number</label>
-            <input
+            <PhoneInput
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={setPhone}
               placeholder="0917 123 4567 or +63 917 123 4567"
               disabled={readOnly}
               className={inputClasses}

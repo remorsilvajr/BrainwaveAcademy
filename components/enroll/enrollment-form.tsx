@@ -494,7 +494,7 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
                 label="Contact Number"
                 name="parent_contact_number"
                 type="tel"
-                placeholder="09XX XXX XXXX or +63 9XX XXX XXXX"
+                placeholder="0917 123 4567 or +63 917 123 4567"
                 required={step === 3}
                 defaultValue={values.parent_contact_number}
                 error={liveErrors.parent_contact_number}

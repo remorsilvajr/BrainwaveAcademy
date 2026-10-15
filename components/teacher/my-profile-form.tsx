@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { useRouter } from 'next/navigation'
 import { Lock } from 'lucide-react'
 import { updateMyProfile, uploadMyAvatar, removeMyAvatar } from '@/app/teacher/my-profile/actions'
@@ -182,11 +183,10 @@ export function MyProfileForm({ profile }: { profile: Profile }) {
               <label htmlFor="phone" className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
                 Phone Number
               </label>
-              <input
+              <PhoneInput
                 id="phone"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="0917 123 4567"
+                onChange={setPhone}
                 className="w-full rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
               />
             </div>

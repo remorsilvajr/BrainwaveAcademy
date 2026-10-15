@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Camera } from 'lucide-react'
 import { createSystemUser, type CreateSystemUserState } from '@/app/admin/create-new-account/actions'
 import { PasswordFields } from '@/components/ui/password-fields'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { adminSetPasswordRequirements } from '@/lib/password-rules'
 
 const initialState: CreateSystemUserState = {}
@@ -38,17 +39,31 @@ function Field({
       <label htmlFor={name} className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
         {label} {required && <span className="text-[#e6007e]">*</span>}
       </label>
-      <input
-        id={name}
-        name={name}
-        type={type}
-        placeholder={placeholder}
-        required={required}
-        defaultValue={defaultValue}
-        className={`w-full rounded-lg border px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 placeholder:text-gray-400 focus:outline-none ${
-          error ? 'border-red-400 focus:border-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-[#0b1b62] dark:focus:border-indigo-400'
-        }`}
-      />
+      {type === 'tel' ? (
+        <PhoneInput
+          id={name}
+          name={name}
+          placeholder={placeholder}
+          required={required}
+          defaultValue={defaultValue}
+          invalid={!!error}
+          className={`w-full rounded-lg border px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 placeholder:text-gray-400 focus:outline-none ${
+            error ? 'border-red-400 focus:border-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-[#0b1b62] dark:focus:border-indigo-400'
+          }`}
+        />
+      ) : (
+        <input
+          id={name}
+          name={name}
+          type={type}
+          placeholder={placeholder}
+          required={required}
+          defaultValue={defaultValue}
+          className={`w-full rounded-lg border px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 placeholder:text-gray-400 focus:outline-none ${
+            error ? 'border-red-400 focus:border-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-[#0b1b62] dark:focus:border-indigo-400'
+          }`}
+        />
+      )}
       {error && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{error}</p>}
     </div>
   )
@@ -190,6 +205,7 @@ export function CreateAccountForm({ canCreateAdmin = false }: { canCreateAdmin?:
               <Field
                 label="Phone Number"
                 name="phone_number"
+                type="tel"
                 placeholder="0917 123 4567"
                 error={fieldErrors.phone_number}
                 defaultValue={values.phone_number}

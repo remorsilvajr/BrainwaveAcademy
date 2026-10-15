@@ -1,5 +1,7 @@
 'use client'
 
+import { PhoneInput } from '@/components/ui/phone-input'
+
 // Shared by both enroll wizards (public /enroll and /parent/enroll-a-student)
 // so a plain text field renders and behaves identically in both.
 export function Field({
@@ -48,6 +50,22 @@ export function Field({
         {required && <span className="text-red-500"> *</span>}
       </label>
       {extraLabelRow && <span aria-hidden className="mb-1 hidden text-xs font-medium invisible sm:block">{label}</span>}
+      {type === 'tel' ? (
+        // Phone numbers get the digit counter and as-you-type spacing.
+        <PhoneInput
+          id={name}
+          name={name}
+          placeholder={placeholder}
+          required={required}
+          defaultValue={defaultValue}
+          onChange={(v) => onChange?.(v)}
+          onBlur={(e) => onBlur?.(e.target.value)}
+          invalid={!!error}
+          className={`w-full rounded-lg border px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 placeholder:text-gray-400 focus:outline-none ${
+            error ? 'border-red-400 focus:border-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-[#0b1b62] dark:focus:border-indigo-400'
+          }`}
+        />
+      ) : (
       <input
         id={name}
         name={name}
@@ -66,6 +84,7 @@ export function Field({
           error ? 'border-red-400 focus:border-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-[#0b1b62] dark:focus:border-indigo-400'
         }`}
       />
+      )}
       {error && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{error}</p>}
     </div>
   )

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { useRouter } from 'next/navigation'
 import { X } from 'lucide-react'
 import { calculateAge, formatDateLong } from '@/lib/format'
@@ -229,9 +230,9 @@ export function TeacherRecordModal({ teacher, onClose }: { teacher: Teacher; onC
               </div>
               <div>
                 <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Phone Number</label>
-                <input
+                <PhoneInput
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={setPhone}
                   placeholder="0917 123 4567 or +63 917 123 4567"
                   className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 placeholder-slate-400 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 dark:placeholder-slate-500 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
                 />
