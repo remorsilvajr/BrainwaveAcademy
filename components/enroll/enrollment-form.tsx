@@ -17,7 +17,8 @@ import { NAME_HTML_PATTERN, NAME_HTML_TITLE, isValidName } from '@/lib/name'
 
 const initialState: SubmitApplicationState = {}
 
-const STUDENT_FIELD_KEYS = ['student_first_name', 'student_middle_name', 'student_last_name', 'student_dob', 'student_gender']
+// The class-photo question is on this step too, so an unanswered one sends people back here.
+const STUDENT_FIELD_KEYS = ['student_first_name', 'student_middle_name', 'student_last_name', 'student_dob', 'student_gender', 'photo_consent']
 const PROGRAM_FIELD_KEYS = ['requested_classroom_id', 'requested_program_options']
 
 export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom[] }) {
@@ -341,13 +342,22 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
           </div>
         </div>
 
+        <PhotoConsentChoice
+          value={photoConsent}
+          onChange={(v) => {
+            setPhotoConsent(v)
+            clearError('photo_consent')
+          }}
+          error={liveErrors.photo_consent}
+        />
+
         <div className="flex justify-end">
           <button
             type="button"
             onClick={() => goToStep(2)}
             className="rounded-full bg-[#0b1b62] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#08154d]"
           >
-            Next: Program →
+            Program →
           </button>
         </div>
       </div>
@@ -385,14 +395,14 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
             onClick={() => goToStep(1)}
             className="order-2 rounded-full border border-slate-200 dark:border-slate-700 px-6 py-2.5 text-sm font-semibold text-[#0b1b62] dark:text-indigo-300 hover:bg-black/5 dark:hover:bg-white/10 sm:order-1"
           >
-            ← Back: Student Information
+            ← Student Information
           </button>
           <button
             type="button"
             onClick={() => goToStep(3)}
             className="order-1 rounded-full bg-[#0b1b62] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#08154d] sm:order-2"
           >
-            Next: Parent / Guardian Information →
+            Parent / Guardian Information →
           </button>
         </div>
       </div>
@@ -570,15 +580,6 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
           </div>
         </div>
 
-        <PhotoConsentChoice
-          value={photoConsent}
-          onChange={(v) => {
-            setPhotoConsent(v)
-            clearError('photo_consent')
-          }}
-          error={liveErrors.photo_consent}
-        />
-
         <div className="flex flex-col gap-3">
           <label className="flex items-start gap-2 text-sm text-[#454650] dark:text-slate-300">
             <input type="checkbox" required className="mt-1 h-4 w-4 shrink-0 rounded border-slate-200 dark:border-slate-700" />
@@ -631,14 +632,14 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
             onClick={() => goToStep(2)}
             className="order-2 rounded-full border border-slate-200 dark:border-slate-700 px-6 py-2.5 text-sm font-semibold text-[#0b1b62] dark:text-indigo-300 hover:bg-black/5 dark:hover:bg-white/10 sm:order-1"
           >
-            ← Back: Program
+            ← Program
           </button>
           <button
             type="submit"
             disabled={isPending}
             className="order-1 shrink-0 rounded-full bg-[#e6007e] px-6 py-3 text-sm font-semibold text-white hover:bg-[#c9006e] disabled:opacity-60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0b1b62] sm:order-2"
           >
-            {isPending ? 'Creating your account…' : 'Submit & Create Account →'}
+            {isPending ? 'Creating your account…' : 'Submit & Create Account'}
           </button>
         </div>
       </div>

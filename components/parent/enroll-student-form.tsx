@@ -17,7 +17,8 @@ import { NAME_HTML_PATTERN, NAME_HTML_TITLE, isValidName } from '@/lib/name'
 
 const initialState: SubmitStudentState = {}
 
-const STUDENT_FIELD_KEYS = ['student_first_name', 'student_middle_name', 'student_last_name', 'student_dob', 'student_gender']
+// The class-photo question is on this step too, so an unanswered one sends people back here.
+const STUDENT_FIELD_KEYS = ['student_first_name', 'student_middle_name', 'student_last_name', 'student_dob', 'student_gender', 'photo_consent']
 
 export function EnrollStudentForm({
   parentName,
@@ -244,6 +245,17 @@ export function EnrollStudentForm({
           </div>
         </div>
 
+        <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
+          <PhotoConsentChoice
+            value={photoConsent}
+            onChange={(v) => {
+              setPhotoConsent(v)
+              clearError('photo_consent')
+            }}
+            error={liveErrors.photo_consent}
+          />
+        </div>
+
         <div className="flex items-center justify-between">
           <Link href="/parent" className="text-sm font-semibold text-[#00a3e0] dark:text-sky-400 hover:underline">
             Cancel
@@ -253,7 +265,7 @@ export function EnrollStudentForm({
             onClick={() => goToStep(2)}
             className="rounded-lg bg-[#0b1b62] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#08154d]"
           >
-            Next: Program →
+            Program →
           </button>
         </div>
       </div>
@@ -280,17 +292,6 @@ export function EnrollStudentForm({
           />
         </div>
 
-        <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
-          <PhotoConsentChoice
-            value={photoConsent}
-            onChange={(v) => {
-              setPhotoConsent(v)
-              clearError('photo_consent')
-            }}
-            error={liveErrors.photo_consent}
-          />
-        </div>
-
         <p className="text-xs text-[#454650] dark:text-slate-400">
           By submitting, you consent to the processing of this student&apos;s information as
           described in our{' '}
@@ -305,7 +306,7 @@ export function EnrollStudentForm({
             onClick={() => goToStep(1)}
             className="order-2 rounded-lg border border-slate-200 dark:border-slate-700 px-6 py-2.5 text-sm font-semibold text-[#0b1b62] dark:text-indigo-300 hover:bg-black/5 dark:hover:bg-white/10 sm:order-1"
           >
-            ← Back: Student Information
+            ← Student Information
           </button>
           <button
             type="submit"
