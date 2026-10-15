@@ -9,7 +9,8 @@ A school admin / enrollment portal for Brain Wave Academy (Tagum City), built wi
 ### Public site
 
 - Landing page with school info, program highlights, founder profile, and the 6 developmental domains
-- Multi-step public enrollment form (student info, program selection, parent/guardian info), with a honeypot spam guard and required consent. Programs the child is too young or too old for are locked **with the reason shown** (the child's age and the program's age range), and the parent answers whether the child may appear in class photos
+- Multi-step public enrollment form (student info, program selection, parent/guardian info), with a honeypot spam guard and required consent. Programs the child is too young or too old for are locked **with the reason shown** (the child's age and the program's age range), and the parent answers whether the child may appear in class photos (on the Student Information step)
+- **Live feedback on every form**: fields are checked as you leave them, with green/red states, a "x of 10 digits" counter on phone numbers, length meters on long text, amount checks on payments, card checks at checkout and a size note on uploads. An error names only the rule that was broken (for example "A mobile number starts with 9 after the 0 or +63.")
 - Login, Forgot/Reset Password, with brute-force lockout after repeated failed attempts and a clear message for blocked accounts
 - Privacy Policy and Terms of Service with real, jurisdiction-specific content (RA 10173 / National Privacy Commission)
 - FAQ page, branded 404, sitemap/robots.txt, and an auto-generated OG image
@@ -40,7 +41,8 @@ A school admin / enrollment portal for Brain Wave Academy (Tagum City), built wi
 - Dashboard with attendance summary, interactive student check-in, milestone summary, and class announcements. Every card links to its full page
 - Announcements scoped to the teacher's assigned class(es), or all parents
 - Student directory with class column and filter
-- Attendance: date-selectable, editable for today only (Tutorial and Quiz Bee programs have no daily attendance)
+- Attendance: date-selectable, for the teacher's own classes, editable for today only, with arrival and departure times (Tutorial and Quiz Bee programs have no daily attendance)
+- Dashboard assessment progress: a 6-segment bar per student showing which domains are assessed (a fully assessed child gets a View button)
 - Student Dashboard: a class filter and student picker, the child's age, attendance, 6-domain milestone assessments (edit-in-place), and a read-only health summary with a red allergy alert
 - Pickup Verification: type a name, or scan the QR on a pickup card, and get "authorized", "similar name, ask again" or "not on file"
 - **Photo Album**: upload photos into today's folder for a class the teacher teaches, with a list of the children whose parents have not allowed class photos
@@ -53,10 +55,10 @@ A school admin / enrollment portal for Brain Wave Academy (Tagum City), built wi
 - User Management: edit, block, and role management, with a hidden super-admin protection tier. **Only a super admin can make an account an admin**, and **a super admin can set another account's password** (never emailed; signs that account out everywhere and notifies the owner)
 - Enrollment Requests and Applications: the two-stage review pipeline from a submitted request to a verified, enrolled student. **Approve, Reject or Request Correction** (each with an admin note where it matters) emails and notifies the parent automatically; a **note is required on every document marked Needs Correction**
 - **Numbers beside sidebar tabs** show what is waiting: enrollment requests, applications to review, unenrollment requests, unresolved feedback
-- Create New Account (manual account provisioning): the new user gets a one-time link to choose their own password; nobody at the school ever sees or sends one
-- **Payments (three tabs)**: **Fees** (what is owed), **Received** (every payment, online or cash, with receipts) and **Student Balances** (every student's total fees, paid, still owed, overdue and last payment, with Add Fee and View Fees per student). Cash can be recorded in full or in part. **Fee corrections** (edit, waive, void, reverse a payment, including a partly paid fee), each with a written reason and an audit trail
-- **Unenrollment Requests**: approve or decline a withdrawal, choosing whether unpaid fees are kept or waived; the parent is emailed
-- **Student Attendance**: any day's attendance per class (present, late, absent, not marked, with allergy alerts), read-only since teachers record it, plus every student attendance record, filterable by date range, status and program
+- Create New Account (manual account provisioning): either email the new user a one-time link to choose their own password, or let the admin set it (Supabase's 6-character minimum, typed twice). A password is never emailed or stored by the app
+- **Payments (three tabs)**: **Fees** (what is owed), **Received** (every payment, online or cash, with receipts) and **Student Balances** (every student's total fees, paid, outstanding, overdue and last payment, with Add Fee and View Fees per student). **Record Cash Payment** in full or in part. A new fee is capped at ₱10,000. **Fee corrections** (edit, waive, void, reverse a payment, including a partly paid fee), each with a written reason and an audit trail. A **super admin can delete a fee with nothing paid** toward it (with a reason); it goes to Deleted Items, Deleted Fees, where it can be restored exactly
+- **Unenrollment** (two tabs): **Unenrollment Requests** (approve or decline a parent's request) and **Unenroll a Student** (the school unenrolls a child with a written reason); either way admin chooses whether unpaid fees are kept or waived, and the parent is emailed
+- **Student Attendance**: any day's attendance per class (present, late, absent, not marked, with a colored split bar and allergy alerts), read-only since teachers record it, plus every student attendance record, filterable by date range, status and program
 - Students (with an Outstanding balance column and a Balance tab where admin can also add a fee), Teachers, and Classes directories. A class has any number of **equal teachers** (no head teacher), and fee due dates are managed per class
 - **Teacher Attendance**: record each teacher present, late or absent for any date up to today, plus every teacher attendance record
 - Student Dashboard with a class filter, milestone edit rights and avatar upload (attendance is view-only for admin), and Export Report whose Back returns to it; **Health** tab and class-photo answer on each student record
@@ -70,7 +72,7 @@ A school admin / enrollment portal for Brain Wave Academy (Tagum City), built wi
 - Pickup Verification, School Calendar (create/edit/publish events, RSVP headcounts), and Photo Album (view and delete)
 - Feedback inbox: categorize and reply to every submission, with a submitter-visible response
 - Activity Log: a searchable audit trail of account, enrollment, payment, and student-data changes
-- Deleted Items (soft-delete review, super-admin only)
+- Deleted Items (deleted accounts, enrollment requests and fees, with Restore; super-admin only)
 
 ### Under the hood
 
@@ -107,7 +109,7 @@ npm run start             # run the production build
 npm run lint              # ESLint
 npm run typecheck         # TypeScript
 npm test                  # unit tests (no network)
-npm run test:integration  # RLS, payments (partial, online, cashier), unenrollment, album, photo consent, auto move-up, preschool completion and daily-job checks against the real Supabase project (self-cleaning)
+npm run test:integration  # RLS, payments (partial, online, cashier, fee delete/restore), unenrollment, album, photo consent, pickup history, attendance scope, auto move-up, preschool completion and daily-job checks against the real Supabase project (self-cleaning)
 npm run test:sweep        # remove leftovers from an interrupted integration run
 npm run db:verify         # prove supabase/migrations rebuild the live schema (needs Docker)
 npm run backup            # save all data + uploaded files to backups/ (gitignored)
