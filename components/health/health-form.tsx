@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { useRouter } from 'next/navigation'
 import { CheckCircle2, Loader2, Plus, Trash2 } from 'lucide-react'
 import { saveHealthInfo } from '@/components/health/actions'
@@ -112,7 +113,7 @@ export function HealthForm({
         </div>
         <div>
           <label htmlFor="h-doctor-phone" className={labelClass}>Doctor&apos;s phone</label>
-          <input id="h-doctor-phone" type="tel" inputMode="tel" maxLength={20} value={value.doctorPhone} onChange={(e) => set('doctorPhone', e.target.value)} placeholder="0917 123 4567" className={inputClass} />
+          <input id="h-doctor-phone" type="tel" inputMode="tel" maxLength={20} value={value.doctorPhone} onChange={(e) => set('doctorPhone', e.target.value)} placeholder="Mobile or landline, e.g. (084) 123 4567" className={inputClass} />
         </div>
         <div>
           <label htmlFor="h-hospital" className={labelClass}>Preferred hospital</label>
@@ -142,7 +143,7 @@ export function HealthForm({
               />
               <div>
                 <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">Phone</label>
-                <input type="tel" inputMode="tel" maxLength={20} value={c.phoneNumber} onChange={(e) => setContact(i, 'phoneNumber', e.target.value)} placeholder="0917 123 4567" className={inputClass} />
+                <PhoneInput value={c.phoneNumber} onChange={(v) => setContact(i, 'phoneNumber', v)} placeholder="0917 123 4567" className={inputClass} />
               </div>
               <button
                 type="button"

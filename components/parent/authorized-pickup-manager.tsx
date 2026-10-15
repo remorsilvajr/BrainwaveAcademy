@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useTransition } from 'react'
+import { PhoneInput } from '@/components/ui/phone-input'
 import { useRouter } from 'next/navigation'
 import { Plus, X, ImagePlus, Loader2 } from 'lucide-react'
 import {
@@ -245,13 +246,9 @@ function PickupFormModal({
           )}
           <div>
             <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Contact Number</label>
-            <input
+            <PhoneInput
               value={input.phoneNumber}
-              onChange={(e) => setInput({ ...input, phoneNumber: e.target.value })}
-              type="tel"
-              inputMode="tel"
-              maxLength={20}
-              placeholder="e.g. 0917 123 4567"
+              onChange={(v) => setInput({ ...input, phoneNumber: v })}
               className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-[#0b1b62] focus:outline-none dark:border-gray-700 dark:bg-transparent dark:text-gray-100 dark:focus:border-indigo-400"
             />
           </div>

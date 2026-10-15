@@ -99,3 +99,38 @@ describe('new fee amount limit', () => {
     expect(validateFeeAmount(50_000)).toBeNull()
   })
 })
+
+describe('phone typing help', () => {
+  it('counts the 10 digits after 0 or +63, whichever is typed', async () => {
+    const { splitPhone } = await import('@/lib/phone')
+    expect(splitPhone('0917 123 45').local).toHaveLength(8)
+    expect(splitPhone('+63 917 123 45').local).toHaveLength(8)
+    expect(splitPhone('639171234567')).toEqual({ prefix: '+63', local: '9171234567' })
+    expect(splitPhone('917 123 4567')).toEqual({ prefix: '', local: '9171234567' })
+  })
+  it('groups digits as they are typed and stops at 10 after the prefix', async () => {
+    const { formatPhoneAsTyped } = await import('@/lib/phone')
+    expect(formatPhoneAsTyped('09171234567')).toBe('0917 123 4567')
+    expect(formatPhoneAsTyped('0917123456789')).toBe('0917 123 4567')
+    expect(formatPhoneAsTyped('+639171234567')).toBe('+63 917 123 4567')
+    expect(formatPhoneAsTyped('+63917123456789')).toBe('+63 917 123 4567')
+    expect(formatPhoneAsTyped('9171234567')).toBe('917 123 4567')
+    expect(formatPhoneAsTyped('+')).toBe('+')
+    expect(formatPhoneAsTyped('+6')).toBe('+6')
+    expect(formatPhoneAsTyped('+63')).toBe('+63')
+    expect(formatPhoneAsTyped('0')).toBe('0')
+    expect(formatPhoneAsTyped('091')).toBe('091')
+    expect(formatPhoneAsTyped('09171')).toBe('0917 1')
+    // Whatever it shows still passes the server check once complete.
+    const { isValidPhoneInput } = await import('@/lib/phone')
+    for (const v of ['0917 123 4567', '+63 917 123 4567', '917 123 4567']) expect(isValidPhoneInput(v)).toBe(true)
+  })
+  it('a doctor or clinic number may be a landline', async () => {
+    const { isValidContactNumber } = await import('@/lib/phone')
+    expect(isValidContactNumber('(084) 123 4567')).toBe(true)
+    expect(isValidContactNumber('8123 4567')).toBe(true)
+    expect(isValidContactNumber('0917 123 4567')).toBe(true)
+    expect(isValidContactNumber('123')).toBe(false)
+    expect(isValidContactNumber('0917abc4567')).toBe(false)
+  })
+})
