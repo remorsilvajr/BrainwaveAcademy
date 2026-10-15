@@ -13,7 +13,7 @@ import { StepTab } from '@/components/enroll/step-tab'
 import { PhotoConsentChoice } from '@/components/enroll/photo-consent-choice'
 import { ProgramSelector, type SelectableClassroom } from '@/components/enroll/program-selector'
 import { validateEnrollField, validateEnrollFields, STUDENT_KEYS, PROGRAM_KEYS } from '@/lib/enroll-validation'
-import { NAME_HTML_PATTERN, NAME_HTML_TITLE } from '@/lib/name'
+import { NAME_HTML_PATTERN, NAME_HTML_TITLE, isValidName } from '@/lib/name'
 
 const initialState: SubmitStudentState = {}
 
@@ -157,6 +157,7 @@ export function EnrollStudentForm({
             <Field
               label="First Name"
               name="student_first_name"
+              confirm={isValidName}
               placeholder="e.g. Olivia"
               // See the public enroll form's identical comment: a plain
               // <input>'s `required` isn't exempt from HTML5 constraint
@@ -177,6 +178,7 @@ export function EnrollStudentForm({
             <Field
               label="Middle Name"
               name="student_middle_name"
+              confirm={isValidName}
               placeholder="Optional"
               pattern={NAME_HTML_PATTERN}
               title={NAME_HTML_TITLE}
@@ -192,6 +194,7 @@ export function EnrollStudentForm({
             <Field
               label="Last Name"
               name="student_last_name"
+              confirm={isValidName}
               placeholder="e.g. Santos"
               required={step === 1}
               pattern={NAME_HTML_PATTERN}

@@ -1,8 +1,10 @@
 'use client'
 
 import { useActionState, useRef, useState } from 'react'
+import { isValidEmail } from '@/lib/email-validation'
+import { isValidName } from '@/lib/name'
 import Link from 'next/link'
-import { Camera } from 'lucide-react'
+import { Camera, Check } from 'lucide-react'
 import { createSystemUser, type CreateSystemUserState } from '@/app/admin/create-new-account/actions'
 import { PasswordFields } from '@/components/ui/password-fields'
 import { PhoneInput } from '@/components/ui/phone-input'
@@ -25,6 +27,7 @@ function Field({
   required,
   error,
   defaultValue,
+  confirm,
 }: {
   label: string
   name: string
@@ -33,7 +36,11 @@ function Field({
   required?: boolean
   error?: string
   defaultValue?: string
+  // Optional: the server's own check; passing it on leaving the field shows green.
+  confirm?: (value: string) => boolean
 }) {
+  const [confirmed, setConfirmed] = useState(false)
+  const showOk = confirmed && !error
   return (
     <div>
       <label htmlFor={name} className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">
@@ -52,17 +59,27 @@ function Field({
           }`}
         />
       ) : (
-        <input
-          id={name}
-          name={name}
-          type={type}
-          placeholder={placeholder}
-          required={required}
-          defaultValue={defaultValue}
-          className={`w-full rounded-lg border px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 placeholder:text-gray-400 focus:outline-none ${
-            error ? 'border-red-400 focus:border-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-[#0b1b62] dark:focus:border-indigo-400'
-          }`}
-        />
+        <div className="relative">
+          <input
+            id={name}
+            name={name}
+            type={type}
+            placeholder={placeholder}
+            required={required}
+            defaultValue={defaultValue}
+            onChange={() => setConfirmed(false)}
+            onBlur={(e) => {
+              const v = e.target.value.trim()
+              setConfirmed(!!confirm && v !== '' && confirm(v))
+            }}
+            className={`w-full rounded-lg border px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 placeholder:text-gray-400 focus:outline-none ${
+              error ? 'border-red-400 focus:border-red-500' : showOk ? 'border-green-500 pr-9 focus:border-green-600' : 'border-slate-200 dark:border-slate-700 focus:border-[#0b1b62] dark:focus:border-indigo-400'
+            }`}
+          />
+          {showOk && (
+            <Check aria-label="Looks good" className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-green-600 dark:text-green-400" />
+          )}
+        </div>
       )}
       {error && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{error}</p>}
     </div>
@@ -171,6 +188,7 @@ export function CreateAccountForm({ canCreateAdmin = false }: { canCreateAdmin?:
               <Field
                 label="First Name"
                 name="first_name"
+                confirm={isValidName}
                 placeholder="e.g. Jane"
                 required
                 error={fieldErrors.first_name}
@@ -179,6 +197,7 @@ export function CreateAccountForm({ canCreateAdmin = false }: { canCreateAdmin?:
               <Field
                 label="Middle Name"
                 name="middle_name"
+                confirm={isValidName}
                 placeholder="Optional"
                 error={fieldErrors.middle_name}
                 defaultValue={values.middle_name}
@@ -186,6 +205,7 @@ export function CreateAccountForm({ canCreateAdmin = false }: { canCreateAdmin?:
               <Field
                 label="Last Name"
                 name="last_name"
+                confirm={isValidName}
                 placeholder="e.g. Doe"
                 required
                 error={fieldErrors.last_name}
@@ -196,6 +216,7 @@ export function CreateAccountForm({ canCreateAdmin = false }: { canCreateAdmin?:
               <Field
                 label="Email Address"
                 name="email"
+                confirm={isValidEmail}
                 type="email"
                 placeholder="jane.doe@example.com"
                 required

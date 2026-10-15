@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState, useState } from 'react'
+import { isValidEmail } from '@/lib/email-validation'
 import { submitApplication, type SubmitApplicationState } from '@/app/enroll/actions'
 import { dobInputMin, dobInputMax, MIN_STUDENT_AGE, MAX_STUDENT_AGE, MIN_ADULT_AGE, MAX_AGE } from '@/lib/dob'
 import { isAgeEligibleForClassroom } from '@/lib/classrooms'
@@ -12,7 +13,7 @@ import { PhotoConsentChoice } from '@/components/enroll/photo-consent-choice'
 import { ProgramSelector, type SelectableClassroom } from '@/components/enroll/program-selector'
 import { PasswordFields } from '@/components/ui/password-fields'
 import { validateEnrollField, validateEnrollFields, STUDENT_KEYS, PROGRAM_KEYS, PARENT_KEYS } from '@/lib/enroll-validation'
-import { NAME_HTML_PATTERN, NAME_HTML_TITLE } from '@/lib/name'
+import { NAME_HTML_PATTERN, NAME_HTML_TITLE, isValidName } from '@/lib/name'
 
 const initialState: SubmitApplicationState = {}
 
@@ -246,6 +247,7 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
             <Field
               label="First Name"
               name="student_first_name"
+              confirm={isValidName}
               placeholder="e.g. Emma"
               // Only truly `required` while this step is the one visible —
               // a plain <input>'s `required` attribute is NOT exempted from
@@ -271,6 +273,7 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
             <Field
               label="Middle Name"
               name="student_middle_name"
+              confirm={isValidName}
               placeholder="e.g. Grace"
               pattern={NAME_HTML_PATTERN}
               title={NAME_HTML_TITLE}
@@ -286,6 +289,7 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
             <Field
               label="Last Name"
               name="student_last_name"
+              confirm={isValidName}
               placeholder="e.g. Smith"
               required={step === 1}
               pattern={NAME_HTML_PATTERN}
@@ -405,6 +409,7 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
               <Field
                 label="First Name"
                 name="parent_first_name"
+                confirm={isValidName}
                 placeholder="e.g. John"
                 // See student_first_name's comment above — same reasoning,
                 // mirrored: this field must stop being natively `required`
@@ -426,6 +431,7 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
               <Field
                 label="Middle Name"
                 name="parent_middle_name"
+                confirm={isValidName}
                 placeholder="Optional"
                 pattern={NAME_HTML_PATTERN}
                 title={NAME_HTML_TITLE}
@@ -441,6 +447,7 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
               <Field
                 label="Last Name"
                 name="parent_last_name"
+                confirm={isValidName}
                 placeholder="e.g. Smith"
                 required={step === 3}
                 pattern={NAME_HTML_PATTERN}
@@ -524,6 +531,7 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
             <Field
               label="Email Address"
               name="parent_email"
+              confirm={isValidEmail}
               type="email"
               placeholder="email@example.com"
               required={step === 3}

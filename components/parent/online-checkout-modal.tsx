@@ -6,11 +6,35 @@ import { CheckCircle2, CreditCard, Loader2, Smartphone, X } from 'lucide-react'
 import { Modal } from '@/components/ui/modal'
 import { formatCurrency } from '@/lib/format'
 import { payOnline, type OnlinePaymentResult } from '@/app/parent/payments/actions'
-import { SANDBOX_TEST_CARDS, SANDBOX_TEST_GCASH, type OnlineMethod } from '@/lib/sandbox-checkout'
+import { SANDBOX_TEST_CARDS, SANDBOX_TEST_GCASH, cardBrand, isValidExpiry, passesLuhn, type OnlineMethod } from '@/lib/sandbox-checkout'
 
 const inputClasses =
   'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-[#0b1b62] focus:outline-none dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100'
 const labelClasses = 'mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300'
+
+// Live verdicts for the card fields (the same rules the server applies):
+// 'none' while still typing, 'ok' / 'error' once there is enough to judge.
+type Verdict = 'none' | 'ok' | 'error'
+const fieldBorder = (v: Verdict) =>
+  v === 'ok' ? 'border-green-500! focus:border-green-600!' : v === 'error' ? 'border-red-400! focus:border-red-500!' : ''
+
+function cardNumberVerdict(number: string): Verdict {
+  const d = number.replace(/\D/g, '')
+  if (d.length < 13) return 'none'
+  if (passesLuhn(d)) return 'ok'
+  return d.length >= 16 ? 'error' : 'none'
+}
+const expiryVerdict = (expiry: string): Verdict => (expiry.length < 5 ? 'none' : isValidExpiry(expiry) ? 'ok' : 'error')
+const cvcVerdict = (cvc: string): Verdict => (cvc.length === 0 ? 'none' : cvc.length >= 3 ? 'ok' : 'none')
+
+function FieldNote({ verdict, ok, error }: { verdict: Verdict; ok: string; error: string }) {
+  if (verdict === 'none') return null
+  return (
+    <p className={`mt-1 text-xs font-medium ${verdict === 'ok' ? 'text-green-700 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+      {verdict === 'ok' ? `✓ ${ok}` : error}
+    </p>
+  )
+}
 
 // "4111111111111111" -> "4111 1111 1111 1111" as it is typed.
 const groupCard = (value: string) =>
@@ -159,15 +183,27 @@ export function OnlineCheckoutModal({
             </div>
             <div>
               <label htmlFor="card-number" className={labelClasses}>Card Number</label>
-              <input
-                id="card-number"
-                inputMode="numeric"
-                autoComplete="off"
-                value={number}
-                onChange={(e) => setNumber(groupCard(e.target.value))}
-                placeholder="4111 1111 1111 1111"
-                className={inputClasses}
-              />
+              <div className="relative">
+                <input
+                  id="card-number"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  value={number}
+                  onChange={(e) => setNumber(groupCard(e.target.value))}
+                  placeholder="4111 1111 1111 1111"
+                  className={`${inputClasses} pr-24 ${fieldBorder(cardNumberVerdict(number))}`}
+                />
+                {number.replace(/\D/g, '').length >= 1 && cardBrand(number) !== 'Card' && (
+                  <span
+                    className={`pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded px-2 py-0.5 text-xs font-bold ${
+                      cardBrand(number) === 'Visa' ? 'bg-blue-50 text-blue-800 dark:bg-blue-950/40 dark:text-blue-300' : 'bg-orange-50 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300'
+                    }`}
+                  >
+                    {cardBrand(number)}
+                  </span>
+                )}
+              </div>
+              <FieldNote verdict={cardNumberVerdict(number)} ok="Card number looks right" error="This card number isn't valid. Check for a typo." />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -182,8 +218,9 @@ export function OnlineCheckoutModal({
                     setExpiry(d.length > 2 ? `${d.slice(0, 2)}/${d.slice(2)}` : d)
                   }}
                   placeholder="12/30"
-                  className={inputClasses}
+                  className={`${inputClasses} ${fieldBorder(expiryVerdict(expiry))}`}
                 />
+                <FieldNote verdict={expiryVerdict(expiry)} ok="Valid date" error="This date has passed or isn't a real month." />
               </div>
               <div>
                 <label htmlFor="card-cvc" className={labelClasses}>Security Code</label>
@@ -194,7 +231,7 @@ export function OnlineCheckoutModal({
                   value={cvc}
                   onChange={(e) => setCvc(e.target.value.replace(/\D/g, '').slice(0, 4))}
                   placeholder="123"
-                  className={inputClasses}
+                  className={`${inputClasses} ${fieldBorder(cvcVerdict(cvc))}`}
                 />
               </div>
             </div>
