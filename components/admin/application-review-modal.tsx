@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
+import { LengthMeter } from '@/components/ui/length-meter'
 import { useRouter } from 'next/navigation'
 import { FileText, X } from 'lucide-react'
 import {
@@ -10,7 +11,7 @@ import {
   approveAndCreateStudentRecord,
 } from '@/app/admin/applications/actions'
 import { calculateAge, formatDateLong } from '@/lib/format'
-import { documentLabels, documentShortLabels, documentOrder, validateCorrectionNotes, CORRECTION_NOTE_MAX } from '@/lib/documents'
+import { documentLabels, documentShortLabels, documentOrder, validateCorrectionNotes, CORRECTION_NOTE_MAX, CORRECTION_NOTE_MIN } from '@/lib/documents'
 import { isAgeEligibleForClassroom, classroomAgeRangeLabel } from '@/lib/classrooms'
 import { DocumentPreviewModal } from '@/components/ui/document-preview-modal'
 import { Modal } from '@/components/ui/modal'
@@ -377,6 +378,7 @@ export function ApplicationReviewModal({
                         placeholder="e.g. The photo is blurry. Please upload a clearer scan."
                         className="w-full rounded-lg border border-red-200 dark:border-red-900 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
                       />
+                      <LengthMeter value={correctionNotes[type] ?? ''} min={CORRECTION_NOTE_MIN} max={CORRECTION_NOTE_MAX} />
                       <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                         The parent sees this next to the document and in the email.
                       </p>

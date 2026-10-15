@@ -1,13 +1,14 @@
 'use client'
 
 import { useState } from 'react'
+import { LengthMeter } from '@/components/ui/length-meter'
 import { useRouter } from 'next/navigation'
 import { Undo2, X } from 'lucide-react'
 import { reversePayment } from '@/app/admin/payments/actions'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Modal } from '@/components/ui/modal'
 import { formatCurrency } from '@/lib/format'
-import { FEE_REASON_MAX, validateFeeReason, type FeeAdjustment, feeAdjustmentLabels } from '@/lib/fees'
+import { FEE_REASON_MAX, validateFeeReason, type FeeAdjustment, feeAdjustmentLabels, FEE_REASON_MIN } from '@/lib/fees'
 import { formatDateLong } from '@/lib/format'
 
 export type ReversibleFee = {
@@ -145,6 +146,7 @@ export function ReversePaymentModal({
               placeholder="For example: recorded against the wrong student."
               className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-[#0b1b62] focus:outline-none dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 dark:focus:border-indigo-400"
             />
+            <LengthMeter value={reason} min={FEE_REASON_MIN} max={FEE_REASON_MAX} />
           </div>
 
           {adjustments.length > 0 && (

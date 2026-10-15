@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { amountBorder, checkAmount } from '@/components/ui/amount-check'
 import { useRouter } from 'next/navigation'
 import { markPaymentPaidManually } from '@/app/admin/payments/actions'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
@@ -50,7 +51,8 @@ export function MarkPaidControl({ paymentId, remainingBalance }: { paymentId: st
           step="0.01"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          className="w-24 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-900 focus:border-[#0b1b62] focus:outline-none dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100"
+          title={checkAmount(amount, remainingBalance, 'remaining').text || undefined}
+          className={`w-24 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-900 focus:border-[#0b1b62] focus:outline-none dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 ${amountBorder(checkAmount(amount, remainingBalance, 'remaining').tone)}`}
         />
       </div>
       <button

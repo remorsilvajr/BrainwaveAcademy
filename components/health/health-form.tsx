@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { LengthMeter } from '@/components/ui/length-meter'
 import { PhoneInput } from '@/components/ui/phone-input'
 import { useRouter } from 'next/navigation'
 import { CheckCircle2, Loader2, Plus, Trash2 } from 'lucide-react'
@@ -81,6 +82,7 @@ export function HealthForm({
         placeholder={placeholder}
         className={inputClass}
       />
+      <LengthMeter value={value[key]} min={0} max={HEALTH_TEXT_MAX} />
     </div>
   )
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useTransition } from 'react'
+import { LengthMeter } from '@/components/ui/length-meter'
 import { useRouter } from 'next/navigation'
 import { CalendarClock, CheckCircle2, Clock, Loader2, UserMinus, X, XCircle } from 'lucide-react'
 import { cancelUnenrollmentRequest, requestUnenrollment } from '@/app/parent/unenrollment/actions'
@@ -8,13 +9,7 @@ import { Modal } from '@/components/ui/modal'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { DobSelect } from '@/components/ui/dob-select'
 import { formatDateLong } from '@/lib/format'
-import {
-  UNENROLLMENT_REASON_MAX,
-  lastDayBounds,
-  validateLastDay,
-  validateReason,
-  type UnenrollmentStatus,
-} from '@/lib/unenrollment'
+import { UNENROLLMENT_REASON_MAX, lastDayBounds, validateLastDay, validateReason, type UnenrollmentStatus, UNENROLLMENT_REASON_MIN } from '@/lib/unenrollment'
 
 export type UnenrollmentChild = {
   id: string
@@ -107,6 +102,7 @@ function RequestModal({ child, onClose }: { child: UnenrollmentChild; onClose: (
             placeholder="For example: we are moving to another city."
             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-[#0b1b62] focus:outline-none dark:border-gray-700 dark:text-gray-100 dark:focus:border-indigo-400"
           />
+          <LengthMeter value={reason} min={UNENROLLMENT_REASON_MIN} max={UNENROLLMENT_REASON_MAX} />
         </div>
 
         <DobSelect

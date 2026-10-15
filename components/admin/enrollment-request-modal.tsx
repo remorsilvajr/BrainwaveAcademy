@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { LengthMeter } from '@/components/ui/length-meter'
 import { useRouter } from 'next/navigation'
 import { Mail, ShieldCheck, Send, X, AlertTriangle } from 'lucide-react'
 import { approveApplication, dismissApplication, requestApplicationCorrection } from '@/app/admin/enroll-a-student/actions'
@@ -261,6 +262,7 @@ export function EnrollmentRequestModal({
                         placeholder="e.g. The student's date of birth doesn't match the birth certificate. Please check it."
                         className="w-full rounded-lg border border-amber-300 dark:border-amber-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
                       />
+                      <LengthMeter value={correctionNote} min={5} max={1000} />
                       <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
                         Shown to {application.parent_first_name} in their Enrollment Status page and emailed to them.
                       </p>

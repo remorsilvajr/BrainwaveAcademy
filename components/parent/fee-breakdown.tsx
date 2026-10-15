@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { AmountCheck, amountBorder, checkAmount } from '@/components/ui/amount-check'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { formatCurrency, formatDateLong, roundToCents } from '@/lib/format'
@@ -132,7 +133,7 @@ export function FeeBreakdown({
                   step="0.01"
                   value={payAmount}
                   onChange={(e) => setPayAmount(e.target.value)}
-                  className="w-32 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-900 focus:border-[#0b1b62] focus:outline-none dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100"
+                  className={`w-32 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-900 focus:border-[#0b1b62] focus:outline-none dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 ${amountBorder(checkAmount(payAmount, totalDue, 'remaining').tone)}`}
                 />
               </div>
               <button
@@ -148,6 +149,9 @@ export function FeeBreakdown({
               >
                 Pay Online
               </button>
+            </div>
+            <div className="max-w-sm">
+              <AmountCheck value={payAmount} max={totalDue} mode="remaining" />
             </div>
             <p className="text-xs text-gray-400 dark:text-gray-500">
               Pay by card or GCash. The amount goes to the fee due soonest first.

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { AmountCheck, amountBorder, checkAmount } from '@/components/ui/amount-check'
 import { useRouter } from 'next/navigation'
 import { X } from 'lucide-react'
 import { Modal } from '@/components/ui/modal'
@@ -144,9 +145,13 @@ export function AddFeeModal({
                     step="0.01"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className={inputClass}
+                    className={`${inputClass} ${amountBorder(checkAmount(amount, NEW_FEE_MAX_AMOUNT, 'limit').tone)}`}
                   />
-                  <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Up to ₱10,000.00.</p>
+                  {amount.trim() === '' ? (
+                    <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Up to ₱10,000.00.</p>
+                  ) : (
+                    <AmountCheck value={amount} max={NEW_FEE_MAX_AMOUNT} mode="limit" />
+                  )}
                 </div>
               </div>
               <div>

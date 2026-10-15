@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { FEE_MAX_AMOUNT } from '@/lib/fees'
+import { AmountCheck, amountBorder, checkAmount } from '@/components/ui/amount-check'
 import { useRouter } from 'next/navigation'
 import { X } from 'lucide-react'
 import { Modal } from '@/components/ui/modal'
@@ -117,8 +119,9 @@ export function RecordPaymentModal({
                 step="0.01"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none"
+                className={`w-full rounded-lg border border-slate-200 bg-white text-slate-900 dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 px-3 py-2 text-sm focus:border-[#0b1b62] dark:focus:border-indigo-400 focus:outline-none ${amountBorder(checkAmount(amount, FEE_MAX_AMOUNT, 'limit').tone)}`}
               />
+              <AmountCheck value={amount} max={FEE_MAX_AMOUNT} mode="limit" />
             </div>
 
             {error && (
