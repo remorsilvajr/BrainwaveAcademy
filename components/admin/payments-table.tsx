@@ -306,7 +306,7 @@ export function PaymentsTable({
                 onClick={() => setShowRecordModal(true)}
                 className="w-full rounded-lg bg-[#0b1b62] px-4 py-2 text-sm font-semibold text-white hover:bg-[#08154d] sm:w-auto"
               >
-                Record Manual Payment
+                Record Cash Payment
               </button>
             </div>
           )}

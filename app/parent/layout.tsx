@@ -18,8 +18,8 @@ const sections: NavSection[] = [
       { label: 'Enrollment Status', href: '/parent/enrollment-status', icon: 'file' },
       { label: 'Requirements', href: '/parent/requirements', icon: 'checklist' },
       { label: 'Payments', href: '/parent/payments', icon: 'wallet' },
-      { label: 'Enroll A Student', href: '/parent/enroll-a-student', icon: 'userPlus' },
-      { label: 'Unenroll A Student', href: '/parent/unenrollment', icon: 'userMinus' },
+      { label: 'Enroll a Student', href: '/parent/enroll-a-student', icon: 'userPlus' },
+      { label: 'Unenroll a Student', href: '/parent/unenrollment', icon: 'userMinus' },
     ],
   },
   {
@@ -53,7 +53,7 @@ export default async function ParentLayout({ children }: { children: React.React
 
   // Matches on created_parent_id OR parent_email, not just created_parent_id
   // — that column is only populated once admin approves the enrollment
-  // *request* itself (Enroll A Student), so a parent who just submitted a
+  // *request* itself (Enroll a Student), so a parent who just submitted a
   // new child would otherwise have no way to even see it in the selector
   // until admin acts on it. Requirements deliberately keeps the narrower
   // created_parent_id-only filter (document upload genuinely shouldn't be

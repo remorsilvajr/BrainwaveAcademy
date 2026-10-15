@@ -358,7 +358,7 @@ export function StudentRecordModal({
               </button>
 
               <div className="mt-6 border-t border-gray-100 dark:border-gray-800 pt-4">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Classroom</h3>
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">Class</h3>
                 <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                   Currently: <span className="font-medium text-gray-900 dark:text-gray-100">{student.classroomName ?? 'Unassigned'}</span>
                 </p>

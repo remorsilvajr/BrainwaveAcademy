@@ -17,7 +17,7 @@ A school admin / enrollment portal for Brain Wave Academy (Tagum City), built wi
 
 ### Parent portal
 
-- Dashboard with enrollment progress, due balance, a Pay Online card, and recent announcements (plus a reminder while a child's class-photo answer is missing). Every card links to its full page
+- Dashboard with enrollment progress, outstanding balance, a Pay Online card, and recent announcements (plus a reminder while a child's class-photo answer is missing). Every card links to its full page
 - Enroll a Student (in-portal wizard for a second/subsequent child)
 - **Create your own account when you enroll**: type your password twice on the enroll form, and you are signed in straight away and can upload requirements right after submitting
 - Requirements checklist with document upload, a live count of what is still missing or needs correcting, and the school's note on each document that needs correcting
@@ -37,9 +37,9 @@ A school admin / enrollment portal for Brain Wave Academy (Tagum City), built wi
 
 ### Teacher portal
 
-- Dashboard with attendance summary, interactive student check-in, milestone summary, and classroom announcements. Every card links to its full page
-- Announcements scoped to the teacher's assigned classroom(s), or all parents
-- Student directory with classroom column and filter
+- Dashboard with attendance summary, interactive student check-in, milestone summary, and class announcements. Every card links to its full page
+- Announcements scoped to the teacher's assigned class(es), or all parents
+- Student directory with class column and filter
 - Attendance: date-selectable, editable for today only (Tutorial and Quiz Bee programs have no daily attendance)
 - Student Dashboard: a class filter and student picker, the child's age, attendance, 6-domain milestone assessments (edit-in-place), and a read-only health summary with a red allergy alert
 - Pickup Verification: type a name, or scan the QR on a pickup card, and get "authorized", "similar name, ask again" or "not on file"
@@ -57,7 +57,7 @@ A school admin / enrollment portal for Brain Wave Academy (Tagum City), built wi
 - **Payments (three tabs)**: **Fees** (what is owed), **Received** (every payment, online or cash, with receipts) and **Student Balances** (every student's total fees, paid, still owed, overdue and last payment, with Add Fee and View Fees per student). Cash can be recorded in full or in part. **Fee corrections** (edit, waive, void, reverse a payment, including a partly paid fee), each with a written reason and an audit trail
 - **Unenrollment Requests**: approve or decline a withdrawal, choosing whether unpaid fees are kept or waived; the parent is emailed
 - **Student Attendance**: any day's attendance per class (present, late, absent, not marked, with allergy alerts), read-only since teachers record it, plus every student attendance record, filterable by date range, status and program
-- Students (with an Outstanding balance column and a Balance tab where admin can also add a fee), Teachers, and Classrooms directories. A class has any number of **equal teachers** (no head teacher), and fee due dates are managed per class
+- Students (with an Outstanding balance column and a Balance tab where admin can also add a fee), Teachers, and Classes directories. A class has any number of **equal teachers** (no head teacher), and fee due dates are managed per class
 - **Teacher Attendance**: record each teacher present, late or absent for any date up to today, plus every teacher attendance record
 - Student Dashboard with a class filter, milestone edit rights and avatar upload (attendance is view-only for admin), and Export Report whose Back returns to it; **Health** tab and class-photo answer on each student record
 - **Pickup history**: staff record each pickup from Pickup Verification (Record Pickup); admin, teachers and parents see a Pickup History with who collected the child, the date and the Manila time, and parents get a notification

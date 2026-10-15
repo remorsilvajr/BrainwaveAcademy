@@ -116,7 +116,7 @@ export function StudentBalancesTable({
     <>
       <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="rounded-xl border border-gray-200 border-l-4 border-l-rose-400 bg-white p-4 shadow-sm dark:border-gray-700 dark:border-l-rose-600 dark:bg-gray-900">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Still Owed (these students)</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Outstanding (these students)</p>
           <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">{formatCurrency(totals.outstanding)}</p>
           <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
             {totals.owing} of {filtered.length} {filtered.length === 1 ? 'student owes' : 'students owe'} something
@@ -125,7 +125,7 @@ export function StudentBalancesTable({
         <div className="rounded-xl border border-gray-200 border-l-4 border-l-red-500 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">
           <p className="text-sm text-gray-500 dark:text-gray-400">Overdue (these students)</p>
           <p className="mt-1 text-2xl font-bold text-red-600 dark:text-red-400">{formatCurrency(totals.overdue)}</p>
-          <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Included in Still Owed</p>
+          <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Included in Outstanding</p>
         </div>
       </div>
 
@@ -170,7 +170,7 @@ export function StudentBalancesTable({
           <table className="w-full min-w-[880px] text-sm">
             <thead className="bg-gray-50 text-left text-gray-500 dark:bg-gray-800/60 dark:text-gray-400">
               <tr>
-                {['Student', 'Class', 'Total Fees', 'Paid', 'Still Owed', 'Overdue', 'Last Payment', 'Action'].map((h) => (
+                {['Student', 'Class', 'Total Fees', 'Paid', 'Outstanding', 'Overdue', 'Last Payment', 'Action'].map((h) => (
                   <th key={h} className="p-4 font-medium">
                     {h}
                   </th>

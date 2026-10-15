@@ -27,7 +27,7 @@ export function EnrollmentForm({ classrooms }: { classrooms: SelectableClassroom
   const [liveErrors, setLiveErrors] = useState<Record<string, string>>({})
   const [bannerError, setBannerError] = useState<string | undefined>(undefined)
 
-  // Three "pages" (Student, Program, then Parent/Guardian) sharing one
+  // Three "pages" (Student, Program, then Parent / Guardian) sharing one
   // <form> and one submission — not separate routes. A real second route
   // would need the in-progress values carried across a full navigation
   // (query params or sessionStorage) just to come back to the same

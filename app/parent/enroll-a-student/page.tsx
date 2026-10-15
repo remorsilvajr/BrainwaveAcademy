@@ -25,7 +25,7 @@ export default async function EnrollAStudentPage({
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Enroll A Student</h1>
+        <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Enroll a Student</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Register a sibling or additional learner under your existing parent account.
         </p>

@@ -186,7 +186,7 @@ export function EnrollmentRequestModal({
                   value={application.student_gender.charAt(0).toUpperCase() + application.student_gender.slice(1)}
                 />
                 <InfoRow
-                  label="Parent/Guardian Name"
+                  label="Parent / Guardian Name"
                   value={`${application.parent_first_name} ${application.parent_last_name}`}
                 />
                 <InfoRow label="Parent Date of Birth" value={formatDateLong(application.parent_dob)} />

@@ -260,7 +260,7 @@ export function ApplicationReviewModal({
           </div>
 
           <p className="mb-2 mt-6 text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
-            Program
+            Class
           </p>
           <div className="rounded-xl bg-gray-50 dark:bg-gray-800/60 p-4">
             <p className="text-xs text-gray-500 dark:text-gray-400">

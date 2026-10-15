@@ -51,7 +51,7 @@ export default async function StudentProfilePage({
           icon={ClipboardList}
           title="No Applicants or Students Yet"
           description="Once you've started an enrollment application for your child, their enrollment record (personal details, guardian info, and document requirements) will appear here."
-          action={{ href: '/parent/enroll-a-student', label: 'Enroll A Student' }}
+          action={{ href: '/parent/enroll-a-student', label: 'Enroll a Student' }}
         />
       </div>
     )
@@ -206,7 +206,7 @@ export default async function StudentProfilePage({
             </div>
             <div className="rounded-lg bg-gray-50 dark:bg-gray-800/60 p-3">
               <p className="text-xs text-gray-400 dark:text-gray-500">
-                {application.created_student_id ? 'Program' : 'Requested Program'}
+                {application.created_student_id ? 'Class' : 'Requested Class'}
               </p>
               <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                 {programClassroom?.name ?? (application.created_student_id ? 'Unassigned' : 'Not specified')}

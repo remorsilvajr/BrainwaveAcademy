@@ -39,8 +39,8 @@ export default async function ParentPaymentsPage({
         <EmptyState
           icon={ClipboardList}
           title="No Enrollment Application Yet"
-          description="Once your child is enrolled and assigned to a classroom, their fee breakdown and payment history will appear here."
-          action={{ href: '/parent/enroll-a-student', label: 'Enroll A Student' }}
+          description="Once your child is enrolled and assigned to a class, their fee breakdown and payment history will appear here."
+          action={{ href: '/parent/enroll-a-student', label: 'Enroll a Student' }}
         />
       </div>
     )
@@ -59,7 +59,7 @@ export default async function ParentPaymentsPage({
           icon={GraduationCap}
           title="Not Enrolled Yet"
           tone="warning"
-          description={`${studentName} hasn't been enrolled and assigned to a classroom yet, so there are no fees to show. Check Enrollment Status for the latest update.`}
+          description={`${studentName} hasn't been enrolled and assigned to a class yet, so there are no fees to show. Check Enrollment Status for the latest update.`}
           action={{ href: withStudent('/parent/enrollment-status', studentParam), label: 'View Enrollment Status' }}
         />
       </div>

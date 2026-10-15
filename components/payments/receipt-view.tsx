@@ -76,13 +76,13 @@ export function ReceiptView({ data, backHref }: { data: ReceiptData; backHref: s
           </div>
           {data.classroomName && (
             <div className="flex justify-between">
-              <span className="text-gray-500 dark:text-gray-400">Classroom</span>
+              <span className="text-gray-500 dark:text-gray-400">Class</span>
               <span className="font-medium text-gray-900 dark:text-gray-100">{data.classroomName}</span>
             </div>
           )}
           {data.parentName && (
             <div className="flex justify-between">
-              <span className="text-gray-500 dark:text-gray-400">Parent/Guardian</span>
+              <span className="text-gray-500 dark:text-gray-400">Parent / Guardian</span>
               <span className="font-medium text-gray-900 dark:text-gray-100">{data.parentName}</span>
             </div>
           )}

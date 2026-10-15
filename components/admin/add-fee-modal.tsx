@@ -16,7 +16,7 @@ type Classroom = { id: string; name: string }
 const inputClass =
   'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-[#0b1b62] focus:outline-none dark:border-slate-700 dark:bg-gray-800 dark:text-slate-100 dark:focus:border-indigo-400'
 
-// Creates a new pending (unpaid) fee for a student, tied to a classroom —
+// Creates a new pending (unpaid) fee for a student, tied to a class —
 // the one thing admin couldn't do before: every other fee only ever came
 // from auto-generation at classroom assignment, or an already-paid manual
 // cash record. Opened from the Student Record modal's Balance tab or a row of
@@ -48,7 +48,7 @@ export function AddFeeModal({
   const [confirmingTuition, setConfirmingTuition] = useState(false)
 
   function validate(): string | null {
-    if (!classroomId) return 'Select a classroom.'
+    if (!classroomId) return 'Select a class.'
     if (duePartial) return 'Pick the day, month, and year of the due date, or leave it blank.'
     return validateNewFeeAmount(Number(amount)) ?? validateFeeDueDate(dueDate || null)
   }
@@ -117,9 +117,9 @@ export function AddFeeModal({
           ) : (
             <div className="space-y-3">
               <div>
-                <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Classroom</label>
+                <label className="mb-1 block text-sm font-semibold text-[#0b1b62] dark:text-indigo-300">Class</label>
                 <select value={classroomId} onChange={(e) => setClassroomId(e.target.value)} className={inputClass}>
-                  <option value="">Select a classroom…</option>
+                  <option value="">Select a class…</option>
                   {classrooms.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
@@ -165,7 +165,7 @@ export function AddFeeModal({
               </div>
               <div>
                 <DobSelect
-                  label="Due date (optional)"
+                  label="Due Date (optional)"
                   defaultValue=""
                   min={`${Number(todayIso().slice(0, 4)) - 1}-01-01`}
                   max={`${Number(todayIso().slice(0, 4)) + 1}-12-31`}
@@ -203,7 +203,7 @@ export function AddFeeModal({
       {confirmingTuition && (
         <ConfirmDialog
           title="Add a second tuition fee?"
-          description="This student already has a tuition fee for this classroom, and tuition is a one-time payment. Add another anyway?"
+          description="This student already has a tuition fee for this class, and tuition is a one-time payment. Add another anyway?"
           confirmLabel="Yes, Add Anyway"
           tone="danger"
           isPending={isSaving}

@@ -41,7 +41,7 @@ export default async function ParentUnenrollmentPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Unenroll A Student</h1>
+        <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Unenroll a Student</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Need to withdraw your child from the school? Send a request here. The school reviews it and emails you the
           decision. Your child stays enrolled until it&apos;s approved.

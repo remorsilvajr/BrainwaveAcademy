@@ -38,10 +38,10 @@ export default async function ClassroomsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Classrooms</h1>
+        <h1 className="text-2xl font-bold text-[#0b1b62] dark:text-indigo-300">Classes</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
           Assign teachers to each program, manage its fee schedule, and view its students.
-          Students are assigned to a classroom from their record in Students.
+          Students are assigned to a class from their record in Students.
         </p>
       </div>
       <ClassroomsGrid classrooms={rows} teacherOptions={teacherOptions} />

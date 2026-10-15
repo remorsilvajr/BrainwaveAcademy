@@ -22,7 +22,7 @@ export async function postAnnouncement(input: {
     return { error: 'Add both a title and a message.' }
   }
 
-  // A teacher may only target a classroom they're actually lead or
+  // A teacher may only target a class they're actually lead or
   // assistant of — the dropdown already only offers those, but this is the
   // real enforcement, since a Server Action is reachable directly
   // regardless of what the UI offers (see the Middleware/Server Action
@@ -38,11 +38,11 @@ export async function postAnnouncement(input: {
         .maybeSingle(),
     ])
     if (!classroom) {
-      return { error: 'Classroom not found.' }
+      return { error: 'Class not found.' }
     }
     const isAssigned = classroom.lead_teacher_id === user.id || !!assistantLink
     if (!isAssigned) {
-      return { error: 'You can only post to a classroom you are assigned to as a teacher.' }
+      return { error: 'You can only post to a class you are assigned to as a teacher.' }
     }
   }
 
@@ -57,7 +57,7 @@ export async function postAnnouncement(input: {
     target_role: 'parent',
     // Null means unscoped — visible to every parent, same as before this
     // existed. A set classroom_id only reaches a parent with a child
-    // actually in that classroom (see lib/parent-classrooms.ts).
+    // actually in that class (see lib/parent-classrooms.ts).
     classroom_id: input.classroomId || null,
     })
     .select('id')
@@ -69,7 +69,7 @@ export async function postAnnouncement(input: {
 
   await logActivity(supabase, {
     actorId: user.id,
-    action: 'Posted classroom announcement',
+    action: 'Posted class announcement',
     targetTable: 'announcements',
   })
 

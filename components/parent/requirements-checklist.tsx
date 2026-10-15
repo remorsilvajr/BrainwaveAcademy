@@ -73,7 +73,7 @@ export function RequirementsChecklist({
             action={{ href: '/parent/enrollment-status', label: 'Check Enrollment Status' }}
             secondaryAction={{
               href: '/parent/enroll-a-student',
-              label: 'Enroll A Student',
+              label: 'Enroll a Student',
               prefix: 'Ready to try again?',
             }}
           />
@@ -86,7 +86,7 @@ export function RequirementsChecklist({
             action={{ href: '/parent/enrollment-status', label: 'Check Enrollment Status' }}
             secondaryAction={{
               href: '/parent/enroll-a-student',
-              label: 'Enroll A Student',
+              label: 'Enroll a Student',
               prefix: 'Enrolling another child in the meantime?',
             }}
           />
@@ -95,7 +95,7 @@ export function RequirementsChecklist({
             icon={ClipboardList}
             title="No Enrollment Application Yet"
             description="This checklist is where you'll upload your child's Birth Certificate, 2×2 ID Photo, Proof of Address, and a Guardian Valid ID once enrollment is underway. Start an application first and this page will fill in automatically."
-            action={{ href: '/parent/enroll-a-student', label: 'Enroll A Student' }}
+            action={{ href: '/parent/enroll-a-student', label: 'Enroll a Student' }}
           />
         )}
       </div>

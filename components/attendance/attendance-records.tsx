@@ -46,7 +46,7 @@ export function AttendanceRecords({
 }: {
   rows: AttendanceRecordRow[]
   subject: 'student' | 'teacher'
-  // Label for the group filter (e.g. "Program" or "Classroom").
+  // Label for the group filter (e.g. "Class").
   groupLabel: string
   // True when more records exist than were loaded.
   capped: boolean

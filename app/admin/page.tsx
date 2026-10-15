@@ -134,7 +134,7 @@ export default async function AdminDashboardPage() {
         >
           <p className="text-sm text-gray-500 dark:text-gray-400">Unenrollment Requests</p>
           <p className="mt-1 text-3xl font-bold text-gray-900 dark:text-gray-100">{pendingUnenrollmentCount ?? 0}</p>
-          <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Parents asking to withdraw a child</p>
+          <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Parents asking to unenroll a child</p>
         </Link>
         <Link
           href="/admin/feedback"

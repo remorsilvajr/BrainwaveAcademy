@@ -35,7 +35,7 @@ export default async function TeacherAttendancePage({
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Every student attendance record on file.</p>
         </div>
         <AttendanceTabLinks basePath="/teacher/attendance" active="records" tabs={TABS} />
-        <AttendanceRecords rows={rows} subject="student" groupLabel="Program" capped={capped} />
+        <AttendanceRecords rows={rows} subject="student" groupLabel="Class" capped={capped} />
       </div>
     )
   }
@@ -97,7 +97,7 @@ export default async function TeacherAttendancePage({
         showUnassigned={false}
         emptyMessage={
           assignedIds.size === 0
-            ? "You aren't assigned to a class yet. Ask the admin to add you to one in Classrooms."
+            ? "You aren't assigned to a class yet. Ask the admin to add you to one in Classes."
             : 'No students in your classes yet.'
         }
         date={selectedDate}

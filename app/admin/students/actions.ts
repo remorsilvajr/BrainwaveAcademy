@@ -77,7 +77,7 @@ export async function updateStudentRecord(
 // Assigning `null` unassigns the student (e.g. moving them out of a
 // classroom entirely) and never touches previously-generated fee rows —
 // only assigning a *new* classroom generates fees, and only once per
-// (student, classroom) pair, so re-assigning back to a classroom the
+// (student, classroom) pair, so re-assigning back to a class the
 // student was already billed for doesn't double-charge them. Age
 // eligibility is enforced here, not on the public/parent enroll forms —
 // see the Classrooms & fee schedule note in CLAUDE.md for why.
@@ -107,7 +107,7 @@ export async function assignStudentClassroom(
     try {
       await applyClassroomToStudent(supabase, studentId, student.date_of_birth, classroomId, programOptions)
     } catch (err) {
-      return { error: err instanceof Error ? err.message : 'Could not assign that classroom.' }
+      return { error: err instanceof Error ? err.message : 'Could not assign that class.' }
     }
   }
 
@@ -116,7 +116,7 @@ export async function assignStudentClassroom(
   } = await supabase.auth.getUser()
   await logActivity(supabase, {
     actorId: actingAdmin?.id ?? null,
-    action: classroomId ? 'Assigned student to a classroom' : 'Unassigned student from their classroom',
+    action: classroomId ? 'Assigned student to a class' : 'Unassigned student from their class',
     targetTable: 'students',
     targetId: studentId,
   })

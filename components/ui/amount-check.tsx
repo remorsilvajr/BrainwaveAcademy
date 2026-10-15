@@ -6,7 +6,7 @@ import { formatCurrency, roundToCents } from '@/lib/format'
 type Mode = 'limit' | 'remaining'
 
 // The verdict on a typed peso amount. `limit`: the most a fee may be (Add Fee,
-// Edit Fee, Record Payment). `remaining`: what is still owed, so a payment may
+// Edit Fee, Record Cash Payment). `remaining`: what is still owed, so a payment may
 // not exceed it (Pay Online, Mark Paid). `min`: a floor the amount can't go
 // under (an edited fee can't drop below what's already been paid). The server
 // re-checks every one of these.

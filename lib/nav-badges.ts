@@ -11,7 +11,7 @@ import { documentOrder } from '@/lib/documents'
 //    that tab so nothing is counted twice.
 
 // A count, or 'alert' for a "!" (something to do that isn't a number, e.g. a parent
-// with no child yet on Enroll A Student).
+// with no child yet on Enroll a Student).
 export type NavBadge = number | 'alert'
 export type NavBadges = Record<string, NavBadge>
 
@@ -92,7 +92,7 @@ export async function loadStateBadges(supabase: SupabaseClient, role: string, us
     out['/parent/requirements'] = requirementsToDo(applications ?? [], documents ?? [])
   }
 
-  // A parent with no child at all (no request they can see): a "!" on Enroll A Student.
+  // A parent with no child at all (no request they can see): a "!" on Enroll a Student.
   // RLS already limits applications to their own (created_parent_id or parent_email).
   if (role === 'parent' && wants('/parent/enroll-a-student')) {
     const { count } = await supabase.from('applications').select('id', { count: 'exact', head: true }).eq('hidden_from_parent', false)

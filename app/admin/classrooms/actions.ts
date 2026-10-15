@@ -9,7 +9,7 @@ import { validateFeeDueDate } from '@/lib/classrooms'
 // teachers share the same responsibilities). They are all rows in
 // classroom_assistants, a table named before that decision; the older
 // classrooms.lead_teacher_id is no longer written, only cleared, and every read
-// still unions it in so a classroom set up the old way keeps its teacher.
+// still unions it in so a class set up the old way keeps its teacher.
 // admins_manage_classrooms / admins_manage_classroom_assistants (admin-only)
 // decide the write; the pre-checks here only turn mistakes into clear messages.
 
@@ -27,7 +27,7 @@ export async function addClassroomTeacher(classroomId: string, teacherId: string
 
   const teacher = await getTeacherProfile(supabase, teacherId)
   if (!teacher || teacher.role !== 'teacher') {
-    return { error: 'Only teacher accounts can be assigned to a classroom.' }
+    return { error: 'Only teacher accounts can be assigned to a class.' }
   }
 
   const { data: classroom } = await supabase
@@ -36,16 +36,16 @@ export async function addClassroomTeacher(classroomId: string, teacherId: string
     .eq('id', classroomId)
     .single()
   if (!classroom) {
-    return { error: 'Classroom not found.' }
+    return { error: 'Class not found.' }
   }
   if (classroom.lead_teacher_id === teacherId) {
-    return { error: `${teacher.first_name} ${teacher.last_name} already teaches this classroom.` }
+    return { error: `${teacher.first_name} ${teacher.last_name} already teaches this class.` }
   }
 
   const { error } = await supabase.from('classroom_assistants').insert({ classroom_id: classroomId, teacher_id: teacherId })
   if (error) {
     if (error.code === '23505') {
-      return { error: `${teacher.first_name} ${teacher.last_name} already teaches this classroom.` }
+      return { error: `${teacher.first_name} ${teacher.last_name} already teaches this class.` }
     }
     return { error: error.message }
   }
@@ -81,7 +81,7 @@ export async function removeClassroomTeacher(classroomId: string, teacherId: str
   } = await supabase.auth.getUser()
   await logActivity(supabase, {
     actorId: actingAdmin?.id ?? null,
-    action: 'Removed a teacher from classroom',
+    action: 'Removed a teacher from class',
     targetTable: 'classrooms',
     targetId: classroomId,
   })
@@ -91,7 +91,7 @@ export async function removeClassroomTeacher(classroomId: string, teacherId: str
 
 
 // Due dates only: the fee amounts are deliberately not writable from here.
-// Only affects students assigned to this classroom *after* the change, and
+// Only affects students assigned to this class *after* the change, and
 // never touches fee rows already generated for already-assigned students (see
 // the Classrooms note in CLAUDE.md). A date is only range-checked when it's
 // being changed, so a stored date that has since drifted into the past doesn't
@@ -140,7 +140,7 @@ export async function updateFeeDueDates(
   } = await supabase.auth.getUser()
   await logActivity(supabase, {
     actorId: actingAdmin?.id ?? null,
-    action: 'Updated classroom fee due dates',
+    action: 'Updated class fee due dates',
     targetTable: 'classrooms',
     targetId: classroomId,
   })
